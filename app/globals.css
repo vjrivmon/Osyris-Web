@@ -5,86 +5,74 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    /* Professional red */
-    --primary: 354 75% 35%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Professional navy blue */
-    --secondary: 220 45% 25%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Professional gold */
-    --accent: 42 87% 55%;
-    --accent-foreground: 222 47% 11%;
-
-    /* Lighter gold */
-    --accent-secondary: 42 65% 75%;
-    --accent-secondary-foreground: 222 47% 11%;
-
-    /* Professional brown */
-    --accent-tertiary: 15 40% 30%;
-    --accent-tertiary-foreground: 0 0% 100%;
-
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 240 50% 30%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 48 96% 53%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222 47% 11%;
-
+    --ring: 48 96% 53%;
     --radius: 0.5rem;
+
+    /* Scout section colors */
+    --castores: 30 100% 60%;
+    --manada: 48 100% 50%;
+    --tropa: 210 100% 50%;
+    --pioneros: 0 100% 50%;
+    --rutas: 120 100% 30%;
+
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222 47% 11%;
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
-    --card: 222 47% 11%;
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 11%;
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    /* Professional red in dark mode */
-    --primary: 354 75% 45%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Professional navy blue in dark mode */
-    --secondary: 220 45% 35%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Professional gold in dark mode */
-    --accent: 42 87% 60%;
-    --accent-foreground: 222 47% 11%;
-
-    /* Lighter gold in dark mode */
-    --accent-secondary: 42 65% 80%;
-    --accent-secondary-foreground: 222 47% 11%;
-
-    /* Professional brown in dark mode */
-    --accent-tertiary: 15 40% 40%;
-    --accent-tertiary-foreground: 0 0% 100%;
-
+    --primary: 240 50% 50%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 48 96% 53%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 48 96% 53%;
+
+    /* Sidebar colors - dark mode */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -97,14 +85,81 @@
   }
 }
 
-.scout-pattern {
-  background-color: #1a2c4e;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e9b949' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+/* Theme transition effects */
+.theme-transition {
+  @apply transition-colors duration-300;
 }
 
-.map-container {
-  height: 400px;
-  width: 100%;
-  border-radius: var(--radius);
+/* Add transition to common elements */
+body,
+.card,
+.button,
+.input,
+.badge,
+header,
+footer,
+main,
+section,
+nav {
+  @apply transition-colors duration-300;
+}
+
+/* Section-specific styles */
+.section-castores {
+  @apply bg-orange-500 text-white;
+}
+
+.section-manada {
+  @apply bg-yellow-400 text-black;
+}
+
+.section-tropa {
+  @apply bg-blue-500 text-white;
+}
+
+.section-pioneros {
+  @apply bg-red-600 text-white;
+}
+
+.section-rutas {
+  @apply bg-green-700 text-white;
+}
+
+.badge-castores {
+  @apply border-orange-500 text-orange-700 bg-orange-50 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-700;
+}
+
+.badge-manada {
+  @apply border-yellow-500 text-yellow-700 bg-yellow-50 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-700;
+}
+
+.badge-tropa {
+  @apply border-blue-500 text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-700;
+}
+
+.badge-pioneros {
+  @apply border-red-500 text-red-700 bg-red-50 dark:bg-red-950 dark:text-red-300 dark:border-red-700;
+}
+
+.badge-rutas {
+  @apply border-green-500 text-green-700 bg-green-50 dark:bg-green-950 dark:text-green-300 dark:border-green-700;
+}
+
+.bg-hero-pattern {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url("/images/hero-background.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.bg-section-pattern {
+  background-image: url("/images/pattern-bg.png");
+  background-size: 200px;
+  background-repeat: repeat;
+  background-color: rgba(255, 255, 255, 0.95);
+  background-blend-mode: overlay;
+}
+
+.dark .bg-section-pattern {
+  background-color: rgba(20, 20, 30, 0.95);
 }
 

@@ -14,31 +14,13 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: false,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'hebbkx1anhila5yf.public.blob.vercel-storage.com',
-      },
-    ],
-    formats: ['image/avif', 'image/webp'],
-  },
-  httpAgentOptions: {
-    keepAlive: true,
+    unoptimized: true,
   },
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
-    serverComponentsExternalPackages: [],
-    optimizeCss: true,
-    serverActions: true,
   },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  generateEtags: true,
-  poweredByHeader: false,
 }
 
 mergeConfig(nextConfig, userConfig)

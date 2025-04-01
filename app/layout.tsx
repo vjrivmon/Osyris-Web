@@ -1,16 +1,18 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Mona_Sans as FontSans } from "next/font/google"
 import "./globals.css"
+import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { AuthProviderWrapper } from "@/components/auth/auth-provider-wrapper"
 
-const inter = Inter({ subsets: ["latin"] })
+const fontSans = FontSans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+})
 
 export const metadata: Metadata = {
-  title: "GS Osyris - Plataforma Web",
-  description: "Plataforma web para la gestión del Grupo Scout Osyris",
+  title: "Grupo Scout Osyris",
+  description: "Plataforma integral para la gestión y comunicación del Grupo Scout Osyris",
     generator: 'v0.dev'
 }
 
@@ -21,10 +23,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <AuthProviderWrapper>{children}</AuthProviderWrapper>
-          <Toaster />
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased transition-colors duration-300",
+          fontSans.variable,
+        )}
+      >
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange={false}>
+          {children}
         </ThemeProvider>
       </body>
     </html>

@@ -1,13 +1,12 @@
 {
-  "name": "gs-osyris-web",
+  "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "analyze": "ANALYZE=true next build"
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -31,7 +30,7 @@
     "@radix-ui/react-select": "^2.1.4",
     "@radix-ui/react-separator": "^1.1.1",
     "@radix-ui/react-slider": "^1.2.2",
-    "@radix-ui/react-slot": "^1.1.1",
+    "@radix-ui/react-slot": "latest",
     "@radix-ui/react-switch": "^1.1.2",
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.4",
@@ -42,12 +41,12 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
-    "date-fns": "^2.30.0",
+    "date-fns": "^3.0.0",
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
-    "next": "15.1.0",
-    "next-themes": "^0.2.1",
+    "next": "15.2.4",
+    "next-themes": "latest",
     "react": "^19",
     "react-day-picker": "8.10.1",
     "react-dom": "^19",
@@ -58,15 +57,12 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
-    "zod": "^3.24.1",
-    "react-big-calendar": "^1.9.4"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^15.1.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/react-big-calendar": "^1.8.9",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"

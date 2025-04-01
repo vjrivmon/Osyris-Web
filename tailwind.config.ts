@@ -9,7 +9,6 @@ const config = {
     "./src/**/*.{ts,tsx}",
     "*.{js,ts,jsx,tsx,mdx}",
   ],
-  prefix: "",
   theme: {
     container: {
       center: true,
@@ -33,14 +32,6 @@ const config = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-          secondary: "hsl(var(--accent-secondary))",
-          "secondary-foreground": "hsl(var(--accent-secondary-foreground))",
-          tertiary: "hsl(var(--accent-tertiary))",
-          "tertiary-foreground": "hsl(var(--accent-tertiary-foreground))",
-        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
@@ -48,6 +39,10 @@ const config = {
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -57,14 +52,6 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Colores específicos del GS Osyris (versión profesional)
-        osyris: {
-          red: "#9e2a2b", // Rojo profesional
-          navy: "#1a2c4e", // Azul marino profesional
-          gold: "#e9b949", // Dorado profesional
-          sand: "#e9d8a6", // Arena claro
-          brown: "#582f0e", // Marrón profesional
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -73,12 +60,12 @@ const config = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
+          from: { height: 0 },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          to: { height: 0 },
         },
       },
       animation: {
