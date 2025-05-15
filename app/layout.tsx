@@ -13,7 +13,7 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: "Grupo Scout Osyris",
   description: "Plataforma integral para la gestión y comunicación del Grupo Scout Osyris",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased transition-colors duration-300",
+          "min-h-screen bg-background font-sans antialiased transition-colors duration-300 no-backdrop-filter",
           fontSans.variable,
         )}
       >

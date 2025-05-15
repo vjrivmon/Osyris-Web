@@ -25,14 +25,14 @@ export default function Home() {
         {/* Hero Section - Improved with better visuals and call to action */}
         <section className="relative bg-hero-pattern bg-cover bg-center py-32 md:py-48">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70"></div>
-          <div className="container relative z-10 mx-auto px-4 text-center text-white">
-            <div className="mb-6 inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium backdrop-blur">
+          <div className="container relative z-10 mx-auto px-4 text-center">
+            <div className="mb-6 inline-block rounded-full bg-white px-4 py-1.5 text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
               Educando en valores desde 1981
             </div>
-            <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+            <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl text-white">
               Grupo Scout <span className="text-secondary">Osyris</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-3xl text-xl leading-relaxed text-white/90">
+            <p className="mx-auto mt-6 max-w-3xl text-xl leading-relaxed text-white">
               Formando jóvenes a través del método scout, promoviendo valores, aventura y servicio a la comunidad desde
               1981.
             </p>

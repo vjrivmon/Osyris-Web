@@ -360,38 +360,34 @@ export default function CalendarioPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center">
-          <MainNav />
-        </div>
-      </header>
+      <MainNav />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-primary py-16">
+        <section className="relative bg-primary py-12 sm:py-16">
           <div className="container mx-auto px-4 text-center text-primary-foreground">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-5xl mb-3 sm:mb-6">
               Calendario Ronda Solar 2024-2025
             </h1>
-            <p className="mt-4 text-xl max-w-3xl mx-auto">
+            <p className="mt-2 sm:mt-4 text-base sm:text-xl max-w-3xl mx-auto">
               Consulta todas las actividades programadas para esta ronda
             </p>
           </div>
         </section>
 
         {/* Calendario principal */}
-        <section className="py-6 md:py-10">
-          <div className="container px-4">
+        <section className="py-4 md:py-10">
+          <div className="container px-3 sm:px-4">
             <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
               {/* Cabecera del calendario */}
-              <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-b bg-muted/30">
-                <div className="flex items-center space-x-2 mb-3 sm:mb-0">
-                  <h1 className="text-2xl font-bold">{format(currentDate, 'MMMM yyyy', { locale: es })}</h1>
-                  <Button variant="outline" size="sm" onClick={goToToday}>
+              <div className="flex flex-col sm:flex-row justify-between items-center p-3 sm:p-4 border-b bg-background">
+                <div className="flex items-center space-x-2 mb-3 sm:mb-0 w-full sm:w-auto justify-center sm:justify-start">
+                  <h1 className="text-xl sm:text-2xl font-bold">{format(currentDate, 'MMMM yyyy', { locale: es })}</h1>
+                  <Button variant="outline" size="sm" onClick={goToToday} className="ml-2">
                     Hoy
                   </Button>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 w-full sm:w-auto justify-center sm:justify-start">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
@@ -447,16 +443,16 @@ export default function CalendarioPage() {
               </div>
 
               {/* Cabecera de días de la semana */}
-              <div className="grid grid-cols-7 text-center py-2 border-b">
+              <div className="grid grid-cols-7 text-center py-1 sm:py-2 border-b bg-background">
                 {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day, i) => (
-                  <div key={i} className="text-sm font-medium text-muted-foreground">
+                  <div key={i} className="text-xs sm:text-sm font-medium text-muted-foreground">
                     {day}
                   </div>
                 ))}
               </div>
 
               {/* Cuadrícula del calendario */}
-              <div className="grid grid-cols-7 auto-rows-[minmax(120px,1fr)]">
+              <div className="grid grid-cols-7 auto-rows-[minmax(80px,1fr)] sm:auto-rows-[minmax(120px,1fr)]">
                 {/* Espacios vacíos para alinear con el día de la semana */}
                 {Array.from({ length: startDay === 0 ? 6 : startDay - 1 }).map((_, i) => (
                   <div key={`empty-${i}`} className="border-r border-b bg-muted/20"></div>
@@ -478,7 +474,7 @@ export default function CalendarioPage() {
                       <div className="flex justify-between items-start">
                         <span 
                           className={cn(
-                            "w-6 h-6 flex items-center justify-center rounded-full text-sm mb-1",
+                            "w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs sm:text-sm mb-1",
                             isToday(day) ? "bg-primary text-primary-foreground font-bold" : ""
                           )}
                         >
@@ -489,7 +485,7 @@ export default function CalendarioPage() {
                       {/* Lista de eventos del día */}
                       <div className="space-y-1 overflow-hidden max-h-[80%]">
                         {events.length > 0 ? (
-                          events.slice(0, 3).map((event, eventIndex) => (
+                          events.slice(0, 2).map((event, eventIndex) => (
                             <div 
                               key={`${event.id}-${eventIndex}`}
                               onClick={() => showEventDetails(event)}
@@ -512,15 +508,15 @@ export default function CalendarioPage() {
                         ) : null}
                         
                         {/* Indicador de más eventos */}
-                        {events.length > 3 && (
+                        {events.length > 2 && (
                           <div 
                             className="text-xs text-center text-muted-foreground cursor-pointer hover:underline"
                             onClick={() => {
                               // Mostrar el primer evento oculto
-                              if (events[3]) showEventDetails(events[3])
+                              if (events[2]) showEventDetails(events[2])
                             }}
                           >
-                            +{events.length - 3} más
+                            +{events.length - 2} más
                           </div>
                         )}
                       </div>
@@ -535,23 +531,23 @@ export default function CalendarioPage() {
         {/* Sección de próximos eventos */}
         <section className="py-6 bg-muted">
           <div className="container px-4">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-1">Próximos Eventos</h2>
-              <p className="text-muted-foreground">Los eventos más cercanos en el calendario</p>
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold mb-1">Próximos Eventos</h2>
+              <p className="text-sm sm:text-base text-muted-foreground">Los eventos más cercanos en el calendario</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {upcomingEvents.length > 0 ? (
                 upcomingEvents.map((event, i) => (
                   <div 
                     key={`upcoming-${i}`} 
-                    className="bg-card rounded-lg border p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    className="bg-card rounded-lg border p-3 sm:p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => showEventDetails(event)}
                   >
                     <div className="flex gap-3">
                       {/* Fecha */}
-                      <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-md flex flex-col items-center justify-center">
-                        <span className="text-lg font-bold">
+                      <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-md flex flex-col items-center justify-center">
+                        <span className="text-base sm:text-lg font-bold">
                           {event.dateObj ? format(event.dateObj, "d") : ""}
                         </span>
                         <span className="text-xs text-muted-foreground">
@@ -561,16 +557,16 @@ export default function CalendarioPage() {
                       
                       {/* Contenido */}
                       <div className="flex-1">
-                        <h3 className="font-medium line-clamp-1">{event.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-1 mb-1">{event.description}</p>
+                        <h3 className="font-medium line-clamp-1 text-sm sm:text-base">{event.title}</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mb-1">{event.description}</p>
                         <div className="flex flex-wrap gap-1">
                           {event.sections.slice(0, 2).map((section, j) => (
-                            <Badge key={j} variant="outline" className={getSectionBadgeClass(section)}>
+                            <Badge key={j} variant="outline" className={`${getSectionBadgeClass(section)} text-xs`}>
                               {section}
                             </Badge>
                           ))}
                           {event.sections.length > 2 && (
-                            <Badge variant="outline">+{event.sections.length - 2}</Badge>
+                            <Badge variant="outline" className="text-xs">+{event.sections.length - 2}</Badge>
                           )}
                         </div>
                       </div>

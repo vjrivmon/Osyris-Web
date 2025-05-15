@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
 import { DashboardBreadcrumb } from "@/components/dashboard-breadcrumb"
 
@@ -136,6 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {isMobile ? (
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="w-[85%] max-w-[300px] p-0">
+            <SheetTitle className="sr-only">Panel de control</SheetTitle>
             <div className="flex flex-col h-full">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-2">

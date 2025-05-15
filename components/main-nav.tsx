@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { useIsMobile } from "@/components/ui/sidebar"
@@ -48,7 +48,8 @@ export function MainNav() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[85%] sm:w-[385px]">
+              <SheetContent side="right" className="w-[85%] sm:w-[385px] bg-background">
+                <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
                 <div className="flex items-center mb-6">
                   <img
                     src="/images/logo-osyris.png"
@@ -205,7 +206,7 @@ export function MainNav() {
                     Secciones
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-background">
                       <li className="row-span-5">
                         <NavigationMenuLink asChild>
                           <a
@@ -300,7 +301,7 @@ export function MainNav() {
                     Sobre Nosotros
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] md:grid-cols-2">
+                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] md:grid-cols-2 bg-background">
                       <ListItem
                         href="/sobre-nosotros"
                         title="Quiénes Somos"
