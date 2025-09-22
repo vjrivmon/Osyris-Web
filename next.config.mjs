@@ -21,6 +21,8 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // Opcional: cambiar el directorio de salida
+  distDir: 'build',
 }
 
 mergeConfig(nextConfig, userConfig)
