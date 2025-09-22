@@ -25,8 +25,8 @@ const nextConfig = {
   output: 'export',
   trailingSlash: true,
   distDir: 'out',
-  basePath: process.env.NODE_ENV === 'production' ? '/Osyris-Web' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/Osyris-Web/' : '',
+  basePath: '/Osyris-Web',
+  assetPrefix: '/Osyris-Web/',
 }
 
 mergeConfig(nextConfig, userConfig)
