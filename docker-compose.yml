@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Servicio de frontend (Next.js)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: osyris-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:5000
+    depends_on:
+      - backend
+    networks:
+      - osyris-network
+
+  # Servicio de backend (Express.js)
+  backend:
+    build:
+      context: ./api-osyris
+      dockerfile: Dockerfile
+    container_name: osyris-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=osyris_user
+      - DB_PASSWORD=osyris_password
+      - DB_NAME=osyris_db
+      - JWT_SECRET=osyrisScoutGroup2024SecretKey
+      - JWT_EXPIRES_IN=24h
+    depends_on:
+      - db
+    networks:
+      - osyris-network
+
+  # Servicio de base de datos (MariaDB)
+  db:
+    image: mariadb:10.6
+    container_name: osyris-db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=osyris_db
+      - MYSQL_USER=osyris_user
+      - MYSQL_PASSWORD=osyris_password
+    volumes:
+      - osyris-db-data:/var/lib/mysql
+    networks:
+      - osyris-network
+
+networks:
+  osyris-network:
+    driver: bridge
+
+volumes:
+  osyris-db-data:
+    driver: local 

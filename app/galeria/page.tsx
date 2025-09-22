@@ -85,27 +85,23 @@ export default function GaleriaPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center">
-          <MainNav />
-        </div>
-      </header>
+      <MainNav />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-primary py-16">
+        <section className="relative bg-primary py-12 sm:py-16">
           <div className="container mx-auto px-4 text-center text-primary-foreground">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-5xl mb-3 sm:mb-6">
               Galería de Fotos
             </h1>
-            <p className="mt-4 text-xl max-w-3xl mx-auto">
+            <p className="mt-2 sm:mt-4 text-base sm:text-xl max-w-3xl mx-auto">
               Explora los mejores momentos del Grupo Scout Osyris
             </p>
           </div>
         </section>
 
         {/* Search Section */}
-        <section className="py-8 border-b">
+        <section className="py-4 sm:py-8 border-b">
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto">
               <div className="relative flex-1">
@@ -117,14 +113,14 @@ export default function GaleriaPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 w-full sm:w-auto">
                 <Tabs defaultValue="todos" className="w-full">
                   <TabsList className="grid grid-cols-3 sm:grid-cols-5 h-9">
-                    <TabsTrigger value="todos" className="text-xs">Todos</TabsTrigger>
-                    <TabsTrigger value="campamentos" className="text-xs">Campamentos</TabsTrigger>
-                    <TabsTrigger value="actividades" className="text-xs">Actividades</TabsTrigger>
-                    <TabsTrigger value="secciones" className="text-xs">Secciones</TabsTrigger>
-                    <TabsTrigger value="eventos" className="text-xs">Eventos</TabsTrigger>
+                    <TabsTrigger value="todos" className="text-xs px-1 sm:px-3">Todos</TabsTrigger>
+                    <TabsTrigger value="campamentos" className="text-xs px-1 sm:px-3">Campamentos</TabsTrigger>
+                    <TabsTrigger value="actividades" className="text-xs px-1 sm:px-3">Actividades</TabsTrigger>
+                    <TabsTrigger value="secciones" className="text-xs px-1 sm:px-3">Secciones</TabsTrigger>
+                    <TabsTrigger value="eventos" className="text-xs px-1 sm:px-3">Eventos</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -133,18 +129,18 @@ export default function GaleriaPage() {
         </section>
 
         {/* Gallery Section */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
+        <section className="py-6 sm:py-12">
+          <div className="container mx-auto px-3 sm:px-4">
             {filteredAlbums.length > 0 ? (
-              <div className="space-y-12">
+              <div className="space-y-8 sm:space-y-12">
                 {filteredAlbums.map((album, albumIndex) => (
-                  <div key={album.id} className="space-y-4">
+                  <div key={album.id} className="space-y-3 sm:space-y-4">
                     <div className="flex justify-between items-center">
-                      <h2 className="text-2xl font-bold">{album.title}</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold">{album.title}</h2>
                       <Badge variant="outline">{album.photos.length} fotos</Badge>
                     </div>
-                    <p className="text-muted-foreground">{album.description}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <p className="text-sm sm:text-base text-muted-foreground">{album.description}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
                       {album.photos.map((photo) => (
                         <Card key={photo.id} className="overflow-hidden group cursor-pointer hover:shadow-md transition-shadow border">
                           <div 
@@ -160,17 +156,17 @@ export default function GaleriaPage() {
                               imgClassName="transition-transform duration-300 group-hover:scale-105"
                               loadingIndicator={
                                 <div className="flex items-center justify-center w-full h-full bg-muted">
-                                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                  <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-muted-foreground" />
                                 </div>
                               }
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="text-white font-medium">Ver foto</span>
+                              <span className="text-white text-sm sm:text-base font-medium">Ver foto</span>
                             </div>
                           </div>
-                          <CardContent className="p-3">
-                            <h3 className="font-medium truncate">{photo.title}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{photo.description}</p>
+                          <CardContent className="p-2 sm:p-3">
+                            <h3 className="font-medium text-sm sm:text-base truncate">{photo.title}</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground truncate">{photo.description}</p>
                           </CardContent>
                         </Card>
                       ))}
@@ -180,7 +176,7 @@ export default function GaleriaPage() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-xl text-muted-foreground">No se encontraron resultados para "{searchTerm}"</p>
+                <p className="text-lg sm:text-xl text-muted-foreground">No se encontraron resultados para "{searchTerm}"</p>
                 <Button variant="outline" className="mt-4" onClick={() => setSearchTerm("")}>
                   Mostrar todas las fotos
                 </Button>
@@ -191,28 +187,28 @@ export default function GaleriaPage() {
       </main>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/90 text-white border-none">
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/90 text-white border-none max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-auto">
           <div className="relative h-[80vh] flex flex-col">
             {/* Controles superiores */}
-            <div className="flex justify-between items-center p-4 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent">
-              <DialogTitle className="text-lg font-medium text-white">
+            <div className="flex justify-between items-center p-2 sm:p-4 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent">
+              <DialogTitle className="text-base sm:text-lg font-medium text-white">
                 {selectedImage?.title}
               </DialogTitle>
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                  <Download className="h-5 w-5" />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8 sm:h-10 sm:w-10">
+                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                  <Share className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8 sm:h-10 sm:w-10">
+                  <Share className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => setIsDialogOpen(false)}>
-                  <X className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8 sm:h-10 sm:w-10" onClick={() => setIsDialogOpen(false)}>
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </div>
             </div>
 
             {/* Imagen principal */}
-            <div className="flex-1 flex items-center justify-center p-8 relative overflow-hidden">
+            <div className="flex-1 flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
               {selectedImage && (
                 <LazyImage
                   src={selectedImage.src}
@@ -222,7 +218,7 @@ export default function GaleriaPage() {
                   onLoad={() => setLightboxLoading(false)}
                   loadingIndicator={
                     <div className="flex items-center justify-center">
-                      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                      <Loader2 className="h-8 w-8 sm:h-12 sm:w-12 animate-spin text-primary" />
                     </div>
                   }
                 />
@@ -230,41 +226,41 @@ export default function GaleriaPage() {
             </div>
 
             {/* Controles de navegación */}
-            <div className="absolute left-0 top-1/2 bottom-1/2 flex items-center justify-start p-4">
+            <div className="absolute left-0 top-1/2 bottom-1/2 flex items-center justify-start p-1 sm:p-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full bg-black/50 text-white hover:bg-black/70"
+                className="rounded-full bg-black/50 text-white hover:bg-black/70 h-8 w-8 sm:h-10 sm:w-10"
                 onClick={prevImage}
                 disabled={lightboxLoading}
               >
-                <ChevronLeft className="h-8 w-8" />
+                <ChevronLeft className="h-6 w-6 sm:h-8 sm:w-8" />
               </Button>
             </div>
-            <div className="absolute right-0 top-1/2 bottom-1/2 flex items-center justify-end p-4">
+            <div className="absolute right-0 top-1/2 bottom-1/2 flex items-center justify-end p-1 sm:p-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full bg-black/50 text-white hover:bg-black/70"
+                className="rounded-full bg-black/50 text-white hover:bg-black/70 h-8 w-8 sm:h-10 sm:w-10"
                 onClick={nextImage}
                 disabled={lightboxLoading}
               >
-                <ChevronRight className="h-8 w-8" />
+                <ChevronRight className="h-6 w-6 sm:h-8 sm:w-8" />
               </Button>
             </div>
 
             {/* Descripción e información */}
-            <div className="p-4 absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent">
-              <DialogDescription className="text-gray-300">
+            <div className="p-2 sm:p-4 absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent">
+              <DialogDescription className="text-xs sm:text-sm text-gray-300">
                 {selectedImage?.description}
               </DialogDescription>
-              <div className="flex mt-2 gap-2 flex-wrap">
+              <div className="flex mt-1 sm:mt-2 gap-1 sm:gap-2 flex-wrap">
                 {selectedImage?.tags.map((tag, index) => (
-                  <Badge key={index} variant="outline" className="bg-white/10 text-white hover:bg-white/20">
+                  <Badge key={index} variant="outline" className="bg-white/10 text-white hover:bg-white/20 text-xs">
                     {tag}
                   </Badge>
                 ))}
-                <Badge variant="outline" className="bg-primary/20 text-primary-foreground">
+                <Badge variant="outline" className="bg-primary/20 text-primary-foreground text-xs">
                   {selectedImage?.date}
                 </Badge>
               </div>
@@ -272,7 +268,7 @@ export default function GaleriaPage() {
           </div>
         </DialogContent>
       </Dialog>
-
+      
       <SiteFooter />
     </div>
   )

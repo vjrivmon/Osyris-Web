@@ -1,0 +1,253 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "dynamicRoutes": [],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/calendario",
+      "regex": "^/calendario(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/calendario(?:/)?$"
+    },
+    {
+      "page": "/contacto",
+      "regex": "^/contacto(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contacto(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/dashboard/ajustes",
+      "regex": "^/dashboard/ajustes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/ajustes(?:/)?$"
+    },
+    {
+      "page": "/dashboard/calendar",
+      "regex": "^/dashboard/calendar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/calendar(?:/)?$"
+    },
+    {
+      "page": "/dashboard/comite",
+      "regex": "^/dashboard/comite(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/comite(?:/)?$"
+    },
+    {
+      "page": "/dashboard/communications",
+      "regex": "^/dashboard/communications(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/communications(?:/)?$"
+    },
+    {
+      "page": "/dashboard/documents",
+      "regex": "^/dashboard/documents(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/documents(?:/)?$"
+    },
+    {
+      "page": "/dashboard/educandos",
+      "regex": "^/dashboard/educandos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/educandos(?:/)?$"
+    },
+    {
+      "page": "/dashboard/familias",
+      "regex": "^/dashboard/familias(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/familias(?:/)?$"
+    },
+    {
+      "page": "/dashboard/inventory",
+      "regex": "^/dashboard/inventory(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/inventory(?:/)?$"
+    },
+    {
+      "page": "/dashboard/kraal",
+      "regex": "^/dashboard/kraal(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/kraal(?:/)?$"
+    },
+    {
+      "page": "/dashboard/kraal/actividades-seccion",
+      "regex": "^/dashboard/kraal/actividades\\-seccion(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/kraal/actividades\\-seccion(?:/)?$"
+    },
+    {
+      "page": "/dashboard/kraal/comunicaciones",
+      "regex": "^/dashboard/kraal/comunicaciones(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/kraal/comunicaciones(?:/)?$"
+    },
+    {
+      "page": "/dashboard/kraal/comunicaciones-seccion",
+      "regex": "^/dashboard/kraal/comunicaciones\\-seccion(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/kraal/comunicaciones\\-seccion(?:/)?$"
+    },
+    {
+      "page": "/dashboard/kraal/documentos",
+      "regex": "^/dashboard/kraal/documentos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/kraal/documentos(?:/)?$"
+    },
+    {
+      "page": "/dashboard/kraal/mis-educandos",
+      "regex": "^/dashboard/kraal/mis\\-educandos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/kraal/mis\\-educandos(?:/)?$"
+    },
+    {
+      "page": "/dashboard/kraal/tienda",
+      "regex": "^/dashboard/kraal/tienda(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/kraal/tienda(?:/)?$"
+    },
+    {
+      "page": "/dashboard/members",
+      "regex": "^/dashboard/members(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/members(?:/)?$"
+    },
+    {
+      "page": "/dashboard/store",
+      "regex": "^/dashboard/store(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/store(?:/)?$"
+    },
+    {
+      "page": "/galeria",
+      "regex": "^/galeria(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/galeria(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/preguntas-frecuentes",
+      "regex": "^/preguntas\\-frecuentes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/preguntas\\-frecuentes(?:/)?$"
+    },
+    {
+      "page": "/privacidad",
+      "regex": "^/privacidad(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacidad(?:/)?$"
+    },
+    {
+      "page": "/recuperar-contrasena",
+      "regex": "^/recuperar\\-contrasena(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/recuperar\\-contrasena(?:/)?$"
+    },
+    {
+      "page": "/secciones",
+      "regex": "^/secciones(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/secciones(?:/)?$"
+    },
+    {
+      "page": "/secciones/castores",
+      "regex": "^/secciones/castores(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/secciones/castores(?:/)?$"
+    },
+    {
+      "page": "/secciones/lobatos",
+      "regex": "^/secciones/lobatos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/secciones/lobatos(?:/)?$"
+    },
+    {
+      "page": "/secciones/pioneros",
+      "regex": "^/secciones/pioneros(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/secciones/pioneros(?:/)?$"
+    },
+    {
+      "page": "/secciones/rutas",
+      "regex": "^/secciones/rutas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/secciones/rutas(?:/)?$"
+    },
+    {
+      "page": "/secciones/tropa",
+      "regex": "^/secciones/tropa(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/secciones/tropa(?:/)?$"
+    },
+    {
+      "page": "/sobre-nosotros",
+      "regex": "^/sobre\\-nosotros(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sobre\\-nosotros(?:/)?$"
+    },
+    {
+      "page": "/sobre-nosotros/kraal",
+      "regex": "^/sobre\\-nosotros/kraal(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sobre\\-nosotros/kraal(?:/)?$"
+    },
+    {
+      "page": "/terminos",
+      "regex": "^/terminos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terminos(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "RSC",
+    "varyHeader": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch",
+    "prefetchHeader": "Next-Router-Prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "Next-Router-Segment-Prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  },
+  "rewrites": []
+}

@@ -85,6 +85,12 @@
   }
 }
 
+/* Clase para evitar transparencias */
+.no-backdrop-filter {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 /* Theme transition effects */
 .theme-transition {
   @apply transition-colors duration-300;
@@ -102,6 +108,48 @@ main,
 section,
 nav {
   @apply transition-colors duration-300;
+}
+
+/* Asegura que los componentes no sean transparentes */
+.bg-background {
+  background-color: hsl(var(--background));
+  backdrop-filter: none !important;
+}
+
+.bg-card {
+  background-color: hsl(var(--card));
+  backdrop-filter: none !important;
+}
+
+/* Especificar para que sheet no sea transparente */
+.bg-popover {
+  background-color: hsl(var(--popover));
+  backdrop-filter: none !important;
+}
+
+/* Asegurar que los encabezados y barras de navegación nunca sean transparentes */
+header, 
+header.sticky, 
+nav, 
+.navbar, 
+.navigation-menu,
+.navigation-menu-viewport, 
+.navigation-menu-content,
+.dialog-content,
+.sheet-content,
+.popover-content,
+*[class*="backdrop-blur"],
+*[class*="bg-background/"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Eliminar cualquier clase con transparencia */
+*[class*="bg-background/"],
+*[class*="bg-card/"],
+*[class*="bg-popover/"] {
+  background-color: hsl(var(--background)) !important;
 }
 
 /* Section-specific styles */
@@ -146,9 +194,14 @@ nav {
 }
 
 .bg-hero-pattern {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url("/images/hero-background.jpg");
+  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url("/images/hero-background.jpg");
   background-size: cover;
   background-position: center;
+  position: relative;
+}
+
+.dark .bg-hero-pattern {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url("/images/hero-background.jpg");
 }
 
 .bg-section-pattern {
