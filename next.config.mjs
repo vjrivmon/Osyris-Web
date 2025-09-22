@@ -21,8 +21,12 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
-  // Opcional: cambiar el directorio de salida
-  distDir: 'build',
+  // Configuración para GitHub Pages
+  output: 'export',
+  trailingSlash: true,
+  distDir: 'out',
+  basePath: process.env.NODE_ENV === 'production' ? '/Osyris-Web' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/Osyris-Web/' : '',
 }
 
 mergeConfig(nextConfig, userConfig)
