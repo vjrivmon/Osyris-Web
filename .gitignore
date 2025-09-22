@@ -8,6 +8,9 @@
 /out/
 /build/
 
+# Allow .nojekyll for GitHub Pages
+!.nojekyll
+
 # production
 
 # debug
