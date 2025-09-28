@@ -4,9 +4,8 @@ const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 
-// Importar base de datos
-const db = require('./config/db.config');
-const { createTables, createTestAdmin } = require('./utils/init-db');
+// 🚀 MIGRACIÓN A SUPABASE: Cambiar configuración de base de datos
+const db = require('./config/supabase.config');
 
 // Importar rutas
 const usuariosRoutes = require('./routes/usuarios.routes');
@@ -100,26 +99,33 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Iniciar servidor
-app.listen(PORT, async () => {
-  console.log(`Servidor en ejecución en http://localhost:${PORT}`);
-  console.log(`Documentación disponible en http://localhost:${PORT}/api-docs`);
-  
-  // Inicializar la base de datos
+// 🚀 INICIALIZACIÓN PARA VERCEL Y DESARROLLO
+const startServer = async () => {
   try {
+    // Inicializar Supabase
     await db.initializeDatabase();
-    console.log('Base de datos inicializada correctamente');
-    
-    // Crear tablas
-    await createTables();
-    console.log('Estructura de la base de datos configurada correctamente');
-    
-    // Crear usuario administrador de prueba
-    await createTestAdmin();
-    
+    console.log('✅ Supabase conectado correctamente');
+
+    // En desarrollo, levantar servidor
+    if (process.env.NODE_ENV !== 'production') {
+      app.listen(PORT, () => {
+        console.log(`🚀 Servidor en ejecución en http://localhost:${PORT}`);
+        console.log(`📚 Documentación disponible en http://localhost:${PORT}/api-docs`);
+      });
+    }
+
   } catch (error) {
-    console.error('Error al configurar la base de datos:', error);
+    console.error('❌ Error al configurar la base de datos:', error);
   }
-});
+};
+
+// Para Vercel, exportar la app sin listen
+if (process.env.VERCEL) {
+  // En Vercel, solo inicializar sin listen
+  startServer();
+} else {
+  // En desarrollo local, inicializar y hacer listen
+  startServer();
+}
 
 module.exports = app; 

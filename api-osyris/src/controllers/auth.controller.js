@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
-const Usuario = require('../models/usuario.model');
+// 🚀 MIGRACIÓN A SUPABASE: Cambiar modelo
+const Usuario = require('../models/usuario.model.supabase');
 
 // Esquema de validación para el login
 const loginSchema = Joi.object({
