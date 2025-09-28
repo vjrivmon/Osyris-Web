@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AlertCircle, ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react"
@@ -37,9 +36,6 @@ type LoginValues = z.infer<typeof loginSchema>
 // Mock de usuarios para simular la base de datos
 const MOCK_USERS = [
   { email: "kraal@osyris.es", password: "kraal123", role: "kraal" },
-  { email: "comite@osyris.es", password: "comite123", role: "comite" },
-  { email: "familia@osyris.es", password: "familia123", role: "familias" },
-  { email: "educando@osyris.es", password: "educando123", role: "educandos" },
   { email: "monitor@osyris.es", password: "monitor123", role: "kraal" },
 ]
 
@@ -65,11 +61,9 @@ export default function LoginPage() {
       try {
         const userData = JSON.parse(savedUser)
         if (userData.role) {
-          // Redireccionar según el rol
+          // Redireccionar según el rol (solo kraal disponible)
           if (userData.role === "kraal") {
             router.push("/aula-virtual")
-          } else {
-            router.push(`/dashboard/${userData.role}`)
           }
         }
       } catch (err) {
@@ -100,13 +94,10 @@ export default function LoginPage() {
           lastLogin: new Date().toISOString(),
         }))
 
-        // Redireccionar según el rol
+        // Redireccionar según el rol (solo kraal disponible)
         if (user.role === "kraal") {
           // Los usuarios kraal van directamente al aula virtual
           router.push("/aula-virtual")
-        } else {
-          // Los demás van a sus dashboards correspondientes
-          router.push(`/dashboard/${user.role}`)
         }
       } else {
         setError("Credenciales incorrectas. Por favor, inténtalo de nuevo.")
@@ -141,190 +132,101 @@ export default function LoginPage() {
           />
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-            <TabsTrigger value="info">Información</TabsTrigger>
-          </TabsList>
+        <Card>
+          <CardHeader>
+            <CardTitle>Acceso a la plataforma</CardTitle>
+            <CardDescription>
+              Introduce tus credenciales para acceder a la plataforma del Grupo Scout Osyris
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <TabsContent value="login">
-            <Card>
-              <CardHeader>
-                <CardTitle>Acceso a la plataforma</CardTitle>
-                <CardDescription>
-                  Introduce tus credenciales para acceder a la plataforma del Grupo Scout Osyris
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {error && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Correo electrónico</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="tu.correo@ejemplo.com"
+                          type="email"
+                          autoComplete="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Correo electrónico</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="tu.correo@ejemplo.com" 
-                              type="email"
-                              autoComplete="email"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contraseña</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            autoComplete="current-password"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <span className="sr-only">
+                              {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                            </span>
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contraseña</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Input
-                                type={showPassword ? "text" : "password"}
-                                placeholder="••••••••"
-                                autoComplete="current-password"
-                                {...field}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-0 top-0 h-full px-3"
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <Eye className="h-4 w-4 text-muted-foreground" />
-                                )}
-                                <span className="sr-only">
-                                  {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                                </span>
-                              </Button>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button type="submit" className="w-full" disabled={isLoggingIn}>
-                      {isLoggingIn ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Iniciando sesión...
-                        </>
-                      ) : (
-                        "Iniciar sesión"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-              <CardFooter className="flex flex-col space-y-2">
-                <div className="text-sm text-muted-foreground text-center">
-                  ¿Has olvidado tu contraseña?{" "}
-                  <Link href="/recuperar-contrasena" className="text-primary hover:underline">
-                    Recuperar contraseña
-                  </Link>
-                </div>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="info">
-            <Card>
-              <CardHeader>
-                <CardTitle>Credenciales de prueba</CardTitle>
-                <CardDescription>
-                  Utiliza estas credenciales para probar los diferentes roles de la plataforma
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2 border rounded-lg p-3">
-                  <div className="flex items-center">
-                    <span className="w-3 h-3 rounded-full bg-primary mr-2"></span>
-                    <h3 className="font-medium">Kraal / Monitor</h3>
-                  </div>
-                  <div className="pl-5 text-sm">
-                    <p>
-                      <strong>Email:</strong> kraal@osyris.es o monitor@osyris.es
-                    </p>
-                    <p>
-                      <strong>Contraseña:</strong> kraal123 o monitor123
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Acceso a funciones de administración y gestión de educandos
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 border rounded-lg p-3">
-                  <div className="flex items-center">
-                    <span className="w-3 h-3 rounded-full bg-primary mr-2"></span>
-                    <h3 className="font-medium">Comité</h3>
-                  </div>
-                  <div className="pl-5 text-sm">
-                    <p>
-                      <strong>Email:</strong> comite@osyris.es
-                    </p>
-                    <p>
-                      <strong>Contraseña:</strong> comite123
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 border rounded-lg p-3">
-                  <div className="flex items-center">
-                    <span className="w-3 h-3 rounded-full bg-primary mr-2"></span>
-                    <h3 className="font-medium">Familias</h3>
-                  </div>
-                  <div className="pl-5 text-sm">
-                    <p>
-                      <strong>Email:</strong> familia@osyris.es
-                    </p>
-                    <p>
-                      <strong>Contraseña:</strong> familia123
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 border rounded-lg p-3">
-                  <div className="flex items-center">
-                    <span className="w-3 h-3 rounded-full bg-primary mr-2"></span>
-                    <h3 className="font-medium">Educandos</h3>
-                  </div>
-                  <div className="pl-5 text-sm">
-                    <p>
-                      <strong>Email:</strong> educando@osyris.es
-                    </p>
-                    <p>
-                      <strong>Contraseña:</strong> educando123
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={() => (document.querySelector('[data-value="login"]') as HTMLElement)?.click()} className="w-full">
-                  Volver al inicio de sesión
+                <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Iniciando sesión...
+                    </>
+                  ) : (
+                    "Iniciar sesión"
+                  )}
                 </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-2">
+            <div className="text-sm text-muted-foreground text-center">
+              ¿Has olvidado tu contraseña?{" "}
+              <Link href="/recuperar-contrasena" className="text-primary hover:underline">
+                Recuperar contraseña
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.</p>

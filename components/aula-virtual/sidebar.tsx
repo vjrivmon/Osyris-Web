@@ -82,7 +82,9 @@ export function AulaVirtualSidebar({ collapsed, onToggle }: AulaVirtualSidebarPr
       {/* Navigation */}
       <nav className="flex-1 p-2" role="menubar">
         {navigationItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+          const isActive = item.href === "/aula-virtual"
+            ? pathname === "/aula-virtual"
+            : pathname === item.href || pathname.startsWith(item.href + "/")
           return (
             <Link
               key={item.id}

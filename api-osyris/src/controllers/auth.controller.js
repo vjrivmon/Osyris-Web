@@ -18,7 +18,7 @@ const registerSchema = Joi.object({
   telefono: Joi.string(),
   direccion: Joi.string(),
   foto_perfil: Joi.string(),
-  rol: Joi.string().valid('admin', 'coordinador', 'scouter', 'padre', 'educando').required()
+  rol: Joi.string().valid('scouter').required()
 });
 
 // Iniciar sesión

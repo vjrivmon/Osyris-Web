@@ -14,7 +14,7 @@ async function createTables() {
         apellidos VARCHAR(200) NOT NULL,
         email VARCHAR(200) UNIQUE NOT NULL,
         password VARCHAR(200) NOT NULL,
-        rol TEXT CHECK (rol IN ('admin', 'coordinador', 'scouter', 'padre', 'educando')) NOT NULL,
+        rol TEXT CHECK (rol IN ('scouter')) NOT NULL,
         telefono VARCHAR(20),
         fecha_nacimiento DATE,
         direccion TEXT,
@@ -120,7 +120,7 @@ async function createTestAdmin() {
         'Osyris', 
         'admin@osyris.com', 
         hashedPassword, 
-        'admin', 
+        'scouter', 
         '666777888',
         true
       ]);

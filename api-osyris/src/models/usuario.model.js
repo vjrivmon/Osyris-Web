@@ -46,7 +46,7 @@ const bcrypt = require('bcryptjs');
  *           description: URL de la foto de perfil del usuario
  *         rol:
  *           type: string
- *           enum: [admin, coordinador, scouter, padre, educando]
+ *           enum: [scouter]
  *           description: Rol del usuario
  *         fecha_registro:
  *           type: string
@@ -66,7 +66,7 @@ const bcrypt = require('bcryptjs');
  *         fecha_nacimiento: 1990-01-01
  *         telefono: 666123456
  *         direccion: Calle Principal 123
- *         rol: educando
+ *         rol: scouter
  *         activo: true
  */
 

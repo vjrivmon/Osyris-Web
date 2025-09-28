@@ -33,6 +33,17 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 import { DashboardBreadcrumb } from "@/components/dashboard-breadcrumb"
 
@@ -57,14 +68,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   useEffect(() => {
-    if (pathname.includes("/aula-virtual") || pathname.includes("/monitor")) {
+    if (pathname.includes("/aula-virtual") || pathname.includes("/monitor") || pathname.includes("/kraal")) {
       setUserRole("kraal")
-    } else if (pathname.includes("/comite")) {
-      setUserRole("comite")
-    } else if (pathname.includes("/familias")) {
-      setUserRole("familias")
-    } else if (pathname.includes("/educandos")) {
-      setUserRole("educandos")
     }
   }, [pathname])
 
@@ -78,30 +83,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           section: "Lobatos",
           avatar: "/placeholder.svg?height=40&width=40",
           unreadNotifications: 3,
-        }
-      case "comite":
-        return {
-          name: "Carlos Rodríguez",
-          role: "Presidente",
-          section: "Comité",
-          avatar: "/placeholder.svg?height=40&width=40",
-          unreadNotifications: 5,
-        }
-      case "familias":
-        return {
-          name: "Ana Martínez",
-          role: "Familia",
-          section: "Lobatos y Tropa",
-          avatar: "/placeholder.svg?height=40&width=40",
-          unreadNotifications: 2,
-        }
-      case "educandos":
-        return {
-          name: "Pablo Navarro",
-          role: "Educando",
-          section: "Pioneros",
-          avatar: "/placeholder.svg?height=40&width=40",
-          unreadNotifications: 1,
         }
       default:
         return {
@@ -122,6 +103,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Redirigir a la landing page
     router.push("/")
   }
+
+  // Logout confirmation state
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
 
   // Get section color based on user role and section
   const getSectionColor = () => {
@@ -178,7 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     active={pathname.includes("/comunicaciones")}
                   />
 
-                  {(userRole === "kraal" || userRole === "comite" || userRole === "monitor") && (
+                  {userRole === "kraal" && (
                     <>
                       <div className="pt-4 pb-2">
                         <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -224,30 +208,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     active={pathname.includes("/ajustes")}
                   />
 
-                  <div className="pt-4 pb-2">
-                    <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Accesos Directos
-                    </div>
-                  </div>
-                  <NavItem href="/dashboard/comite" icon={Users} label="Comité" active={pathname.includes("/comite")} />
-                  <NavItem
-                    href="/dashboard/familias"
-                    icon={Home}
-                    label="Familias"
-                    active={pathname.includes("/familias")}
-                  />
-                  <NavItem
-                    href="/dashboard/educandos"
-                    icon={Users}
-                    label="Educandos"
-                    active={pathname.includes("/educandos")}
-                  />
-                  <NavItem
-                    href="/dashboard/aula-virtual"
-                    icon={Users}
-                    label="Kraal/Monitor"
-                    active={pathname.includes("/aula-virtual")}
-                  />
                 </nav>
               </div>
               <div className="border-t p-4">
@@ -312,7 +272,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   active={pathname.includes("/comunicaciones")}
                 />
 
-                {(userRole === "kraal" || userRole === "comite" || userRole === "monitor") && (
+                {userRole === "kraal" && (
                   <>
                     <div className="pt-5 pb-2">
                       <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -358,30 +318,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   active={pathname.includes("/ajustes")}
                 />
 
-                <div className="pt-5 pb-2">
-                  <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Accesos Directos
-                  </div>
-                </div>
-                <NavItem href="/dashboard/comite" icon={Users} label="Comité" active={pathname.includes("/comite")} />
-                <NavItem
-                  href="/dashboard/familias"
-                  icon={Home}
-                  label="Familias"
-                  active={pathname.includes("/familias")}
-                />
-                <NavItem
-                  href="/dashboard/educandos"
-                  icon={Users}
-                  label="Educandos"
-                  active={pathname.includes("/educandos")}
-                />
-                <NavItem
-                  href="/dashboard/aula-virtual"
-                  icon={Users}
-                  label="Kraal/Monitor"
-                  active={pathname.includes("/aula-virtual")}
-                />
               </nav>
             </div>
             <div className="flex-shrink-0 flex border-t p-4">
@@ -423,15 +359,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Theme toggle */}
             <ThemeToggle />
 
-            {/* Logout button */}
+            {/* Logout button - Mobile (icon only) */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutDialog(true)}
+              className="md:hidden"
               aria-label="Cerrar sesión"
               title="Cerrar sesión"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-4 w-4" />
             </Button>
 
             {/* Notifications */}
@@ -480,11 +417,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Logout button for quick access */}
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
+            {/* Logout button - Desktop (with text) - ALWAYS VISIBLE FOR TESTING */}
+            <button
+              onClick={() => setShowLogoutDialog(true)}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors bg-red-100 border border-red-500"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
               <LogOut className="h-4 w-4" />
-              <span>Cerrar sesión</span>
-            </Button>
+              <span>LOGOUT - VISIBLE TEST</span>
+            </button>
+
+            {/* Logout Confirmation Dialog */}
+            <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Estás a punto de cerrar tu sesión en la plataforma del Grupo Scout Osyris.
+                    Tendrás que volver a iniciar sesión para acceder al sistema.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setShowLogoutDialog(false)}>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      setShowLogoutDialog(false)
+                      handleLogout()
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Cerrar sesión
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </header>
 

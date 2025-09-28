@@ -75,7 +75,7 @@ const checkRole = (roles) => {
       });
     }
     
-    const hasRole = roles.includes(req.usuario.tipo_usuario);
+    const hasRole = roles.includes(req.usuario.rol);
     
     if (!hasRole) {
       return res.status(403).json({

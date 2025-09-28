@@ -6,6 +6,16 @@ import { AulaVirtualSidebar } from "@/components/aula-virtual/sidebar"
 import { Button } from "@/components/ui/button"
 import { Menu, LogOut } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function AulaVirtualLayout({
   children,
@@ -14,6 +24,7 @@ export default function AulaVirtualLayout({
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const router = useRouter()
 
   const handleLogout = () => {
@@ -65,15 +76,54 @@ export default function AulaVirtualLayout({
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
+
+            {/* Logout button - Mobile (icon only) */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutDialog(true)}
+              className="md:hidden"
               aria-label="Cerrar sesión"
               title="Cerrar sesión"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-4 w-4" />
             </Button>
+
+            {/* Logout button - Desktop (with text) */}
+            <button
+              onClick={() => setShowLogoutDialog(true)}
+              className="hidden md:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Cerrar sesión</span>
+            </button>
+
+            {/* Logout Confirmation Dialog */}
+            <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Estás a punto de cerrar tu sesión en la plataforma del Grupo Scout Osyris.
+                    Tendrás que volver a iniciar sesión para acceder al sistema.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setShowLogoutDialog(false)}>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      setShowLogoutDialog(false)
+                      handleLogout()
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Cerrar sesión
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </header>
 

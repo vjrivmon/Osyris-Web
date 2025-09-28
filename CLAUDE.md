@@ -18,7 +18,7 @@
 - **Framework:** Next.js 15.5.4 con App Router
 - **Lenguaje:** TypeScript 5.9.2
 - **UI Framework:** Tailwind CSS + Shadcn/ui
-- **Puerto de desarrollo:** 3002
+- **Puerto de desarrollo:** 3000
 - **Estado:** React 19.1.1 con hooks personalizados
 
 #### Backend (Express.js)
@@ -37,13 +37,10 @@ Osyris-Web/
 │   │   ├── dashboard/                # Panel principal por roles
 │   │   │   ├── ajustes/             # Configuración usuario
 │   │   │   ├── calendar/            # Calendario actividades
-│   │   │   ├── comite/              # Panel administración
 │   │   │   ├── communications/       # Centro mensajería
 │   │   │   ├── documents/           # Gestión documentos
-│   │   │   ├── educandos/           # Listado miembros
-│   │   │   ├── familias/            # Portal familias
 │   │   │   ├── inventory/           # Control inventario
-│   │   │   ├── kraal/               # Panel monitores
+│   │   │   ├── kraal/               # Panel monitores (ÚNICO PERFIL ACTIVO)
 │   │   │   ├── members/             # Gestión miembros
 │   │   │   └── store/               # Tienda scout
 │   │   ├── secciones/               # Páginas secciones
@@ -484,8 +481,99 @@ npm run build
 - Docker para producción
 
 ### Puertos
-- **3002** - Frontend desarrollo
+- **3000** - Frontend desarrollo
 - **5000** - Backend API
 - **3306** - Base de datos (Docker)
 
-Este sistema está diseñado para ser una solución completa de gestión para grupos scout, con enfoque en facilidad de uso, escalabilidad y mantenimiento.
+## 🎨 Design System y UX/UI
+
+### Documentación de Diseño
+- **Design System:** Documentado en `DESIGN_SYSTEM.md`
+- **Filosofía:** Profesional, accesible y scout-identity
+- **Componentes:** Basados en Shadcn/ui con personalización scout
+- **Responsividad:** Mobile-first con breakpoints optimizados
+
+### Mejoras Implementadas (Rama: eliminación-datos-mock)
+
+#### 🚪 **Sistema de Logout Mejorado**
+- **Pop-up de confirmación:** AlertDialog con descripción clara
+- **Responsivo:** Texto en desktop, solo icono en móvil
+- **UX:** Confirmación antes de acción destructiva
+- **Ubicación:** `app/dashboard/layout.tsx:107-140`
+
+#### 🧭 **Navegación Aula Virtual Corregida**
+- **Problema resuelto:** INICIO ya no queda siempre activo
+- **Lógica mejorada:** Detección precisa de ruta activa
+- **Archivo:** `components/aula-virtual/sidebar.tsx:85-87`
+
+#### 📅 **Calendario Profesional**
+- **Componente nuevo:** `components/ui/calendar-view.tsx`
+- **Características:**
+  - Vista mensual interactiva
+  - Colores por sección scout
+  - Sidebar con detalles de eventos
+  - Navegación entre meses
+  - Responsive design completo
+- **Landing page:** Calendario funcional en `/calendario`
+
+#### 🎯 **Perfiles Simplificados**
+- **Solo Kraal activo:** Eliminados familias, comité, educandos
+- **Login simplificado:** Sin tab de información
+- **Backend actualizado:** Roles restringidos a 'scouter'
+- **Base de datos:** Schema actualizado para solo kraal
+
+#### 📊 **Reporte de Usabilidad**
+- **Puntuación:** 7.5/10
+- **Fortalezas:** Navegación sólida, diseño responsivo, UX clara
+- **Mejoras:** Navegación corregida, calendario implementado
+- **Accesibilidad:** WCAG 2.1 AA en desarrollo
+
+### Patrones de Código Establecidos
+
+#### 🎨 **Componentes UI**
+```typescript
+// Botón con confirmación
+<AlertDialog>
+  <AlertDialogTrigger asChild>
+    <Button variant="ghost">Acción</Button>
+  </AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Título</AlertDialogTitle>
+      <AlertDialogDescription>Descripción</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+      <AlertDialogAction onClick={handleAction}>Confirmar</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+#### 🎯 **Navegación Activa**
+```typescript
+// Patrón para detectar rutas activas
+const isActive = item.href === "/base-route"
+  ? pathname === "/base-route"
+  : pathname === item.href || pathname.startsWith(item.href + "/")
+```
+
+#### 📱 **Responsive Design**
+```typescript
+// Patrón de botones responsivos
+<div className="hidden md:block">
+  <Button showText={true}>Texto Desktop</Button>
+</div>
+<div className="md:hidden">
+  <Button showText={false}>Solo Icono Móvil</Button>
+</div>
+```
+
+## 🔧 **Comandos Actualizados**
+
+### Comandos Esenciales
+- `./scripts/dev-start.sh` - **Iniciar desarrollo completo** (puerto 3000 frontend)
+- `npm run lint` - **Verificar código**
+- `npm test` - **Ejecutar tests**
+
+Este sistema está diseñado para ser una solución completa de gestión para grupos scout, con enfoque en facilidad de uso, escalabilidad, mantenimiento y experiencia de usuario profesional.
