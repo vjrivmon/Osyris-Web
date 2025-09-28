@@ -289,7 +289,7 @@ export function CalendarView({ events, className }: CalendarViewProps) {
                         </div>
                         <div className="flex items-center justify-between mt-1">
                           <span className="text-xs">{event.time}</span>
-                          <Badge size="sm" variant="outline">{event.section}</Badge>
+                          <Badge variant="outline">{event.section}</Badge>
                         </div>
                       </div>
                     ))
