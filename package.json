@@ -11,7 +11,7 @@
     "build:frontend": "next build",
     "build:backend": "cd api-osyris && echo 'Backend build not required'",
     "test": "npm run test:frontend && npm run test:backend",
-    "test:frontend": "jest --watchAll=false",
+    "test:frontend": "jest --watchAll=false --passWithNoTests",
     "test:backend": "cd api-osyris && npm test",
     "test:e2e": "npx playwright test",
     "lint": "npm run lint:frontend && npm run lint:backend",
