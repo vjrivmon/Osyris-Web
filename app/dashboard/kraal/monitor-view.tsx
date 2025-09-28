@@ -14,7 +14,6 @@ export default function MonitorDashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Panel de Control - Monitor</h1>
         <p className="text-muted-foreground">Bienvenido al panel de control para monitores del Grupo Scout Osyris.</p>
       </div>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -57,7 +56,6 @@ export default function MonitorDashboardPage() {
           </CardContent>
         </Card>
       </div>
-
       <Tabs defaultValue="educandos" className="space-y-4">
         <TabsList>
           <TabsTrigger value="educandos">Mis Educandos</TabsTrigger>
@@ -407,7 +405,6 @@ export default function MonitorDashboardPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -432,7 +429,7 @@ export default function MonitorDashboardPage() {
             </div>
             <div className="mt-4 text-center">
               <Button asChild variant="outline">
-                <Link href="/dashboard/monitor/inventario">
+                <Link href="/dashboard/monitor/inventario" >
                   Ver inventario completo
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -470,7 +467,7 @@ export default function MonitorDashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
 
 function getInitials(name) {

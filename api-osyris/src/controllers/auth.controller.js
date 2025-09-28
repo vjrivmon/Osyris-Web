@@ -247,9 +247,56 @@ const changePassword = async (req, res) => {
   }
 };
 
+// Verificar autenticación (endpoint simple para verificar tokens)
+const verifyAuth = async (req, res) => {
+  try {
+    const usuario = req.usuario;
+
+    if (!usuario) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token inválido o usuario no encontrado'
+      });
+    }
+
+    // Obtener información del token
+    const tokenPayload = req.tokenPayload;
+    const issuedAt = new Date(tokenPayload.iat * 1000);
+    const expiresAt = new Date(tokenPayload.exp * 1000);
+
+    res.status(200).json({
+      success: true,
+      message: 'Token válido',
+      data: {
+        usuario: {
+          id: usuario.id,
+          email: usuario.email,
+          nombre: usuario.nombre,
+          apellidos: usuario.apellidos,
+          rol: usuario.rol,
+          activo: usuario.activo
+        },
+        tokenInfo: {
+          issuedAt: issuedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+          timeToExpire: Math.max(0, Math.floor((expiresAt - new Date()) / 1000))
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al verificar la autenticación',
+      error: error.message
+    });
+  }
+};
+
+
 module.exports = {
   login,
   register,
   profile,
-  changePassword
+  changePassword,
+  verifyAuth
 }; 

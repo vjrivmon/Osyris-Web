@@ -65,7 +65,12 @@ export default function LoginPage() {
       try {
         const userData = JSON.parse(savedUser)
         if (userData.role) {
-          router.push(`/dashboard/${userData.role}`)
+          // Redireccionar según el rol
+          if (userData.role === "kraal") {
+            router.push("/aula-virtual")
+          } else {
+            router.push(`/dashboard/${userData.role}`)
+          }
         }
       } catch (err) {
         localStorage.removeItem("osyris_user")
@@ -95,8 +100,14 @@ export default function LoginPage() {
           lastLogin: new Date().toISOString(),
         }))
 
-        // Redireccionar al dashboard correspondiente
-        router.push(`/dashboard/${user.role}`)
+        // Redireccionar según el rol
+        if (user.role === "kraal") {
+          // Los usuarios kraal van directamente al aula virtual
+          router.push("/aula-virtual")
+        } else {
+          // Los demás van a sus dashboards correspondientes
+          router.push(`/dashboard/${user.role}`)
+        }
       } else {
         setError("Credenciales incorrectas. Por favor, inténtalo de nuevo.")
       }
@@ -118,11 +129,9 @@ export default function LoginPage() {
           </Link>
         </Button>
       </div>
-
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
           <img
@@ -309,7 +318,7 @@ export default function LoginPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button onClick={() => document.querySelector('[data-value="login"]')?.click()} className="w-full">
+                <Button onClick={() => (document.querySelector('[data-value="login"]') as HTMLElement)?.click()} className="w-full">
                   Volver al inicio de sesión
                 </Button>
               </CardFooter>
@@ -330,6 +339,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

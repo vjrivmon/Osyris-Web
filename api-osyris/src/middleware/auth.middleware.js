@@ -37,9 +37,10 @@ const verifyToken = async (req, res, next) => {
       });
     }
     
-    // Añadir el usuario a la solicitud
+    // Añadir el usuario y el payload del token a la solicitud
     req.usuario = usuario;
-    
+    req.tokenPayload = decoded;
+
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

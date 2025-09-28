@@ -14,7 +14,6 @@ export default function SobreNosotrosPage() {
           <MainNav />
         </div>
       </header>
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-primary py-16 md:py-24">
@@ -155,7 +154,7 @@ export default function SobreNosotrosPage() {
 
                 <div className="mt-8 text-center">
                   <Button asChild>
-                    <Link href="/secciones">
+                    <Link href="/secciones" >
                       Conoce más sobre nuestras secciones
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -189,10 +188,9 @@ export default function SobreNosotrosPage() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Mock data

@@ -12,7 +12,6 @@ export default function PionerosPage() {
           <MainNav />
         </div>
       </header>
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-red-400 to-red-600 py-16 md:py-24 text-white">
@@ -143,13 +142,13 @@ export default function PionerosPage() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <Button asChild variant="outline">
-                <Link href="/secciones/tropa">
+                <Link href="/secciones/tropa" >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Anterior: Tropa
                 </Link>
               </Button>
               <Button asChild className="mt-4 sm:mt-0">
-                <Link href="/secciones/rutas">
+                <Link href="/secciones/rutas" >
                   Siguiente: Rutas
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -158,10 +157,9 @@ export default function PionerosPage() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Data for activities

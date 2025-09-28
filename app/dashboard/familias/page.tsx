@@ -377,25 +377,25 @@ export default function FamiliasDashboardPage() {
                   {[...pendingDocuments, ...completedDocuments].map((doc, i) => (
                     <div key={i} className="flex gap-3 rounded-lg border p-4">
                       <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${doc.completedDate ? "bg-green-500" : "bg-amber-500"}`}
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${(doc as any).completedDate ? "bg-green-500" : "bg-amber-500"}`}
                       >
                         <FileText className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">{doc.title}</p>
-                          {doc.completedDate ? (
+                          {(doc as any).completedDate ? (
                             <Badge variant="outline" className="bg-green-500 text-white">
                               Completado
                             </Badge>
                           ) : (
-                            <Badge variant={doc.urgent ? "destructive" : "outline"}>
-                              {doc.urgent ? "Urgente" : "Pendiente"}
+                            <Badge variant={(doc as any).urgent ? "destructive" : "outline"}>
+                              {(doc as any).urgent ? "Urgente" : "Pendiente"}
                             </Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {doc.completedDate ? `Completado: ${doc.completedDate}` : `Fecha límite: ${doc.deadline}`}
+                          {(doc as any).completedDate ? `Completado: ${(doc as any).completedDate}` : `Fecha límite: ${(doc as any).deadline}`}
                         </p>
                         <p className="text-sm">{doc.description}</p>
                         <div className="pt-2 flex gap-2">
@@ -403,7 +403,7 @@ export default function FamiliasDashboardPage() {
                             <Download className="mr-2 h-4 w-4" />
                             Descargar
                           </Button>
-                          {!doc.completedDate && <Button size="sm">Firmar</Button>}
+                          {!(doc as any).completedDate && <Button size="sm">Firmar</Button>}
                         </div>
                       </div>
                     </div>

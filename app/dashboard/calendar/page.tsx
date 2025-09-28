@@ -54,7 +54,7 @@ export default function CalendarPage() {
   const filteredEvents = events.filter((event) => selectedSection === "all" || event.section === selectedSection)
 
   // Get events for a specific day
-  const getEventsForDay = (day) => {
+  const getEventsForDay = (day: number) => {
     return filteredEvents.filter((event) => {
       const eventDate = new Date(event.date)
       return (
@@ -64,7 +64,7 @@ export default function CalendarPage() {
   }
 
   // Generate calendar days
-  const calendarDays = []
+  const calendarDays: (number | null)[] = []
   for (let i = 0; i < adjustedFirstDay; i++) {
     calendarDays.push(null) // Empty cells for days before the 1st of the month
   }
@@ -169,7 +169,7 @@ export default function CalendarPage() {
           <div className="space-y-4">
             {filteredEvents
               .filter((event) => new Date(event.date) >= new Date())
-              .sort((a, b) => new Date(a.date) - new Date(b.date))
+              .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
               .slice(0, 5)
               .map((event, i) => {
                 const eventDate = new Date(event.date)
@@ -207,7 +207,7 @@ export default function CalendarPage() {
   )
 }
 
-function getSectionColor(section) {
+function getSectionColor(section: string) {
   switch (section) {
     case "castores":
       return "bg-blue-100 text-blue-800"
@@ -228,7 +228,7 @@ function getSectionColor(section) {
   }
 }
 
-function getSectionColorHex(section) {
+function getSectionColorHex(section: string) {
   switch (section) {
     case "castores":
       return "#3b82f6"
@@ -249,7 +249,7 @@ function getSectionColorHex(section) {
   }
 }
 
-function getSectionName(section) {
+function getSectionName(section: string) {
   switch (section) {
     case "castores":
       return "Castores"

@@ -24,7 +24,6 @@ export default function KraalDashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Panel de Control - Kraal</h1>
         <p className="text-muted-foreground">Bienvenido al panel de control del Grupo Scout Osyris.</p>
       </div>
-
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Vista General</TabsTrigger>
@@ -109,7 +108,7 @@ export default function KraalDashboardPage() {
                 </div>
                 <div className="mt-4 text-center">
                   <Button asChild variant="outline">
-                    <Link href="/dashboard/kraal/calendario">Ver calendario completo</Link>
+                    <Link href="/aula-virtual/calendario">Ver calendario completo</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -234,7 +233,7 @@ export default function KraalDashboardPage() {
               </div>
               <div className="mt-6 text-center">
                 <Button asChild variant="outline">
-                  <Link href="/dashboard/kraal/documentos">Ver todos los documentos</Link>
+                  <Link href="/aula-virtual/documentos">Ver todos los documentos</Link>
                 </Button>
               </div>
             </CardContent>
@@ -262,7 +261,7 @@ export default function KraalDashboardPage() {
                         <h3 className="font-medium">Mis Educandos</h3>
                         <p className="text-sm text-muted-foreground">Gestiona los educandos a tu cargo</p>
                         <Button asChild className="mt-2">
-                          <Link href="/dashboard/kraal/monitor-view">Acceder</Link>
+                          <Link href="/aula-virtual/monitor-view">Acceder</Link>
                         </Button>
                       </div>
                     </CardContent>
@@ -275,7 +274,7 @@ export default function KraalDashboardPage() {
                         <h3 className="font-medium">Actividades de Sección</h3>
                         <p className="text-sm text-muted-foreground">Planifica actividades para tu sección</p>
                         <Button asChild className="mt-2">
-                          <Link href="/dashboard/kraal/actividades-seccion">Acceder</Link>
+                          <Link href="/aula-virtual/actividades-seccion">Acceder</Link>
                         </Button>
                       </div>
                     </CardContent>
@@ -288,7 +287,7 @@ export default function KraalDashboardPage() {
                         <h3 className="font-medium">Comunicaciones</h3>
                         <p className="text-sm text-muted-foreground">Envía mensajes a familias y educandos</p>
                         <Button asChild className="mt-2">
-                          <Link href="/dashboard/kraal/comunicaciones">Acceder</Link>
+                          <Link href="/aula-virtual/comunicaciones">Acceder</Link>
                         </Button>
                       </div>
                     </CardContent>
@@ -299,7 +298,6 @@ export default function KraalDashboardPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
@@ -325,7 +323,7 @@ export default function KraalDashboardPage() {
             </div>
             <div className="mt-4 text-center">
               <Button asChild variant="outline">
-                <Link href="/dashboard/kraal/inventario">
+                <Link href="/aula-virtual/inventario" >
                   Ver inventario completo
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -353,7 +351,7 @@ export default function KraalDashboardPage() {
             </div>
             <div className="mt-4 text-center">
               <Button asChild variant="outline">
-                <Link href="/dashboard/kraal/comunicaciones">
+                <Link href="/aula-virtual/comunicaciones" >
                   Ver todas las comunicaciones
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -384,7 +382,7 @@ export default function KraalDashboardPage() {
             </div>
             <div className="mt-4 text-center">
               <Button asChild variant="outline">
-                <Link href="/dashboard/kraal/miembros">
+                <Link href="/aula-virtual/miembros" >
                   Ver todos los miembros
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -394,7 +392,7 @@ export default function KraalDashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
 
 // Mock data

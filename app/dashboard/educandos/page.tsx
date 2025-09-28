@@ -17,7 +17,6 @@ export default function EducandosDashboardPage() {
           monitores.
         </p>
       </div>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -63,7 +62,6 @@ export default function EducandosDashboardPage() {
           </CardContent>
         </Card>
       </div>
-
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Resumen</TabsTrigger>
@@ -189,7 +187,10 @@ export default function EducandosDashboardPage() {
 
                 <div className="mt-4 text-center">
                   <Button asChild variant="outline" size="sm">
-                    <Link href="/dashboard/educandos/insignias" className="flex items-center">
+                    <Link
+                      href="/dashboard/educandos/insignias"
+                      className="flex items-center"
+                      >
                       Ver todas mis insignias
                       <ChevronRight className="ml-1 h-4 w-4" />
                     </Link>
@@ -553,7 +554,7 @@ export default function EducandosDashboardPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
 function getInitials(name) {

@@ -37,24 +37,26 @@ export function DashboardBreadcrumb() {
 
   return (
     <nav className="flex items-center text-sm text-muted-foreground">
-      <Link href={`/dashboard/${userRole}`} className="flex items-center hover:text-foreground">
+      <Link
+        href={`/dashboard/${userRole}`}
+        className="flex items-center hover:text-foreground"
+        >
         <Home className="h-4 w-4 mr-1" />
         <span className="sr-only sm:not-sr-only">Inicio</span>
       </Link>
-
       {breadcrumbItems.slice(1).map((item, index) => (
         <div key={item.href} className="flex items-center">
           <ChevronRight className="h-4 w-4 mx-1" />
           {item.isCurrent ? (
             <span className="font-medium text-foreground">{item.label}</span>
           ) : (
-            <Link href={item.href} className="hover:text-foreground">
+            <Link href={item.href} className="hover:text-foreground" >
               {item.label}
             </Link>
           )}
         </div>
       ))}
     </nav>
-  )
+  );
 }
 

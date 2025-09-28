@@ -221,7 +221,7 @@ export default function CommunicationsPage() {
   )
 }
 
-function getInitials(name) {
+function getInitials(name: string) {
   return name
     .split(" ")
     .map((part) => part[0])

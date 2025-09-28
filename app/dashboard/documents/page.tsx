@@ -25,7 +25,6 @@ export default function DocumentsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Documentos</h1>
         <p className="text-muted-foreground">Gestiona todos los documentos del grupo scout.</p>
       </div>
-
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="flex flex-1 items-center space-x-2">
           <div className="relative flex-1">
@@ -53,7 +52,6 @@ export default function DocumentsPage() {
           </Button>
         </div>
       </div>
-
       <Tabs defaultValue="all" className="space-y-4">
         <div className="flex justify-between items-center">
           <TabsList>
@@ -117,7 +115,7 @@ export default function DocumentsPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {folders.map((folder, i) => (
-                  <Link href={`/dashboard/documents/${folder.id}`} key={i}>
+                  <Link href={`/dashboard/documents/${folder.id}`} key={i} >
                     <div className="border rounded-lg p-4 hover:bg-slate-50 cursor-pointer">
                       <div className="flex items-center space-x-4">
                         <div className="bg-blue-100 p-2 rounded-lg">
@@ -213,7 +211,7 @@ export default function DocumentsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
 function getFileIconColor(type) {

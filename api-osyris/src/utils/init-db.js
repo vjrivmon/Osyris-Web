@@ -9,32 +9,32 @@ async function createTables() {
     // Crear tabla de usuarios
     await db.query(`
       CREATE TABLE IF NOT EXISTS usuarios (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre VARCHAR(100) NOT NULL,
         apellidos VARCHAR(200) NOT NULL,
         email VARCHAR(200) UNIQUE NOT NULL,
         password VARCHAR(200) NOT NULL,
-        rol ENUM('admin', 'coordinador', 'scouter', 'padre', 'educando') NOT NULL,
+        rol TEXT CHECK (rol IN ('admin', 'coordinador', 'scouter', 'padre', 'educando')) NOT NULL,
         telefono VARCHAR(20),
         fecha_nacimiento DATE,
         direccion TEXT,
-        activo BOOLEAN DEFAULT TRUE,
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        activo BOOLEAN DEFAULT 1,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Crear tabla de secciones
     await db.query(`
       CREATE TABLE IF NOT EXISTS secciones (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre VARCHAR(100) NOT NULL,
         descripcion TEXT,
         color VARCHAR(7),
         rango_edad VARCHAR(50),
-        coordinador_id INT,
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        coordinador_id INTEGER,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (coordinador_id) REFERENCES usuarios(id)
       )
     `);
@@ -42,17 +42,17 @@ async function createTables() {
     // Crear tabla de actividades
     await db.query(`
       CREATE TABLE IF NOT EXISTS actividades (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         titulo VARCHAR(200) NOT NULL,
         descripcion TEXT,
         fecha_inicio DATETIME NOT NULL,
         fecha_fin DATETIME NOT NULL,
         ubicacion TEXT,
-        seccion_id INT,
-        creador_id INT NOT NULL,
-        estado ENUM('planificada', 'en progreso', 'completada', 'cancelada') DEFAULT 'planificada',
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        seccion_id INTEGER,
+        creador_id INTEGER NOT NULL,
+        estado TEXT CHECK (estado IN ('planificada', 'en progreso', 'completada', 'cancelada')) DEFAULT 'planificada',
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (seccion_id) REFERENCES secciones(id),
         FOREIGN KEY (creador_id) REFERENCES usuarios(id)
       )
@@ -61,15 +61,15 @@ async function createTables() {
     // Crear tabla de documentos
     await db.query(`
       CREATE TABLE IF NOT EXISTS documentos (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre VARCHAR(200) NOT NULL,
         descripcion TEXT,
         url VARCHAR(255) NOT NULL,
         tipo VARCHAR(50),
-        seccion_id INT,
-        autor_id INT NOT NULL,
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        seccion_id INTEGER,
+        autor_id INTEGER NOT NULL,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (seccion_id) REFERENCES secciones(id),
         FOREIGN KEY (autor_id) REFERENCES usuarios(id)
       )
@@ -78,13 +78,13 @@ async function createTables() {
     // Crear tabla de mensajes
     await db.query(`
       CREATE TABLE IF NOT EXISTS mensajes (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         asunto VARCHAR(200) NOT NULL,
         contenido TEXT NOT NULL,
-        remitente_id INT NOT NULL,
-        seccion_id INT,
-        es_global BOOLEAN DEFAULT FALSE,
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        remitente_id INTEGER NOT NULL,
+        seccion_id INTEGER,
+        es_global BOOLEAN DEFAULT 0,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (remitente_id) REFERENCES usuarios(id),
         FOREIGN KEY (seccion_id) REFERENCES secciones(id)
       )

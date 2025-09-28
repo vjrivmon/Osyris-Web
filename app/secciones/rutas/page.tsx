@@ -12,7 +12,6 @@ export default function RutasPage() {
           <MainNav />
         </div>
       </header>
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-green-500 to-green-700 py-16 md:py-24 text-white">
@@ -141,7 +140,7 @@ export default function RutasPage() {
           <div className="container mx-auto px-4">
             <div className="flex justify-start">
               <Button asChild variant="outline">
-                <Link href="/secciones/pioneros">
+                <Link href="/secciones/pioneros" >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Anterior: Pioneros
                 </Link>
@@ -150,10 +149,9 @@ export default function RutasPage() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Data for activities

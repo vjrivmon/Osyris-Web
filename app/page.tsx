@@ -20,7 +20,6 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <MainNav />
-
       <main className="flex-1">
         {/* Hero Section - Improved with better visuals and call to action */}
         <section className="relative bg-hero-pattern bg-cover bg-center py-32 md:py-48">
@@ -100,7 +99,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
               {sections.map((section, i) => (
-                <Link href={section.href} key={i} className="group">
+                <Link href={section.href} key={i} className="group" >
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg group-hover:translate-y-[-5px]">
                     <div className="relative h-40 overflow-hidden">
                       <div className={`absolute inset-0 ${section.gradientClass} opacity-90`}></div>
@@ -119,7 +118,7 @@ export default function Home() {
             </div>
             <div className="mt-8 text-center">
               <Button asChild>
-                <Link href="/secciones" className="group">
+                <Link href="/secciones" className="group" >
                   Conoce todas nuestras secciones
                   <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -178,7 +177,7 @@ export default function Home() {
             </div>
             <div className="mt-8 text-center">
               <Button asChild>
-                <Link href="/calendario" className="group">
+                <Link href="/calendario" className="group" >
                   Ver calendario completo
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -213,7 +212,7 @@ export default function Home() {
             </div>
             <div className="mt-10 text-center">
               <Button asChild variant="secondary">
-                <Link href="/sobre-nosotros" className="group">
+                <Link href="/sobre-nosotros" className="group" >
                   Conoce más sobre nosotros
                   <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -280,10 +279,9 @@ export default function Home() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Secciones data

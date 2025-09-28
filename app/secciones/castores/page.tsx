@@ -12,7 +12,6 @@ export default function CastoresPage() {
           <MainNav />
         </div>
       </header>
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-orange-400 to-orange-600 py-16 md:py-24 text-white">
@@ -139,13 +138,13 @@ export default function CastoresPage() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <Button asChild variant="outline">
-                <Link href="/secciones">
+                <Link href="/secciones" >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Volver a Secciones
                 </Link>
               </Button>
               <Button asChild className="mt-4 sm:mt-0">
-                <Link href="/secciones/manada">
+                <Link href="/secciones/manada" >
                   Siguiente: Manada
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -154,10 +153,9 @@ export default function CastoresPage() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Data for activities

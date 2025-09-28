@@ -12,7 +12,6 @@ export default function TropaPage() {
           <MainNav />
         </div>
       </header>
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-blue-400 to-blue-600 py-16 md:py-24 text-white">
@@ -139,13 +138,13 @@ export default function TropaPage() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <Button asChild variant="outline">
-                <Link href="/secciones/lobatos">
+                <Link href="/secciones/lobatos" >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Anterior: Lobatos
                 </Link>
               </Button>
               <Button asChild className="mt-4 sm:mt-0">
-                <Link href="/secciones/pioneros">
+                <Link href="/secciones/pioneros" >
                   Siguiente: Pioneros
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -154,10 +153,9 @@ export default function TropaPage() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Data for activities

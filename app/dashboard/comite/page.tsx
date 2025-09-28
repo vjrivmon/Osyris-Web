@@ -30,7 +30,6 @@ export default function ComiteDashboardPage() {
           Panel de administración del Comité del Grupo Scout Osyris. Aquí puedes gestionar todos los aspectos del grupo.
         </p>
       </div>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -76,7 +75,6 @@ export default function ComiteDashboardPage() {
           </CardContent>
         </Card>
       </div>
-
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Resumen</TabsTrigger>
@@ -346,7 +344,7 @@ export default function ComiteDashboardPage() {
                       </div>
                       <div className="col-span-2 flex justify-end">
                         <Button asChild variant="ghost" size="sm">
-                          <Link href={`/dashboard/comite/miembros/${i}`}>
+                          <Link href={`/dashboard/comite/miembros/${i}`} >
                             <span className="sr-only">Ver detalles</span>
                             <ChevronRight className="h-4 w-4" />
                           </Link>
@@ -675,7 +673,7 @@ export default function ComiteDashboardPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
 function getInitials(name: string): string {

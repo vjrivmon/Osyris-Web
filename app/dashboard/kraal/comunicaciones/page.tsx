@@ -131,7 +131,7 @@ export default function CommunicationsPage() {
     })
   }
 
-  const useTemplate = useCallback(
+  const applyTemplate = useCallback(
     (template) => {
       setMessageType(template.type)
       setContent(template.content)
@@ -339,7 +339,7 @@ export default function CommunicationsPage() {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox id="send-copy" checked={sendCopy} onCheckedChange={setSendCopy} />
+                <Checkbox id="send-copy" checked={sendCopy} onCheckedChange={(checked) => setSendCopy(checked === true)} />
                 <Label htmlFor="send-copy" className="text-sm font-medium">
                   Enviarme una copia
                 </Label>
@@ -388,7 +388,7 @@ export default function CommunicationsPage() {
                           </div>
                         </DialogContent>
                       </Dialog>
-                      <Button size="sm" onClick={() => useTemplate(template)}>
+                      <Button size="sm" onClick={() => applyTemplate(template)}>
                         <Copy className="mr-2 h-4 w-4" />
                         Usar
                       </Button>

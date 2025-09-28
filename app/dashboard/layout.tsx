@@ -57,7 +57,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   useEffect(() => {
-    if (pathname.includes("/kraal") || pathname.includes("/monitor")) {
+    if (pathname.includes("/aula-virtual") || pathname.includes("/monitor")) {
       setUserRole("kraal")
     } else if (pathname.includes("/comite")) {
       setUserRole("comite")
@@ -117,7 +117,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const user = getUserData()
 
   const handleLogout = () => {
-    router.push("/login")
+    // Limpiar sesión del localStorage
+    localStorage.removeItem("osyris_user")
+    // Redirigir a la landing page
+    router.push("/")
   }
 
   // Get section color based on user role and section
@@ -240,10 +243,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     active={pathname.includes("/educandos")}
                   />
                   <NavItem
-                    href="/dashboard/kraal"
+                    href="/dashboard/aula-virtual"
                     icon={Users}
                     label="Kraal/Monitor"
-                    active={pathname.includes("/kraal")}
+                    active={pathname.includes("/aula-virtual")}
                   />
                 </nav>
               </div>
@@ -261,20 +264,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Cerrar sesión
-                </Button>
               </div>
             </div>
           </SheetContent>
         </Sheet>
       ) : (
         /* Desktop Sidebar */
-        <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
+        (<div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
           <div className="flex flex-col flex-grow border-r bg-card">
             <div className="flex items-center h-16 flex-shrink-0 px-4 border-b">
-              <Link href={`/dashboard/${userRole}`} className="flex items-center gap-2">
+              <Link
+                href={`/dashboard/${userRole}`}
+                className="flex items-center gap-2"
+                >
                 <img
                   src="/images/logo-osyris.png"
                   alt="Logo Grupo Scout Osyris"
@@ -375,10 +377,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   active={pathname.includes("/educandos")}
                 />
                 <NavItem
-                  href="/dashboard/kraal"
+                  href="/dashboard/aula-virtual"
                   icon={Users}
                   label="Kraal/Monitor"
-                  active={pathname.includes("/kraal")}
+                  active={pathname.includes("/aula-virtual")}
                 />
               </nav>
             </div>
@@ -398,9 +400,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             </div>
           </div>
-        </div>
+        </div>)
       )}
-
       {/* Main content */}
       <div className={cn("flex flex-col flex-1 overflow-hidden", isMobile ? "w-full" : "md:pl-64")}>
         {/* Top navigation */}
@@ -421,6 +422,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="ml-auto flex items-center space-x-4">
             {/* Theme toggle */}
             <ThemeToggle />
+
+            {/* Logout button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
 
             {/* Notifications */}
             <DropdownMenu>
@@ -483,7 +495,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
-  )
+  );
 }
 
 function NavItem({ href, icon: Icon, label, active }: { href: string; icon: any; label: string; active: boolean }) {
@@ -494,11 +506,11 @@ function NavItem({ href, icon: Icon, label, active }: { href: string; icon: any;
         "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
         active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground",
       )}
-    >
+      >
       <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
       {label}
     </Link>
-  )
+  );
 }
 
 function getInitials(name: string): string {
