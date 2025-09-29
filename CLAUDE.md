@@ -299,6 +299,49 @@ PUT  /api/mensajes/:id/leido   # Marcar como leído
 - `documentos` - Archivos y circulares
 - `mensajes` - Sistema mensajería
 
+## 🚀 Sistema Dual de Desarrollo
+
+### 🏠 Desarrollo Local vs ☁️ Producción Supabase
+
+El proyecto está configurado para funcionar en **dos entornos completamente separados**:
+
+#### 🏠 **Entorno Local (SQLite)**
+- **Base de datos:** SQLite local (`/database/osyris.db`)
+- **Uploads:** Sistema de archivos local (`/uploads/`)
+- **Configuración:** `src/config/db.config.js`
+- **Credenciales:** No se requieren claves externas
+- **Uso:** Desarrollo y testing local
+
+#### ☁️ **Entorno Producción (Supabase)**
+- **Base de datos:** PostgreSQL en Supabase
+- **Uploads:** Supabase Storage
+- **Configuración:** `src/config/supabase.config.js`
+- **Credenciales:** Variables de entorno Supabase
+- **Uso:** Deploy en Vercel y producción
+
+### 🔄 Comandos de Cambio de Entorno
+
+#### Cambiar a desarrollo local:
+```bash
+# Comando Claude disponible
+/local-dev
+```
+
+#### Cambiar a producción Supabase:
+```bash
+# Comando Claude disponible
+/supabase-deploy
+```
+
+### 📝 Configuración Automática
+
+Cada comando configura automáticamente:
+- ✅ Variables de entorno correspondientes
+- ✅ Archivos de configuración de BD
+- ✅ Sistema de uploads apropiado
+- ✅ Scripts de inicio correctos
+- ✅ Dependencias necesarias
+
 ## 🛠️ Scripts de Automatización
 
 ### 🚀 dev-start.sh
@@ -575,5 +618,77 @@ const isActive = item.href === "/base-route"
 - `./scripts/dev-start.sh` - **Iniciar desarrollo completo** (puerto 3000 frontend)
 - `npm run lint` - **Verificar código**
 - `npm test` - **Ejecutar tests**
+
+## ⚠️ **IMPORTANTE: Páginas de Secciones Scout**
+
+### Contenido Estático vs Base de Datos
+
+**Las páginas de secciones (castores, manada, tropa, pioneros, rutas) NO usan contenido dinámico de base de datos.**
+
+#### 📄 Archivo de Contenido
+- **Ubicación:** `components/ui/dynamic-section-page.tsx`
+- **Comportamiento:** Carga SOLO datos estáticos locales
+- **Razón:** El contenido original y correcto está hardcoded en el componente
+
+#### ✅ Configuración Actual (Correcta)
+```typescript
+// components/ui/dynamic-section-page.tsx:34-48
+const loadSectionData = async () => {
+  // ⚠️ IMPORTANTE: Las páginas de secciones usan SOLO datos estáticos locales
+  // NO se cargan desde base de datos para mantener el contenido correcto y original
+  const fallbackData = getFallbackData(sectionSlug)
+  setSectionData(fallbackData)
+  setIsUsingFallback(true)
+}
+```
+
+#### ❌ Configuración Anterior (Problemática)
+- Intentaba cargar desde Supabase con `fetchPageWithConnection()`
+- Mostraba contenido incorrecto/desactualizado de la base de datos
+- Causaba errores cuando faltaban propiedades como `colors`
+
+#### 📝 Estructura de Datos
+Cada sección tiene definido en `dynamic-section-page.tsx` (líneas 69-240):
+- **name**: Nombre corto (ej: "Castores", "Manada")
+- **fullName**: Nombre completo (ej: "Colonia La Veleta", "Manada Waingunga")
+- **slug**: Identificador de ruta (ej: "castores", "manada")
+- **emoji**: Icono de la sección
+- **motto**: Lema scout de la sección
+- **ageRange**: Rango de edad
+- **colors**: Colores gradiente (from, to, accent)
+- **description**: Descripción breve
+- **details**: Detalles adicionales
+- **frame**: Marco simbólico
+- **activities**: Lista de actividades (icon, title, description)
+- **methodology**: Metodología educativa (title, description)
+- **team**: Equipo de monitores (name, role, photo)
+- **navigation**: Enlaces de navegación (prev, next)
+
+#### 🔄 Si Necesitas Cambiar Contenido de Secciones
+1. **Editar:** `components/ui/dynamic-section-page.tsx`
+2. **Buscar:** El objeto `fallbackSections` (línea ~69)
+3. **Modificar:** El contenido de la sección deseada
+4. **Recargar:** El navegador recompilará automáticamente
+
+#### 🚫 NO Hacer
+- No cambiar `loadSectionData()` para cargar desde base de datos
+- No eliminar la llamada a `getFallbackData()`
+- No usar `fetchPageWithConnection()` para secciones
+- No intentar "migrar" el contenido a Supabase
+
+#### ✅ Sí Hacer
+- Mantener el contenido hardcoded en el componente
+- Actualizar directamente en `fallbackSections`
+- Usar la base de datos SOLO para otras páginas (contacto, calendario, etc.)
+
+### 🗄️ Diferenciación de Contenido
+
+| Página | Fuente de Datos | Editable desde Admin |
+|--------|-----------------|---------------------|
+| Secciones Scout | `dynamic-section-page.tsx` | ❌ No |
+| Contacto | Base de datos | ✅ Sí |
+| Sobre Nosotros | Base de datos | ✅ Sí |
+| Calendario | Base de datos | ✅ Sí |
+| Galería | Base de datos | ✅ Sí |
 
 Este sistema está diseñado para ser una solución completa de gestión para grupos scout, con enfoque en facilidad de uso, escalabilidad, mantenimiento y experiencia de usuario profesional.

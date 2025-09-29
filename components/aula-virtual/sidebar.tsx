@@ -9,6 +9,7 @@ import {
   Calendar,
   MessageSquare,
   ChevronLeft,
+  Settings,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -16,9 +17,10 @@ import { cn } from "@/lib/utils"
 interface AulaVirtualSidebarProps {
   collapsed: boolean
   onToggle: () => void
+  isAdmin?: boolean
 }
 
-export function AulaVirtualSidebar({ collapsed, onToggle }: AulaVirtualSidebarProps) {
+export function AulaVirtualSidebar({ collapsed, onToggle, isAdmin = false }: AulaVirtualSidebarProps) {
   const pathname = usePathname()
 
   const navigationItems = [
