@@ -14,6 +14,8 @@ const actividadesRoutes = require('./routes/actividades.routes');
 const documentosRoutes = require('./routes/documentos.routes');
 const mensajesRoutes = require('./routes/mensajes.routes');
 const authRoutes = require('./routes/auth.routes');
+// 🚀 NUEVAS RUTAS CMS
+const uploadRoutes = require('./routes/upload.routes');
 
 // Configuración de variables de entorno
 dotenv.config();
@@ -74,6 +76,8 @@ app.use('/api/secciones', seccionesRoutes);
 app.use('/api/actividades', actividadesRoutes);
 app.use('/api/documentos', documentosRoutes);
 app.use('/api/mensajes', mensajesRoutes);
+// 🚀 NUEVAS RUTAS CMS
+app.use('/api/uploads', uploadRoutes);
 
 // Ruta inicial
 app.get('/', (req, res) => {

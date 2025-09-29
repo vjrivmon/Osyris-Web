@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const Usuario = require('../models/usuario.model');
+// 🚀 MIGRACIÓN A SUPABASE: Cambiar modelo
+const Usuario = require('../models/usuario.model.supabase');
 
 // Middleware para verificar el token
 const verifyToken = async (req, res, next) => {
@@ -88,7 +89,30 @@ const checkRole = (roles) => {
   };
 };
 
+// Middleware para requerir rol específico (más conveniente)
+const requireRole = (roles) => {
+  return [verifyToken, checkRole(roles)];
+};
+
+// Middleware específico para super admin
+const requireSuperAdmin = [verifyToken, checkRole(['super_admin'])];
+
+// Middleware para verificar si es super admin (sin bloquear)
+const isSuperAdmin = (req, res, next) => {
+  if (req.usuario && req.usuario.rol === 'super_admin') {
+    req.isSuperAdmin = true;
+  } else {
+    req.isSuperAdmin = false;
+  }
+  next();
+};
+
 module.exports = {
   verifyToken,
-  checkRole
+  checkRole,
+  requireRole,
+  requireSuperAdmin,
+  isSuperAdmin,
+  // Alias para compatibilidad
+  authenticateToken: verifyToken
 }; 
