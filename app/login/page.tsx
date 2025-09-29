@@ -72,41 +72,63 @@ export default function LoginPage() {
     }
   }, [router])
 
-  // Función de login
+  // Función de login actualizada para usar API real
   const handleLogin = async (values: LoginValues) => {
     setIsLoggingIn(true)
     setError(null)
 
     try {
-      // Simular latencia de API
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      // Determinar URL de API según el entorno
+      const apiUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:5000/api/auth/login'  // Desarrollo local
+        : '/api/auth/login';  // Producción (usa Next.js API Routes)
 
-      // Buscar usuario en nuestro "mock de base de datos"
-      const user = MOCK_USERS.find(
-        (u) => u.email === values.email && u.password === values.password
-      )
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+        }),
+      });
 
-      if (user) {
-        // Guardar sesión en localStorage
-        localStorage.setItem("osyris_user", JSON.stringify({
-          email: user.email,
-          role: user.role,
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Guardar token y datos del usuario
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('osyris_user', JSON.stringify({
+          ...data.data.usuario,
+          role: data.data.usuario.rol,
           lastLogin: new Date().toISOString(),
-        }))
+        }));
 
-        // Redireccionar según el rol (solo kraal disponible)
-        if (user.role === "kraal") {
-          // Los usuarios kraal van directamente al aula virtual
-          router.push("/aula-virtual")
+        // Redireccionar según el rol
+        const userRole = data.data.usuario.rol;
+
+        if (userRole === 'super_admin') {
+          // Super admin va al panel de administración
+          router.push('/dashboard/admin');
+        } else if (userRole === 'kraal' || userRole === 'scouter') {
+          // Kraal/scouter va al aula virtual
+          router.push('/aula-virtual');
+        } else if (userRole === 'comite') {
+          // Comité va al dashboard
+          router.push('/dashboard');
+        } else {
+          // Otros roles van al dashboard por defecto
+          router.push('/dashboard');
         }
       } else {
-        setError("Credenciales incorrectas. Por favor, inténtalo de nuevo.")
+        setError(data.message || "Credenciales incorrectas. Por favor, inténtalo de nuevo.");
       }
     } catch (err) {
-      console.error("Error en el proceso de login:", err)
-      setError("Error al iniciar sesión. Por favor, inténtalo de nuevo más tarde.")
+      console.error("Error en el proceso de login:", err);
+      setError("Error al iniciar sesión. Por favor, inténtalo de nuevo más tarde.");
     } finally {
-      setIsLoggingIn(false)
+      setIsLoggingIn(false);
     }
   }
 
