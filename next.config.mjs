@@ -1,4 +1,8 @@
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -17,11 +21,17 @@ const nextConfig = {
     parallelServerCompiles: true,
   },
   webpack: (config, { isServer }) => {
-    // Add path aliases
+    // Add path aliases with absolute path
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve('./'),
+      '@': __dirname,
     }
+
+    // Ensure alias is properly set for both server and client
+    if (!config.resolve.alias['@']) {
+      config.resolve.alias['@'] = __dirname
+    }
+
     return config
   },
 }
