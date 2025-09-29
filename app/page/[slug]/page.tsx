@@ -28,9 +28,9 @@ interface Pagina {
 }
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export default function PageBySlug({ params }: PageProps) {
@@ -38,8 +38,18 @@ export default function PageBySlug({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [slug, setSlug] = useState<string | null>(null)
 
   useEffect(() => {
+    // Unwrap params promise
+    params.then(p => {
+      setSlug(p.slug)
+    })
+  }, [params])
+
+  useEffect(() => {
+    if (!slug) return
+
     // Verificar rol del usuario
     const userData = localStorage.getItem('osyris_user')
     if (userData) {
@@ -48,15 +58,17 @@ export default function PageBySlug({ params }: PageProps) {
     }
 
     loadPage()
-  }, [params.slug])
+  }, [slug])
 
   const loadPage = async () => {
     try {
       setIsLoading(true)
       setError(null)
 
+      if (!slug) return
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/paginas/slug/${params.slug}`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/paginas/slug/${slug}`,
         {
           method: 'GET',
           headers: {
