@@ -24,3 +24,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# lock files (use npm only)
+pnpm-lock.yaml
+yarn.lock
