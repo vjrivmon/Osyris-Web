@@ -41,8 +41,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verificar contraseña
-    const validPassword = await bcrypt.compare(password, usuario.password);
+    // Verificar contraseña (columna 'contraseña' en la BD)
+    const validPassword = await bcrypt.compare(password, usuario.contraseña || usuario.password);
 
     if (!validPassword) {
       return NextResponse.json(
