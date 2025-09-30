@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { MainNav } from "@/components/main-nav"
@@ -14,18 +17,50 @@ import {
   ChevronRight,
   Heart,
   Compass,
+  Edit
 } from "lucide-react"
 
 export default function Home() {
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Verificar rol del usuario solo para botón de editar
+    const userData = localStorage.getItem('osyris_user')
+    const token = localStorage.getItem('token')
+
+    if (userData && token) {
+      try {
+        const user = JSON.parse(userData)
+        if (user.rol === 'admin') {
+          setUserRole(user.rol)
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+        setUserRole(null)
+      }
+    }
+  }, [])
+
   return (
     <div className="flex flex-col min-h-screen">
       <MainNav />
-
       <main className="flex-1">
         {/* Hero Section - Improved with better visuals and call to action */}
         <section className="relative bg-hero-pattern bg-cover bg-center py-32 md:py-48">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70"></div>
           <div className="container relative z-10 mx-auto px-4 text-center">
+            {/* Admin Edit Button - Solo para admins autenticados */}
+            {userRole === 'admin' && (
+              <div className="absolute top-4 right-4">
+                <Link href="/admin">
+                  <Button size="sm" variant="outline" className="border-white/50 bg-white/10 text-white hover:bg-white/20">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar página
+                  </Button>
+                </Link>
+              </div>
+            )}
+
             <div className="mb-6 inline-block rounded-full bg-white px-4 py-1.5 text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
               Educando en valores desde 1981
             </div>
@@ -100,7 +135,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
               {sections.map((section, i) => (
-                <Link href={section.href} key={i} className="group">
+                <Link href={section.href} key={i} className="group" >
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg group-hover:translate-y-[-5px]">
                     <div className="relative h-40 overflow-hidden">
                       <div className={`absolute inset-0 ${section.gradientClass} opacity-90`}></div>
@@ -119,7 +154,7 @@ export default function Home() {
             </div>
             <div className="mt-8 text-center">
               <Button asChild>
-                <Link href="/secciones" className="group">
+                <Link href="/secciones" className="group" >
                   Conoce todas nuestras secciones
                   <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -178,7 +213,7 @@ export default function Home() {
             </div>
             <div className="mt-8 text-center">
               <Button asChild>
-                <Link href="/calendario" className="group">
+                <Link href="/calendario" className="group" >
                   Ver calendario completo
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -213,7 +248,7 @@ export default function Home() {
             </div>
             <div className="mt-10 text-center">
               <Button asChild variant="secondary">
-                <Link href="/sobre-nosotros" className="group">
+                <Link href="/sobre-nosotros" className="group" >
                   Conoce más sobre nosotros
                   <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -280,10 +315,9 @@ export default function Home() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Secciones data

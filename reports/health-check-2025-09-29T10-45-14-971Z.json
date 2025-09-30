@@ -1,0 +1,82 @@
+{
+  "timestamp": "2025-09-29T10:45:14.967Z",
+  "overallHealth": "critical",
+  "checks": [
+    {
+      "name": "Acceso a Base de Datos",
+      "status": "pass",
+      "details": {
+        "path": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/database/osyris.db",
+        "size": "156.00 KB",
+        "lastModified": "2025-09-29T10:39:43.814Z",
+        "permissions": "Lectura/Escritura OK"
+      },
+      "message": "Base de datos accesible"
+    },
+    {
+      "name": "Configuración SQLite",
+      "status": "error",
+      "details": {},
+      "message": "Error verificando configuración: diagnostics.connect is not a function"
+    },
+    {
+      "name": "Integridad Estructural",
+      "status": "error",
+      "details": {},
+      "message": "Error verificando integridad: diagnostics.connect is not a function"
+    },
+    {
+      "name": "Performance y Optimización",
+      "status": "error",
+      "details": {},
+      "message": "Error verificando performance: diagnostics.connect is not a function"
+    },
+    {
+      "name": "Sistema de Backup",
+      "status": "error",
+      "details": {
+        "backupDirectory": "Accesible",
+        "totalBackups": 0,
+        "lastBackup": "Nunca",
+        "hasRecentBackup": null,
+        "oldestBackup": "N/A"
+      },
+      "message": "Sistema de backup no configurado o fallando"
+    },
+    {
+      "name": "Sistema de Validación",
+      "status": "warn",
+      "details": {
+        "testsPassed": "3/4",
+        "successRate": "75.0%",
+        "results": [
+          {
+            "name": "Usuario válido",
+            "passed": false
+          },
+          {
+            "name": "Usuario inválido",
+            "passed": true
+          },
+          {
+            "name": "ID válido",
+            "passed": true
+          },
+          {
+            "name": "ID inválido",
+            "passed": true
+          }
+        ]
+      },
+      "message": "Sistema de validación mayormente funcional"
+    },
+    {
+      "name": "Sistema",
+      "status": "error",
+      "message": "Cannot read properties of undefined (reading 'length')"
+    }
+  ],
+  "recommendations": [],
+  "actions": [],
+  "healthScore": 27
+}

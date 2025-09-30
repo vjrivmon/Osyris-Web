@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/.533f4ca81e77e78589261b2281c113b4063353c3-audit.json",
+    "files": [
+        {
+            "date": 1759164553415,
+            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-09-29.log",
+            "hash": "3001668b681fe8a320b360aebcb4c8dab408487173335ee58168f796704c2c1e"
+        },
+        {
+            "date": 1759214433575,
+            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-09-30.log",
+            "hash": "b49807c596ddb4fa25d4dc48863f7f75413bc645d3c8f1942e68e81105d47aa7"
+        }
+    ],
+    "hashType": "sha256"
+}

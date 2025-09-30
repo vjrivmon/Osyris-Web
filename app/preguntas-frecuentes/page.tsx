@@ -15,7 +15,6 @@ export default function PreguntasFrecuentesPage() {
           <MainNav />
         </div>
       </header>
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-primary py-16 md:py-24">
@@ -140,7 +139,7 @@ export default function PreguntasFrecuentesPage() {
               encantados de ayudarte.
             </p>
             <Button asChild size="lg">
-              <Link href="/contacto">
+              <Link href="/contacto" >
                 Contactar con nosotros
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -148,10 +147,9 @@ export default function PreguntasFrecuentesPage() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Data for FAQs

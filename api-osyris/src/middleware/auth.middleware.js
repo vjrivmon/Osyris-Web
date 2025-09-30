@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const Usuario = require('../models/usuario.model');
+// 🌐 DUAL SYSTEM: Usar database manager para ambos sistemas
+const dbManager = require('../config/database.manager');
 
 // Middleware para verificar el token
 const verifyToken = async (req, res, next) => {
@@ -19,8 +20,8 @@ const verifyToken = async (req, res, next) => {
     // Verificar el token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'osyrisScoutGroup2024SecretKey');
     
-    // Verificar si el usuario existe
-    const usuario = await Usuario.findById(decoded.id);
+    // Verificar si el usuario existe usando database manager
+    const usuario = await dbManager.getUserById(decoded.id);
     
     if (!usuario) {
       return res.status(404).json({
@@ -37,9 +38,10 @@ const verifyToken = async (req, res, next) => {
       });
     }
     
-    // Añadir el usuario a la solicitud
+    // Añadir el usuario y el payload del token a la solicitud
     req.usuario = usuario;
-    
+    req.tokenPayload = decoded;
+
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -74,7 +76,7 @@ const checkRole = (roles) => {
       });
     }
     
-    const hasRole = roles.includes(req.usuario.tipo_usuario);
+    const hasRole = roles.includes(req.usuario.rol);
     
     if (!hasRole) {
       return res.status(403).json({
@@ -87,7 +89,30 @@ const checkRole = (roles) => {
   };
 };
 
+// Middleware para requerir rol específico (más conveniente)
+const requireRole = (roles) => {
+  return [verifyToken, checkRole(roles)];
+};
+
+// Middleware específico para super admin
+const requireSuperAdmin = [verifyToken, checkRole(['super_admin'])];
+
+// Middleware para verificar si es super admin (sin bloquear)
+const isSuperAdmin = (req, res, next) => {
+  if (req.usuario && req.usuario.rol === 'super_admin') {
+    req.isSuperAdmin = true;
+  } else {
+    req.isSuperAdmin = false;
+  }
+  next();
+};
+
 module.exports = {
   verifyToken,
-  checkRole
+  checkRole,
+  requireRole,
+  requireSuperAdmin,
+  isSuperAdmin,
+  // Alias para compatibilidad
+  authenticateToken: verifyToken
 }; 

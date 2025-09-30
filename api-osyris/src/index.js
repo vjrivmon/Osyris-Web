@@ -1,12 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 
-// Importar base de datos
-const db = require('./config/db.config');
-const { createTables, createTestAdmin } = require('./utils/init-db');
+// 🏠 CONFIGURACIÓN DUAL MEJORADA: SQLite / Supabase con fallback automático
+const databaseManager = require('./config/database.manager');
 
 // Importar rutas
 const usuariosRoutes = require('./routes/usuarios.routes');
@@ -15,6 +15,10 @@ const actividadesRoutes = require('./routes/actividades.routes');
 const documentosRoutes = require('./routes/documentos.routes');
 const mensajesRoutes = require('./routes/mensajes.routes');
 const authRoutes = require('./routes/auth.routes');
+// 🚀 NUEVAS RUTAS CMS
+const uploadRoutes = require('./routes/upload.routes');
+const paginasRoutes = require('./routes/paginas.routes');
+// const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
 
 // Configuración de variables de entorno
 dotenv.config();
@@ -27,6 +31,11 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Servir archivos estáticos desde uploads (solo en desarrollo local con almacenamiento local)
+if (process.env.STORAGE_TYPE !== 'supabase') {
+  app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+}
 
 // Opciones de Swagger
 const swaggerOptions = {
@@ -75,6 +84,10 @@ app.use('/api/secciones', seccionesRoutes);
 app.use('/api/actividades', actividadesRoutes);
 app.use('/api/documentos', documentosRoutes);
 app.use('/api/mensajes', mensajesRoutes);
+// 🚀 NUEVAS RUTAS CMS
+app.use('/api/uploads', uploadRoutes);
+app.use('/api/paginas', paginasRoutes);
+// app.use('/api/preview', previewRoutes); // Temporarily disabled
 
 // Ruta inicial
 app.get('/', (req, res) => {
@@ -100,26 +113,56 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Iniciar servidor
-app.listen(PORT, async () => {
-  console.log(`Servidor en ejecución en http://localhost:${PORT}`);
-  console.log(`Documentación disponible en http://localhost:${PORT}/api-docs`);
-  
-  // Inicializar la base de datos
+// 🚀 INICIALIZACIÓN PARA VERCEL Y DESARROLLO
+const startServer = async () => {
   try {
-    await db.initializeDatabase();
-    console.log('Base de datos inicializada correctamente');
-    
-    // Crear tablas
-    await createTables();
-    console.log('Estructura de la base de datos configurada correctamente');
-    
-    // Crear usuario administrador de prueba
-    await createTestAdmin();
-    
+    console.log('🔧 Inicializando sistema de base de datos...');
+
+    // Inicializar el database manager
+    await databaseManager.initialize();
+
+    const dbType = databaseManager.getDatabaseType();
+    const isSupabase = databaseManager.isUsingSupabase();
+
+    console.log(`✅ Sistema de base de datos inicializado`);
+    console.log(`📊 Base de datos activa: ${dbType === 'supabase' ? 'PostgreSQL (Supabase)' : 'SQLite (Local)'}`);
+    console.log(`📁 Almacenamiento: ${process.env.STORAGE_TYPE === 'supabase' ? 'Supabase Storage' : 'Sistema de archivos local'}`);
+
+    // Obtener estadísticas del sistema
+    try {
+      const stats = await databaseManager.getSystemStats();
+      console.log('📈 Estadísticas del sistema:', stats);
+    } catch (statsError) {
+      console.warn('⚠️ No se pudieron obtener estadísticas:', statsError.message);
+    }
+
+    // En desarrollo, levantar servidor
+    if (process.env.NODE_ENV !== 'production') {
+      app.listen(PORT, () => {
+        console.log(`\n${'='.repeat(60)}`);
+        console.log(`🚀 Servidor en ejecución en http://localhost:${PORT}`);
+        console.log(`📚 Documentación disponible en http://localhost:${PORT}/api-docs`);
+        console.log(`🔧 Entorno: ${process.env.NODE_ENV}`);
+        console.log(`🗄️ Base de datos: ${dbType}`);
+        console.log(`📦 Almacenamiento: ${process.env.STORAGE_TYPE || 'local'}`);
+        console.log(`${'='.repeat(60)}\n`);
+      });
+    }
+
   } catch (error) {
-    console.error('Error al configurar la base de datos:', error);
+    console.error('❌ Error crítico al inicializar el servidor:', error);
+    console.error('Detalles del error:', error.stack);
+    process.exit(1);
   }
-});
+};
+
+// Para Vercel, exportar la app sin listen
+if (process.env.VERCEL) {
+  // En Vercel, solo inicializar sin listen
+  startServer();
+} else {
+  // En desarrollo local, inicializar y hacer listen
+  startServer();
+}
 
 module.exports = app; 

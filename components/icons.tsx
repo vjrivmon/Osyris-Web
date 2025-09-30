@@ -12,7 +12,6 @@ import {
   Image,
   Laptop,
   Loader2,
-  type LightbulbIcon as LucideProps,
   Moon,
   MoreVertical,
   Pizza,
@@ -43,7 +42,7 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   laptop: Laptop,
-  gitHub: ({ ...props }: LucideProps) => (
+  gitHub: ({ ...props }: LucideIcon) => (
     <svg
       aria-hidden="true"
       focusable="false"

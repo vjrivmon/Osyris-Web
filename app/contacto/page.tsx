@@ -5,27 +5,130 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import PageEditor from "@/components/ui/page-editor"
 import { MapPin, Mail, Phone, Send } from "lucide-react"
+
+// Definición de elementos editables para la página de contacto
+const editableElements = [
+  {
+    id: 'hero-title',
+    type: 'text' as const,
+    selector: '[data-edit="hero-title"]',
+    label: 'Título principal',
+    content: 'Contacto',
+    maxLength: 100
+  },
+  {
+    id: 'hero-subtitle',
+    type: 'text' as const,
+    selector: '[data-edit="hero-subtitle"]',
+    label: 'Subtítulo contacto',
+    content: '¿Tienes alguna pregunta o quieres formar parte de nuestro grupo? ¡Contáctanos!',
+    maxLength: 200
+  },
+  {
+    id: 'form-title',
+    type: 'text' as const,
+    selector: '[data-edit="form-title"]',
+    label: 'Título formulario',
+    content: 'Envíanos un mensaje',
+    maxLength: 100
+  },
+  {
+    id: 'form-description',
+    type: 'text' as const,
+    selector: '[data-edit="form-description"]',
+    label: 'Descripción formulario',
+    content: 'Rellena el formulario y te responderemos lo antes posible.',
+    maxLength: 200
+  },
+  {
+    id: 'contact-info-title',
+    type: 'text' as const,
+    selector: '[data-edit="contact-info-title"]',
+    label: 'Título información contacto',
+    content: 'Información de contacto',
+    maxLength: 100
+  },
+  {
+    id: 'contact-address',
+    type: 'textarea' as const,
+    selector: '[data-edit="contact-address"]',
+    label: 'Dirección',
+    content: 'Calle Ejemplo, 123\n46000 Valencia',
+    maxLength: 300
+  },
+  {
+    id: 'contact-email',
+    type: 'text' as const,
+    selector: '[data-edit="contact-email"]',
+    label: 'Email de contacto',
+    content: 'contacto@grupoosyris.es',
+    maxLength: 100
+  },
+  {
+    id: 'contact-phone',
+    type: 'text' as const,
+    selector: '[data-edit="contact-phone"]',
+    label: 'Teléfono de contacto',
+    content: '123 456 789',
+    maxLength: 50
+  }
+]
+
+// Data for FAQs
+const faqs = [
+  {
+    question: "¿Cómo puedo inscribir a mi hijo/a en el grupo scout?",
+    answer:
+      "Para inscribir a tu hijo/a, puedes contactarnos a través del formulario de esta página, por email o acercarte directamente a nuestro local en horario de atención a familias. Te informaremos sobre el proceso de inscripción y las plazas disponibles.",
+  },
+  {
+    question: "¿Cuál es la cuota y qué incluye?",
+    answer:
+      "La cuota anual es de 180€, que se puede pagar en tres plazos trimestrales. Incluye el seguro, materiales para las actividades regulares y la cuota de pertenencia a la Federación. Las acampadas y campamentos tienen un coste adicional.",
+  },
+  {
+    question: "¿Qué edad debe tener mi hijo/a para unirse al grupo?",
+    answer:
+      "Aceptamos niños y niñas desde los 5 años (Castores) hasta los 19 años (Rutas). Cada sección tiene un rango de edad específico: Castores (5-7), Lobatos (7-10), Scouts (10-13), Pioneros (13-16) y Rutas (16-19).",
+  },
+  {
+    question: "¿Cómo puedo colaborar como adulto?",
+    answer:
+      "Hay varias formas de colaborar: como monitor/a (Scouter), como miembro del Comité de Padres, o como colaborador puntual en actividades específicas. Contáctanos para más información.",
+  },
+  {
+    question: "¿Qué actividades realizan durante el año?",
+    answer:
+      "Realizamos reuniones semanales los sábados, acampadas de fin de semana aproximadamente una vez al trimestre, y un campamento de verano de 15 días en julio. También participamos en actividades con otros grupos scouts y eventos comunitarios.",
+  },
+]
 
 export default function ContactoPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center">
-          <MainNav />
-        </div>
-      </header>
-
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative bg-primary py-16 md:py-24">
-          <div className="container mx-auto px-4 text-center text-primary-foreground">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">Contacto</h1>
-            <p className="mt-4 text-xl max-w-3xl mx-auto">
-              ¿Tienes alguna pregunta o quieres formar parte de nuestro grupo? ¡Contáctanos!
-            </p>
+    <PageEditor
+      pageName="Contacto"
+      pageSlug="contacto"
+      elements={editableElements}
+    >
+      <div className="flex flex-col min-h-screen">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 items-center">
+            <MainNav />
           </div>
-        </section>
+        </header>
+
+        <main className="flex-1">
+          {/* Hero Section */}
+          <section className="relative bg-primary py-16 md:py-24">
+            <div className="container mx-auto px-4 text-center text-primary-foreground">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6" data-edit="hero-title">Contacto</h1>
+              <p className="mt-4 text-xl max-w-3xl mx-auto" data-edit="hero-subtitle">
+                ¿Tienes alguna pregunta o quieres formar parte de nuestro grupo? ¡Contáctanos!
+              </p>
+            </div>
+          </section>
 
         {/* Contact Section */}
         <section className="py-12">
@@ -34,8 +137,8 @@ export default function ContactoPage() {
               <div className="md:w-1/2">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Envíanos un mensaje</CardTitle>
-                    <CardDescription>Rellena el formulario y te responderemos lo antes posible.</CardDescription>
+                    <CardTitle data-edit="form-title">Envíanos un mensaje</CardTitle>
+                    <CardDescription data-edit="form-description">Rellena el formulario y te responderemos lo antes posible.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
@@ -66,7 +169,7 @@ export default function ContactoPage() {
               <div className="md:w-1/2 space-y-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Información de contacto</CardTitle>
+                    <CardTitle data-edit="contact-info-title">Información de contacto</CardTitle>
                     <CardDescription>Puedes contactarnos a través de los siguientes medios.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -161,35 +264,7 @@ export default function ContactoPage() {
 
       <SiteFooter />
     </div>
-  )
+    </PageEditor>
+  );
 }
-
-// Data for FAQs
-const faqs = [
-  {
-    question: "¿Cómo puedo inscribir a mi hijo/a en el grupo scout?",
-    answer:
-      "Para inscribir a tu hijo/a, puedes contactarnos a través del formulario de esta página, por email o acercarte directamente a nuestro local en horario de atención a familias. Te informaremos sobre el proceso de inscripción y las plazas disponibles.",
-  },
-  {
-    question: "¿Cuál es la cuota y qué incluye?",
-    answer:
-      "La cuota anual es de 180€, que se puede pagar en tres plazos trimestrales. Incluye el seguro, materiales para las actividades regulares y la cuota de pertenencia a la Federación. Las acampadas y campamentos tienen un coste adicional.",
-  },
-  {
-    question: "¿Qué edad debe tener mi hijo/a para unirse al grupo?",
-    answer:
-      "Aceptamos niños y niñas desde los 5 años (Castores) hasta los 19 años (Rutas). Cada sección tiene un rango de edad específico: Castores (5-7), Lobatos (7-10), Scouts (10-13), Pioneros (13-16) y Rutas (16-19).",
-  },
-  {
-    question: "¿Cómo puedo colaborar como adulto?",
-    answer:
-      "Hay varias formas de colaborar: como monitor/a (Scouter), como miembro del Comité de Padres, o como colaborador puntual en actividades específicas. Contáctanos para más información.",
-  },
-  {
-    question: "¿Qué actividades realizan durante el año?",
-    answer:
-      "Realizamos reuniones semanales los sábados, acampadas de fin de semana aproximadamente una vez al trimestre, y un campamento de verano de 15 días en julio. También participamos en actividades con otros grupos scouts y eventos comunitarios.",
-  },
-]
 

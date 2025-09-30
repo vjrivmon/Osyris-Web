@@ -30,7 +30,9 @@ export function MainNav() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo - Always on the left */}
-          <Link href="/" className="flex items-center transition-transform hover:scale-105">
+          <Link
+            href="/"
+            className="flex items-center transition-transform hover:scale-105">
             <img
               src="/images/logo-osyris.png"
               alt="Logo Grupo Scout Osyris"
@@ -67,7 +69,7 @@ export function MainNav() {
                       "flex items-center justify-between text-lg font-medium transition-colors hover:text-primary p-2 rounded-md",
                       pathname === "/" ? "text-primary bg-primary/10" : "text-foreground hover:bg-muted",
                     )}
-                  >
+                    >
                     <span>Inicio</span>
                     {pathname === "/" && (
                       <Badge variant="outline" className="border-primary text-primary">
@@ -83,7 +85,7 @@ export function MainNav() {
                         href="/secciones/castores"
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-muted"
-                      >
+                        >
                         <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                         <span>Castores (5-7 años)</span>
                       </Link>
@@ -91,7 +93,7 @@ export function MainNav() {
                         href="/secciones/manada"
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-muted"
-                      >
+                        >
                         <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
                         <span>Manada (7-10 años)</span>
                       </Link>
@@ -99,7 +101,7 @@ export function MainNav() {
                         href="/secciones/tropa"
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-muted"
-                      >
+                        >
                         <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                         <span>Tropa (10-13 años)</span>
                       </Link>
@@ -107,7 +109,7 @@ export function MainNav() {
                         href="/secciones/pioneros"
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-muted"
-                      >
+                        >
                         <span className="w-2 h-2 rounded-full bg-red-600"></span>
                         <span>Pioneros (13-16 años)</span>
                       </Link>
@@ -115,7 +117,7 @@ export function MainNav() {
                         href="/secciones/rutas"
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-muted"
-                      >
+                        >
                         <span className="w-2 h-2 rounded-full bg-green-700"></span>
                         <span>Rutas (16-19 años)</span>
                       </Link>
@@ -183,16 +185,17 @@ export function MainNav() {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <Link href="/" legacyBehavior passHref>
-                    <NavigationMenuLink
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/"
                       className={cn(
                         navigationMenuTriggerStyle(),
                         pathname === "/" ? "text-primary font-medium" : "text-foreground",
                       )}
                     >
                       Inicio
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
@@ -265,29 +268,31 @@ export function MainNav() {
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <Link href="/calendario" legacyBehavior passHref>
-                    <NavigationMenuLink
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/calendario"
                       className={cn(
                         navigationMenuTriggerStyle(),
                         pathname === "/calendario" ? "text-primary font-medium" : "text-foreground",
                       )}
                     >
                       Calendario
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <Link href="/galeria" legacyBehavior passHref>
-                    <NavigationMenuLink
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/galeria"
                       className={cn(
                         navigationMenuTriggerStyle(),
                         pathname === "/galeria" ? "text-primary font-medium" : "text-foreground",
                       )}
                     >
                       Galería
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
@@ -346,7 +351,7 @@ export function MainNav() {
         </div>
       </div>
     </header>
-  )
+  );
 }
 
 const ListItem = React.forwardRef<

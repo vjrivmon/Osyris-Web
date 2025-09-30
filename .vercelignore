@@ -1,0 +1,8 @@
+# Vercel ignore file
+api-osyris/
+scripts/
+*.md
+.git/
+.gitignore
+docker-compose.yml
+Dockerfile

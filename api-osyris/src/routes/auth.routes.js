@@ -196,4 +196,56 @@ router.get('/profile', verifyToken, authController.profile);
  */
 router.post('/change-password', verifyToken, authController.changePassword);
 
+/**
+ * @swagger
+ * /api/auth/verify:
+ *   get:
+ *     summary: Verificar la autenticación del token
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Token válido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Token válido
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     usuario:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                         email:
+ *                           type: string
+ *                         nombre:
+ *                           type: string
+ *                         apellidos:
+ *                           type: string
+ *                         rol:
+ *                           type: string
+ *                     tokenInfo:
+ *                       type: object
+ *                       properties:
+ *                         issuedAt:
+ *                           type: string
+ *                         expiresAt:
+ *                           type: string
+ *       401:
+ *         description: Token inválido o expirado
+ *       500:
+ *         description: Error del servidor
+ */
+router.get('/verify', verifyToken, authController.verifyAuth);
+
 module.exports = router; 

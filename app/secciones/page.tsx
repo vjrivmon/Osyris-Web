@@ -12,7 +12,6 @@ export default function SeccionesPage() {
           <MainNav />
         </div>
       </header>
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-primary py-16 md:py-24">
@@ -60,7 +59,7 @@ export default function SeccionesPage() {
                     <p className="text-muted-foreground">{section.description}</p>
                     <div className="pt-4">
                       <Button asChild>
-                        <Link href={section.href}>
+                        <Link href={section.href} >
                           Conocer más
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
@@ -119,10 +118,9 @@ export default function SeccionesPage() {
           </div>
         </section>
       </main>
-
       <SiteFooter />
     </div>
-  )
+  );
 }
 
 // Data for sections

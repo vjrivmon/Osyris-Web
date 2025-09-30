@@ -21,7 +21,7 @@ export function SiteFooter() {
                 rel="noopener noreferrer"
                 className="hover:text-secondary transition-colors"
                 aria-label="Facebook"
-              >
+                >
                 <Facebook className="h-5 w-5" />
               </Link>
               <Link
@@ -30,7 +30,7 @@ export function SiteFooter() {
                 rel="noopener noreferrer"
                 className="hover:text-secondary transition-colors"
                 aria-label="Instagram"
-              >
+                >
                 <Instagram className="h-5 w-5" />
               </Link>
               <Link
@@ -39,14 +39,14 @@ export function SiteFooter() {
                 rel="noopener noreferrer"
                 className="hover:text-secondary transition-colors"
                 aria-label="YouTube"
-              >
+                >
                 <Youtube className="h-5 w-5" />
               </Link>
               <Link
                 href="mailto:info@grupoosyris.es"
                 className="hover:text-secondary transition-colors"
                 aria-label="Email"
-              >
+                >
                 <Mail className="h-5 w-5" />
               </Link>
             </div>
@@ -143,6 +143,6 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
 

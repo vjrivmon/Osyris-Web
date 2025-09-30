@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Admin Auth</title>
+</head>
+<body>
+    <h1>Testing Admin Authentication</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+
+        // Check localStorage for tokens
+        const token = localStorage.getItem('token');
+        const osyrisToken = localStorage.getItem('osyris_token');
+        const userStr = localStorage.getItem('osyris_user');
+
+        let html = '<h2>LocalStorage Check:</h2>';
+        html += `<p>token: ${token ? 'EXISTS' : 'NOT FOUND'}</p>`;
+        html += `<p>osyris_token: ${osyrisToken ? 'EXISTS' : 'NOT FOUND'}</p>`;
+        html += `<p>osyris_user: ${userStr ? 'EXISTS' : 'NOT FOUND'}</p>`;
+
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                html += `<p>User email: ${user.email}</p>`;
+                html += `<p>User role: ${user.rol}</p>`;
+                html += `<p>User token in data: ${user.token ? 'EXISTS' : 'NOT FOUND'}</p>`;
+            } catch (e) {
+                html += `<p>Error parsing user data: ${e.message}</p>`;
+            }
+        }
+
+        // Try to call the API
+        const finalToken = token || (userStr ? JSON.parse(userStr).token : null) || osyrisToken;
+
+        if (finalToken) {
+            html += '<h2>API Test:</h2>';
+            html += `<p>Using token: ${finalToken.substring(0, 20)}...</p>`;
+
+            fetch('http://localhost:5000/api/paginas', {
+                headers: {
+                    'Authorization': `Bearer ${finalToken}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                html += `<p>Response status: ${response.status}</p>`;
+                return response.json();
+            })
+            .then(data => {
+                html += `<p>Response data:</p>`;
+                html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                output.innerHTML = html;
+            })
+            .catch(error => {
+                html += `<p>Error: ${error.message}</p>`;
+                output.innerHTML = html;
+            });
+        } else {
+            html += '<p style="color: red;">NO TOKEN FOUND!</p>';
+            output.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

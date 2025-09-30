@@ -1,0 +1,224 @@
+{
+  "version": "1.0.0",
+  "mcps": {
+    "supabase": {
+      "enabled": true,
+      "description": "Supabase integration for database and storage operations",
+      "endpoints": {
+        "database": "https://nwkopngnziocsczqkjra.supabase.co/rest/v1/",
+        "storage": "https://nwkopngnziocsczqkjra.supabase.co/storage/v1/",
+        "auth": "https://nwkopngnziocsczqkjra.supabase.co/auth/v1/"
+      },
+      "credentials": {
+        "anon_key": "${SUPABASE_ANON_KEY}",
+        "service_key": "${SUPABASE_SERVICE_KEY}",
+        "url": "${SUPABASE_URL}"
+      },
+      "capabilities": [
+        "database_query",
+        "database_insert",
+        "database_update", 
+        "database_delete",
+        "storage_upload",
+        "storage_download",
+        "storage_list",
+        "auth_management"
+      ]
+    },
+
+    "github": {
+      "enabled": true,
+      "description": "GitHub integration for repository management and CI/CD",
+      "endpoints": {
+        "api": "https://api.github.com/",
+        "repo": "https://api.github.com/repos/${GITHUB_REPO}"
+      },
+      "credentials": {
+        "token": "${GITHUB_TOKEN}",
+        "repo": "${GITHUB_REPO}"
+      },
+      "capabilities": [
+        "repository_management",
+        "branch_operations",
+        "pull_request_management",
+        "issue_tracking",
+        "deployment_status",
+        "webhook_management"
+      ]
+    },
+
+    "vercel": {
+      "enabled": true,
+      "description": "Vercel integration for frontend deployment",
+      "endpoints": {
+        "api": "https://api.vercel.com/",
+        "deployments": "https://api.vercel.com/v6/deployments"
+      },
+      "credentials": {
+        "token": "${VERCEL_TOKEN}",
+        "team_id": "${VERCEL_TEAM_ID}",
+        "project_id": "${VERCEL_PROJECT_ID}"
+      },
+      "capabilities": [
+        "deployment_management",
+        "environment_variables",
+        "domain_management",
+        "build_logs",
+        "performance_metrics"
+      ]
+    },
+
+    "filesystem": {
+      "enabled": true,
+      "description": "Local filesystem operations for development",
+      "base_path": "/home/vicente/RoadToDevOps/osyris/Osyris-Web",
+      "capabilities": [
+        "file_read",
+        "file_write",
+        "directory_operations",
+        "backup_management",
+        "log_access"
+      ],
+      "restrictions": {
+        "allowed_paths": [
+          "api-osyris/",
+          "app/",
+          "components/",
+          "uploads/",
+          "backups/",
+          ".claude/",
+          "migrations/"
+        ],
+        "forbidden_paths": [
+          ".env",
+          "node_modules/",
+          ".git/"
+        ]
+      }
+    },
+
+    "database_tools": {
+      "enabled": true,
+      "description": "Database management tools for SQLite and PostgreSQL",
+      "sqlite": {
+        "path": "api-osyris/database/osyris.db",
+        "capabilities": [
+          "schema_inspection",
+          "data_query",
+          "backup_creation",
+          "migration_execution"
+        ]
+      },
+      "postgresql": {
+        "connection": "${DATABASE_URL}",
+        "capabilities": [
+          "schema_management",
+          "data_operations",
+          "performance_monitoring",
+          "backup_management"
+        ]
+      }
+    },
+
+    "monitoring": {
+      "enabled": true,
+      "description": "System monitoring and logging",
+      "log_paths": [
+        ".claude/logs/",
+        "api-osyris/logs/",
+        "logs/"
+      ],
+      "metrics": {
+        "performance": true,
+        "errors": true,
+        "usage": true,
+        "deployment": true
+      },
+      "capabilities": [
+        "log_analysis",
+        "error_tracking",
+        "performance_monitoring",
+        "alert_management"
+      ]
+    }
+  },
+
+  "integration_workflows": {
+    "local_to_production": {
+      "steps": [
+        "filesystem.backup_current_state",
+        "database_tools.sqlite.create_backup", 
+        "supabase.database_migration",
+        "supabase.storage_migration",
+        "github.create_deployment_branch",
+        "vercel.trigger_deployment",
+        "monitoring.track_deployment"
+      ]
+    },
+
+    "production_to_local": {
+      "steps": [
+        "supabase.export_data",
+        "database_tools.sqlite.import_data",
+        "supabase.download_files",
+        "filesystem.organize_local_files",
+        "monitoring.log_sync_operation"
+      ]
+    },
+
+    "schema_migration": {
+      "steps": [
+        "database_tools.sqlite.extract_schema",
+        "database_tools.postgresql.compare_schema",
+        "database_tools.postgresql.generate_migration",
+        "supabase.apply_migration",
+        "monitoring.validate_migration"
+      ]
+    }
+  },
+
+  "error_handling": {
+    "retry_policies": {
+      "network_errors": {
+        "max_retries": 3,
+        "backoff": "exponential",
+        "base_delay": 1000
+      },
+      "api_rate_limits": {
+        "max_retries": 5,
+        "backoff": "linear",
+        "base_delay": 5000
+      }
+    },
+
+    "fallback_strategies": {
+      "supabase_unavailable": "use_local_sqlite",
+      "vercel_deployment_failed": "deploy_to_alternative",
+      "github_api_down": "use_local_git_operations"
+    }
+  },
+
+  "security": {
+    "credential_management": {
+      "use_environment_variables": true,
+      "encrypt_stored_credentials": true,
+      "rotate_credentials_regularly": true
+    },
+
+    "access_control": {
+      "validate_permissions": true,
+      "audit_all_operations": true,
+      "restrict_sensitive_operations": true
+    }
+  },
+
+  "performance": {
+    "connection_pooling": true,
+    "request_caching": true,
+    "batch_operations": true,
+    "parallel_requests": {
+      "max_concurrent": 10,
+      "queue_size": 100
+    }
+  }
+}

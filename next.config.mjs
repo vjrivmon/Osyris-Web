@@ -1,9 +1,8 @@
-let userConfig = undefined
-try {
-  userConfig = await import('./v0-user-next.config')
-} catch (e) {
-  // ignore error
-}
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -21,34 +20,20 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
-  // Configuración para GitHub Pages
-  output: 'export',
-  trailingSlash: true,
-  distDir: 'out',
-  basePath: '/Osyris-Web',
-  assetPrefix: '/Osyris-Web/',
-}
-
-mergeConfig(nextConfig, userConfig)
-
-function mergeConfig(nextConfig, userConfig) {
-  if (!userConfig) {
-    return
-  }
-
-  for (const key in userConfig) {
-    if (
-      typeof nextConfig[key] === 'object' &&
-      !Array.isArray(nextConfig[key])
-    ) {
-      nextConfig[key] = {
-        ...nextConfig[key],
-        ...userConfig[key],
-      }
-    } else {
-      nextConfig[key] = userConfig[key]
+  webpack: (config, { isServer }) => {
+    // Add path aliases with absolute path
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': __dirname,
     }
-  }
+
+    // Ensure alias is properly set for both server and client
+    if (!config.resolve.alias['@']) {
+      config.resolve.alias['@'] = __dirname
+    }
+
+    return config
+  },
 }
 
 export default nextConfig

@@ -46,17 +46,15 @@ export default function RecuperarContrasenaPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-section-pattern p-4">
       <div className="absolute top-4 left-4 flex items-center space-x-2">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/login">
+          <Link href="/login" >
             <ArrowLeft className="h-5 w-5" />
             <span className="sr-only">Volver al inicio de sesión</span>
           </Link>
         </Button>
       </div>
-
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
           <img
@@ -132,6 +130,6 @@ export default function RecuperarContrasenaPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
