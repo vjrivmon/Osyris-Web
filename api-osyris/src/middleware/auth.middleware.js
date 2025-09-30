@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-// 🚀 MIGRACIÓN A SUPABASE: Cambiar modelo
-const Usuario = require('../models/usuario.model.supabase');
+// 🌐 DUAL SYSTEM: Usar database manager para ambos sistemas
+const dbManager = require('../config/database.manager');
 
 // Middleware para verificar el token
 const verifyToken = async (req, res, next) => {
@@ -20,8 +20,8 @@ const verifyToken = async (req, res, next) => {
     // Verificar el token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'osyrisScoutGroup2024SecretKey');
     
-    // Verificar si el usuario existe
-    const usuario = await Usuario.findById(decoded.id);
+    // Verificar si el usuario existe usando database manager
+    const usuario = await dbManager.getUserById(decoded.id);
     
     if (!usuario) {
       return res.status(404).json({

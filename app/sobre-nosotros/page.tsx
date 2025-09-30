@@ -3,27 +3,170 @@ import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import PageEditor from "@/components/ui/page-editor"
 import Link from "next/link"
 import { ArrowRight, Award, Calendar, FileText, Heart, MapPin, Users } from "lucide-react"
 
+// Definición de elementos editables para la página Sobre Nosotros
+const editableElements = [
+  {
+    id: 'hero-title',
+    type: 'text' as const,
+    selector: '[data-edit="hero-title"]',
+    label: 'Título principal',
+    content: 'Sobre Nosotros',
+    maxLength: 100
+  },
+  {
+    id: 'hero-subtitle',
+    type: 'text' as const,
+    selector: '[data-edit="hero-subtitle"]',
+    label: 'Subtítulo del héroe',
+    content: 'Conoce la historia, valores y personas que forman el Grupo Scout Osyris',
+    maxLength: 200
+  },
+  {
+    id: 'historia-title',
+    type: 'text' as const,
+    selector: '[data-edit="historia-title"]',
+    label: 'Título sección historia',
+    content: 'Nuestra Historia',
+    maxLength: 100
+  },
+  {
+    id: 'historia-description',
+    type: 'textarea' as const,
+    selector: '[data-edit="historia-description"]',
+    label: 'Descripción historia',
+    content: 'El Grupo Scout Osyris fue fundado el 23 de febrero de 1981...',
+    maxLength: 2000
+  },
+  {
+    id: 'valores-title',
+    type: 'text' as const,
+    selector: '[data-edit="valores-title"]',
+    label: 'Título sección valores',
+    content: 'Nuestros Valores',
+    maxLength: 100
+  },
+  {
+    id: 'metodologia-title',
+    type: 'text' as const,
+    selector: '[data-edit="metodologia-title"]',
+    label: 'Título sección metodología',
+    content: 'Nuestra Metodología',
+    maxLength: 100
+  },
+  {
+    id: 'hero-image',
+    type: 'image' as const,
+    selector: '[data-edit="hero-image"]',
+    label: 'Imagen principal historia',
+    content: '/placeholder.svg?height=400&width=600'
+  }
+]
+
+// Mock data moved to fix syntax errors
+const timelineEvents = [
+  { year: "1981", description: "Fundación del Grupo Scout Osyris, con su primera ronda solar 1980-1981." },
+  { year: "1990", description: "Celebración del 10º aniversario con un gran campamento en los Pirineos." },
+  { year: "2000", description: "Ampliación de las secciones y consolidación del grupo en el barrio de Benimaclet." },
+  { year: "2006", description: "Renovación del proyecto educativo y metodología del grupo." },
+  {
+    year: "2016",
+    description: "Celebración del 35º aniversario con una gran fiesta y encuentro de antiguos miembros.",
+  },
+  { year: "2021", description: "40º aniversario del grupo, adaptándonos a los nuevos tiempos y retos." },
+  { year: "Actualidad", description: "Seguimos creciendo y formando a niños, niñas y jóvenes en valores scouts." },
+]
+
+const values = [
+  {
+    icon: <Users className="h-8 w-8" />,
+    title: "Comunidad",
+    description:
+      "Fomentamos el sentido de pertenencia y el trabajo en equipo, creando vínculos fuertes entre todos los miembros.",
+  },
+  {
+    icon: <Heart className="h-8 w-8" />,
+    title: "Servicio",
+    description:
+      "Promovemos la actitud de ayuda desinteresada hacia los demás y el compromiso con la mejora de la sociedad.",
+  },
+  {
+    icon: <Award className="h-8 w-8" />,
+    title: "Compromiso",
+    description: "Desarrollamos la responsabilidad personal y el compromiso con los demás y con la sociedad.",
+  },
+  {
+    icon: <MapPin className="h-8 w-8" />,
+    title: "Naturaleza",
+    description: "Fomentamos el respeto y cuidado del medio ambiente a través de actividades al aire libre.",
+  },
+  {
+    icon: <Calendar className="h-8 w-8" />,
+    title: "Progresión Personal",
+    description:
+      "Acompañamos el desarrollo individual de cada persona, respetando sus ritmos y potenciando sus capacidades.",
+  },
+  {
+    icon: <FileText className="h-8 w-8" />,
+    title: "Educación",
+    description: "Trabajamos por el desarrollo integral de niños y jóvenes a través del método scout.",
+  },
+]
+
+const sections = [
+  {
+    name: "Castores",
+    description: "5-7 años. Colonia La Veleta. Lema: 'Compartir'",
+    bgClass: "bg-orange-100 text-orange-800",
+  },
+  {
+    name: "Lobatos",
+    description: "7-10 años. Manada Waingunga. Lema: 'Haremos lo mejor'",
+    bgClass: "bg-yellow-100 text-yellow-800",
+  },
+  {
+    name: "Tropa",
+    description: "10-13 años. Tropa Brownsea. Lema: 'Listos'",
+    bgClass: "bg-blue-100 text-blue-800",
+  },
+  {
+    name: "Pioneros",
+    description: "13-16 años. Posta Kanhiwara. Lema: 'Descubrir'",
+    bgClass: "bg-red-100 text-red-800",
+  },
+  {
+    name: "Rutas",
+    description: "16-19 años. Ruta Walhalla. Lema: 'Servir'",
+    bgClass: "bg-green-100 text-green-800",
+  },
+]
+
 export default function SobreNosotrosPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center">
-          <MainNav />
-        </div>
-      </header>
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative bg-primary py-16 md:py-24">
-          <div className="container mx-auto px-4 text-center text-primary-foreground">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">Sobre Nosotros</h1>
-            <p className="mt-4 text-xl max-w-3xl mx-auto">
-              Conoce la historia, valores y personas que forman el Grupo Scout Osyris
-            </p>
+    <PageEditor
+      pageName="Sobre Nosotros"
+      pageSlug="sobre-nosotros"
+      elements={editableElements}
+    >
+      <div className="flex flex-col min-h-screen">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 items-center">
+            <MainNav />
           </div>
-        </section>
+        </header>
+        <main className="flex-1">
+          {/* Hero Section */}
+          <section className="relative bg-primary py-16 md:py-24">
+            <div className="container mx-auto px-4 text-center text-primary-foreground">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6" data-edit="hero-title">Sobre Nosotros</h1>
+              <p className="mt-4 text-xl max-w-3xl mx-auto" data-edit="hero-subtitle">
+                Conoce la historia, valores y personas que forman el Grupo Scout Osyris
+              </p>
+            </div>
+          </section>
 
         {/* Tabs Section */}
         <section className="py-12">
@@ -40,7 +183,7 @@ export default function SobreNosotrosPage() {
               <TabsContent value="historia" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                   <div>
-                    <h2 className="text-2xl font-bold mb-4">Nuestra Historia</h2>
+                    <h2 className="text-2xl font-bold mb-4" data-edit="historia-title">Nuestra Historia</h2>
                     <p className="mb-4">
                       El Grupo Scout Osyris fue fundado el 23 de febrero de 1981, siendo su primera ronda la que
                       corresponde a los años 1980-1981. Desde entonces, hemos estado comprometidos con la educación en
@@ -190,84 +333,7 @@ export default function SobreNosotrosPage() {
       </main>
       <SiteFooter />
     </div>
+    </PageEditor>
   );
 }
-
-// Mock data
-const timelineEvents = [
-  { year: "1981", description: "Fundación del Grupo Scout Osyris, con su primera ronda solar 1980-1981." },
-  { year: "1990", description: "Celebración del 10º aniversario con un gran campamento en los Pirineos." },
-  { year: "2000", description: "Ampliación de las secciones y consolidación del grupo en el barrio de Benimaclet." },
-  { year: "2006", description: "Renovación del proyecto educativo y metodología del grupo." },
-  {
-    year: "2016",
-    description: "Celebración del 35º aniversario con una gran fiesta y encuentro de antiguos miembros.",
-  },
-  { year: "2021", description: "40º aniversario del grupo, adaptándonos a los nuevos tiempos y retos." },
-  { year: "Actualidad", description: "Seguimos creciendo y formando a niños, niñas y jóvenes en valores scouts." },
-]
-
-const values = [
-  {
-    icon: <Users className="h-8 w-8" />,
-    title: "Comunidad",
-    description:
-      "Fomentamos el sentido de pertenencia y el trabajo en equipo, creando vínculos fuertes entre todos los miembros.",
-  },
-  {
-    icon: <Heart className="h-8 w-8" />,
-    title: "Servicio",
-    description:
-      "Promovemos la actitud de ayuda desinteresada hacia los demás y el compromiso con la mejora de la sociedad.",
-  },
-  {
-    icon: <Award className="h-8 w-8" />,
-    title: "Compromiso",
-    description: "Desarrollamos la responsabilidad personal y el compromiso con los demás y con la sociedad.",
-  },
-  {
-    icon: <MapPin className="h-8 w-8" />,
-    title: "Naturaleza",
-    description: "Fomentamos el respeto y cuidado del medio ambiente a través de actividades al aire libre.",
-  },
-  {
-    icon: <Calendar className="h-8 w-8" />,
-    title: "Progresión Personal",
-    description:
-      "Acompañamos el desarrollo individual de cada persona, respetando sus ritmos y potenciando sus capacidades.",
-  },
-  {
-    icon: <FileText className="h-8 w-8" />,
-    title: "Educación",
-    description: "Trabajamos por el desarrollo integral de niños y jóvenes a través del método scout.",
-  },
-]
-
-const sections = [
-  {
-    name: "Castores",
-    description: "5-7 años. Colonia La Veleta. Lema: 'Compartir'",
-    bgClass: "bg-orange-100 text-orange-800",
-  },
-  {
-    name: "Lobatos",
-    description: "7-10 años. Manada Waingunga. Lema: 'Haremos lo mejor'",
-    bgClass: "bg-yellow-100 text-yellow-800",
-  },
-  {
-    name: "Tropa",
-    description: "10-13 años. Tropa Brownsea. Lema: 'Listos'",
-    bgClass: "bg-blue-100 text-blue-800",
-  },
-  {
-    name: "Pioneros",
-    description: "13-16 años. Posta Kanhiwara. Lema: 'Descubrir'",
-    bgClass: "bg-red-100 text-red-800",
-  },
-  {
-    name: "Rutas",
-    description: "16-19 años. Ruta Walhalla. Lema: 'Servir'",
-    bgClass: "bg-green-100 text-green-800",
-  },
-]
 

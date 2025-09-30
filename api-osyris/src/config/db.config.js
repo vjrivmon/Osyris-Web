@@ -49,14 +49,17 @@ function createTables() {
         apellidos VARCHAR(100) NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
-        rol TEXT CHECK(rol IN ('comite', 'kraal', 'familia', 'educando')) NOT NULL,
+        rol TEXT CHECK(rol IN ('admin', 'coordinador', 'scouter', 'padre', 'educando')) NOT NULL,
         seccion_id INTEGER,
         fecha_nacimiento DATE,
         telefono VARCHAR(20),
         direccion TEXT,
+        foto_perfil VARCHAR(500),
         activo BOOLEAN DEFAULT 1,
-        fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
         ultimo_acceso DATETIME,
+        fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (seccion_id) REFERENCES secciones(id)
       )
     `;
@@ -130,13 +133,37 @@ function createTables() {
       )
     `;
 
+    // Tabla de páginas web para CMS
+    const createPagesTable = `
+      CREATE TABLE IF NOT EXISTS paginas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        titulo VARCHAR(200) NOT NULL,
+        slug VARCHAR(200) UNIQUE NOT NULL,
+        contenido TEXT NOT NULL,
+        resumen TEXT,
+        meta_descripcion TEXT,
+        imagen_destacada VARCHAR(500),
+        estado TEXT CHECK(estado IN ('borrador', 'publicada', 'archivada')) DEFAULT 'borrador',
+        tipo TEXT CHECK(tipo IN ('pagina', 'articulo', 'noticia')) DEFAULT 'pagina',
+        orden_menu INTEGER DEFAULT 0,
+        mostrar_en_menu BOOLEAN DEFAULT 1,
+        permite_comentarios BOOLEAN DEFAULT 0,
+        creado_por INTEGER NOT NULL,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_publicacion DATETIME,
+        FOREIGN KEY (creado_por) REFERENCES usuarios(id)
+      )
+    `;
+
     // Ejecutar creación de tablas
     db.serialize(() => {
       db.run(createSectionsTable);
       db.run(createUsersTable);
       db.run(createActivitiesTable);
       db.run(createDocumentsTable);
-      db.run(createMessagesTable, (err) => {
+      db.run(createMessagesTable);
+      db.run(createPagesTable, (err) => {
         if (err) {
           reject(err);
         } else {

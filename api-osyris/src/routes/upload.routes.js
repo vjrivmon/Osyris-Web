@@ -1,6 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken, requireRole } = require('../middleware/auth.middleware');
+
+// 🏠 CONFIGURACIÓN DUAL: Local / Supabase
+const uploadController = process.env.STORAGE_TYPE === 'supabase'
+  ? require('../controllers/upload.supabase.controller')
+  : require('../controllers/upload.local.controller');
+
 const {
   upload,
   uploadFile,
@@ -8,7 +14,7 @@ const {
   deleteFile,
   getFolders,
   getFileStats
-} = require('../controllers/upload.controller');
+} = uploadController;
 
 /**
  * 🏕️ RUTAS DE UPLOADS - SISTEMA CMS OSYRIS
@@ -99,7 +105,7 @@ const {
  */
 router.post('/',
   authenticateToken,
-  requireRole(['super_admin']),
+  requireRole(['admin']),
   upload.single('file'),
   uploadFile
 );
@@ -161,7 +167,7 @@ router.post('/',
  */
 router.get('/',
   authenticateToken,
-  requireRole(['super_admin']),
+  requireRole(['admin']),
   getFiles
 );
 
@@ -190,7 +196,7 @@ router.get('/',
  */
 router.delete('/:id',
   authenticateToken,
-  requireRole(['super_admin']),
+  requireRole(['admin']),
   deleteFile
 );
 
@@ -219,7 +225,7 @@ router.delete('/:id',
  */
 router.get('/folders',
   authenticateToken,
-  requireRole(['super_admin']),
+  requireRole(['admin']),
   getFolders
 );
 
@@ -255,7 +261,7 @@ router.get('/folders',
  */
 router.get('/stats',
   authenticateToken,
-  requireRole(['super_admin']),
+  requireRole(['admin']),
   getFileStats
 );
 

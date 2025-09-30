@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { MainNav } from "@/components/main-nav"
@@ -14,9 +17,30 @@ import {
   ChevronRight,
   Heart,
   Compass,
+  Edit
 } from "lucide-react"
 
 export default function Home() {
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Verificar rol del usuario solo para botón de editar
+    const userData = localStorage.getItem('osyris_user')
+    const token = localStorage.getItem('token')
+
+    if (userData && token) {
+      try {
+        const user = JSON.parse(userData)
+        if (user.rol === 'admin') {
+          setUserRole(user.rol)
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+        setUserRole(null)
+      }
+    }
+  }, [])
+
   return (
     <div className="flex flex-col min-h-screen">
       <MainNav />
@@ -25,6 +49,18 @@ export default function Home() {
         <section className="relative bg-hero-pattern bg-cover bg-center py-32 md:py-48">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70"></div>
           <div className="container relative z-10 mx-auto px-4 text-center">
+            {/* Admin Edit Button - Solo para admins autenticados */}
+            {userRole === 'admin' && (
+              <div className="absolute top-4 right-4">
+                <Link href="/admin">
+                  <Button size="sm" variant="outline" className="border-white/50 bg-white/10 text-white hover:bg-white/20">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar página
+                  </Button>
+                </Link>
+              </div>
+            )}
+
             <div className="mb-6 inline-block rounded-full bg-white px-4 py-1.5 text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
               Educando en valores desde 1981
             </div>

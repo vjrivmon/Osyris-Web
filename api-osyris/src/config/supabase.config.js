@@ -156,6 +156,26 @@ const usuarios = {
   }
 };
 
+// 🧪 Test de conexión
+async function testConnection() {
+  try {
+    const { data, error } = await supabase
+      .from('secciones')
+      .select('count')
+      .limit(1);
+
+    if (error) {
+      console.error('❌ Error al conectar con Supabase:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error de conexión:', error.message);
+    return false;
+  }
+}
+
 // 🏕️ SECCIONES
 const secciones = {
   async getAll() {
@@ -286,12 +306,180 @@ const mensajes = {
   }
 };
 
+// 📄 PÁGINAS
+const paginas = {
+  async getAll(filters = {}) {
+    let query = supabase
+      .from('paginas')
+      .select('*');
+
+    if (filters.estado) {
+      query = query.eq('estado', filters.estado);
+    }
+
+    if (filters.tipo) {
+      query = query.eq('tipo', filters.tipo);
+    }
+
+    if (filters.mostrar_en_menu !== undefined) {
+      query = query.eq('mostrar_en_menu', filters.mostrar_en_menu);
+    }
+
+    // Ejecutar consulta con orden por ID (más robusto)
+    const { data, error } = await query.order('id', { ascending: true });
+
+    if (error) {
+      // Si hay error por columna faltante, intentar consulta básica
+      if (error.message && error.message.includes('does not exist')) {
+        console.warn('⚠️ Columna no existe, usando consulta básica');
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('paginas')
+          .select('*')
+          .order('id', { ascending: true });
+
+        if (fallbackError) throw fallbackError;
+        return fallbackData;
+      }
+      throw error;
+    }
+    return data;
+  },
+
+  async getById(id) {
+    const { data, error } = await supabase
+      .from('paginas')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+    return data;
+  },
+
+  async getBySlug(slug) {
+    const { data, error } = await supabase
+      .from('paginas')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+    return data;
+  },
+
+  async create(pageData) {
+    const { data, error } = await supabase
+      .from('paginas')
+      .insert(pageData)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id, pageData) {
+    // Add fecha_actualizacion to the data
+    const updateData = {
+      ...pageData,
+      fecha_actualizacion: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('paginas')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id) {
+    const { data, error } = await supabase
+      .from('paginas')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getMenuPages() {
+    try {
+      const { data, error } = await supabase
+        .from('paginas')
+        .select('id, titulo, slug')
+        .eq('visible', true)
+        .order('id', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.warn('⚠️ Error obteniendo páginas de menú:', error.message);
+      return [];
+    }
+  },
+
+  async getStats() {
+    // Get total count
+    const { count: totalCount, error: totalError } = await supabase
+      .from('paginas')
+      .select('*', { count: 'exact', head: true });
+
+    if (totalError) throw totalError;
+
+    // Get published count
+    const { count: publishedCount, error: publishedError } = await supabase
+      .from('paginas')
+      .select('*', { count: 'exact', head: true })
+      .eq('estado', 'publicada');
+
+    if (publishedError) throw publishedError;
+
+    // Get draft count
+    const { count: draftCount, error: draftError } = await supabase
+      .from('paginas')
+      .select('*', { count: 'exact', head: true })
+      .eq('estado', 'borrador');
+
+    if (draftError) throw draftError;
+
+    // Get types count
+    const { data: typeData, error: typeError } = await supabase
+      .from('paginas')
+      .select('tipo')
+      .order('tipo');
+
+    if (typeError) throw typeError;
+
+    // Group by type manually
+    const typeCount = typeData.reduce((acc, row) => {
+      acc[row.tipo] = (acc[row.tipo] || 0) + 1;
+      return acc;
+    }, {});
+
+    const por_tipo = Object.entries(typeCount)
+      .map(([tipo, count]) => ({ tipo, count }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      total: totalCount || 0,
+      publicadas: publishedCount || 0,
+      borradores: draftCount || 0,
+      por_tipo
+    };
+  }
+};
+
 module.exports = {
   // Compatibilidad con código existente
   initializeDatabase,
   query,
   getConnection,
   closeDatabase,
+  testConnection,
 
   // Cliente Supabase directo
   supabase,
@@ -302,5 +490,6 @@ module.exports = {
   secciones,
   actividades,
   documentos,
-  mensajes
+  mensajes,
+  paginas
 };

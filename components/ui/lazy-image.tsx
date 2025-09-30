@@ -13,6 +13,7 @@ interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'
   imgClassName?: string
   placeholderClassName?: string
   loadingIndicator?: React.ReactNode
+  fill?: boolean // Flag to indicate image should fill container
   onLoad?(): void
   onError?(): void
 }
@@ -39,6 +40,7 @@ export function LazyImage({
   imgClassName,
   placeholderClassName,
   loadingIndicator,
+  fill,
   onLoad,
   onError,
   ...props

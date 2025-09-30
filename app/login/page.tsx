@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { setAuthData, getCurrentUser, getApiUrl } from "@/lib/auth-utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,6 +38,7 @@ type LoginValues = z.infer<typeof loginSchema>
 const MOCK_USERS = [
   { email: "kraal@osyris.es", password: "kraal123", role: "kraal" },
   { email: "monitor@osyris.es", password: "monitor123", role: "kraal" },
+  { email: "admin@grupoosyris.es", password: "OsyrisAdmin2024!", role: "admin" },
 ]
 
 export default function LoginPage() {
@@ -56,18 +58,13 @@ export default function LoginPage() {
 
   // Verificar si hay una sesión activa al cargar la página
   useEffect(() => {
-    const savedUser = localStorage.getItem("osyris_user")
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        if (userData.role) {
-          // Redireccionar según el rol (solo kraal disponible)
-          if (userData.role === "kraal") {
-            router.push("/aula-virtual")
-          }
-        }
-      } catch (err) {
-        localStorage.removeItem("osyris_user")
+    const currentUser = getCurrentUser()
+    if (currentUser && currentUser.rol) {
+      // Redireccionar según el rol
+      if (currentUser.rol === "admin") {
+        router.push("/admin")
+      } else {
+        router.push("/aula-virtual")
       }
     }
   }, [router])
@@ -78,12 +75,10 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      // Determinar URL de API según el entorno
-      const apiUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        ? 'http://localhost:5000/api/auth/login'  // Desarrollo local
-        : '/api/auth/login';  // Producción (usa Next.js API Routes)
+      // Usar la URL de API centralizada
+      const apiUrl = getApiUrl()
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,29 +92,25 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Guardar token y datos del usuario
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('osyris_user', JSON.stringify({
-          ...data.data.usuario,
-          role: data.data.usuario.rol,
-          lastLogin: new Date().toISOString(),
-        }));
+        // Usar el sistema de auth centralizado
+        setAuthData(data.data.token, {
+          id: data.data.usuario.id,
+          nombre: data.data.usuario.nombre,
+          apellidos: data.data.usuario.apellidos,
+          email: data.data.usuario.email,
+          rol: data.data.usuario.rol,
+          activo: data.data.usuario.activo
+        });
 
         // Redireccionar según el rol
         const userRole = data.data.usuario.rol;
 
-        if (userRole === 'super_admin') {
-          // Super admin va al panel de administración
-          router.push('/dashboard/admin');
-        } else if (userRole === 'kraal' || userRole === 'scouter') {
-          // Kraal/scouter va al aula virtual
-          router.push('/aula-virtual');
-        } else if (userRole === 'comite') {
-          // Comité va al dashboard
-          router.push('/dashboard');
+        if (userRole === 'admin') {
+          // Admin va al panel de administración separado
+          router.push('/admin');
         } else {
-          // Otros roles van al dashboard por defecto
-          router.push('/dashboard');
+          // Todos los demás van al aula virtual
+          router.push('/aula-virtual');
         }
       } else {
         setError(data.message || "Credenciales incorrectas. Por favor, inténtalo de nuevo.");

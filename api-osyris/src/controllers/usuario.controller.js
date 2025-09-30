@@ -1,3 +1,9 @@
+// 🏠 CONFIGURACIÓN DUAL: SQLite / Supabase
+const db = process.env.DATABASE_TYPE === 'supabase'
+  ? require('../config/supabase.config')
+  : require('../config/db.config');
+
+// Importar modelo SQLite como fallback
 const Usuario = require('../models/usuario.model');
 const Joi = require('joi');
 
@@ -11,7 +17,7 @@ const usuarioSchema = Joi.object({
   telefono: Joi.string(),
   direccion: Joi.string(),
   foto_perfil: Joi.string(),
-  tipo_usuario: Joi.string().valid('educando', 'familiar', 'monitor', 'admin').required(),
+  rol: Joi.string().valid('scouter', 'admin').required(),
   activo: Joi.boolean()
 });
 
@@ -25,14 +31,21 @@ const usuarioUpdateSchema = Joi.object({
   telefono: Joi.string(),
   direccion: Joi.string(),
   foto_perfil: Joi.string(),
-  tipo_usuario: Joi.string().valid('educando', 'familiar', 'monitor', 'admin'),
+  rol: Joi.string().valid('scouter', 'admin'),
   activo: Joi.boolean()
 }).min(1); // Al menos un campo debe ser proporcionado
 
 // Obtener todos los usuarios
 const getAll = async (req, res) => {
   try {
-    const usuarios = await Usuario.findAll();
+    let usuarios;
+
+    if (process.env.DATABASE_TYPE === 'supabase') {
+      usuarios = await db.usuarios.getAll();
+    } else {
+      usuarios = await Usuario.findAll();
+    }
+
     res.status(200).json({
       success: true,
       data: usuarios
@@ -50,23 +63,37 @@ const getAll = async (req, res) => {
 const getById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    
+
     if (isNaN(id)) {
       return res.status(400).json({
         success: false,
         message: 'ID de usuario inválido'
       });
     }
-    
-    const usuario = await Usuario.findById(id);
-    
+
+    let usuario;
+
+    if (process.env.DATABASE_TYPE === 'supabase') {
+      try {
+        usuario = await db.usuarios.getById(id);
+      } catch (error) {
+        if (error.message.includes('not found') || error.message.includes('PGRST116')) {
+          usuario = null;
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      usuario = await Usuario.findById(id);
+    }
+
     if (!usuario) {
       return res.status(404).json({
         success: false,
         message: `Usuario con ID ${id} no encontrado`
       });
     }
-    
+
     res.status(200).json({
       success: true,
       data: usuario
@@ -94,17 +121,41 @@ const create = async (req, res) => {
       });
     }
     
-    // Verificar si el email ya existe
-    const existingUser = await Usuario.findByEmail(value.email);
-    
+    // Verificar si el email ya existe usando configuración dual
+    let existingUser;
+
+    if (process.env.DATABASE_TYPE === 'supabase') {
+      try {
+        existingUser = await db.usuarios.getByEmail(value.email);
+      } catch (error) {
+        if (error.message.includes('not found') || error.message.includes('PGRST116')) {
+          existingUser = null;
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      existingUser = await Usuario.findByEmail(value.email);
+    }
+
     if (existingUser) {
       return res.status(409).json({
         success: false,
         message: 'El email ya está registrado'
       });
     }
-    
-    const newUser = await Usuario.create(value);
+
+    // Crear usuario usando configuración dual
+    let newUser;
+
+    if (process.env.DATABASE_TYPE === 'supabase') {
+      // Para Supabase, necesitamos hashear la contraseña primero
+      const bcrypt = require('bcryptjs');
+      value.password = await bcrypt.hash(value.password, 10);
+      newUser = await db.usuarios.create(value);
+    } else {
+      newUser = await Usuario.create(value);
+    }
     
     res.status(201).json({
       success: true,
@@ -131,17 +182,31 @@ const update = async (req, res) => {
         message: 'ID de usuario inválido'
       });
     }
-    
-    // Verificar que el usuario existe
-    const usuario = await Usuario.findById(id);
-    
+
+    // Verificar que el usuario existe usando configuración dual
+    let usuario;
+
+    if (process.env.DATABASE_TYPE === 'supabase') {
+      try {
+        usuario = await db.usuarios.getById(id);
+      } catch (error) {
+        if (error.message.includes('not found') || error.message.includes('PGRST116')) {
+          usuario = null;
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      usuario = await Usuario.findById(id);
+    }
+
     if (!usuario) {
       return res.status(404).json({
         success: false,
         message: `Usuario con ID ${id} no encontrado`
       });
     }
-    
+
     // Validar datos de entrada
     const { error, value } = usuarioUpdateSchema.validate(req.body);
     
@@ -155,8 +220,22 @@ const update = async (req, res) => {
     
     // Si se intenta actualizar el email, verificar que no esté en uso
     if (value.email && value.email !== usuario.email) {
-      const existingUser = await Usuario.findByEmail(value.email);
-      
+      let existingUser;
+
+      if (process.env.DATABASE_TYPE === 'supabase') {
+        try {
+          existingUser = await db.usuarios.getByEmail(value.email);
+        } catch (error) {
+          if (error.message.includes('not found') || error.message.includes('PGRST116')) {
+            existingUser = null;
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        existingUser = await Usuario.findByEmail(value.email);
+      }
+
       if (existingUser) {
         return res.status(409).json({
           success: false,
@@ -164,8 +243,20 @@ const update = async (req, res) => {
         });
       }
     }
-    
-    const updatedUser = await Usuario.update(id, value);
+
+    // Actualizar usuario usando configuración dual
+    let updatedUser;
+
+    if (process.env.DATABASE_TYPE === 'supabase') {
+      // Si se está actualizando la contraseña, necesitamos hashearla
+      if (value.password) {
+        const bcrypt = require('bcryptjs');
+        value.password = await bcrypt.hash(value.password, 10);
+      }
+      updatedUser = await db.usuarios.update(id, value);
+    } else {
+      updatedUser = await Usuario.update(id, value);
+    }
     
     res.status(200).json({
       success: true,
@@ -193,18 +284,40 @@ const remove = async (req, res) => {
       });
     }
     
-    // Verificar que el usuario existe
-    const usuario = await Usuario.findById(id);
-    
+    // Verificar que el usuario existe usando configuración dual
+    let usuario;
+
+    if (process.env.DATABASE_TYPE === 'supabase') {
+      try {
+        usuario = await db.usuarios.getById(id);
+      } catch (error) {
+        if (error.message.includes('not found') || error.message.includes('PGRST116')) {
+          usuario = null;
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      usuario = await Usuario.findById(id);
+    }
+
     if (!usuario) {
       return res.status(404).json({
         success: false,
         message: `Usuario con ID ${id} no encontrado`
       });
     }
-    
-    const deleted = await Usuario.remove(id);
-    
+
+    // Eliminar usuario usando configuración dual
+    let deleted;
+
+    if (process.env.DATABASE_TYPE === 'supabase') {
+      await db.usuarios.delete(id);
+      deleted = true; // Supabase no devuelve el número de filas afectadas de la misma manera
+    } else {
+      deleted = await Usuario.remove(id);
+    }
+
     if (!deleted) {
       return res.status(500).json({
         success: false,
