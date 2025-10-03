@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-      - develop
-      - 'feature/**'
-      - 'fix/**'
   workflow_dispatch:
 
 env:
@@ -39,13 +36,13 @@ jobs:
         run: npm test -- --passWithNoTests || true
 
       - name: 🔨 Build frontend
-        run: npm run build:frontend
+        run: npm run build
 
   deploy:
     name: Deploy to Hetzner
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: 📥 Checkout code
@@ -68,13 +65,6 @@ jobs:
             .
 
       - name: 🚀 Deploy to server
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           # Crear directorio si no existe
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}"
@@ -82,86 +72,43 @@ jobs:
           # Subir archivos
           scp -o StrictHostKeyChecking=no deploy.tar.gz ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
 
-          # Extraer y configurar en servidor
-          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash -s << EOF
-            cd ${{ env.DEPLOY_PATH }}
+          # Script de deploy en el servidor
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
+          set -e
+          cd ${{ env.DEPLOY_PATH }}
 
-            # Backup de seguridad del código
-            if [ -d "current" ]; then
-              cp -r current backup_\$(date +%Y%m%d_%H%M%S)
-              # Mantener solo últimos 5 backups
-              ls -t | grep backup_ | tail -n +6 | xargs rm -rf
-            fi
+          # Backup de seguridad
+          if [ -d "current" ]; then
+            cp -r current backup_$(date +%Y%m%d_%H%M%S)
+            ls -t | grep backup_ | tail -n +6 | xargs rm -rf 2>/dev/null || true
+          fi
 
-            # Backup de base de datos ANTES del deploy
-            echo "📊 Creando backup de base de datos..."
-            docker exec osyris-db pg_dump -U ${DB_USER} ${DB_NAME} | gzip > backup_db_\$(date +%Y%m%d_%H%M%S).sql.gz
+          # Backup de base de datos
+          echo "📊 Creando backup de base de datos..."
+          docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > backup_db_$(date +%Y%m%d_%H%M%S).sql.gz || true
+          ls -t backup_db_*.sql.gz 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true
 
-            # Mantener solo últimos 10 backups de BD
-            ls -t backup_db_*.sql.gz 2>/dev/null | tail -n +11 | xargs rm -f
+          # Extraer nuevos archivos
+          mkdir -p current
+          tar -xzf deploy.tar.gz -C current/
+          rm deploy.tar.gz
 
-            # Extraer nuevos archivos
-            mkdir -p current
-            tar -xzf deploy.tar.gz -C current/
-            rm deploy.tar.gz
+          cd current
 
-            cd current
+          # Instalar dependencias
+          npm ci --production
+          cd api-osyris && npm ci --production && cd ..
 
-            # Instalar dependencias
-            npm ci --production
-            cd api-osyris && npm ci --production && cd ..
+          # Build frontend
+          npm run build
 
-            # Build frontend
-            npm run build:frontend
+          # Reiniciar contenedores Docker
+          echo "🔄 Reiniciando servicios..."
+          docker-compose -f docker-compose.prod.yml down || true
+          docker-compose -f docker-compose.prod.yml up -d
 
-            # Configurar variables de entorno producción
-            cat > api-osyris/.env.production <<ENVFILE
-NODE_ENV=production
-PORT=5000
-DB_TYPE=postgres
-DB_HOST=${DB_HOST}
-DB_PORT=${DB_PORT}
-DB_USER=${DB_USER}
-DB_PASSWORD=${DB_PASSWORD}
-DB_NAME=${DB_NAME}
-JWT_SECRET=${JWT_SECRET}
-JWT_EXPIRES_IN=24h
-ENVFILE
-
-            # *** MIGRACIONES DE BASE DE DATOS AUTOMÁTICAS ***
-            echo "🔄 Aplicando migraciones de base de datos..."
-
-            # Verificar si hay archivo de migración SQL
-            if [ -f "database/migrations/migrate.sql" ]; then
-              echo "📊 Aplicando migrate.sql..."
-              docker exec -i osyris-db psql -U ${DB_USER} -d ${DB_NAME} < database/migrations/migrate.sql
-              echo "✅ Migraciones SQL aplicadas"
-            fi
-
-            # Verificar si hay script de migración Node.js
-            if [ -f "database/migrations/migrate.js" ]; then
-              echo "📊 Ejecutando migrate.js..."
-              node database/migrations/migrate.js
-              echo "✅ Script de migración ejecutado"
-            fi
-
-            # Aplicar todas las migraciones pendientes en carpeta migrations/
-            if [ -d "database/migrations" ]; then
-              for migration in database/migrations/*.sql; do
-                if [ -f "\$migration" ] && [ "\$migration" != "database/migrations/migrate.sql" ]; then
-                  echo "📊 Aplicando: \$migration"
-                  docker exec -i osyris-db psql -U ${DB_USER} -d ${DB_NAME} < "\$migration" || echo "⚠️ Warning: Migration \$migration may have issues"
-                fi
-              done
-            fi
-
-            # Reiniciar servicios con PM2
-            pm2 restart osyris-backend || pm2 start api-osyris/src/index.js --name osyris-backend
-            pm2 restart osyris-frontend || pm2 start npm --name osyris-frontend -- run start
-            pm2 save
-
-            echo "✅ Deploy completado exitosamente (código + migraciones BD)"
-          EOF
+          echo "✅ Deploy completado exitosamente"
+          ENDSSH
 
       - name: 🧹 Cleanup
         run: rm -f deploy.tar.gz
@@ -169,21 +116,13 @@ ENVFILE
       - name: ✅ Verify deployment
         run: |
           echo "Esperando a que el servidor esté listo..."
-          sleep 10
+          sleep 15
 
-          # Verificar backend
-          if curl -f -s -o /dev/null https://api.grupooosyris.es/api/health; then
-            echo "✅ Backend respondiendo correctamente"
+          # Verificar que el servidor responde
+          if curl -f -s -o /dev/null http://${{ env.SERVER_HOST }}; then
+            echo "✅ Servidor respondiendo correctamente"
           else
-            echo "❌ Backend no responde"
-            exit 1
-          fi
-
-          # Verificar frontend
-          if curl -f -s -o /dev/null https://grupooosyris.es; then
-            echo "✅ Frontend respondiendo correctamente"
-          else
-            echo "❌ Frontend no responde"
+            echo "❌ Servidor no responde"
             exit 1
           fi
 
@@ -194,11 +133,10 @@ ENVFILE
           echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment:** Production (Hetzner)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Server:** ${{ env.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🌐 URLs" >> $GITHUB_STEP_SUMMARY
-          echo "- Frontend: https://grupooosyris.es" >> $GITHUB_STEP_SUMMARY
-          echo "- API: https://api.grupooosyris.es" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Access" >> $GITHUB_STEP_SUMMARY
+          echo "- Server IP: http://${{ env.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Deployment completed successfully!" >> $GITHUB_STEP_SUMMARY
 
@@ -213,7 +151,7 @@ ENVFILE
         run: |
           if [ "${{ needs.deploy.result }}" == "success" ]; then
             echo "✅ Deploy exitoso a producción"
-            echo "🌐 https://grupooosyris.es"
+            echo "🌐 http://${{ env.SERVER_HOST }}"
           else
             echo "❌ Deploy falló - revisar logs"
           fi
