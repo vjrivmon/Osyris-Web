@@ -135,9 +135,9 @@ jobs:
           cd /var/www/osyris/current
           pm2 start npm --name "osyris-frontend" -- start -- -p 3000
 
-          # Iniciar backend con PM2
+          # Iniciar backend con PM2 (usar node directamente, no nodemon en producción)
           cd /var/www/osyris/current/api-osyris
-          pm2 start npm --name "osyris-backend" -- run dev
+          pm2 start src/index.js --name "osyris-backend" --node-args="--env-file=.env"
 
           # Guardar configuración PM2
           pm2 save
