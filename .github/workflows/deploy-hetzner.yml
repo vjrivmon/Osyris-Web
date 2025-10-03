@@ -68,6 +68,13 @@ jobs:
             .
 
       - name: 🚀 Deploy to server
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           # Crear directorio si no existe
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}"
@@ -76,19 +83,19 @@ jobs:
           scp -o StrictHostKeyChecking=no deploy.tar.gz ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
 
           # Extraer y configurar en servidor
-          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash -s << EOF
             cd ${{ env.DEPLOY_PATH }}
 
             # Backup de seguridad del código
             if [ -d "current" ]; then
-              cp -r current backup_$(date +%Y%m%d_%H%M%S)
+              cp -r current backup_\$(date +%Y%m%d_%H%M%S)
               # Mantener solo últimos 5 backups
               ls -t | grep backup_ | tail -n +6 | xargs rm -rf
             fi
 
             # Backup de base de datos ANTES del deploy
             echo "📊 Creando backup de base de datos..."
-            docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > backup_db_$(date +%Y%m%d_%H%M%S).sql.gz
+            docker exec osyris-db pg_dump -U ${DB_USER} ${DB_NAME} | gzip > backup_db_\$(date +%Y%m%d_%H%M%S).sql.gz
 
             # Mantener solo últimos 10 backups de BD
             ls -t backup_db_*.sql.gz 2>/dev/null | tail -n +11 | xargs rm -f
@@ -112,12 +119,12 @@ jobs:
 NODE_ENV=production
 PORT=5000
 DB_TYPE=postgres
-DB_HOST=${{ secrets.DB_HOST }}
-DB_PORT=${{ secrets.DB_PORT }}
-DB_USER=${{ secrets.DB_USER }}
-DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-DB_NAME=${{ secrets.DB_NAME }}
-JWT_SECRET=${{ secrets.JWT_SECRET }}
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT}
+DB_USER=${DB_USER}
+DB_PASSWORD=${DB_PASSWORD}
+DB_NAME=${DB_NAME}
+JWT_SECRET=${JWT_SECRET}
 JWT_EXPIRES_IN=24h
 ENVFILE
 
@@ -127,7 +134,7 @@ ENVFILE
             # Verificar si hay archivo de migración SQL
             if [ -f "database/migrations/migrate.sql" ]; then
               echo "📊 Aplicando migrate.sql..."
-              docker exec -i osyris-db psql -U osyris_user -d osyris_db < database/migrations/migrate.sql
+              docker exec -i osyris-db psql -U ${DB_USER} -d ${DB_NAME} < database/migrations/migrate.sql
               echo "✅ Migraciones SQL aplicadas"
             fi
 
@@ -141,9 +148,9 @@ ENVFILE
             # Aplicar todas las migraciones pendientes en carpeta migrations/
             if [ -d "database/migrations" ]; then
               for migration in database/migrations/*.sql; do
-                if [ -f "$migration" ] && [ "$migration" != "database/migrations/migrate.sql" ]; then
-                  echo "📊 Aplicando: $migration"
-                  docker exec -i osyris-db psql -U osyris_user -d osyris_db < "$migration" || echo "⚠️ Warning: Migration $migration may have issues"
+                if [ -f "\$migration" ] && [ "\$migration" != "database/migrations/migrate.sql" ]; then
+                  echo "📊 Aplicando: \$migration"
+                  docker exec -i osyris-db psql -U ${DB_USER} -d ${DB_NAME} < "\$migration" || echo "⚠️ Warning: Migration \$migration may have issues"
                 fi
               done
             fi
