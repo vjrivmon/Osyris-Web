@@ -103,8 +103,12 @@ jobs:
 
           cd current
 
-          # Build y dependencias ya incluidos en tar.gz
-          echo "✓ Build y dependencias incluidos en el paquete"
+          # Build incluido en tar.gz, pero necesitamos instalar dependencias en producción
+          echo "✓ Build incluido en el paquete"
+
+          # Instalar dependencias en producción
+          npm ci --omit=dev
+          cd api-osyris && npm ci --omit=dev && cd ..
 
           # Configurar .env del backend
           cat > api-osyris/.env << 'ENVFILE'
