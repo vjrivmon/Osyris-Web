@@ -57,7 +57,6 @@ jobs:
         run: |
           tar -czf deploy.tar.gz \
             --exclude=node_modules \
-            --exclude=.next \
             --exclude=.git \
             --exclude=logs \
             --exclude=.github \
@@ -110,8 +109,8 @@ jobs:
           npm ci --production
           cd api-osyris && npm ci --production && cd ..
 
-          # Build frontend
-          npm run build
+          # El build ya está incluido en el tar.gz (hecho en GitHub Actions)
+          echo "✓ Build ya incluido en el paquete"
 
           # Reiniciar contenedores Docker
           echo "🔄 Reiniciando servicios..."
