@@ -106,10 +106,28 @@ jobs:
           # Build y dependencias ya incluidos en tar.gz
           echo "✓ Build y dependencias incluidos en el paquete"
 
-          # Reiniciar contenedores Docker
-          echo "🔄 Reiniciando servicios..."
-          docker compose -f docker-compose.prod.yml down || true
-          docker compose -f docker-compose.prod.yml up -d --build
+          # Instalar PM2 si no está instalado
+          if ! command -v pm2 &> /dev/null; then
+            npm install -g pm2
+          fi
+
+          # Detener servicios existentes
+          pm2 stop osyris-frontend || true
+          pm2 stop osyris-backend || true
+          pm2 delete osyris-frontend || true
+          pm2 delete osyris-backend || true
+
+          # Iniciar frontend con PM2
+          cd /var/www/osyris/current
+          pm2 start npm --name "osyris-frontend" -- start -- -p 3000
+
+          # Iniciar backend con PM2
+          cd /var/www/osyris/current/api-osyris
+          pm2 start npm --name "osyris-backend" -- run dev
+
+          # Guardar configuración PM2
+          pm2 save
+          pm2 startup || true
 
           echo "✅ Deploy completado exitosamente"
           ENDSSH
