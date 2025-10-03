@@ -114,8 +114,8 @@ jobs:
 
           # Reiniciar contenedores Docker
           echo "🔄 Reiniciando servicios..."
-          docker-compose -f docker-compose.prod.yml down || true
-          docker-compose -f docker-compose.prod.yml up -d
+          docker compose -f docker-compose.prod.yml down || true
+          docker compose -f docker-compose.prod.yml up -d
 
           echo "✅ Deploy completado exitosamente"
           ENDSSH
