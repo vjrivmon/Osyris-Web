@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  # PostgreSQL local para desarrollo
+  postgres:
+    image: postgres:16-alpine
+    container_name: osyris-postgres-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: osyris_user
+      POSTGRES_PASSWORD: osyris_password
+      POSTGRES_DB: osyris_db
+    volumes:
+      - ./api-osyris/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_local_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U osyris_user -d osyris_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_local_data:
+    driver: local

@@ -5,8 +5,8 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 
-// 🏠 CONFIGURACIÓN DUAL MEJORADA: SQLite / Supabase con fallback automático
-const databaseManager = require('./config/database.manager');
+// 🐘 CONFIGURACIÓN POSTGRESQL
+const db = require('./config/db.config');
 
 // Importar rutas
 const usuariosRoutes = require('./routes/usuarios.routes');
@@ -113,41 +113,26 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 🚀 INICIALIZACIÓN PARA VERCEL Y DESARROLLO
+// 🚀 INICIALIZACIÓN DEL SERVIDOR
 const startServer = async () => {
   try {
-    console.log('🔧 Inicializando sistema de base de datos...');
+    console.log('🔧 Inicializando PostgreSQL...');
 
-    // Inicializar el database manager
-    await databaseManager.initialize();
+    // Inicializar PostgreSQL
+    await db.initializeDatabase();
 
-    const dbType = databaseManager.getDatabaseType();
-    const isSupabase = databaseManager.isUsingSupabase();
+    console.log(`✅ PostgreSQL inicializado correctamente`);
+    console.log(`📁 Almacenamiento: Sistema de archivos local`);
 
-    console.log(`✅ Sistema de base de datos inicializado`);
-    console.log(`📊 Base de datos activa: ${dbType === 'supabase' ? 'PostgreSQL (Supabase)' : 'SQLite (Local)'}`);
-    console.log(`📁 Almacenamiento: ${process.env.STORAGE_TYPE === 'supabase' ? 'Supabase Storage' : 'Sistema de archivos local'}`);
-
-    // Obtener estadísticas del sistema
-    try {
-      const stats = await databaseManager.getSystemStats();
-      console.log('📈 Estadísticas del sistema:', stats);
-    } catch (statsError) {
-      console.warn('⚠️ No se pudieron obtener estadísticas:', statsError.message);
-    }
-
-    // En desarrollo, levantar servidor
-    if (process.env.NODE_ENV !== 'production') {
-      app.listen(PORT, () => {
-        console.log(`\n${'='.repeat(60)}`);
-        console.log(`🚀 Servidor en ejecución en http://localhost:${PORT}`);
-        console.log(`📚 Documentación disponible en http://localhost:${PORT}/api-docs`);
-        console.log(`🔧 Entorno: ${process.env.NODE_ENV}`);
-        console.log(`🗄️ Base de datos: ${dbType}`);
-        console.log(`📦 Almacenamiento: ${process.env.STORAGE_TYPE || 'local'}`);
-        console.log(`${'='.repeat(60)}\n`);
-      });
-    }
+    // Levantar servidor
+    app.listen(PORT, () => {
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`🚀 Servidor en ejecución en http://localhost:${PORT}`);
+      console.log(`📚 Documentación disponible en http://localhost:${PORT}/api-docs`);
+      console.log(`🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🗄️ Base de datos: PostgreSQL`);
+      console.log(`${'='.repeat(60)}\n`);
+    });
 
   } catch (error) {
     console.error('❌ Error crítico al inicializar el servidor:', error);

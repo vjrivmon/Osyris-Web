@@ -1,0 +1,136 @@
+version: '3.9'
+
+################################################################################
+# Docker Compose - Producción Hetzner
+# Para: Osyris Scout Management System
+# Autor: Vicente Rivas Monferrer
+# Descripción: Configuración optimizada para producción en Hetzner
+################################################################################
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: osyris-db
+    restart: always
+    environment:
+      POSTGRES_USER: osyris_user
+      POSTGRES_PASSWORD: OsyrisDB2024!Secure
+      POSTGRES_DB: osyris_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./api-osyris/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - osyris-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U osyris_user -d osyris_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Backend API (Express.js)
+  backend:
+    build:
+      context: ./api-osyris
+      dockerfile: Dockerfile.prod
+    container_name: osyris-backend
+    restart: always
+    environment:
+      # Base de datos PostgreSQL local
+      DATABASE_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: osyris_user
+      DB_PASSWORD: OsyrisDB2024!Secure
+      DB_NAME: osyris_db
+
+      # Servidor
+      NODE_ENV: production
+      PORT: 5000
+
+      # JWT
+      JWT_SECRET: osyrisScoutGroup2024SecretKey!Production
+      JWT_EXPIRES_IN: 24h
+
+      # CORS
+      FRONTEND_URL: https://gruposcoutsosyris.es
+      ALLOWED_ORIGINS: https://gruposcoutsosyris.es,https://www.gruposcoutsosyris.es
+
+      # Storage local
+      STORAGE_TYPE: local
+      UPLOAD_DIR: /app/uploads
+      MAX_FILE_SIZE: 10485760
+      ALLOWED_FILE_TYPES: image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf
+    volumes:
+      - ./api-osyris/uploads:/app/uploads
+      - ./api-osyris/logs:/app/logs
+    ports:
+      - "127.0.0.1:5000:5000"
+    networks:
+      - osyris-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: https://gruposcoutsosyris.es
+        NEXT_PUBLIC_APP_NAME: Osyris Scout Management
+    container_name: osyris-frontend
+    restart: always
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://gruposcoutsosyris.es
+      NEXT_PUBLIC_APP_NAME: Osyris Scout Management
+      NEXT_TELEMETRY_DISABLED: 1
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - osyris-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  osyris-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

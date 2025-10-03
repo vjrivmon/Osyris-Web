@@ -1,5 +1,5 @@
 // 🏠 CONFIGURACIÓN CON DATABASE MANAGER MEJORADO
-const dbManager = require('../config/database.manager');
+const db = require('../config/db.config');
 const Joi = require('joi');
 
 /**
@@ -56,7 +56,7 @@ const getAll = async (req, res) => {
     if (categoria) filters.categoria = categoria;
 
     // Obtener páginas usando el database manager
-    let paginas = await dbManager.getAllPages(filters);
+    let paginas = await db.getAllPages(filters);
 
     // Aplicar paginación si es necesario
     if (limit || offset) {
@@ -88,7 +88,7 @@ const getById = async (req, res) => {
     const { id } = req.params;
     console.log(`📄 Obteniendo página con ID: ${id}`);
 
-    const pagina = await dbManager.getPageById(id);
+    const pagina = await db.getPageById(id);
 
     if (!pagina) {
       return res.status(404).json({
@@ -119,7 +119,7 @@ const getBySlug = async (req, res) => {
     const { slug } = req.params;
     console.log(`📄 Obteniendo página con slug: ${slug}`);
 
-    const pagina = await dbManager.getPageBySlug(slug);
+    const pagina = await db.getPageBySlug(slug);
 
     if (!pagina) {
       return res.status(404).json({
@@ -162,7 +162,7 @@ const create = async (req, res) => {
     const paginaData = value;
 
     // Verificar si el slug ya existe
-    const existingPage = await dbManager.getPageBySlug(paginaData.slug);
+    const existingPage = await db.getPageBySlug(paginaData.slug);
     if (existingPage) {
       return res.status(409).json({
         success: false,
@@ -179,7 +179,7 @@ const create = async (req, res) => {
     paginaData.actualizado_por = req.usuario?.id || null;
 
     // Crear la página
-    const nuevaPagina = await dbManager.createPage(paginaData);
+    const nuevaPagina = await db.createPage(paginaData);
 
     console.log(`✅ Página creada: ${nuevaPagina.titulo}`);
 
@@ -217,7 +217,7 @@ const update = async (req, res) => {
     const paginaData = value;
 
     // Verificar que la página existe
-    const paginaExistente = await dbManager.getPageById(id);
+    const paginaExistente = await db.getPageById(id);
     if (!paginaExistente) {
       return res.status(404).json({
         success: false,
@@ -227,7 +227,7 @@ const update = async (req, res) => {
 
     // Si se actualiza el slug, verificar que no exista otro con el mismo
     if (paginaData.slug && paginaData.slug !== paginaExistente.slug) {
-      const conflictPage = await dbManager.getPageBySlug(paginaData.slug);
+      const conflictPage = await db.getPageBySlug(paginaData.slug);
       if (conflictPage && conflictPage.id !== parseInt(id)) {
         return res.status(409).json({
           success: false,
@@ -245,7 +245,7 @@ const update = async (req, res) => {
     paginaData.actualizado_por = req.usuario?.id || null;
 
     // Actualizar la página
-    const paginaActualizada = await dbManager.updatePage(id, paginaData);
+    const paginaActualizada = await db.updatePage(id, paginaData);
 
     console.log(`✅ Página actualizada: ${paginaActualizada.titulo}`);
 
@@ -271,7 +271,7 @@ const remove = async (req, res) => {
     console.log(`🗑️ Eliminando página con ID: ${id}`);
 
     // Verificar que la página existe
-    const paginaExistente = await dbManager.getPageById(id);
+    const paginaExistente = await db.getPageById(id);
     if (!paginaExistente) {
       return res.status(404).json({
         success: false,
@@ -280,7 +280,7 @@ const remove = async (req, res) => {
     }
 
     // Eliminar la página
-    await dbManager.deletePage(id);
+    await db.deletePage(id);
 
     console.log(`✅ Página eliminada: ${paginaExistente.titulo}`);
 
@@ -304,7 +304,7 @@ const getMenuPages = async (req, res) => {
     console.log('📊 Obteniendo páginas para menú...');
 
     // Obtener páginas visibles
-    const todasPaginas = await dbManager.getAllPages({ visible: true });
+    const todasPaginas = await db.getAllPages({ visible: true });
 
     // Formatear para menú
     const paginas = todasPaginas
@@ -338,7 +338,7 @@ const getStats = async (req, res) => {
     console.log('📈 Obteniendo estadísticas de páginas...');
 
     // Obtener todas las páginas
-    const todasPaginas = await dbManager.getAllPages();
+    const todasPaginas = await db.getAllPages();
 
     // Calcular estadísticas
     const stats = {

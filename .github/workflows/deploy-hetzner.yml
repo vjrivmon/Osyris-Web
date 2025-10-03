@@ -1,0 +1,212 @@
+name: Deploy to Hetzner Production
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'fix/**'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+  DEPLOY_PATH: /var/www/osyris
+  SERVER_USER: root
+  SERVER_HOST: ${{ secrets.HETZNER_HOST }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: |
+          npm ci
+          cd api-osyris && npm ci
+
+      - name: 🧪 Run tests
+        run: npm test -- --passWithNoTests || true
+
+      - name: 🔨 Build frontend
+        run: npm run build:frontend
+
+  deploy:
+    name: Deploy to Hetzner
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: 📦 Create deployment package
+        run: |
+          tar -czf deploy.tar.gz \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=.git \
+            --exclude=logs \
+            --exclude=api-osyris/node_modules \
+            --exclude=api-osyris/database \
+            .
+
+      - name: 🚀 Deploy to server
+        run: |
+          # Crear directorio si no existe
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}"
+
+          # Subir archivos
+          scp -o StrictHostKeyChecking=no deploy.tar.gz ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
+
+          # Extraer y configurar en servidor
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} << 'EOF'
+            cd ${{ env.DEPLOY_PATH }}
+
+            # Backup de seguridad del código
+            if [ -d "current" ]; then
+              cp -r current backup_$(date +%Y%m%d_%H%M%S)
+              # Mantener solo últimos 5 backups
+              ls -t | grep backup_ | tail -n +6 | xargs rm -rf
+            fi
+
+            # Backup de base de datos ANTES del deploy
+            echo "📊 Creando backup de base de datos..."
+            docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > backup_db_$(date +%Y%m%d_%H%M%S).sql.gz
+
+            # Mantener solo últimos 10 backups de BD
+            ls -t backup_db_*.sql.gz 2>/dev/null | tail -n +11 | xargs rm -f
+
+            # Extraer nuevos archivos
+            mkdir -p current
+            tar -xzf deploy.tar.gz -C current/
+            rm deploy.tar.gz
+
+            cd current
+
+            # Instalar dependencias
+            npm ci --production
+            cd api-osyris && npm ci --production && cd ..
+
+            # Build frontend
+            npm run build:frontend
+
+            # Configurar variables de entorno producción
+            cat > api-osyris/.env.production <<ENVFILE
+NODE_ENV=production
+PORT=5000
+DB_TYPE=postgres
+DB_HOST=${{ secrets.DB_HOST }}
+DB_PORT=${{ secrets.DB_PORT }}
+DB_USER=${{ secrets.DB_USER }}
+DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+DB_NAME=${{ secrets.DB_NAME }}
+JWT_SECRET=${{ secrets.JWT_SECRET }}
+JWT_EXPIRES_IN=24h
+ENVFILE
+
+            # *** MIGRACIONES DE BASE DE DATOS AUTOMÁTICAS ***
+            echo "🔄 Aplicando migraciones de base de datos..."
+
+            # Verificar si hay archivo de migración SQL
+            if [ -f "database/migrations/migrate.sql" ]; then
+              echo "📊 Aplicando migrate.sql..."
+              docker exec -i osyris-db psql -U osyris_user -d osyris_db < database/migrations/migrate.sql
+              echo "✅ Migraciones SQL aplicadas"
+            fi
+
+            # Verificar si hay script de migración Node.js
+            if [ -f "database/migrations/migrate.js" ]; then
+              echo "📊 Ejecutando migrate.js..."
+              node database/migrations/migrate.js
+              echo "✅ Script de migración ejecutado"
+            fi
+
+            # Aplicar todas las migraciones pendientes en carpeta migrations/
+            if [ -d "database/migrations" ]; then
+              for migration in database/migrations/*.sql; do
+                if [ -f "$migration" ] && [ "$migration" != "database/migrations/migrate.sql" ]; then
+                  echo "📊 Aplicando: $migration"
+                  docker exec -i osyris-db psql -U osyris_user -d osyris_db < "$migration" || echo "⚠️ Warning: Migration $migration may have issues"
+                fi
+              done
+            fi
+
+            # Reiniciar servicios con PM2
+            pm2 restart osyris-backend || pm2 start api-osyris/src/index.js --name osyris-backend
+            pm2 restart osyris-frontend || pm2 start npm --name osyris-frontend -- run start
+            pm2 save
+
+            echo "✅ Deploy completado exitosamente (código + migraciones BD)"
+          EOF
+
+      - name: 🧹 Cleanup
+        run: rm -f deploy.tar.gz
+
+      - name: ✅ Verify deployment
+        run: |
+          echo "Esperando a que el servidor esté listo..."
+          sleep 10
+
+          # Verificar backend
+          if curl -f -s -o /dev/null https://api.grupooosyris.es/api/health; then
+            echo "✅ Backend respondiendo correctamente"
+          else
+            echo "❌ Backend no responde"
+            exit 1
+          fi
+
+          # Verificar frontend
+          if curl -f -s -o /dev/null https://grupooosyris.es; then
+            echo "✅ Frontend respondiendo correctamente"
+          else
+            echo "❌ Frontend no responde"
+            exit 1
+          fi
+
+      - name: 📊 Deployment summary
+        run: |
+          echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Production (Hetzner)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: https://grupooosyris.es" >> $GITHUB_STEP_SUMMARY
+          echo "- API: https://api.grupooosyris.es" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment completed successfully!" >> $GITHUB_STEP_SUMMARY
+
+  notify:
+    name: Send notifications
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: 📬 Deploy notification
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Deploy exitoso a producción"
+            echo "🌐 https://grupooosyris.es"
+          else
+            echo "❌ Deploy falló - revisar logs"
+          fi

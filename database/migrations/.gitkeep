@@ -1,0 +1,4 @@
+# Este archivo mantiene la carpeta migrations/ en git
+# Tus archivos de migración van aquí:
+# - 20251003_descripcion.sql
+# - 20251004_descripcion.js

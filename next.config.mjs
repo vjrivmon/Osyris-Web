@@ -15,6 +15,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  output: 'standalone', // Para Docker
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,

@@ -313,7 +313,7 @@ export default function PagesAdminPage() {
         insertImage(uploadedFile)
       }
     }
-  }, [selectedPage])
+  }, [])
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()

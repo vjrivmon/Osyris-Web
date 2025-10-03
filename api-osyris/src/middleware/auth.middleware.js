@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 // 🌐 DUAL SYSTEM: Usar database manager para ambos sistemas
-const dbManager = require('../config/database.manager');
+const db = require('../config/db.config');
 
 // Middleware para verificar el token
 const verifyToken = async (req, res, next) => {
@@ -21,7 +21,7 @@ const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'osyrisScoutGroup2024SecretKey');
     
     // Verificar si el usuario existe usando database manager
-    const usuario = await dbManager.getUserById(decoded.id);
+    const usuario = await db.getUserById(decoded.id);
     
     if (!usuario) {
       return res.status(404).json({

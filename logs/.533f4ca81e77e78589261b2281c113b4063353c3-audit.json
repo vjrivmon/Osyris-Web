@@ -14,6 +14,11 @@
             "date": 1759214433575,
             "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-09-30.log",
             "hash": "b49807c596ddb4fa25d4dc48863f7f75413bc645d3c8f1942e68e81105d47aa7"
+        },
+        {
+            "date": 1759474759651,
+            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-03.log",
+            "hash": "03a0005b83e60d441a263a50634a41c71133ce0ee0ecf7ee891163d1cbb5f4f9"
         }
     ],
     "hashType": "sha256"

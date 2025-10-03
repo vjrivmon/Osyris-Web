@@ -3,7 +3,7 @@ const Joi = require('joi');
 const bcrypt = require('bcryptjs');
 
 // 🏠 CONFIGURACIÓN CON DATABASE MANAGER MEJORADO
-const dbManager = require('../config/database.manager');
+const db = require('../config/db.config');
 
 // Importar modelo SQLite para verificación de contraseñas
 const Usuario = require('../models/usuario.model');
@@ -44,7 +44,7 @@ const login = async (req, res) => {
     }
 
     // Buscar usuario por email
-    const usuario = await dbManager.getUserByEmail(value.email);
+    const usuario = await db.getUserByEmail(value.email);
 
     if (!usuario) {
       console.log('❌ Usuario no encontrado:', value.email);
@@ -75,7 +75,7 @@ const login = async (req, res) => {
 
     // Actualizar la fecha de último acceso
     try {
-      await dbManager.updateUser(usuario.id, {
+      await db.updateUser(usuario.id, {
         ultimo_acceso: new Date().toISOString()
       });
     } catch (updateError) {
@@ -137,7 +137,7 @@ const register = async (req, res) => {
     }
 
     // Verificar si el email ya existe
-    const existingUser = await dbManager.getUserByEmail(value.email);
+    const existingUser = await db.getUserByEmail(value.email);
 
     if (existingUser) {
       console.log('❌ Email ya registrado:', value.email);
@@ -174,7 +174,7 @@ const register = async (req, res) => {
     };
 
     // Crear usuario
-    const newUser = await dbManager.createUser(userData);
+    const newUser = await db.createUser(userData);
 
     // Generar token JWT
     const token = jwt.sign(
@@ -226,7 +226,7 @@ const profile = async (req, res) => {
     }
 
     // Obtener datos actualizados del usuario
-    const usuario = await dbManager.getUserById(usuarioId);
+    const usuario = await db.getUserById(usuarioId);
 
     if (!usuario) {
       return res.status(404).json({
@@ -289,7 +289,7 @@ const changePassword = async (req, res) => {
     }
 
     // Obtener usuario
-    const usuario = await dbManager.getUserById(usuarioId);
+    const usuario = await db.getUserById(usuarioId);
 
     if (!usuario) {
       return res.status(404).json({
@@ -315,7 +315,7 @@ const changePassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Actualizar la contraseña
-    await dbManager.updateUser(usuarioId, {
+    await db.updateUser(usuarioId, {
       contraseña: hashedPassword
     });
 
