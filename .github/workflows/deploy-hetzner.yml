@@ -56,11 +56,9 @@ jobs:
       - name: 📦 Create deployment package
         run: |
           tar -czf deploy.tar.gz \
-            --exclude=node_modules \
             --exclude=.git \
             --exclude=logs \
             --exclude=.github \
-            --exclude=api-osyris/node_modules \
             --exclude=api-osyris/database \
             --exclude=deploy.tar.gz \
             . || true
@@ -105,17 +103,13 @@ jobs:
 
           cd current
 
-          # Instalar dependencias
-          npm ci --production
-          cd api-osyris && npm ci --production && cd ..
-
-          # El build ya está incluido en el tar.gz (hecho en GitHub Actions)
-          echo "✓ Build ya incluido en el paquete"
+          # Build y dependencias ya incluidos en tar.gz
+          echo "✓ Build y dependencias incluidos en el paquete"
 
           # Reiniciar contenedores Docker
           echo "🔄 Reiniciando servicios..."
           docker compose -f docker-compose.prod.yml down || true
-          docker compose -f docker-compose.prod.yml up -d
+          docker compose -f docker-compose.prod.yml up -d --build
 
           echo "✅ Deploy completado exitosamente"
           ENDSSH
