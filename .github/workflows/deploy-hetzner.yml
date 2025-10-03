@@ -126,12 +126,23 @@ jobs:
           ALLOWED_ORIGINS=http://116.203.98.142,https://gruposcoutsosyris.es,https://www.gruposcoutsosyris.es
           ENVFILE
 
+          # Detener contenedores Docker de frontend y backend (mantener solo DB)
+          echo "🛑 Deteniendo contenedores Docker antiguos..."
+          docker stop osyris-frontend || true
+          docker stop osyris-backend || true
+          docker rm osyris-frontend || true
+          docker rm osyris-backend || true
+
+          # Asegurar que PostgreSQL está corriendo
+          echo "🐘 Verificando PostgreSQL..."
+          docker start osyris-db || docker-compose -f docker-compose.prod.yml up -d db
+
           # Instalar PM2 si no está instalado
           if ! command -v pm2 &> /dev/null; then
             npm install -g pm2
           fi
 
-          # Detener servicios existentes
+          # Detener servicios PM2 existentes
           pm2 stop osyris-frontend || true
           pm2 stop osyris-backend || true
           pm2 delete osyris-frontend || true
@@ -151,7 +162,10 @@ jobs:
           pm2 save
           pm2 startup || true
 
-          echo "✅ Deploy completado exitosamente"
+          # Mostrar estado final
+          echo "✅ Deployment completado:"
+          pm2 list
+          docker ps | grep osyris
           ENDSSH
 
       - name: 🧹 Cleanup
