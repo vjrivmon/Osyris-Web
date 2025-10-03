@@ -63,6 +63,7 @@ jobs:
             --exclude=.github \
             --exclude=api-osyris/node_modules \
             --exclude=api-osyris/database \
+            --exclude=deploy.tar.gz \
             . || true
 
           # Verificar que el archivo se creó
@@ -97,7 +98,8 @@ jobs:
           docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > backup_db_$(date +%Y%m%d_%H%M%S).sql.gz || true
           ls -t backup_db_*.sql.gz 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true
 
-          # Extraer nuevos archivos
+          # Extraer nuevos archivos (limpiar current primero)
+          rm -rf current
           mkdir -p current
           tar -xzf deploy.tar.gz -C current/
           rm deploy.tar.gz
