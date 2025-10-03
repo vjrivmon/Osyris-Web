@@ -32,10 +32,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos desde uploads (solo en desarrollo local con almacenamiento local)
-if (process.env.STORAGE_TYPE !== 'supabase') {
-  app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
-}
+// Servir archivos estáticos desde uploads
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 // Opciones de Swagger
 const swaggerOptions = {
@@ -141,13 +139,7 @@ const startServer = async () => {
   }
 };
 
-// Para Vercel, exportar la app sin listen
-if (process.env.VERCEL) {
-  // En Vercel, solo inicializar sin listen
-  startServer();
-} else {
-  // En desarrollo local, inicializar y hacer listen
-  startServer();
-}
+// Iniciar servidor
+startServer();
 
 module.exports = app; 

@@ -18,7 +18,7 @@
       "enabled": true,
       "scripts": [
         "validate-production-readiness",
-        "check-supabase-connectivity",
+        "check-database-connectivity",
         "validate-environment-variables",
         "run-migration-tests"
       ]
@@ -112,7 +112,7 @@
       "enabled": true,
       "triggers": ["deployment", "migration"],
       "config": {
-        "storage-providers": ["local", "supabase"],
+        "storage-providers": ["local"],
         "file-validation": true,
         "compression-enabled": true
       }
@@ -152,14 +152,15 @@
 
   "environments": {
     "development": {
-      "database": "sqlite",
+      "database": "postgresql",
       "storage": "local",
       "debug": true
     },
     "production": {
-      "database": "supabase",
-      "storage": "supabase",
-      "debug": false
+      "database": "postgresql",
+      "storage": "local",
+      "debug": false,
+      "server": "hetzner"
     }
   }
 }

@@ -137,18 +137,21 @@ const getFiles = async (req, res) => {
 
     let sql = 'SELECT * FROM documentos WHERE 1=1';
     const params = [];
+    let paramIndex = 1;
 
     if (folder) {
-      sql += ' AND archivo_ruta LIKE ?';
+      sql += ` AND archivo_ruta LIKE $${paramIndex}`;
       params.push(`%/${folder}/%`);
+      paramIndex++;
     }
 
     if (type) {
-      sql += ' AND tipo_archivo LIKE ?';
+      sql += ` AND tipo_archivo LIKE $${paramIndex}`;
       params.push(`${type}%`);
+      paramIndex++;
     }
 
-    sql += ' ORDER BY fecha_subida DESC LIMIT ? OFFSET ?';
+    sql += ` ORDER BY fecha_subida DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(parseInt(limit), parseInt(offset));
 
     const files = await db.query(sql, params);

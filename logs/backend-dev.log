@@ -181,3 +181,227 @@ Node.js v22.19.0
 🗄️ Base de datos: PostgreSQL
 ============================================================
 
+📄 Obteniendo todas las páginas...
+❌ Error al obtener páginas: TypeError: db.getAllPages is not a function
+    at getAll (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/paginas.controller.js:59:28)
+    at Layer.handle [as handle_request] (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/route.js:149:13)
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/middleware/auth.middleware.js:88:5
+    at Layer.handle [as handle_request] (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/route.js:149:13)
+    at verifyToken (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/middleware/auth.middleware.js:45:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Error en query: error: syntax error at or near "OFFSET"
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/config/db.config.js:34:20)
+    at async getFiles (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/upload.local.controller.js:154:19) {
+  length: 95,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '71',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Error al obtener archivos: error: syntax error at or near "OFFSET"
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/config/db.config.js:34:20)
+    at async getFiles (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/upload.local.controller.js:154:19) {
+  length: 95,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '71',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+📄 Obteniendo todas las páginas...
+❌ Error al obtener páginas: TypeError: db.getAllPages is not a function
+    at getAll (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/paginas.controller.js:59:28)
+    at Layer.handle [as handle_request] (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/route.js:149:13)
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/middleware/auth.middleware.js:88:5
+    at Layer.handle [as handle_request] (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/route.js:149:13)
+    at verifyToken (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/middleware/auth.middleware.js:45:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+📄 Obteniendo todas las páginas...
+❌ Error al obtener páginas: TypeError: db.getAllPages is not a function
+    at getAll (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/paginas.controller.js:59:28)
+    at Layer.handle [as handle_request] (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/route.js:149:13)
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/middleware/auth.middleware.js:88:5
+    at Layer.handle [as handle_request] (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/route.js:149:13)
+    at verifyToken (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/middleware/auth.middleware.js:45:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+📄 Obteniendo todas las páginas...
+❌ Error al obtener páginas: TypeError: db.getAllPages is not a function
+    at getAll (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/paginas.controller.js:59:28)
+    at Layer.handle [as handle_request] (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/route.js:149:13)
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/middleware/auth.middleware.js:88:5
+    at Layer.handle [as handle_request] (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/express/lib/router/route.js:149:13)
+    at verifyToken (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/middleware/auth.middleware.js:45:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Error en query: error: syntax error at or near "OFFSET"
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/config/db.config.js:34:20)
+    at async getFiles (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/upload.local.controller.js:154:19) {
+  length: 95,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '71',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Error al obtener archivos: error: syntax error at or near "OFFSET"
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/config/db.config.js:34:20)
+    at async getFiles (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/upload.local.controller.js:154:19) {
+  length: 95,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '71',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Error en query: error: syntax error at or near "OFFSET"
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/config/db.config.js:34:20)
+    at async getFiles (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/upload.local.controller.js:154:19) {
+  length: 95,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '71',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Error al obtener archivos: error: syntax error at or near "OFFSET"
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/config/db.config.js:34:20)
+    at async getFiles (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/upload.local.controller.js:154:19) {
+  length: 95,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '71',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Error en query: error: syntax error at or near "OFFSET"
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/config/db.config.js:34:20)
+    at async getFiles (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/upload.local.controller.js:154:19) {
+  length: 95,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '71',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Error al obtener archivos: error: syntax error at or near "OFFSET"
+    at /home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/config/db.config.js:34:20)
+    at async getFiles (/home/vicente/RoadToDevOps/osyris/Osyris-Web/api-osyris/src/controllers/upload.local.controller.js:154:19) {
+  length: 95,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '71',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}

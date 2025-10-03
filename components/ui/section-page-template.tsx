@@ -47,6 +47,30 @@ interface SectionPageTemplateProps {
   sectionData: SectionData
 }
 
+// Mapeo estático de clases por color de sección para garantizar dark mode
+const accentClasses = {
+  orange: {
+    methodology: 'bg-orange-50 border-l-4 border-orange-500 dark:bg-orange-950 dark:border-orange-400',
+    teamSection: 'bg-orange-50 dark:bg-orange-950/50',
+    teamCard: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'
+  },
+  yellow: {
+    methodology: 'bg-yellow-50 border-l-4 border-yellow-500 dark:bg-yellow-950 dark:border-yellow-400',
+    teamSection: 'bg-yellow-50 dark:bg-yellow-950/50',
+    teamCard: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'
+  },
+  green: {
+    methodology: 'bg-green-50 border-l-4 border-green-500 dark:bg-green-950 dark:border-green-400',
+    teamSection: 'bg-green-50 dark:bg-green-950/50',
+    teamCard: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'
+  },
+  red: {
+    methodology: 'bg-red-50 border-l-4 border-red-500 dark:bg-red-950 dark:border-red-400',
+    teamSection: 'bg-red-50 dark:bg-red-950/50',
+    teamCard: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'
+  }
+}
+
 export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
   // Ensure sectionData has all required properties
   if (!sectionData || !sectionData.colors) {
@@ -61,6 +85,9 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
       </div>
     )
   }
+
+  // Obtener las clases estáticas según el color accent de la sección
+  const sectionClasses = accentClasses[sectionData.colors.accent as keyof typeof accentClasses] || accentClasses.orange
 
   const editableElements = [
     {
@@ -229,9 +256,9 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                 </h2>
                 <div className="space-y-6">
                   {sectionData.methodology.map((method, i) => (
-                    <div key={i} className={`bg-${sectionData.colors.accent}-50 border-l-4 border-${sectionData.colors.accent}-500 p-4 rounded`}>
-                      <h3 className="font-bold mb-2">{method.title}</h3>
-                      <p>{method.description}</p>
+                    <div key={i} className={`${sectionClasses.methodology} p-4 rounded`}>
+                      <h3 className="font-bold mb-2 text-foreground">{method.title}</h3>
+                      <p className="text-foreground/90">{method.description}</p>
                     </div>
                   ))}
                 </div>
@@ -240,22 +267,22 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
           </section>
 
           {/* Team Section */}
-          <section className={`py-12 bg-${sectionData.colors.accent}-50`}>
+          <section className={`py-12 ${sectionClasses.teamSection}`}>
             <div className="container mx-auto px-4">
               <h2 className="text-2xl font-bold text-center mb-8" data-edit="team-title">
                 Nuestro Equipo
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
                 {sectionData.team.map((member, i) => (
-                  <div key={i} className="bg-white rounded-lg p-6 shadow-sm text-center">
-                    <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4">
+                  <div key={i} className={`${sectionClasses.teamCard} rounded-lg p-6 shadow-sm text-center`}>
+                    <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 bg-muted">
                       <img
                         src={member.photo || "/placeholder.svg?height=100&width=100"}
                         alt={member.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <h3 className="font-bold">{member.name}</h3>
+                    <h3 className="font-bold text-foreground">{member.name}</h3>
                     <p className="text-sm text-muted-foreground">{member.role}</p>
                   </div>
                 ))}

@@ -24,7 +24,7 @@
 #### Backend (Express.js)
 - **Framework:** Express.js 4.18.2
 - **Lenguaje:** JavaScript (Node.js)
-- **Base de datos:** PostgreSQL 15 (desarrollo y producción)
+- **Base de datos:** SQLite (desarrollo) / MariaDB (producción)
 - **Puerto:** 5000
 - **Autenticación:** JWT + bcryptjs
 
@@ -75,7 +75,7 @@ Osyris-Web/
 │       │   ├── utils/               # Funciones auxiliares
 │       │   └── index.js             # Servidor principal
 │       ├── database/
-│       │   └── init.sql            # Scripts inicialización PostgreSQL
+│       │   └── osyris.db           # BD SQLite desarrollo
 │       └── package.json
 ├── 🛠️ Scripts de Desarrollo
 │   └── scripts/
@@ -171,10 +171,10 @@ npm run fix-deps          # Reparar dependencias
 - **Backend API:** http://localhost:5000
 - **Documentación API:** http://localhost:5000/api-docs
 
-### Docker (Desarrollo y Producción)
+### Docker (Producción)
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:5000
-- **Base de datos PostgreSQL:** localhost:5432
+- **Base de datos:** localhost:3306
 
 ## 🔐 Sistema de Roles y Permisos
 
@@ -281,25 +281,16 @@ PUT  /api/mensajes/:id/leido   # Marcar como leído
 
 ## 🗃️ Base de Datos
 
-### PostgreSQL 15 (Desarrollo y Producción)
+### Desarrollo (SQLite)
+- **Archivo:** `database/osyris.db` (creado automáticamente)
+- **Configuración:** Automática con tablas básicas
+- **Herramientas:** DB Browser for SQLite
+- **Secciones:** Insertadas automáticamente (Castores, Lobatos, Tropa, Pioneros, Rutas)
 
-**Configuración idéntica** en local y producción para paridad completa:
-
-#### Desarrollo Local (Docker)
-- **Imagen:** postgres:15-alpine
-- **Host:** localhost
-- **Puerto:** 5432
-- **Usuario:** osyris_user
-- **Password:** osyris_password
-- **Base de datos:** osyris_db
-- **Herramientas:** pgAdmin, DBeaver, psql
-
-#### Producción (Hetzner Cloud)
-- **Servidor:** 116.203.98.142
-- **Container:** osyris-db (Docker)
-- **Puerto:** 5432
-- **Backup automático:** Diario a las 9:00 AM
-- **Retención:** 2 backups más recientes
+### Producción (MariaDB)
+- **Host:** Configurable via Docker
+- **Puerto:** 3306
+- **Usuario/BD:** Configurables en `.env`
 
 ### Tablas Principales
 - `usuarios` - Información usuarios y roles
@@ -307,28 +298,49 @@ PUT  /api/mensajes/:id/leido   # Marcar como leído
 - `actividades` - Eventos y actividades
 - `documentos` - Archivos y circulares
 - `mensajes` - Sistema mensajería
-- `paginas_estaticas` - Contenido web editable
 
-## 🐳 Infraestructura y Despliegue
+## 🚀 Sistema Dual de Desarrollo
 
-### Entornos
+### 🏠 Desarrollo Local vs ☁️ Producción Supabase
 
-#### 🏠 **Desarrollo Local**
-- **Base de datos:** PostgreSQL 15 en Docker (`postgres:15-alpine`)
+El proyecto está configurado para funcionar en **dos entornos completamente separados**:
+
+#### 🏠 **Entorno Local (SQLite)**
+- **Base de datos:** SQLite local (`/database/osyris.db`)
 - **Uploads:** Sistema de archivos local (`/uploads/`)
-- **Configuración:** `api-osyris/src/config/db.config.js`
-- **Puerto BD:** 5432
-- **Inicio:** `./scripts/dev-start.sh` o `npm run dev`
+- **Configuración:** `src/config/db.config.js`
+- **Credenciales:** No se requieren claves externas
+- **Uso:** Desarrollo y testing local
 
-#### ☁️ **Producción (Hetzner Cloud)**
-- **Servidor:** 116.203.98.142
-- **Base de datos:** PostgreSQL 15 en Docker (container: osyris-db)
-- **Gestor procesos:** PM2
-- **Puerto Frontend:** 3000 (Next.js)
-- **Puerto Backend:** 5000 (Express.js)
-- **Puerto BD:** 5432 (PostgreSQL)
-- **CI/CD:** GitHub Actions → Deploy automático
-- **Backups:** Automáticos diarios 9:00 AM (2 más recientes)
+#### ☁️ **Entorno Producción (Supabase)**
+- **Base de datos:** PostgreSQL en Supabase
+- **Uploads:** Supabase Storage
+- **Configuración:** `src/config/supabase.config.js`
+- **Credenciales:** Variables de entorno Supabase
+- **Uso:** Deploy en Vercel y producción
+
+### 🔄 Comandos de Cambio de Entorno
+
+#### Cambiar a desarrollo local:
+```bash
+# Comando Claude disponible
+/local-dev
+```
+
+#### Cambiar a producción Supabase:
+```bash
+# Comando Claude disponible
+/supabase-deploy
+```
+
+### 📝 Configuración Automática
+
+Cada comando configura automáticamente:
+- ✅ Variables de entorno correspondientes
+- ✅ Archivos de configuración de BD
+- ✅ Sistema de uploads apropiado
+- ✅ Scripts de inicio correctos
+- ✅ Dependencias necesarias
 
 ## 🛠️ Scripts de Automatización
 
@@ -338,8 +350,9 @@ PUT  /api/mensajes/:id/leido   # Marcar como leído
 - ✅ **FUNCIÓN INTEGRADA de limpieza** (no necesitas script separado)
 - ✅ **5 intentos de forzado** para liberar puertos ocupados
 - ✅ Verifica dependencias instaladas
-- ✅ **Inicia PostgreSQL en Docker** si no está corriendo
+- ✅ Configura Next.js automáticamente
 - ✅ **Inicia en puerto 3000** (frontend) y 5000 (backend)
+- ✅ **Configura SQLite automáticamente** con tablas y datos básicos
 - ✅ Gestión de errores y logging colorizado
 - ✅ **Sin dependencias externas** - todo en un solo script
 
@@ -367,7 +380,7 @@ docker-compose down
 ### Servicios Docker
 - **osyris-frontend** - Next.js (puerto 3000)
 - **osyris-backend** - Express.js (puerto 5000)
-- **osyris-db** - PostgreSQL 15 (puerto 5432)
+- **osyris-db** - MariaDB (puerto 3306)
 
 ## 🔧 Configuración
 
@@ -384,7 +397,7 @@ NEXT_PUBLIC_APP_NAME=Osyris Scout Management
 NODE_ENV=development
 PORT=5000
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=3306
 DB_USER=osyris_user
 DB_PASSWORD=osyris_password
 DB_NAME=osyris_db

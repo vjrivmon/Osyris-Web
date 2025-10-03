@@ -31,7 +31,7 @@ services:
       - NODE_ENV=production
       - PORT=5000
       - DB_HOST=db
-      - DB_PORT=3306
+      - DB_PORT=5432
       - DB_USER=osyris_user
       - DB_PASSWORD=osyris_password
       - DB_NAME=osyris_db
@@ -42,20 +42,19 @@ services:
     networks:
       - osyris-network
 
-  # Servicio de base de datos (MariaDB)
+  # Servicio de base de datos (PostgreSQL)
   db:
-    image: mariadb:10.6
+    image: postgres:15-alpine
     container_name: osyris-db
     restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MYSQL_ROOT_PASSWORD=root_password
-      - MYSQL_DATABASE=osyris_db
-      - MYSQL_USER=osyris_user
-      - MYSQL_PASSWORD=osyris_password
+      - POSTGRES_USER=osyris_user
+      - POSTGRES_PASSWORD=osyris_password
+      - POSTGRES_DB=osyris_db
     volumes:
-      - osyris-db-data:/var/lib/mysql
+      - osyris-db-data:/var/lib/postgresql/data
     networks:
       - osyris-network
 

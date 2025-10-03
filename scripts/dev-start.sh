@@ -144,6 +144,19 @@ wait_for_port() {
     return 1
 }
 
+# Iniciar PostgreSQL en Docker si no está corriendo
+log "🐘 Verificando PostgreSQL..."
+if ! docker ps --format '{{.Names}}' | grep -q "^osyris-db$"; then
+    warning "PostgreSQL no está corriendo, iniciando..."
+    ./scripts/start-postgres-local.sh
+    if [ $? -ne 0 ]; then
+        error "❌ No se pudo iniciar PostgreSQL"
+        exit 1
+    fi
+else
+    success "✅ PostgreSQL ya está corriendo"
+fi
+
 # Iniciar servicios
 log "Iniciando servicios..."
 

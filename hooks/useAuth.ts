@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, createContext, useContext } from 'react'
+import { clearAuthData, isSessionExpired } from '@/lib/auth-utils'
 
 interface User {
   id: number
@@ -41,6 +42,19 @@ export function useAuth(): AuthContextType {
 
   const checkAuthStatus = async () => {
     try {
+      // Primero verificar si la sesión ha expirado
+      if (isSessionExpired()) {
+        console.log('🔒 Session expired or invalid, clearing auth data')
+        clearAuthData()
+        setAuthState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false
+        })
+        return
+      }
+
       const token = localStorage.getItem('token')
       if (!token) {
         setAuthState(prev => ({ ...prev, isLoading: false }))
@@ -52,6 +66,11 @@ export function useAuth(): AuthContextType {
         headers: {
           'Authorization': `Bearer ${token}`
         }
+      }).catch((error) => {
+        console.error('❌ Failed to connect to auth server:', error)
+        // Si el servidor no responde, limpiar sesión para forzar login
+        clearAuthData()
+        throw error
       })
 
       if (response.ok) {
@@ -63,8 +82,9 @@ export function useAuth(): AuthContextType {
           isLoading: false
         })
       } else {
-        // Token inválido
-        localStorage.removeItem('token')
+        // Token inválido o servidor rechazó la sesión
+        console.warn('⚠️ Invalid token or unauthorized, clearing session')
+        clearAuthData()
         setAuthState({
           user: null,
           token: null,
@@ -74,6 +94,8 @@ export function useAuth(): AuthContextType {
       }
     } catch (error) {
       console.error('Error checking auth status:', error)
+      // En caso de error, limpiar sesión para seguridad
+      clearAuthData()
       setAuthState({
         user: null,
         token: null,
@@ -116,7 +138,8 @@ export function useAuth(): AuthContextType {
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
+    console.log('👋 Logging out, clearing all auth data')
+    clearAuthData()
     setAuthState({
       user: null,
       token: null,

@@ -1,31 +1,6 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "mcps": {
-    "supabase": {
-      "enabled": true,
-      "description": "Supabase integration for database and storage operations",
-      "endpoints": {
-        "database": "https://nwkopngnziocsczqkjra.supabase.co/rest/v1/",
-        "storage": "https://nwkopngnziocsczqkjra.supabase.co/storage/v1/",
-        "auth": "https://nwkopngnziocsczqkjra.supabase.co/auth/v1/"
-      },
-      "credentials": {
-        "anon_key": "${SUPABASE_ANON_KEY}",
-        "service_key": "${SUPABASE_SERVICE_KEY}",
-        "url": "${SUPABASE_URL}"
-      },
-      "capabilities": [
-        "database_query",
-        "database_insert",
-        "database_update", 
-        "database_delete",
-        "storage_upload",
-        "storage_download",
-        "storage_list",
-        "auth_management"
-      ]
-    },
-
     "github": {
       "enabled": true,
       "description": "GitHub integration for repository management and CI/CD",
@@ -47,24 +22,23 @@
       ]
     },
 
-    "vercel": {
+    "hetzner": {
       "enabled": true,
-      "description": "Vercel integration for frontend deployment",
+      "description": "Hetzner Cloud server management for production",
       "endpoints": {
-        "api": "https://api.vercel.com/",
-        "deployments": "https://api.vercel.com/v6/deployments"
+        "server": "116.203.98.142",
+        "ssh_port": 22
       },
       "credentials": {
-        "token": "${VERCEL_TOKEN}",
-        "team_id": "${VERCEL_TEAM_ID}",
-        "project_id": "${VERCEL_PROJECT_ID}"
+        "ssh_key": "${HETZNER_SSH_KEY}",
+        "user": "root"
       },
       "capabilities": [
-        "deployment_management",
-        "environment_variables",
-        "domain_management",
-        "build_logs",
-        "performance_metrics"
+        "server_management",
+        "deployment_execution",
+        "service_monitoring",
+        "log_access",
+        "database_management"
       ]
     },
 
@@ -87,7 +61,8 @@
           "uploads/",
           "backups/",
           ".claude/",
-          "migrations/"
+          "migrations/",
+          "scripts/"
         ],
         "forbidden_paths": [
           ".env",
@@ -99,9 +74,10 @@
 
     "database_tools": {
       "enabled": true,
-      "description": "Database management tools for SQLite and PostgreSQL",
-      "sqlite": {
-        "path": "api-osyris/database/osyris.db",
+      "description": "Database management tools for PostgreSQL (local and production)",
+      "development": {
+        "type": "postgresql",
+        "docker_container": "osyris-db-local",
         "capabilities": [
           "schema_inspection",
           "data_query",
@@ -109,8 +85,10 @@
           "migration_execution"
         ]
       },
-      "postgresql": {
-        "connection": "${DATABASE_URL}",
+      "production": {
+        "type": "postgresql",
+        "docker_container": "osyris-db",
+        "server": "116.203.98.142",
         "capabilities": [
           "schema_management",
           "data_operations",
@@ -140,38 +118,80 @@
         "performance_monitoring",
         "alert_management"
       ]
+    },
+
+    "project_memory": {
+      "enabled": true,
+      "description": "MCP Memory para mantener contexto del proyecto entre sesiones",
+      "storage": ".claude/memory/",
+      "capabilities": [
+        "project_state_tracking",
+        "implementation_history",
+        "decision_rationale",
+        "technical_debt_tracking"
+      ]
+    },
+
+    "playwright": {
+      "enabled": true,
+      "description": "Playwright MCP para testing E2E y capturas de pantalla automatizadas",
+      "browser": "chromium",
+      "headless": true,
+      "capabilities": [
+        "browser_automation",
+        "screenshot_capture",
+        "e2e_testing",
+        "visual_regression_testing",
+        "accessibility_testing"
+      ],
+      "configuration": {
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "timeout": 30000,
+        "screenshot_directory": "screenshots/",
+        "video_directory": "videos/"
+      },
+      "test_environments": {
+        "local": "http://localhost:3000",
+        "staging": "http://localhost:3000",
+        "production": "https://osyris.grupoosyris.es"
+      }
     }
   },
 
   "integration_workflows": {
     "local_to_production": {
+      "description": "Deploy from local development to Hetzner production",
       "steps": [
         "filesystem.backup_current_state",
-        "database_tools.sqlite.create_backup", 
-        "supabase.database_migration",
-        "supabase.storage_migration",
-        "github.create_deployment_branch",
-        "vercel.trigger_deployment",
+        "database_tools.create_backup",
+        "github.push_to_main",
+        "github.trigger_action",
+        "hetzner.deploy_via_github_action",
         "monitoring.track_deployment"
       ]
     },
 
     "production_to_local": {
+      "description": "Sync production data to local for debugging",
       "steps": [
-        "supabase.export_data",
-        "database_tools.sqlite.import_data",
-        "supabase.download_files",
+        "hetzner.export_database",
+        "database_tools.import_to_local",
+        "hetzner.download_uploads",
         "filesystem.organize_local_files",
         "monitoring.log_sync_operation"
       ]
     },
 
     "schema_migration": {
+      "description": "Apply database schema changes",
       "steps": [
-        "database_tools.sqlite.extract_schema",
-        "database_tools.postgresql.compare_schema",
-        "database_tools.postgresql.generate_migration",
-        "supabase.apply_migration",
+        "database_tools.extract_local_schema",
+        "database_tools.compare_with_production",
+        "database_tools.generate_migration",
+        "hetzner.apply_migration",
         "monitoring.validate_migration"
       ]
     }
@@ -192,8 +212,8 @@
     },
 
     "fallback_strategies": {
-      "supabase_unavailable": "use_local_sqlite",
-      "vercel_deployment_failed": "deploy_to_alternative",
+      "hetzner_unavailable": "notify_admin_and_wait",
+      "github_action_failed": "manual_deployment_instructions",
       "github_api_down": "use_local_git_operations"
     }
   },

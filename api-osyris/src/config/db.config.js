@@ -94,6 +94,36 @@ async function getUserById(id) {
   return result[0] || null;
 }
 
+// Función helper para páginas estáticas
+async function getAllPages(filters = {}) {
+  let sql = 'SELECT * FROM paginas WHERE 1=1';
+  const params = [];
+  let paramIndex = 1;
+
+  if (filters.visible !== undefined) {
+    sql += ` AND visible = $${paramIndex}`;
+    params.push(filters.visible);
+    paramIndex++;
+  }
+
+  if (filters.seccion) {
+    sql += ` AND seccion = $${paramIndex}`;
+    params.push(filters.seccion);
+    paramIndex++;
+  }
+
+  if (filters.categoria) {
+    sql += ` AND categoria = $${paramIndex}`;
+    params.push(filters.categoria);
+    paramIndex++;
+  }
+
+  sql += ' ORDER BY orden ASC, id ASC';
+
+  const result = await query(sql, params);
+  return result;
+}
+
 module.exports = {
   initializeDatabase,
   query,
@@ -101,5 +131,6 @@ module.exports = {
   closeDatabase,
   pool,
   getUserByEmail,
-  getUserById
+  getUserById,
+  getAllPages
 };

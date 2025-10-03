@@ -12,13 +12,55 @@ export interface UserData {
   activo: boolean
   token?: string
   lastLogin?: string
+  expiresAt?: string
+}
+
+// Configuración de expiración de sesión
+const SESSION_DURATION_HOURS = 24 // Sesión expira después de 24 horas
+const SESSION_DURATION_MS = SESSION_DURATION_HOURS * 60 * 60 * 1000
+
+/**
+ * Check if session has expired
+ */
+export const isSessionExpired = (): boolean => {
+  const userStr = localStorage.getItem('osyris_user')
+  if (!userStr) return true
+
+  try {
+    const user: UserData = JSON.parse(userStr)
+
+    // Si no hay expiresAt, la sesión es inválida (sesión antigua sin expiración)
+    if (!user.expiresAt) {
+      console.warn('⚠️ Session without expiration date, clearing...')
+      return true
+    }
+
+    const now = new Date().getTime()
+    const expiresAt = new Date(user.expiresAt).getTime()
+
+    if (now > expiresAt) {
+      console.warn('⚠️ Session expired, clearing...')
+      return true
+    }
+
+    return false
+  } catch (error) {
+    console.error('Error checking session expiration:', error)
+    return true
+  }
 }
 
 /**
  * Get authentication token from localStorage
- * Checks multiple locations for backward compatibility
+ * Checks multiple locations for backward compatibility and validates expiration
  */
 export const getAuthToken = (): string | null => {
+  // Check if session has expired
+  if (isSessionExpired()) {
+    clearAuthData()
+    return null
+  }
+
   // First try direct token storage (new method)
   const directToken = localStorage.getItem('token')
   if (directToken) {
@@ -81,22 +123,28 @@ export const isAdmin = (): boolean => {
 }
 
 /**
- * Store authentication data
+ * Store authentication data with expiration
  */
-export const setAuthData = (token: string, userData: Omit<UserData, 'token'>) => {
+export const setAuthData = (token: string, userData: Omit<UserData, 'token' | 'lastLogin' | 'expiresAt'>) => {
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + SESSION_DURATION_MS)
+
   // Store token separately for easy access
   localStorage.setItem('token', token)
 
-  // Store user data with token included for completeness
-  const completeUserData = {
+  // Store user data with token, timestamp and expiration
+  const completeUserData: UserData = {
     ...userData,
     token,
-    lastLogin: new Date().toISOString()
+    lastLogin: now.toISOString(),
+    expiresAt: expiresAt.toISOString()
   }
   localStorage.setItem('osyris_user', JSON.stringify(completeUserData))
 
   // Store role separately for quick access
   localStorage.setItem('userRole', userData.rol)
+
+  console.log(`✅ Session stored, expires at: ${expiresAt.toLocaleString()}`)
 }
 
 /**
