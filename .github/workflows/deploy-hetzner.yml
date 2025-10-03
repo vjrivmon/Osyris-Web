@@ -122,6 +122,8 @@ jobs:
           PORT=5000
           JWT_SECRET=osyrisScoutGroup2024SecretKey!Production
           JWT_EXPIRES_IN=24h
+          FRONTEND_URL=http://116.203.98.142
+          ALLOWED_ORIGINS=http://116.203.98.142,https://gruposcoutsosyris.es,https://www.gruposcoutsosyris.es
           ENVFILE
 
           # Instalar PM2 si no está instalado

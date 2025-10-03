@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { setAuthData, getCurrentUser, getApiUrl } from "@/lib/auth-utils"
+import { setAuthData, getCurrentUser, getApiUrlWithFallback } from "@/lib/auth-utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -69,14 +69,15 @@ export default function LoginPage() {
     }
   }, [router])
 
-  // Función de login actualizada para usar API real
+  // Función de login actualizada para usar API real con fallback automático
   const handleLogin = async (values: LoginValues) => {
     setIsLoggingIn(true)
     setError(null)
 
     try {
-      // Usar la URL de API centralizada
-      const apiUrl = getApiUrl()
+      // Usar la URL de API con fallback automático
+      const apiUrl = await getApiUrlWithFallback()
+      console.log('📡 Usando API URL:', apiUrl)
 
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
@@ -117,7 +118,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error("Error en el proceso de login:", err);
-      setError("Error al iniciar sesión. Por favor, inténtalo de nuevo más tarde.");
+      setError("No se pudo conectar al servidor. Por favor, verifica tu conexión e inténtalo de nuevo.");
     } finally {
       setIsLoggingIn(false);
     }
