@@ -166,3 +166,18 @@ Emitted 'error' event on Server instance at:
 
 Node.js v22.19.0
 [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🔧 Inicializando PostgreSQL...
+✅ Conexión a PostgreSQL establecida correctamente
+📁 Base de datos: osyris_db
+✅ PostgreSQL inicializado correctamente
+📁 Almacenamiento: Sistema de archivos local
+
+============================================================
+🚀 Servidor en ejecución en http://localhost:5000
+📚 Documentación disponible en http://localhost:5000/api-docs
+🔧 Entorno: development
+🗄️ Base de datos: PostgreSQL
+============================================================
+
