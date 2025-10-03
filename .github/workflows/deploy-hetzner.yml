@@ -148,9 +148,9 @@ jobs:
           pm2 delete osyris-frontend || true
           pm2 delete osyris-backend || true
 
-          # Iniciar frontend con PM2
+          # Iniciar frontend con PM2 (usar next start directamente)
           cd /var/www/osyris/current
-          pm2 start npm --name "osyris-frontend" -- start -- -p 3000
+          pm2 start "npx next start -p 3000" --name "osyris-frontend"
 
           # Iniciar backend con PM2 (usar node directamente, no nodemon en producción)
           pm2 start /var/www/osyris/current/api-osyris/src/index.js \
