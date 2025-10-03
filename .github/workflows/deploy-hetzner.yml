@@ -60,9 +60,18 @@ jobs:
             --exclude=.next \
             --exclude=.git \
             --exclude=logs \
+            --exclude=.github \
             --exclude=api-osyris/node_modules \
             --exclude=api-osyris/database \
-            .
+            . || true
+
+          # Verificar que el archivo se creó
+          if [ ! -f deploy.tar.gz ]; then
+            echo "Error: deploy.tar.gz no se creó"
+            exit 1
+          fi
+
+          ls -lh deploy.tar.gz
 
       - name: 🚀 Deploy to server
         run: |
