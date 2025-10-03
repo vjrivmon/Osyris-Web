@@ -103,14 +103,18 @@ jobs:
 
           cd current
 
-          # Instalar dependencias y construir en el servidor
-          echo "📦 Instalando dependencias..."
-          npm ci --omit=dev
+          # Instalar dependencias (necesitamos devDependencies para build)
+          echo "📦 Instalando dependencias completas para build..."
+          npm ci
           cd api-osyris && npm ci --omit=dev && cd ..
 
           # Construir frontend en el servidor
           echo "🏗️ Construyendo frontend..."
           npm run build:frontend
+
+          # Limpiar devDependencies después del build (opcional, reduce espacio)
+          echo "🧹 Limpiando devDependencies post-build..."
+          npm prune --omit=dev
 
           # Configurar .env del backend
           cat > api-osyris/.env << 'ENVFILE'
