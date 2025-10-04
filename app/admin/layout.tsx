@@ -16,7 +16,7 @@ import {
   Users,
   Database,
   ChevronLeft,
-  Home
+  Edit
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -89,8 +89,9 @@ export default function AdminLayout({
     router.push("/")
   }
 
-  const goToUserView = () => {
-    router.push("/aula-virtual")
+  const goToEditMode = () => {
+    // Redirigir a la home con modo edición activado automáticamente
+    router.push("/?editMode=true")
   }
 
   return (
@@ -247,15 +248,15 @@ export default function AdminLayout({
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Botón para ir al aula virtual */}
+              {/* Botón para ir a editar contenido web */}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={goToUserView}
-                className="hidden md:inline-flex border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
+                onClick={goToEditMode}
+                className="hidden md:inline-flex border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950"
               >
-                <Home className="h-4 w-4 mr-2" />
-                Aula Virtual
+                <Edit className="h-4 w-4 mr-2" />
+                Editar Contenido Web
               </Button>
 
               <ThemeToggle />

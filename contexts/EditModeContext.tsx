@@ -6,6 +6,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
 // Tipos
@@ -45,6 +46,8 @@ const EditModeContext = createContext<EditModeContextType | undefined>(undefined
 // Provider
 export function EditModeProvider({ children }: { children: React.ReactNode }) {
   const { user, token } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
@@ -160,6 +163,18 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
     setPendingChanges(new Map());
     console.log('Cambios descartados');
   }, []);
+
+  // Activar automáticamente modo edición si viene de admin con ?editMode=true
+  useEffect(() => {
+    if (searchParams?.get('editMode') === 'true' && canEdit && !isEditMode) {
+      console.log('🚀 Activando modo edición automáticamente desde admin panel');
+      setIsEditMode(true);
+
+      // Limpiar el query param de la URL para que quede limpia
+      const newUrl = window.location.pathname;
+      router.replace(newUrl);
+    }
+  }, [searchParams, canEdit, isEditMode, router]);
 
   // Desactivar modo edición cuando el usuario cierra sesión
   useEffect(() => {
