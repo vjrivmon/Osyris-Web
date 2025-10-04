@@ -30,7 +30,7 @@ export function EditModeToggle({
     <button
       onClick={toggleEditMode}
       className={cn(
-        position === 'fixed' && 'fixed top-20 right-6 z-40',
+        position === 'fixed' && 'fixed top-20 right-6 z-[9999]',
         'bg-white dark:bg-gray-800 shadow-lg rounded-full',
         'border-2',
         isEditMode

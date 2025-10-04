@@ -64,7 +64,7 @@ export function EditToolbar() {
     <>
       {/* Toolbar principal */}
       <div className={cn(
-        'fixed bottom-6 left-1/2 -translate-x-1/2 z-50',
+        'fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999]',
         'bg-white dark:bg-gray-800 shadow-2xl rounded-full',
         'border-2 border-gray-200 dark:border-gray-700',
         'px-6 py-3',
