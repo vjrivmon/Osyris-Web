@@ -44,7 +44,7 @@ const EditModeContext = createContext<EditModeContextType | undefined>(undefined
 
 // Provider
 export function EditModeProvider({ children }: { children: React.ReactNode }) {
-  const { user, authData } = useAuth();
+  const { user, token } = useAuth();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
@@ -106,7 +106,7 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
       return true;
     }
 
-    if (!authData?.token) {
+    if (!token) {
       console.error('No hay token de autenticación');
       return false;
     }
@@ -121,7 +121,7 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${authData.token}`
+              'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
               tipo: change.tipo,
@@ -153,7 +153,7 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsSaving(false);
     }
-  }, [pendingChanges, authData]);
+  }, [pendingChanges, token]);
 
   // Descartar todos los cambios
   const discardChanges = useCallback(() => {
