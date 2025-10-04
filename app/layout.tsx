@@ -5,6 +5,8 @@ import "./globals.css"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DevSessionInit } from "@/components/dev-session-init"
+import { EditModeProvider } from "@/contexts/EditModeContext"
+import { EditToolbar, EditModeToggle } from "@/components/editable"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -32,7 +34,13 @@ export default function RootLayout({
       >
         <DevSessionInit />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange={false}>
-          {children}
+          <EditModeProvider>
+            {children}
+
+            {/* Componentes de edición (solo visibles para admin/editor) */}
+            <EditModeToggle />
+            <EditToolbar />
+          </EditModeProvider>
         </ThemeProvider>
       </body>
     </html>
