@@ -18,6 +18,7 @@ const authRoutes = require('./routes/auth.routes');
 // 🚀 NUEVAS RUTAS CMS
 const uploadRoutes = require('./routes/upload.routes');
 const paginasRoutes = require('./routes/paginas.routes');
+const contentRoutes = require('./routes/content.routes');
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
 
 // Configuración de variables de entorno
@@ -85,6 +86,7 @@ app.use('/api/mensajes', mensajesRoutes);
 // 🚀 NUEVAS RUTAS CMS
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/paginas', paginasRoutes);
+app.use('/api/content', contentRoutes);
 // app.use('/api/preview', previewRoutes); // Temporarily disabled
 
 // Ruta inicial
