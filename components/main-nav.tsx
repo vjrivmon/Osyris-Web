@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { useIsMobile } from "@/components/ui/sidebar"
 import { useAuth } from "@/hooks/useAuth"
 import { useEditMode } from "@/contexts/EditModeContext"
+import { EditModeToggle } from "@/components/editable/EditModeToggle"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -216,6 +217,9 @@ export function MainNav() {
                             <div className="text-xs text-muted-foreground">Administrador</div>
                           </div>
                         </div>
+                        <div className="w-full">
+                          <EditModeToggle />
+                        </div>
                         <Button onClick={handleLogoutClick} variant="destructive" className="w-full">
                           <LogOut className="h-4 w-4 mr-2" />
                           Cerrar sesión
@@ -397,6 +401,9 @@ export function MainNav() {
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
+              {isAuthenticated && user?.rol === 'admin' && (
+                <EditModeToggle />
+              )}
               {isAuthenticated && user?.rol === 'admin' ? (
                 <div className="hidden lg:flex items-center gap-3">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-md">

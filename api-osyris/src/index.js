@@ -106,6 +106,16 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Manejo de rutas no encontradas
 app.use((req, res) => {
   res.status(404).json({
