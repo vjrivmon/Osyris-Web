@@ -21,6 +21,15 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // Reescribir rutas de uploads al backend
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: 'http://localhost:5000/uploads/:path*',
+      },
+    ]
+  },
   webpack: (config, { isServer }) => {
     // Add path aliases with absolute path
     config.resolve.alias = {

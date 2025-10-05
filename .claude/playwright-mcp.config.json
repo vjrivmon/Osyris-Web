@@ -1,0 +1,103 @@
+{
+  "name": "Osyris Playwright MCP Configuration",
+  "version": "1.0.0",
+  "description": "Configuración optimizada del servidor MCP de Playwright para Osyris Scout Management",
+  
+  "browser_settings": {
+    "browser": "chromium",
+    "headless": true,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "permissions": [
+      "geolocation",
+      "clipboard-read", 
+      "clipboard-write"
+    ]
+  },
+
+  "timeouts": {
+    "action": 10000,
+    "navigation": 30000,
+    "page_load": 45000
+  },
+
+  "output": {
+    "screenshots_dir": "./screenshots",
+    "videos_dir": "./videos", 
+    "traces_dir": "./traces",
+    "save_trace": true,
+    "save_video": false,
+    "save_session": true
+  },
+
+  "network": {
+    "ignore_https_errors": true,
+    "block_service_workers": false,
+    "allowed_origins": [
+      "http://localhost:3000",
+      "http://localhost:5000", 
+      "https://osyris.grupoosyris.es"
+    ],
+    "proxy_bypass": ".local,.localhost,127.0.0.1"
+  },
+
+  "security": {
+    "no_sandbox": true,
+    "isolated": false,
+    "shared_context": false
+  },
+
+  "test_environments": {
+    "local_frontend": "http://localhost:3000",
+    "local_backend": "http://localhost:5000",
+    "production": "https://osyris.grupoosyris.es"
+  },
+
+  "common_selectors": {
+    "login_form": "form[data-testid='login-form']",
+    "username_input": "input[name='username'], input[name='email']",
+    "password_input": "input[name='password']",
+    "submit_button": "button[type='submit']",
+    "navigation_menu": "nav, [data-testid='navigation']",
+    "dashboard": "[data-testid='dashboard'], .dashboard",
+    "loading_spinner": ".loading, [data-testid='loading']"
+  },
+
+  "automation_scenarios": {
+    "login_flow": {
+      "description": "Flujo completo de autenticación",
+      "steps": [
+        "navigate_to_login",
+        "fill_credentials", 
+        "submit_form",
+        "verify_dashboard"
+      ]
+    },
+    "dashboard_navigation": {
+      "description": "Navegación por el dashboard principal",
+      "steps": [
+        "verify_navigation_menu",
+        "test_section_links",
+        "verify_responsive_design"
+      ]
+    },
+    "form_validation": {
+      "description": "Validación de formularios críticos",
+      "steps": [
+        "test_required_fields",
+        "test_invalid_inputs",
+        "test_success_scenarios"
+      ]
+    }
+  },
+
+  "monitoring": {
+    "performance_metrics": true,
+    "console_logs": true,
+    "network_requests": true,
+    "error_tracking": true
+  }
+}

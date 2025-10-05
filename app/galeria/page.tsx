@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import PageEditor from "@/components/ui/page-editor"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { EditableText } from "@/components/editable/EditableText"
+import { useSectionContent } from "@/hooks/useSectionContent"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LazyImage } from "@/components/ui/lazy-image"
 import { ChevronLeft, ChevronRight, X, Search, Download, Share, Loader2 } from "lucide-react"
 
@@ -22,34 +23,6 @@ interface Photo {
   date: string
   size?: string
 }
-
-// Definición de elementos editables para la galería
-const editableElements = [
-  {
-    id: 'hero-title',
-    type: 'text' as const,
-    selector: '[data-edit="hero-title"]',
-    label: 'Título principal',
-    content: 'Galería de Fotos',
-    maxLength: 100
-  },
-  {
-    id: 'hero-subtitle',
-    type: 'text' as const,
-    selector: '[data-edit="hero-subtitle"]',
-    label: 'Subtítulo galería',
-    content: 'Revive nuestras aventuras y momentos especiales',
-    maxLength: 200
-  },
-  {
-    id: 'search-placeholder',
-    type: 'text' as const,
-    selector: '[data-edit="search-placeholder"]',
-    label: 'Placeholder de búsqueda',
-    content: 'Buscar fotos...',
-    maxLength: 50
-  }
-]
 
 // Datos de ejemplo para la galería
 const photoAlbums = [
@@ -99,6 +72,14 @@ const photoAlbums = [
 
 // Componente para la galería
 export default function GaleriaPage() {
+  // Cargar contenido desde la API
+  const { content, isLoading } = useSectionContent('galeria')
+
+  // Función helper para obtener contenido con fallback
+  const getContent = (key: string, fallback: string) => {
+    return content[key]?.contenido || fallback
+  }
+
   const [selectedImage, setSelectedImage] = useState<Photo | null>(null)
   const [currentAlbumIndex, setCurrentAlbumIndex] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -156,31 +137,47 @@ export default function GaleriaPage() {
     )
   }
 
-  return (
-    <PageEditor
-      pageName="Galería de Fotos"
-      pageSlug="galeria"
-      elements={editableElements}
-    >
-      <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-16 items-center">
-            <MainNav />
-          </div>
-        </header>
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
-        <main className="flex-1">
-          {/* Hero Section */}
-          <section className="relative bg-gradient-to-br from-primary to-primary/80 py-16 md:py-24 text-primary-foreground">
-            <div className="container mx-auto px-4 text-center">
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6" data-edit="hero-title">
-                Galería de Fotos
-              </h1>
-              <p className="mt-4 text-xl max-w-3xl mx-auto" data-edit="hero-subtitle">
-                Revive nuestras aventuras y momentos especiales
-              </p>
-            </div>
-          </section>
+  return (
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center">
+          <MainNav />
+        </div>
+      </header>
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative bg-gradient-to-br from-primary to-primary/80 py-16 md:py-24 text-primary-foreground">
+          <div className="container mx-auto px-4 text-center">
+            <EditableText
+              contentId={300}
+              identificador="hero-title"
+              seccion="galeria"
+              as="h1"
+              className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6"
+            >
+              {getContent('hero-title', 'Galería de Fotos')}
+            </EditableText>
+            <EditableText
+              contentId={301}
+              identificador="hero-subtitle"
+              seccion="galeria"
+              as="p"
+              multiline
+              className="mt-4 text-xl max-w-3xl mx-auto"
+            >
+              {getContent('hero-subtitle', 'Revive nuestras aventuras y momentos especiales')}
+            </EditableText>
+          </div>
+        </section>
 
           {/* Search Section */}
           <section className="py-8 bg-muted/50">
@@ -190,11 +187,10 @@ export default function GaleriaPage() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     type="text"
-                    placeholder="Buscar fotos..."
+                    placeholder={getContent('search-placeholder', 'Buscar fotos...')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
-                    data-edit="search-placeholder"
                   />
                 </div>
               </div>
@@ -341,8 +337,7 @@ export default function GaleriaPage() {
           </Dialog>
         </main>
 
-        <SiteFooter />
-      </div>
-    </PageEditor>
+      <SiteFooter />
+    </div>
   )
 }

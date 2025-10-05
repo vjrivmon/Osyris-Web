@@ -5,7 +5,7 @@
 
 const db = require('../config/db.config');
 // Usar pool para las queries directas
-const pool = db;
+const pool = db.pool;
 
 /**
  * GET /api/content/page/:seccion
@@ -15,7 +15,7 @@ exports.getPageContent = async (req, res) => {
   const { seccion } = req.params;
 
   try {
-    const rows = await pool.query(
+    const result = await pool.query(
       `SELECT
         id,
         seccion,
@@ -34,15 +34,36 @@ exports.getPageContent = async (req, res) => {
       [seccion]
     );
 
+    const rows = result.rows || [];
+
     // Organizar contenido en un objeto más fácil de consumir
     const content = {};
 
     if (rows && Array.isArray(rows)) {
       rows.forEach(row => {
+        // Seleccionar el campo correcto según el tipo
+        let contenido;
+        switch(row.tipo) {
+          case 'texto':
+            contenido = row.contenido_texto;
+            break;
+          case 'html':
+            contenido = row.contenido_html;
+            break;
+          case 'json':
+            contenido = row.contenido_json;
+            break;
+          case 'imagen':
+            contenido = row.url_archivo;
+            break;
+          default:
+            contenido = row.contenido_texto || row.contenido_html || row.contenido_json || row.url_archivo;
+        }
+
         content[row.identificador] = {
           id: row.id,
           tipo: row.tipo,
-          contenido: row.contenido_texto || row.contenido_html || row.contenido_json || row.url_archivo,
+          contenido: contenido,
           metadata: row.metadata,
           version: row.version,
           lastModified: row.fecha_modificacion
@@ -148,37 +169,88 @@ exports.updateContent = async (req, res) => {
     }
 
     // Actualizar contenido (el trigger creará el snapshot automáticamente)
-    const result = await pool.query(
-      `UPDATE contenido_editable
-       SET ${updateField} = $1,
-           metadata = $2,
-           modificado_por = $3
-       WHERE id = $4
-       RETURNING *`,
-      [updateValue, metadata || {}, userId, id]
-    );
+    let query;
+    let params;
 
-    if (result.rows.length === 0) {
+    if (tipo === 'texto') {
+      query = `UPDATE contenido_editable
+               SET contenido_texto = $1,
+                   metadata = $2,
+                   modificado_por = $3,
+                   fecha_modificacion = NOW()
+               WHERE id = $4
+               RETURNING *`;
+      params = [updateValue, metadata || {}, userId, id];
+    } else if (tipo === 'html') {
+      query = `UPDATE contenido_editable
+               SET contenido_html = $1,
+                   metadata = $2,
+                   modificado_por = $3,
+                   fecha_modificacion = NOW()
+               WHERE id = $4
+               RETURNING *`;
+      params = [updateValue, metadata || {}, userId, id];
+    } else if (tipo === 'imagen') {
+      query = `UPDATE contenido_editable
+               SET url_archivo = $1,
+                   metadata = $2,
+                   modificado_por = $3,
+                   fecha_modificacion = NOW()
+               WHERE id = $4
+               RETURNING *`;
+      params = [updateValue, metadata || {}, userId, id];
+    } else {
+      // lista o json
+      query = `UPDATE contenido_editable
+               SET contenido_json = $1,
+                   metadata = $2,
+                   modificado_por = $3,
+                   fecha_modificacion = NOW()
+               WHERE id = $4
+               RETURNING *`;
+      params = [updateValue, metadata || {}, userId, id];
+    }
+
+    console.log('🔍 Ejecutando UPDATE:', { tipo, id, query: query.substring(0, 100), paramsLength: params.length });
+    console.log('🔍 Pool object type:', typeof pool, 'tiene query?:', typeof pool?.query);
+
+    let result;
+    try {
+      result = await pool.query(query, params);
+      console.log('✅ Query ejecutada, resultado tipo:', typeof result, 'keys:', Object.keys(result || {}));
+    } catch (queryError) {
+      console.error('❌ Error en pool.query:', queryError.message, queryError.stack);
+      throw queryError;
+    }
+
+    console.log('✅ Resultado query:', { hasRows: !!result?.rows, rowCount: result?.rowCount, rows: result?.rows?.length });
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      console.warn('⚠️ No se encontró contenido con ID:', id);
       return res.status(404).json({
         success: false,
         message: 'Contenido no encontrado'
       });
     }
 
-    // Registrar en audit log
-    await pool.query(
-      `INSERT INTO audit_log (usuario_id, accion, entidad_tipo, entidad_id, datos_nuevos, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        userId,
-        'editar_contenido',
-        'contenido',
-        id,
-        { contenido: updateValue, metadata },
-        req.ip,
-        req.get('user-agent')
-      ]
-    );
+    // Registrar en audit log (opcional, no fallar si la tabla no existe)
+    try {
+      await pool.query(
+        `INSERT INTO audit_log (usuario_id, accion, entidad_tipo, entidad_id, datos_nuevos, ip_address, user_agent)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          userId,
+          'editar_contenido',
+          'contenido',
+          id,
+          JSON.stringify({ contenido: updateValue, metadata }),
+          req.ip || 'unknown',
+          req.get('user-agent') || 'unknown'
+        ]
+      );
+    } catch (auditError) {
+      console.warn('No se pudo registrar en audit_log:', auditError.message);
+    }
 
     res.json({
       success: true,
@@ -333,7 +405,9 @@ exports.uploadImage = async (req, res) => {
     const path = require('path');
 
     // Crear directorio si no existe
-    const fullPath = path.join(__dirname, '../../', uploadDir);
+    // __dirname = /path/to/api-osyris/src/controllers
+    // Necesitamos ir a /path/to/api-osyris/uploads/content
+    const fullPath = path.join(__dirname, '../..', uploadDir);
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
     }

@@ -1,3 +1,5 @@
+"use client"
+
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -5,76 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import PageEditor from "@/components/ui/page-editor"
+import { EditableText } from "@/components/editable/EditableText"
 import { MapPin, Mail, Phone, Send } from "lucide-react"
-
-// Definición de elementos editables para la página de contacto
-const editableElements = [
-  {
-    id: 'hero-title',
-    type: 'text' as const,
-    selector: '[data-edit="hero-title"]',
-    label: 'Título principal',
-    content: 'Contacto',
-    maxLength: 100
-  },
-  {
-    id: 'hero-subtitle',
-    type: 'text' as const,
-    selector: '[data-edit="hero-subtitle"]',
-    label: 'Subtítulo contacto',
-    content: '¿Tienes alguna pregunta o quieres formar parte de nuestro grupo? ¡Contáctanos!',
-    maxLength: 200
-  },
-  {
-    id: 'form-title',
-    type: 'text' as const,
-    selector: '[data-edit="form-title"]',
-    label: 'Título formulario',
-    content: 'Envíanos un mensaje',
-    maxLength: 100
-  },
-  {
-    id: 'form-description',
-    type: 'text' as const,
-    selector: '[data-edit="form-description"]',
-    label: 'Descripción formulario',
-    content: 'Rellena el formulario y te responderemos lo antes posible.',
-    maxLength: 200
-  },
-  {
-    id: 'contact-info-title',
-    type: 'text' as const,
-    selector: '[data-edit="contact-info-title"]',
-    label: 'Título información contacto',
-    content: 'Información de contacto',
-    maxLength: 100
-  },
-  {
-    id: 'contact-address',
-    type: 'textarea' as const,
-    selector: '[data-edit="contact-address"]',
-    label: 'Dirección',
-    content: 'Calle Ejemplo, 123\n46000 Valencia',
-    maxLength: 300
-  },
-  {
-    id: 'contact-email',
-    type: 'text' as const,
-    selector: '[data-edit="contact-email"]',
-    label: 'Email de contacto',
-    content: 'contacto@grupoosyris.es',
-    maxLength: 100
-  },
-  {
-    id: 'contact-phone',
-    type: 'text' as const,
-    selector: '[data-edit="contact-phone"]',
-    label: 'Teléfono de contacto',
-    content: '123 456 789',
-    maxLength: 50
-  }
-]
 
 // Data for FAQs
 const faqs = [
@@ -107,28 +41,38 @@ const faqs = [
 
 export default function ContactoPage() {
   return (
-    <PageEditor
-      pageName="Contacto"
-      pageSlug="contacto"
-      elements={editableElements}
-    >
-      <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-16 items-center">
-            <MainNav />
-          </div>
-        </header>
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center">
+          <MainNav />
+        </div>
+      </header>
 
-        <main className="flex-1">
-          {/* Hero Section */}
-          <section className="relative bg-primary py-16 md:py-24">
-            <div className="container mx-auto px-4 text-center text-primary-foreground">
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6" data-edit="hero-title">Contacto</h1>
-              <p className="mt-4 text-xl max-w-3xl mx-auto" data-edit="hero-subtitle">
-                ¿Tienes alguna pregunta o quieres formar parte de nuestro grupo? ¡Contáctanos!
-              </p>
-            </div>
-          </section>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative bg-primary py-16 md:py-24">
+          <div className="container mx-auto px-4 text-center text-primary-foreground">
+            <EditableText
+              contentId={400}
+              identificador="hero-title"
+              seccion="contacto"
+              as="h1"
+              className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6"
+            >
+              Contacto
+            </EditableText>
+            <EditableText
+              contentId={401}
+              identificador="hero-subtitle"
+              seccion="contacto"
+              as="p"
+              multiline
+              className="mt-4 text-xl max-w-3xl mx-auto"
+            >
+              ¿Tienes alguna pregunta o quieres formar parte de nuestro grupo? ¡Contáctanos!
+            </EditableText>
+          </div>
+        </section>
 
         {/* Contact Section */}
         <section className="py-12">
@@ -137,8 +81,22 @@ export default function ContactoPage() {
               <div className="md:w-1/2">
                 <Card>
                   <CardHeader>
-                    <CardTitle data-edit="form-title">Envíanos un mensaje</CardTitle>
-                    <CardDescription data-edit="form-description">Rellena el formulario y te responderemos lo antes posible.</CardDescription>
+                    <EditableText
+                      contentId={402}
+                      identificador="form-title"
+                      seccion="contacto"
+                      as={CardTitle}
+                    >
+                      Envíanos un mensaje
+                    </EditableText>
+                    <EditableText
+                      contentId={403}
+                      identificador="form-description"
+                      seccion="contacto"
+                      as={CardDescription}
+                    >
+                      Rellena el formulario y te responderemos lo antes posible.
+                    </EditableText>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
@@ -169,7 +127,14 @@ export default function ContactoPage() {
               <div className="md:w-1/2 space-y-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle data-edit="contact-info-title">Información de contacto</CardTitle>
+                    <EditableText
+                      contentId={404}
+                      identificador="contact-info-title"
+                      seccion="contacto"
+                      as={CardTitle}
+                    >
+                      Información de contacto
+                    </EditableText>
                     <CardDescription>Puedes contactarnos a través de los siguientes medios.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -177,23 +142,46 @@ export default function ContactoPage() {
                       <MapPin className="h-5 w-5 text-primary mt-0.5" />
                       <div>
                         <h3 className="font-medium">Dirección</h3>
-                        <p className="text-muted-foreground">
+                        <EditableText
+                          contentId={405}
+                          identificador="contact-address"
+                          seccion="contacto"
+                          as="p"
+                          multiline
+                          className="text-muted-foreground"
+                        >
                           Calle Poeta Ricard Sanmartí nº3, Barrio de Benimaclet, Valencia
-                        </p>
+                        </EditableText>
                       </div>
                     </div>
                     <div className="flex items-start space-x-4">
                       <Mail className="h-5 w-5 text-primary mt-0.5" />
                       <div>
                         <h3 className="font-medium">Email</h3>
-                        <p className="text-muted-foreground">info@grupoosyris.es</p>
+                        <EditableText
+                          contentId={406}
+                          identificador="contact-email"
+                          seccion="contacto"
+                          as="p"
+                          className="text-muted-foreground"
+                        >
+                          info@grupoosyris.es
+                        </EditableText>
                       </div>
                     </div>
                     <div className="flex items-start space-x-4">
                       <Phone className="h-5 w-5 text-primary mt-0.5" />
                       <div>
                         <h3 className="font-medium">Teléfono</h3>
-                        <p className="text-muted-foreground">+34 600 123 456</p>
+                        <EditableText
+                          contentId={407}
+                          identificador="contact-phone"
+                          seccion="contacto"
+                          as="p"
+                          className="text-muted-foreground"
+                        >
+                          +34 600 123 456
+                        </EditableText>
                       </div>
                     </div>
                   </CardContent>
@@ -201,21 +189,83 @@ export default function ContactoPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Horario</CardTitle>
-                    <CardDescription>Nuestras actividades regulares y horario de atención.</CardDescription>
+                    <EditableText
+                      contentId={408}
+                      identificador="horario-title"
+                      seccion="contacto"
+                      as={CardTitle}
+                    >
+                      Horario
+                    </EditableText>
+                    <EditableText
+                      contentId={409}
+                      identificador="horario-description"
+                      seccion="contacto"
+                      as={CardDescription}
+                    >
+                      Nuestras actividades regulares y horario de atención.
+                    </EditableText>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <h3 className="font-medium">Reuniones semanales</h3>
-                      <p className="text-muted-foreground">Sábados de 17:00 a 19:00</p>
+                      <EditableText
+                        contentId={410}
+                        identificador="horario-reuniones-title"
+                        seccion="contacto"
+                        as="h3"
+                        className="font-medium"
+                      >
+                        Reuniones semanales
+                      </EditableText>
+                      <EditableText
+                        contentId={411}
+                        identificador="horario-reuniones-time"
+                        seccion="contacto"
+                        as="p"
+                        className="text-muted-foreground"
+                      >
+                        Sábados de 17:00 a 19:00
+                      </EditableText>
                     </div>
                     <div>
-                      <h3 className="font-medium">Atención a familias</h3>
-                      <p className="text-muted-foreground">Sábados de 16:30 a 17:00 y de 19:00 a 19:30</p>
+                      <EditableText
+                        contentId={412}
+                        identificador="horario-familias-title"
+                        seccion="contacto"
+                        as="h3"
+                        className="font-medium"
+                      >
+                        Atención a familias
+                      </EditableText>
+                      <EditableText
+                        contentId={413}
+                        identificador="horario-familias-time"
+                        seccion="contacto"
+                        as="p"
+                        className="text-muted-foreground"
+                      >
+                        Sábados de 16:30 a 17:00 y de 19:00 a 19:30
+                      </EditableText>
                     </div>
                     <div>
-                      <h3 className="font-medium">Reuniones de Kraal</h3>
-                      <p className="text-muted-foreground">Viernes de 20:00 a 22:00</p>
+                      <EditableText
+                        contentId={414}
+                        identificador="horario-kraal-title"
+                        seccion="contacto"
+                        as="h3"
+                        className="font-medium"
+                      >
+                        Reuniones de Kraal
+                      </EditableText>
+                      <EditableText
+                        contentId={415}
+                        identificador="horario-kraal-time"
+                        seccion="contacto"
+                        as="p"
+                        className="text-muted-foreground"
+                      >
+                        Viernes de 20:00 a 22:00
+                      </EditableText>
                     </div>
                   </CardContent>
                 </Card>
@@ -227,7 +277,15 @@ export default function ContactoPage() {
         {/* Map Section */}
         <section className="py-12 bg-muted">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-center mb-8">Nuestra ubicación</h2>
+            <EditableText
+              contentId={416}
+              identificador="map-title"
+              seccion="contacto"
+              as="h2"
+              className="text-2xl font-bold text-center mb-8"
+            >
+              Nuestra ubicación
+            </EditableText>
             <div className="aspect-video w-full max-w-4xl mx-auto rounded-lg overflow-hidden">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3079.6536087335247!2d-0.3661111!3d39.4812222!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd604f53c3913ebf%3A0x7fb0a7e3e5c2ae9a!2sCalle%20Poeta%20Ricard%20Sanmart%C3%AD%2C%203%2C%2046020%20Valencia!5e0!3m2!1ses!2ses!4v1653923456789!5m2!1ses!2ses"
@@ -245,15 +303,40 @@ export default function ContactoPage() {
         {/* FAQ Section */}
         <section className="py-12">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-center mb-8">Preguntas frecuentes</h2>
+            <EditableText
+              contentId={417}
+              identificador="faq-title"
+              seccion="contacto"
+              as="h2"
+              className="text-2xl font-bold text-center mb-8"
+            >
+              Preguntas frecuentes
+            </EditableText>
             <div className="grid gap-6 max-w-3xl mx-auto">
               {faqs.map((faq, i) => (
                 <Card key={i}>
                   <CardHeader>
-                    <CardTitle className="text-lg">{faq.question}</CardTitle>
+                    <EditableText
+                      contentId={418 + i * 2}
+                      identificador={`faq-${i}-question`}
+                      seccion="contacto"
+                      as={CardTitle}
+                      className="text-lg"
+                    >
+                      {faq.question}
+                    </EditableText>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">{faq.answer}</p>
+                    <EditableText
+                      contentId={419 + i * 2}
+                      identificador={`faq-${i}-answer`}
+                      seccion="contacto"
+                      as="p"
+                      multiline
+                      className="text-muted-foreground"
+                    >
+                      {faq.answer}
+                    </EditableText>
                   </CardContent>
                 </Card>
               ))}
@@ -264,7 +347,5 @@ export default function ContactoPage() {
 
       <SiteFooter />
     </div>
-    </PageEditor>
   );
 }
-

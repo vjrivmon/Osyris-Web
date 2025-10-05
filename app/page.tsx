@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button"
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent } from "@/components/ui/card"
+import { EditableText } from "@/components/editable/EditableText"
+import { EditableImage } from "@/components/editable/EditableImage"
+import { EditableList } from "@/components/editable/EditableList"
+import { useSectionContent } from "@/hooks/useSectionContent"
 import {
   CalendarDays,
   FileText,
@@ -15,12 +19,48 @@ import {
   ArrowRight,
   ChevronRight,
   Heart,
-  Compass
+  Compass,
+  Loader2
 } from "lucide-react"
 
 export default function Home() {
-  // Sistema de edición en vivo ahora usa EditModeToggle del root layout
-  // Para editar esta página, haz login como admin y busca el botón "Editar Página" en la esquina superior derecha
+  // Cargar contenido desde la API
+  const { content, isLoading } = useSectionContent('landing')
+
+  // Función helper para obtener contenido con fallback
+  const getContent = (key: string, fallback: string) => {
+    return content[key]?.contenido || fallback
+  }
+
+  // Función helper para obtener contenido JSON con fallback
+  const getJson = <T,>(key: string, fallback: T[]): T[] => {
+    try {
+      const jsonContent = content[key]?.contenido
+
+      // Si ya es un array (JSON parseado por PostgreSQL), devolverlo directamente
+      if (Array.isArray(jsonContent)) {
+        return jsonContent as T[]
+      }
+
+      // Si es un string JSON, parsearlo
+      if (jsonContent && typeof jsonContent === 'string') {
+        const parsed = JSON.parse(jsonContent)
+        return Array.isArray(parsed) ? parsed : fallback
+      }
+
+      return fallback
+    } catch {
+      return fallback
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -33,13 +73,25 @@ export default function Home() {
             <div className="mb-6 inline-block rounded-full bg-white px-4 py-1.5 text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
               Educando en valores desde 1981
             </div>
-            <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl text-white">
-              Grupo Scout <span className="text-secondary">Osyris</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-3xl text-xl leading-relaxed text-white">
-              Formando jóvenes a través del método scout, promoviendo valores, aventura y servicio a la comunidad desde
-              1981.
-            </p>
+            <EditableText
+              contentId={100}
+              identificador="hero-title"
+              seccion="landing"
+              as="h1"
+              className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl text-white"
+            >
+              {getContent('hero-title', 'Grupo Scout Osyris')}
+            </EditableText>
+            <EditableText
+              contentId={101}
+              identificador="hero-subtitle"
+              seccion="landing"
+              as="p"
+              multiline
+              className="mx-auto mt-6 max-w-3xl text-xl leading-relaxed text-white"
+            >
+              {getContent('hero-subtitle', 'Formando jóvenes a través del método scout, promoviendo valores, aventura y servicio a la comunidad desde 1981.')}
+            </EditableText>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Button asChild size="lg" className="bg-secondary text-black hover:bg-secondary/90">
                 <Link href="/secciones">Descubre nuestras secciones</Link>
@@ -64,29 +116,73 @@ export default function Home() {
                 <div className="mb-4 rounded-full bg-primary/10 p-4">
                   <Compass className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="mb-2 text-xl font-bold">Aventura y Aprendizaje</h3>
-                <p className="text-muted-foreground">
+                <EditableText
+                  contentId={102}
+                  identificador="feature-1-title"
+                  seccion="landing"
+                  as="h3"
+                  className="mb-2 text-xl font-bold"
+                >
+                  Aventura y Aprendizaje
+                </EditableText>
+                <EditableText
+                  contentId={103}
+                  identificador="feature-1-description"
+                  seccion="landing"
+                  as="p"
+                  multiline
+                  className="text-muted-foreground"
+                >
                   Actividades emocionantes que combinan diversión y desarrollo personal en un entorno seguro.
-                </p>
+                </EditableText>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 rounded-full bg-primary/10 p-4">
                   <Heart className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="mb-2 text-xl font-bold">Valores y Amistad</h3>
-                <p className="text-muted-foreground">
+                <EditableText
+                  contentId={104}
+                  identificador="feature-2-title"
+                  seccion="landing"
+                  as="h3"
+                  className="mb-2 text-xl font-bold"
+                >
+                  Valores y Amistad
+                </EditableText>
+                <EditableText
+                  contentId={105}
+                  identificador="feature-2-description"
+                  seccion="landing"
+                  as="p"
+                  multiline
+                  className="text-muted-foreground"
+                >
                   Fomentamos valores como el respeto, la responsabilidad y la amistad a través del método scout.
-                </p>
+                </EditableText>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 rounded-full bg-primary/10 p-4">
                   <Tent className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="mb-2 text-xl font-bold">Naturaleza y Sostenibilidad</h3>
-                <p className="text-muted-foreground">
-                  Conectamos con la naturaleza y aprendemos a cuidar nuestro entorno a través de actividades al aire
-                  libre.
-                </p>
+                <EditableText
+                  contentId={106}
+                  identificador="feature-3-title"
+                  seccion="landing"
+                  as="h3"
+                  className="mb-2 text-xl font-bold"
+                >
+                  Naturaleza y Sostenibilidad
+                </EditableText>
+                <EditableText
+                  contentId={107}
+                  identificador="feature-3-description"
+                  seccion="landing"
+                  as="p"
+                  multiline
+                  className="text-muted-foreground"
+                >
+                  Conectamos con la naturaleza y aprendemos a cuidar nuestro entorno a través de actividades al aire libre.
+                </EditableText>
               </div>
             </div>
           </div>
@@ -96,11 +192,25 @@ export default function Home() {
         <section className="bg-section-pattern py-16">
           <div className="container mx-auto px-4">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold">Nuestras Secciones</h2>
-              <p className="mx-auto max-w-2xl text-muted-foreground">
-                El escultismo se adapta a las diferentes etapas de desarrollo de niños y jóvenes, ofreciendo actividades
-                y metodologías específicas para cada edad.
-              </p>
+              <EditableText
+                contentId={120}
+                identificador="sections-title"
+                seccion="landing"
+                as="h2"
+                className="mb-4 text-3xl font-bold"
+              >
+                {getContent('sections-title', 'Nuestras Secciones')}
+              </EditableText>
+              <EditableText
+                contentId={121}
+                identificador="sections-subtitle"
+                seccion="landing"
+                as="p"
+                multiline
+                className="mx-auto max-w-2xl text-muted-foreground"
+              >
+                {getContent('sections-subtitle', 'El escultismo se adapta a las diferentes etapas de desarrollo de niños y jóvenes, ofreciendo actividades y metodologías específicas para cada edad.')}
+              </EditableText>
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
               {sections.map((section, i) => (
@@ -136,10 +246,25 @@ export default function Home() {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold">Próximas Actividades</h2>
-              <p className="mx-auto max-w-2xl text-muted-foreground">
-                Descubre las actividades que tenemos programadas para las próximas semanas.
-              </p>
+              <EditableText
+                contentId={122}
+                identificador="activities-title"
+                seccion="landing"
+                as="h2"
+                className="mb-4 text-3xl font-bold"
+              >
+                {getContent('activities-title', 'Próximas Actividades')}
+              </EditableText>
+              <EditableText
+                contentId={123}
+                identificador="activities-subtitle"
+                seccion="landing"
+                as="p"
+                multiline
+                className="mx-auto max-w-2xl text-muted-foreground"
+              >
+                {getContent('activities-subtitle', 'Descubre las actividades que tenemos programadas para las próximas semanas.')}
+              </EditableText>
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {upcomingActivities.map((activity, i) => (
@@ -195,11 +320,25 @@ export default function Home() {
         <section className="bg-primary py-16 text-primary-foreground">
           <div className="container mx-auto px-4">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold">Nuestros Valores</h2>
-              <p className="mx-auto max-w-2xl text-primary-foreground/80">
-                El escultismo se basa en valores fundamentales que guían nuestras actividades y nuestra forma de
-                entender la educación.
-              </p>
+              <EditableText
+                contentId={109}
+                identificador="valores-title"
+                seccion="landing"
+                as="h2"
+                className="mb-4 text-3xl font-bold"
+              >
+                {getContent('valores-title', 'Nuestros Valores')}
+              </EditableText>
+              <EditableText
+                contentId={110}
+                identificador="valores-subtitle"
+                seccion="landing"
+                as="p"
+                multiline
+                className="mx-auto max-w-2xl text-primary-foreground/80"
+              >
+                {getContent('valores-subtitle', 'El escultismo se basa en valores fundamentales que guían nuestras actividades y nuestra forma de entender la educación.')}
+              </EditableText>
             </div>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
               {values.map((value, i) => (
@@ -210,8 +349,25 @@ export default function Home() {
                   <div className="mb-4 inline-flex items-center justify-center rounded-full bg-primary-foreground p-4 text-primary">
                     {value.icon}
                   </div>
-                  <h3 className="mb-2 text-xl font-bold">{value.title}</h3>
-                  <p className="text-primary-foreground/80">{value.description}</p>
+                  <EditableText
+                    contentId={111 + i * 2}
+                    identificador={`valor-${i}-title`}
+                    seccion="landing"
+                    as="h3"
+                    className="mb-2 text-xl font-bold"
+                  >
+                    {getContent(`valor-${i}-title`, value.title)}
+                  </EditableText>
+                  <EditableText
+                    contentId={112 + i * 2}
+                    identificador={`valor-${i}-description`}
+                    seccion="landing"
+                    as="p"
+                    multiline
+                    className="text-primary-foreground/80"
+                  >
+                    {getContent(`valor-${i}-description`, value.description)}
+                  </EditableText>
                 </div>
               ))}
             </div>
@@ -232,17 +388,39 @@ export default function Home() {
             <div className="rounded-xl bg-muted p-8 md:p-12">
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <div>
-                  <h2 className="mb-4 text-3xl font-bold">¿Quieres formar parte de nuestra familia scout?</h2>
-                  <p className="mb-6 text-muted-foreground">
-                    Si estás interesado en que tu hijo/a forme parte del Grupo Scout Osyris o quieres unirte como
-                    monitor, no dudes en contactar con nosotros. ¡Te esperamos con los brazos abiertos!
-                  </p>
+                  <EditableText
+                    contentId={124}
+                    identificador="join-title"
+                    seccion="landing"
+                    as="h2"
+                    className="mb-4 text-3xl font-bold"
+                  >
+                    {getContent('join-title', '¿Quieres formar parte de nuestra familia scout?')}
+                  </EditableText>
+                  <EditableText
+                    contentId={125}
+                    identificador="join-description"
+                    seccion="landing"
+                    as="p"
+                    multiline
+                    className="mb-6 text-muted-foreground"
+                  >
+                    {getContent('join-description', 'Si estás interesado en que tu hijo/a forme parte del Grupo Scout Osyris o quieres unirte como monitor, no dudes en contactar con nosotros. ¡Te esperamos con los brazos abiertos!')}
+                  </EditableText>
                   <Button asChild size="lg">
                     <Link href="/contacto">Contacta con nosotros</Link>
                   </Button>
                 </div>
                 <div className="flex items-center justify-center">
-                  <img src="/placeholder.svg?height=300&width=400" alt="Grupo Scout Osyris" className="rounded-lg" />
+                  <EditableImage
+                    contentId={108}
+                    identificador="join-us-image"
+                    seccion="landing"
+                    alt="Grupo Scout Osyris"
+                    className="rounded-lg"
+                  >
+                    {getContent('join-us-image', '/placeholder.svg?height=300&width=400')}
+                  </EditableImage>
                 </div>
               </div>
             </div>
@@ -253,14 +431,36 @@ export default function Home() {
         <section className="bg-section-pattern py-16">
           <div className="container mx-auto px-4">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold">Testimonios</h2>
-              <p className="mx-auto max-w-2xl text-muted-foreground">
-                Descubre lo que opinan las familias y antiguos miembros sobre su experiencia en el Grupo Scout Osyris.
-              </p>
+              <EditableText
+                contentId={126}
+                identificador="testimonials-title"
+                seccion="landing"
+                as="h2"
+                className="mb-4 text-3xl font-bold"
+              >
+                {getContent('testimonials-title', 'Testimonios')}
+              </EditableText>
+              <EditableText
+                contentId={127}
+                identificador="testimonials-subtitle"
+                seccion="landing"
+                as="p"
+                multiline
+                className="mx-auto max-w-2xl text-muted-foreground"
+              >
+                {getContent('testimonials-subtitle', 'Descubre lo que opinan las familias y antiguos miembros sobre su experiencia en el Grupo Scout Osyris.')}
+              </EditableText>
             </div>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {testimonials.map((testimonial, i) => (
-                <Card key={i} className="h-full bg-muted/50">
+            <EditableList<{name: string; role: string; avatar: string; text: string}>
+              contentId={128}
+              identificador="testimonials-list"
+              seccion="landing"
+              fallback={testimonials}
+              emptyItem={{ name: '', role: '', avatar: '/placeholder.svg?height=100&width=100', text: '' }}
+              className="grid grid-cols-1 gap-8 md:grid-cols-3"
+              addButtonText="Añadir testimonio"
+              render={(testimonial) => (
+                <Card className="h-full bg-muted/50">
                   <CardContent className="p-6">
                     <div className="mb-6 text-4xl">"</div>
                     <p className="mb-6 italic">{testimonial.text}</p>
@@ -279,8 +479,50 @@ export default function Home() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              )}
+              itemEditor={(item, onChange, onDelete) => (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium">Nombre</label>
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => onChange({ ...item, name: e.target.value })}
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Rol</label>
+                    <input
+                      type="text"
+                      value={item.role}
+                      onChange={(e) => onChange({ ...item, role: e.target.value })}
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Avatar URL</label>
+                    <input
+                      type="text"
+                      value={item.avatar}
+                      onChange={(e) => onChange({ ...item, avatar: e.target.value })}
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Testimonio</label>
+                    <textarea
+                      value={item.text}
+                      onChange={(e) => onChange({ ...item, text: e.target.value })}
+                      rows={4}
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+              )}
+            >
+              {JSON.stringify(getJson('testimonials-list', testimonials))}
+            </EditableList>
           </div>
         </section>
       </main>

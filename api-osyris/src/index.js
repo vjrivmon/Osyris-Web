@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const fileUpload = require('express-fileupload');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 
@@ -32,9 +33,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Servir archivos estáticos desde uploads
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+app.use(fileUpload({
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  abortOnLimit: true,
+  useTempFiles: true,
+  tempFileDir: '/tmp/'
+}));
 
 // Opciones de Swagger
 const swaggerOptions = {
@@ -88,6 +92,11 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/paginas', paginasRoutes);
 app.use('/api/content', contentRoutes);
 // app.use('/api/preview', previewRoutes); // Temporarily disabled
+
+// Servir archivos estáticos desde uploads (debe ir después de las rutas API)
+const uploadsPath = path.join(__dirname, '../uploads');
+console.log('📁 Configurando static files en:', uploadsPath);
+app.use('/uploads', express.static(uploadsPath));
 
 // Ruta inicial
 app.get('/', (req, res) => {

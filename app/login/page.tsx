@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { setAuthData, getCurrentUser, getApiUrlWithFallback } from "@/lib/auth-utils"
+import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -43,6 +44,7 @@ const MOCK_USERS = [
 
 export default function LoginPage() {
   const router = useRouter()
+  const { refreshUser } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
@@ -102,6 +104,9 @@ export default function LoginPage() {
           rol: data.data.usuario.rol,
           activo: data.data.usuario.activo
         });
+
+        // Actualizar el estado del contexto de autenticación
+        await refreshUser();
 
         // Redireccionar según el rol
         const userRole = data.data.usuario.rol;

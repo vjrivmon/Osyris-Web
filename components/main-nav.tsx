@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   NavigationMenu,
@@ -14,16 +14,54 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { Button } from "@/components/ui/button"
-import { Menu } from "lucide-react"
+import { Menu, LogOut, User } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { useIsMobile } from "@/components/ui/sidebar"
+import { useAuth } from "@/hooks/useAuth"
+import { useEditMode } from "@/contexts/EditModeContext"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 export function MainNav() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isOpen, setIsOpen] = React.useState(false)
+  const [showLogoutDialog, setShowLogoutDialog] = React.useState(false)
   const isMobile = useIsMobile()
+  const { isAuthenticated, user, logout } = useAuth()
+  const { disableEditMode } = useEditMode()
+  const { toast } = useToast()
+
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true)
+  }
+
+  const confirmLogout = () => {
+    disableEditMode()
+    logout()
+    setIsOpen(false)
+    setShowLogoutDialog(false)
+
+    toast({
+      title: "✅ Sesión cerrada",
+      description: "Has cerrado sesión correctamente",
+      duration: 3000,
+      className: "!bg-green-600 !text-white !border-green-700",
+    })
+
+    router.push('/')
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full bg-background border-b shadow-sm">
@@ -38,11 +76,11 @@ export function MainNav() {
               alt="Logo Grupo Scout Osyris"
               className="h-10 w-10 rounded-full border-2 border-primary shadow-md"
             />
-            {!isMobile && <span className="ml-2 font-semibold text-lg">Grupo Scout Osyris</span>}
+            <span className="ml-2 font-semibold text-lg hidden lg:inline">Grupo Scout Osyris</span>
           </Link>
 
           {/* Mobile Navigation - On the right */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-2">
             <ThemeToggle />
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
@@ -169,11 +207,27 @@ export function MainNav() {
                   </Link>
 
                   <div className="mt-4">
-                    <Button asChild className="w-full">
-                      <Link href="/login" onClick={() => setIsOpen(false)}>
-                        Acceder
-                      </Link>
-                    </Button>
+                    {isAuthenticated && user?.rol === 'admin' ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-md">
+                          <User className="h-4 w-4 text-primary" />
+                          <div className="text-sm">
+                            <div className="font-medium">{user.email}</div>
+                            <div className="text-xs text-muted-foreground">Administrador</div>
+                          </div>
+                        </div>
+                        <Button onClick={handleLogoutClick} variant="destructive" className="w-full">
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Cerrar sesión
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button asChild className="w-full">
+                        <Link href="/login" onClick={() => setIsOpen(false)}>
+                          Acceder
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 </nav>
               </SheetContent>
@@ -181,7 +235,7 @@ export function MainNav() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-4 lg:space-x-6">
+          <div className="hidden lg:flex lg:items-center lg:space-x-6">
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
@@ -343,13 +397,48 @@ export function MainNav() {
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button asChild>
-                <Link href="/login">Acceder</Link>
-              </Button>
+              {isAuthenticated && user?.rol === 'admin' ? (
+                <div className="hidden lg:flex items-center gap-3">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-md">
+                    <User className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">{user.email}</span>
+                  </div>
+                  <Button onClick={handleLogoutClick} variant="destructive" size="sm">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Cerrar sesión
+                  </Button>
+                </div>
+              ) : (
+                <Button asChild className="hidden md:inline-flex">
+                  <Link href="/login">Acceder</Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Dialog de confirmación de cierre de sesión */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vas a cerrar la sesión de <strong>{user?.email}</strong>. Tendrás que volver a iniciar sesión para acceder al panel de administración.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmLogout}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Cerrar sesión
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 }

@@ -35,11 +35,21 @@ log "🛑 Matando TODOS los procesos de desarrollo previos..."
 
 # Matar procesos específicos por puerto (ahora incluye 3000)
 for port in 3000 5000; do
+    # Método 1: lsof
     PIDS=$(lsof -ti:$port 2>/dev/null)
     if [ ! -z "$PIDS" ]; then
-        warning "Matando procesos en puerto $port: $PIDS"
+        warning "Matando procesos en puerto $port (lsof): $PIDS"
         echo $PIDS | xargs -r kill -9
         sleep 1
+    fi
+
+    # Método 2: fuser (más agresivo para procesos fantasma)
+    fuser -k $port/tcp 2>/dev/null && warning "Forzada limpieza de puerto $port con fuser"
+    sleep 1
+
+    # Verificar que quedó libre
+    if lsof -ti:$port >/dev/null 2>&1; then
+        warning "Puerto $port sigue ocupado después de limpieza"
     else
         log "Puerto $port está libre"
     fi
@@ -55,6 +65,21 @@ pkill -f "osyris" 2>/dev/null && warning "Procesos osyris eliminados"
 # Esperar que se liberen completamente
 sleep 3
 
+# Limpiar caché de Next.js para forzar recompilación
+log "🧹 Limpiando caché de Next.js..."
+if [ -d ".next" ]; then
+    rm -rf .next
+    success "✅ Caché .next/ eliminado"
+fi
+if [ -d "node_modules/.cache" ]; then
+    rm -rf node_modules/.cache
+    success "✅ Caché node_modules/.cache/ eliminado"
+fi
+if [ -d ".turbopack" ]; then
+    rm -rf .turbopack
+    success "✅ Caché .turbopack/ eliminado"
+fi
+
 # Verificación final y forzado si es necesario
 log "Verificación final de puertos..."
 for port in 3000 5000; do
@@ -63,11 +88,14 @@ for port in 3000 5000; do
     while [ $attempts -lt $max_attempts ]; do
         if lsof -ti:$port >/dev/null 2>&1; then
             warning "Puerto $port sigue ocupado, forzando limpieza... (intento $((attempts + 1)))"
-            lsof -ti:$port | xargs -r kill -9
+            # Intentar múltiples métodos
+            lsof -ti:$port | xargs -r kill -9 2>/dev/null
+            fuser -k $port/tcp 2>/dev/null
+            pkill -9 -f ":$port" 2>/dev/null
             sleep 2
             attempts=$((attempts + 1))
         else
-            log "✅ Puerto $port completamente liberado"
+            success "✅ Puerto $port completamente liberado"
             break
         fi
     done
@@ -75,6 +103,8 @@ for port in 3000 5000; do
     # Si después de 5 intentos sigue ocupado, mostrar error
     if [ $attempts -eq $max_attempts ] && lsof -ti:$port >/dev/null 2>&1; then
         error "❌ No se pudo liberar el puerto $port después de $max_attempts intentos"
+        error "Proceso persistente detectado. Ejecuta manualmente:"
+        error "  sudo fuser -k $port/tcp"
         exit 1
     fi
 done

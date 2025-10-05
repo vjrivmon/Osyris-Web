@@ -15,10 +15,7 @@
       ]
     },
     "playwright": {
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ]
+      "url": "http://localhost:3001/mcp"
     },
     "filesystem": {
       "command": "npx",

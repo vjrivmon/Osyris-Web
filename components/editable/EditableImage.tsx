@@ -16,9 +16,10 @@ interface EditableImageProps {
   identificador: string;
   seccion?: string;
 
-  // Imagen
-  src: string;
+  // Imagen (puede venir como src o children)
+  src?: string;
   alt: string;
+  children?: React.ReactNode; // URL de imagen desde API
 
   // Estilos
   className?: string;
@@ -40,6 +41,7 @@ export function EditableImage({
   seccion,
   src,
   alt,
+  children,
   className = '',
   width,
   height,
@@ -54,6 +56,14 @@ export function EditableImage({
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Obtener src: prioridad a children (desde API) sobre prop src (fallback)
+  const rawImageSrc = (children?.toString() || src || '') as string;
+
+  // Si la imagen viene de uploads (path relativo), usar la URL del backend
+  const imageSrc = rawImageSrc.startsWith('/uploads/')
+    ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${rawImageSrc}`
+    : rawImageSrc;
 
   // Validar archivo
   const validateFile = (file: File): string | null => {
@@ -178,8 +188,8 @@ export function EditableImage({
     }
   };
 
-  // URL de la imagen a mostrar
-  const displaySrc = preview || src;
+  // URL de la imagen a mostrar (preview > imageSrc desde API/children > src fallback)
+  const displaySrc = preview || imageSrc;
 
   return (
     <div className={cn('relative group', className)}>

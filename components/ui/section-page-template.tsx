@@ -4,9 +4,11 @@ import React from 'react'
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
-import PageEditor from "@/components/ui/page-editor"
+import { EditableText } from "@/components/editable/EditableText"
+import { EditableImage } from "@/components/editable/EditableImage"
+import { useSectionContent } from "@/hooks/useSectionContent"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 
 interface SectionData {
   name: string
@@ -47,6 +49,15 @@ interface SectionPageTemplateProps {
   sectionData: SectionData
 }
 
+// Mapeo de IDs base por sección
+const SECTION_BASE_IDS: Record<string, number> = {
+  'castores': 500,
+  'manada': 600,
+  'tropa': 700,
+  'pioneros': 800,
+  'rutas': 900
+}
+
 // Mapeo estático de clases por color de sección para garantizar dark mode
 const accentClasses = {
   orange: {
@@ -72,6 +83,14 @@ const accentClasses = {
 }
 
 export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
+  // Cargar contenido desde la API
+  const { content, isLoading } = useSectionContent(sectionData.slug)
+
+  // Función helper para obtener contenido con fallback
+  const getContent = (key: string, fallback: string) => {
+    return content[key]?.contenido || fallback
+  }
+
   // Ensure sectionData has all required properties
   if (!sectionData || !sectionData.colors) {
     return (
@@ -86,245 +105,280 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
     )
   }
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Obtener base ID para esta sección
+  const baseId = SECTION_BASE_IDS[sectionData.slug] || 500
+
   // Obtener las clases estáticas según el color accent de la sección
   const sectionClasses = accentClasses[sectionData.colors.accent as keyof typeof accentClasses] || accentClasses.orange
 
-  const editableElements = [
-    {
-      id: 'hero-title',
-      type: 'text' as const,
-      selector: '[data-edit="hero-title"]',
-      label: 'Título principal',
-      content: `${sectionData.name} - ${sectionData.fullName}`,
-      maxLength: 100
-    },
-    {
-      id: 'hero-subtitle',
-      type: 'text' as const,
-      selector: '[data-edit="hero-subtitle"]',
-      label: 'Subtítulo del héroe',
-      content: `"${sectionData.motto}" - ${sectionData.ageRange}`,
-      maxLength: 150
-    },
-    {
-      id: 'hero-image',
-      type: 'image' as const,
-      selector: '[data-edit="hero-image"]',
-      label: 'Imagen principal',
-      content: '/placeholder.svg?height=400&width=600'
-    },
-    {
-      id: 'about-title',
-      type: 'text' as const,
-      selector: '[data-edit="about-title"]',
-      label: 'Título sección "Quiénes somos"',
-      content: `¿Quiénes son los ${sectionData.name}?`,
-      maxLength: 100
-    },
-    {
-      id: 'about-description',
-      type: 'textarea' as const,
-      selector: '[data-edit="about-description"]',
-      label: 'Descripción principal',
-      content: sectionData.description,
-      maxLength: 1000
-    },
-    {
-      id: 'about-details',
-      type: 'textarea' as const,
-      selector: '[data-edit="about-details"]',
-      label: 'Detalles adicionales',
-      content: sectionData.details,
-      maxLength: 1000
-    },
-    ...(sectionData.frame ? [{
-      id: 'about-frame',
-      type: 'textarea' as const,
-      selector: '[data-edit="about-frame"]',
-      label: 'Marco simbólico',
-      content: sectionData.frame,
-      maxLength: 1000
-    }] : []),
-    {
-      id: 'activities-title',
-      type: 'text' as const,
-      selector: '[data-edit="activities-title"]',
-      label: 'Título sección actividades',
-      content: `¿Qué hacen los ${sectionData.name}?`,
-      maxLength: 100
-    },
-    {
-      id: 'methodology-title',
-      type: 'text' as const,
-      selector: '[data-edit="methodology-title"]',
-      label: 'Título metodología',
-      content: 'Metodología',
-      maxLength: 100
-    },
-    {
-      id: 'team-title',
-      type: 'text' as const,
-      selector: '[data-edit="team-title"]',
-      label: 'Título equipo',
-      content: 'Nuestro Equipo',
-      maxLength: 100
-    }
-  ]
-
   return (
-    <PageEditor
-      pageName={`${sectionData.name} - ${sectionData.fullName}`}
-      pageSlug={sectionData.slug}
-      elements={editableElements}
-    >
-      <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-16 items-center">
-            <MainNav />
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center">
+          <MainNav />
+        </div>
+      </header>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className={`relative bg-gradient-to-br ${sectionData.colors.from} ${sectionData.colors.to} py-16 md:py-24 text-white`}>
+          <div className="container mx-auto px-4 text-center">
+            <div className="inline-block mb-4 text-5xl">{sectionData.emoji}</div>
+            <EditableText
+              contentId={baseId}
+              identificador="hero-title"
+              seccion={sectionData.slug}
+              as="h1"
+              className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6 text-white"
+            >
+              {getContent('hero-title', `${sectionData.name} - ${sectionData.fullName}`)}
+            </EditableText>
+            <EditableText
+              contentId={baseId + 1}
+              identificador="hero-subtitle"
+              seccion={sectionData.slug}
+              as="p"
+              className="mt-4 text-xl max-w-3xl mx-auto text-white"
+            >
+              {getContent('hero-subtitle', `"${sectionData.motto}" - ${sectionData.ageRange}`)}
+            </EditableText>
           </div>
-        </header>
-        <main className="flex-1">
-          {/* Hero Section */}
-          <section className={`relative bg-gradient-to-br ${sectionData.colors.from} ${sectionData.colors.to} py-16 md:py-24 text-white`}>
-            <div className="container mx-auto px-4 text-center">
-              <div className="inline-block mb-4 text-5xl">{sectionData.emoji}</div>
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6" data-edit="hero-title">
-                {sectionData.name} - {sectionData.fullName}
-              </h1>
-              <p className="mt-4 text-xl max-w-3xl mx-auto" data-edit="hero-subtitle">
-                "{sectionData.motto}" - {sectionData.ageRange}
-              </p>
-            </div>
-          </section>
+        </section>
 
-          {/* About Section */}
-          <section className="py-12">
-            <div className="container mx-auto px-4">
-              <div className="flex flex-col md:flex-row gap-8 items-center">
-                <div className="md:w-1/2">
-                  <img
-                    src="/placeholder.svg?height=400&width=600"
-                    alt={`${sectionData.name} en actividad`}
-                    className="rounded-lg w-full h-auto"
-                    data-edit="hero-image"
-                  />
-                </div>
-                <div className="md:w-1/2 space-y-4">
-                  <h2 className="text-2xl font-bold" data-edit="about-title">
-                    ¿Quiénes son los {sectionData.name}?
-                  </h2>
-                  <p data-edit="about-description">
-                    {sectionData.description}
-                  </p>
-                  <p data-edit="about-details">
-                    {sectionData.details}
-                  </p>
-                  {sectionData.frame && (
-                    <p data-edit="about-frame">
-                      {sectionData.frame}
-                    </p>
-                  )}
-                </div>
+        {/* About Section */}
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row gap-8 items-center">
+              <div className="md:w-1/2">
+                <EditableImage
+                  contentId={baseId + 2}
+                  identificador="hero-image"
+                  seccion={sectionData.slug}
+                  className="rounded-lg w-full h-auto"
+                  alt={`${sectionData.name} en actividad`}
+                >
+                  {getContent('hero-image', '/placeholder.svg?height=400&width=600')}
+                </EditableImage>
+              </div>
+              <div className="md:w-1/2 space-y-4">
+                <EditableText
+                  contentId={baseId + 3}
+                  identificador="about-title"
+                  seccion={sectionData.slug}
+                  as="h2"
+                  className="text-2xl font-bold"
+                >
+                  {getContent('about-title', `¿Quiénes son los ${sectionData.name}?`)}
+                </EditableText>
+                <EditableText
+                  contentId={baseId + 4}
+                  identificador="about-description"
+                  seccion={sectionData.slug}
+                  as="p"
+                  multiline
+                >
+                  {getContent('about-description', sectionData.description)}
+                </EditableText>
+                <EditableText
+                  contentId={baseId + 5}
+                  identificador="about-details"
+                  seccion={sectionData.slug}
+                  as="p"
+                  multiline
+                >
+                  {getContent('about-details', sectionData.details)}
+                </EditableText>
+                {sectionData.frame && (
+                  <EditableText
+                    contentId={baseId + 6}
+                    identificador="about-frame"
+                    seccion={sectionData.slug}
+                    as="p"
+                    multiline
+                  >
+                    {getContent('about-frame', sectionData.frame)}
+                  </EditableText>
+                )}
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Activities Section */}
-          <section className="py-12 bg-muted">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-center mb-8" data-edit="activities-title">
-                ¿Qué hacen los {sectionData.name}?
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {sectionData.activities.map((activity, i) => (
-                  <div key={i} className="bg-background rounded-lg p-6 shadow-sm">
-                    <div className="text-3xl mb-4">{activity.icon}</div>
-                    <h3 className="text-xl font-bold mb-2">{activity.title}</h3>
-                    <p className="text-muted-foreground">{activity.description}</p>
+        {/* Activities Section */}
+        <section className="py-12 bg-muted">
+          <div className="container mx-auto px-4">
+            <EditableText
+              contentId={baseId + 7}
+              identificador="activities-title"
+              seccion={sectionData.slug}
+              as="h2"
+              className="text-2xl font-bold text-center mb-8"
+            >
+              {getContent('activities-title', `¿Qué hacen los ${sectionData.name}?`)}
+            </EditableText>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {sectionData.activities.map((activity, i) => (
+                <div key={i} className="bg-background rounded-lg p-6 shadow-sm">
+                  <div className="text-3xl mb-4">{activity.icon}</div>
+                  <EditableText
+                    contentId={baseId + 10 + (i * 2)}
+                    identificador={`activity-${i}-title`}
+                    seccion={sectionData.slug}
+                    as="h3"
+                    className="text-xl font-bold mb-2"
+                  >
+                    {getContent(`activity-${i}-title`, activity.title)}
+                  </EditableText>
+                  <EditableText
+                    contentId={baseId + 11 + (i * 2)}
+                    identificador={`activity-${i}-description`}
+                    seccion={sectionData.slug}
+                    as="p"
+                    multiline
+                    className="text-muted-foreground"
+                  >
+                    {getContent(`activity-${i}-description`, activity.description)}
+                  </EditableText>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Methodology Section */}
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto">
+              <EditableText
+                contentId={baseId + 20}
+                identificador="methodology-title"
+                seccion={sectionData.slug}
+                as="h2"
+                className="text-2xl font-bold text-center mb-8"
+              >
+                {getContent('methodology-title', 'Metodología')}
+              </EditableText>
+              <div className="space-y-6">
+                {sectionData.methodology.map((method, i) => (
+                  <div key={i} className={`${sectionClasses.methodology} p-4 rounded`}>
+                    <EditableText
+                      contentId={baseId + 21 + (i * 2)}
+                      identificador={`methodology-${i}-title`}
+                      seccion={sectionData.slug}
+                      as="h3"
+                      className="font-bold mb-2 text-foreground"
+                    >
+                      {getContent(`methodology-${i}-title`, method.title)}
+                    </EditableText>
+                    <EditableText
+                      contentId={baseId + 22 + (i * 2)}
+                      identificador={`methodology-${i}-description`}
+                      seccion={sectionData.slug}
+                      as="p"
+                      multiline
+                      className="text-foreground/90"
+                    >
+                      {getContent(`methodology-${i}-description`, method.description)}
+                    </EditableText>
                   </div>
                 ))}
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Methodology Section */}
-          <section className="py-12">
-            <div className="container mx-auto px-4">
-              <div className="max-w-3xl mx-auto">
-                <h2 className="text-2xl font-bold text-center mb-8" data-edit="methodology-title">
-                  Metodología
-                </h2>
-                <div className="space-y-6">
-                  {sectionData.methodology.map((method, i) => (
-                    <div key={i} className={`${sectionClasses.methodology} p-4 rounded`}>
-                      <h3 className="font-bold mb-2 text-foreground">{method.title}</h3>
-                      <p className="text-foreground/90">{method.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Team Section */}
-          <section className={`py-12 ${sectionClasses.teamSection}`}>
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-center mb-8" data-edit="team-title">
-                Nuestro Equipo
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-                {sectionData.team.map((member, i) => (
-                  <div key={i} className={`${sectionClasses.teamCard} rounded-lg p-6 shadow-sm text-center`}>
-                    <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 bg-muted">
-                      <img
-                        src={member.photo || "/placeholder.svg?height=100&width=100"}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <h3 className="font-bold text-foreground">{member.name}</h3>
-                    <p className="text-sm text-muted-foreground">{member.role}</p>
+        {/* Team Section */}
+        <section className={`py-12 ${sectionClasses.teamSection}`}>
+          <div className="container mx-auto px-4">
+            <EditableText
+              contentId={baseId + 30}
+              identificador="team-title"
+              seccion={sectionData.slug}
+              as="h2"
+              className="text-2xl font-bold text-center mb-8"
+            >
+              {getContent('team-title', 'Nuestro Equipo')}
+            </EditableText>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+              {sectionData.team.map((member, i) => (
+                <div key={i} className={`${sectionClasses.teamCard} rounded-lg p-6 shadow-sm text-center`}>
+                  <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 bg-muted">
+                    <EditableImage
+                      contentId={baseId + 31 + (i * 3)}
+                      identificador={`team-${i}-photo`}
+                      seccion={sectionData.slug}
+                      className="w-full h-full object-cover"
+                      alt={member.name}
+                    >
+                      {getContent(`team-${i}-photo`, member.photo || "/placeholder.svg?height=100&width=100")}
+                    </EditableImage>
                   </div>
-                ))}
-              </div>
+                  <EditableText
+                    contentId={baseId + 32 + (i * 3)}
+                    identificador={`team-${i}-name`}
+                    seccion={sectionData.slug}
+                    as="h3"
+                    className="font-bold text-foreground"
+                  >
+                    {getContent(`team-${i}-name`, member.name)}
+                  </EditableText>
+                  <EditableText
+                    contentId={baseId + 33 + (i * 3)}
+                    identificador={`team-${i}-role`}
+                    seccion={sectionData.slug}
+                    as="p"
+                    className="text-sm text-muted-foreground"
+                  >
+                    {getContent(`team-${i}-role`, member.role)}
+                  </EditableText>
+                </div>
+              ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Navigation Section */}
-          <section className="py-8 bg-muted">
-            <div className="container mx-auto px-4">
-              <div className="flex flex-col sm:flex-row justify-between items-center">
-                {sectionData.navigation.prev ? (
-                  <Button asChild variant="outline">
-                    <Link href={sectionData.navigation.prev.href}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      {sectionData.navigation.prev.title}
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button asChild variant="outline">
-                    <Link href="/secciones">
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Volver a Secciones
-                    </Link>
-                  </Button>
-                )}
+        {/* Navigation Section */}
+        <section className="py-8 bg-muted">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center">
+              {sectionData.navigation.prev ? (
+                <Button asChild variant="outline">
+                  <Link href={sectionData.navigation.prev.href}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    {sectionData.navigation.prev.title}
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild variant="outline">
+                  <Link href="/secciones">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Volver a Secciones
+                  </Link>
+                </Button>
+              )}
 
-                {sectionData.navigation.next && (
-                  <Button asChild className="mt-4 sm:mt-0">
-                    <Link href={sectionData.navigation.next.href}>
-                      {sectionData.navigation.next.title}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
-              </div>
+              {sectionData.navigation.next && (
+                <Button asChild className="mt-4 sm:mt-0">
+                  <Link href={sectionData.navigation.next.href}>
+                    {sectionData.navigation.next.title}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
             </div>
-          </section>
-        </main>
-        <SiteFooter />
-      </div>
-    </PageEditor>
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </div>
   )
 }
 

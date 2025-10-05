@@ -1,179 +1,16 @@
+"use client"
+
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import PageEditor from "@/components/ui/page-editor"
+import { EditableText } from "@/components/editable/EditableText"
+import { EditableImage } from "@/components/editable/EditableImage"
+import { useSectionContent } from "@/hooks/useSectionContent"
 import Link from "next/link"
-import { Mail } from "lucide-react"
+import { Mail, Loader2 } from "lucide-react"
 
-// Definición de elementos editables para la página Kraal
-const editableElements = [
-  {
-    id: 'hero-title',
-    type: 'text' as const,
-    selector: '[data-edit="hero-title"]',
-    label: 'Título principal',
-    content: 'Nuestro Kraal',
-    maxLength: 100
-  },
-  {
-    id: 'hero-subtitle',
-    type: 'text' as const,
-    selector: '[data-edit="hero-subtitle"]',
-    label: 'Subtítulo del héroe',
-    content: 'Conoce al equipo de monitores que hacen posible el Grupo Scout Osyris',
-    maxLength: 200
-  },
-  {
-    id: 'coordinacion-title',
-    type: 'text' as const,
-    selector: '[data-edit="coordinacion-title"]',
-    label: 'Título coordinación',
-    content: 'Coordinación de Grupo',
-    maxLength: 100
-  },
-  {
-    id: 'secciones-title',
-    type: 'text' as const,
-    selector: '[data-edit="secciones-title"]',
-    label: 'Título secciones',
-    content: 'Scouters por Secciones',
-    maxLength: 100
-  },
-  {
-    id: 'join-title',
-    type: 'text' as const,
-    selector: '[data-edit="join-title"]',
-    label: 'Título únete',
-    content: '¿Quieres formar parte de nuestro Kraal?',
-    maxLength: 150
-  },
-  {
-    id: 'join-description',
-    type: 'textarea' as const,
-    selector: '[data-edit="join-description"]',
-    label: 'Descripción únete',
-    content: 'Si tienes experiencia scout, ganas de aprender y quieres contribuir a la educación de niños y jóvenes, ¡únete a nuestro equipo!',
-    maxLength: 500
-  }
-]
-
-export default function KraalPage() {
-  return (
-    <PageEditor
-      pageName="Nuestro Kraal"
-      pageSlug="sobre-nosotros-kraal"
-      elements={editableElements}
-    >
-      <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-16 items-center">
-            <MainNav />
-          </div>
-        </header>
-
-        <main className="flex-1">
-          {/* Hero Section */}
-          <section className="relative bg-primary py-16 md:py-24">
-            <div className="container mx-auto px-4 text-center text-primary-foreground">
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6" data-edit="hero-title">
-                Nuestro Kraal
-              </h1>
-              <p className="mt-4 text-xl max-w-3xl mx-auto" data-edit="hero-subtitle">
-                Conoce al equipo de monitores que hacen posible el Grupo Scout Osyris
-              </p>
-            </div>
-          </section>
-
-          {/* Coordinación Section */}
-          <section className="py-12">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-center mb-8" data-edit="coordinacion-title">
-                Coordinación de Grupo
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                {coordinationTeam.map((member, i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <div className="h-64 relative">
-                      <img
-                        src={member.photo || "/placeholder.svg?height=300&width=300"}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <CardContent className="p-6 text-center">
-                      <h3 className="text-xl font-bold mb-1">{member.name}</h3>
-                      <p className="text-primary mb-2">{member.role}</p>
-                      <p className="text-sm text-muted-foreground mb-4">{member.description}</p>
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Mail className="mr-2 h-4 w-4" />
-                        Contactar
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Secciones Section */}
-          <section className="py-12 bg-muted">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-center mb-12" data-edit="secciones-title">
-                Scouters por Secciones
-              </h2>
-
-              {sections.map((section, i) => (
-                <div key={i} className="mb-16 last:mb-0">
-                  <div className={`h-2 ${section.colorClass} max-w-xs mx-auto mb-4 rounded`}></div>
-                  <h3 className="text-xl font-bold text-center mb-8">{section.name}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {section.members.map((member, j) => (
-                      <Card key={j} className="overflow-hidden h-full">
-                        <div className="h-48 relative">
-                          <img
-                            src={member.photo || "/placeholder.svg?height=200&width=200"}
-                            alt={member.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <CardContent className="p-4 text-center">
-                          <h4 className="font-bold mb-1">{member.name}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">{member.role}</p>
-                          <p className="text-xs text-muted-foreground">{member.experience}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Join Us Section */}
-          <section className="py-16 bg-primary text-primary-foreground">
-            <div className="container mx-auto px-4 text-center">
-              <h2 className="text-3xl font-bold mb-6" data-edit="join-title">
-                ¿Quieres formar parte de nuestro Kraal?
-              </h2>
-              <p className="max-w-2xl mx-auto mb-8" data-edit="join-description">
-                Si tienes experiencia scout, ganas de aprender y quieres contribuir a la educación de niños y jóvenes,
-                ¡únete a nuestro equipo!
-              </p>
-              <Button asChild variant="secondary">
-                <Link href="/contacto">Contacta con nosotros</Link>
-              </Button>
-            </div>
-          </section>
-        </main>
-
-        <SiteFooter />
-      </div>
-    </PageEditor>
-  )
-}
-
-// Mock data
+// Mock data - En fase futura se cargará dinámicamente de BD
 const coordinationTeam = [
   {
     name: "María García",
@@ -312,3 +149,231 @@ const sections = [
     ],
   },
 ]
+
+export default function KraalPage() {
+  // Cargar contenido desde la API
+  const { content, isLoading } = useSectionContent('kraal')
+
+  // Función helper para obtener contenido con fallback
+  const getContent = (key: string, fallback: string) => {
+    return content[key]?.contenido || fallback
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center">
+          <MainNav />
+        </div>
+      </header>
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative bg-primary py-16 md:py-24">
+          <div className="container mx-auto px-4 text-center text-primary-foreground">
+            <EditableText
+              contentId={220}
+              identificador="hero-title"
+              seccion="kraal"
+              as="h1"
+              className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6"
+            >
+              Nuestro Kraal
+            </EditableText>
+            <EditableText
+              contentId={221}
+              identificador="hero-subtitle"
+              seccion="kraal"
+              as="p"
+              multiline
+              className="mt-4 text-xl max-w-3xl mx-auto"
+            >
+              Conoce al equipo de monitores que hacen posible el Grupo Scout Osyris
+            </EditableText>
+          </div>
+        </section>
+
+        {/* Coordinación Section */}
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <EditableText
+              contentId={222}
+              identificador="coordinacion-title"
+              seccion="kraal"
+              as="h2"
+              className="text-2xl font-bold text-center mb-8"
+            >
+              Coordinación de Grupo
+            </EditableText>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              {coordinationTeam.map((member, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <div className="h-64 relative">
+                    <EditableImage
+                      contentId={223 + i * 4}
+                      identificador={`coord-${i}-photo`}
+                      seccion="kraal"
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                    >
+                      {getContent(`coord-${i}-photo`, member.photo)}
+                    </EditableImage>
+                  </div>
+                  <CardContent className="p-6 text-center">
+                    <EditableText
+                      contentId={224 + i * 4}
+                      identificador={`coord-${i}-name`}
+                      seccion="kraal"
+                      as="h3"
+                      className="text-xl font-bold mb-1"
+                    >
+                      {member.name}
+                    </EditableText>
+                    <EditableText
+                      contentId={225 + i * 4}
+                      identificador={`coord-${i}-role`}
+                      seccion="kraal"
+                      as="p"
+                      className="text-primary mb-2"
+                    >
+                      {member.role}
+                    </EditableText>
+                    <EditableText
+                      contentId={226 + i * 4}
+                      identificador={`coord-${i}-description`}
+                      seccion="kraal"
+                      as="p"
+                      multiline
+                      className="text-sm text-muted-foreground mb-4"
+                    >
+                      {member.description}
+                    </EditableText>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Mail className="mr-2 h-4 w-4" />
+                      Contactar
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Secciones Section */}
+        <section className="py-12 bg-muted">
+          <div className="container mx-auto px-4">
+            <EditableText
+              contentId={235}
+              identificador="secciones-title"
+              seccion="kraal"
+              as="h2"
+              className="text-2xl font-bold text-center mb-12"
+            >
+              Scouters por Secciones
+            </EditableText>
+
+            {sections.map((section, i) => (
+              <div key={i} className="mb-16 last:mb-0">
+                <div className={`h-2 ${section.colorClass} max-w-xs mx-auto mb-4 rounded`}></div>
+                <EditableText
+                  contentId={236 + i * 20}
+                  identificador={`section-${i}-title`}
+                  seccion="kraal"
+                  as="h3"
+                  className="text-xl font-bold text-center mb-8"
+                >
+                  {section.name}
+                </EditableText>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {section.members.map((member, j) => (
+                    <Card key={j} className="overflow-hidden h-full">
+                      <div className="h-48 relative">
+                        <EditableImage
+                          contentId={237 + i * 20 + j * 4}
+                          identificador={`section-${i}-member-${j}-photo`}
+                          seccion="kraal"
+                          alt={member.name}
+                          className="w-full h-full object-cover"
+                        >
+                          {getContent(`section-${i}-member-${j}-photo`, member.photo)}
+                        </EditableImage>
+                      </div>
+                      <CardContent className="p-4 text-center">
+                        <EditableText
+                          contentId={238 + i * 20 + j * 4}
+                          identificador={`section-${i}-member-${j}-name`}
+                          seccion="kraal"
+                          as="h4"
+                          className="font-bold mb-1"
+                        >
+                          {member.name}
+                        </EditableText>
+                        <EditableText
+                          contentId={239 + i * 20 + j * 4}
+                          identificador={`section-${i}-member-${j}-role`}
+                          seccion="kraal"
+                          as="p"
+                          className="text-sm text-muted-foreground mb-2"
+                        >
+                          {member.role}
+                        </EditableText>
+                        <EditableText
+                          contentId={240 + i * 20 + j * 4}
+                          identificador={`section-${i}-member-${j}-experience`}
+                          seccion="kraal"
+                          as="p"
+                          className="text-xs text-muted-foreground"
+                        >
+                          {member.experience}
+                        </EditableText>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Join Us Section */}
+        <section className="py-16 bg-primary text-primary-foreground">
+          <div className="container mx-auto px-4 text-center">
+            <EditableText
+              contentId={336}
+              identificador="join-title"
+              seccion="kraal"
+              as="h2"
+              className="text-3xl font-bold mb-6"
+            >
+              ¿Quieres formar parte de nuestro Kraal?
+            </EditableText>
+            <EditableText
+              contentId={337}
+              identificador="join-description"
+              seccion="kraal"
+              as="p"
+              multiline
+              className="max-w-2xl mx-auto mb-8"
+            >
+              Si tienes experiencia scout, ganas de aprender y quieres contribuir a la educación de niños y jóvenes,
+              ¡únete a nuestro equipo!
+            </EditableText>
+            <Button asChild variant="secondary">
+              <Link href="/contacto">Contacta con nosotros</Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter />
+    </div>
+  )
+}

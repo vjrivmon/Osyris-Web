@@ -38,7 +38,6 @@ interface EditModeContextType {
   // Permisos
   canEdit: boolean;
   isAdmin: boolean;
-  isEditor: boolean;
 }
 
 const EditModeContext = createContext<EditModeContextType | undefined>(undefined);
@@ -53,10 +52,12 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
   const [isSaving, setIsSaving] = useState(false);
 
-  // Permisos
+  // Ref para procesar el parámetro ?editMode=true solo una vez
+  const processedEditModeParam = React.useRef(false);
+
+  // Permisos - SOLO administradores pueden editar
   const isAdmin = user?.rol === 'admin';
-  const isEditor = user?.rol === 'editor';
-  const canEdit = isAdmin || isEditor;
+  const canEdit = Boolean(isAdmin);
 
   // Calcular si hay cambios sin guardar
   const hasUnsavedChanges = pendingChanges.size > 0;
@@ -82,6 +83,10 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
   // Deshabilitar modo edición
   const disableEditMode = useCallback(() => {
     setIsEditMode(false);
+    // Resetear el ref para permitir reactivación con ?editMode=true
+    if (processedEditModeParam.current) {
+      processedEditModeParam.current = false;
+    }
   }, []);
 
   // Añadir cambio pendiente
@@ -166,15 +171,17 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
 
   // Activar automáticamente modo edición si viene de admin con ?editMode=true
   useEffect(() => {
-    if (searchParams?.get('editMode') === 'true' && canEdit && !isEditMode) {
+    // Solo procesar el parámetro una vez por sesión
+    if (searchParams?.get('editMode') === 'true' && canEdit && !processedEditModeParam.current) {
       console.log('🚀 Activando modo edición automáticamente desde admin panel');
       setIsEditMode(true);
+      processedEditModeParam.current = true;
 
       // Limpiar el query param de la URL para que quede limpia
       const newUrl = window.location.pathname;
       router.replace(newUrl);
     }
-  }, [searchParams, canEdit, isEditMode, router]);
+  }, [searchParams, canEdit, router]);
 
   // Desactivar modo edición cuando el usuario cierra sesión
   useEffect(() => {
@@ -225,8 +232,7 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
 
     // Permisos
     canEdit,
-    isAdmin,
-    isEditor
+    isAdmin
   };
 
   return (
