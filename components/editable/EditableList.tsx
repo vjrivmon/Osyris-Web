@@ -88,11 +88,13 @@ export function EditableList<T = any>({
 
   const registerChange = (newItems: T[]) => {
     addPendingChange({
+      id: `${seccion}-${identificador}`,
       contentId,
       identificador,
       seccion,
       tipo: 'json',
-      contenido: JSON.stringify(newItems)
+      contenido: JSON.stringify(newItems),
+      timestamp: Date.now()
     })
   }
 
