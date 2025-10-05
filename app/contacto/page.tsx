@@ -81,22 +81,26 @@ export default function ContactoPage() {
               <div className="md:w-1/2">
                 <Card>
                   <CardHeader>
-                    <EditableText
-                      contentId={402}
-                      identificador="form-title"
-                      seccion="contacto"
-                      as={CardTitle}
-                    >
-                      Envíanos un mensaje
-                    </EditableText>
-                    <EditableText
-                      contentId={403}
-                      identificador="form-description"
-                      seccion="contacto"
-                      as={CardDescription}
-                    >
-                      Rellena el formulario y te responderemos lo antes posible.
-                    </EditableText>
+                    <CardTitle>
+                      <EditableText
+                        contentId={402}
+                        identificador="form-title"
+                        seccion="contacto"
+                        as="span"
+                      >
+                        Envíanos un mensaje
+                      </EditableText>
+                    </CardTitle>
+                    <CardDescription>
+                      <EditableText
+                        contentId={403}
+                        identificador="form-description"
+                        seccion="contacto"
+                        as="span"
+                      >
+                        Rellena el formulario y te responderemos lo antes posible.
+                      </EditableText>
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
@@ -127,14 +131,16 @@ export default function ContactoPage() {
               <div className="md:w-1/2 space-y-8">
                 <Card>
                   <CardHeader>
-                    <EditableText
-                      contentId={404}
-                      identificador="contact-info-title"
-                      seccion="contacto"
-                      as={CardTitle}
-                    >
-                      Información de contacto
-                    </EditableText>
+                    <CardTitle>
+                      <EditableText
+                        contentId={404}
+                        identificador="contact-info-title"
+                        seccion="contacto"
+                        as="span"
+                      >
+                        Información de contacto
+                      </EditableText>
+                    </CardTitle>
                     <CardDescription>Puedes contactarnos a través de los siguientes medios.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -189,22 +195,26 @@ export default function ContactoPage() {
 
                 <Card>
                   <CardHeader>
-                    <EditableText
-                      contentId={408}
-                      identificador="horario-title"
-                      seccion="contacto"
-                      as={CardTitle}
-                    >
-                      Horario
-                    </EditableText>
-                    <EditableText
-                      contentId={409}
-                      identificador="horario-description"
-                      seccion="contacto"
-                      as={CardDescription}
-                    >
-                      Nuestras actividades regulares y horario de atención.
-                    </EditableText>
+                    <CardTitle>
+                      <EditableText
+                        contentId={408}
+                        identificador="horario-title"
+                        seccion="contacto"
+                        as="span"
+                      >
+                        Horario
+                      </EditableText>
+                    </CardTitle>
+                    <CardDescription>
+                      <EditableText
+                        contentId={409}
+                        identificador="horario-description"
+                        seccion="contacto"
+                        as="span"
+                      >
+                        Nuestras actividades regulares y horario de atención.
+                      </EditableText>
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
@@ -316,15 +326,16 @@ export default function ContactoPage() {
               {faqs.map((faq, i) => (
                 <Card key={i}>
                   <CardHeader>
-                    <EditableText
-                      contentId={418 + i * 2}
-                      identificador={`faq-${i}-question`}
-                      seccion="contacto"
-                      as={CardTitle}
-                      className="text-lg"
-                    >
-                      {faq.question}
-                    </EditableText>
+                    <CardTitle className="text-lg">
+                      <EditableText
+                        contentId={418 + i * 2}
+                        identificador={`faq-${i}-question`}
+                        seccion="contacto"
+                        as="span"
+                      >
+                        {faq.question}
+                      </EditableText>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <EditableText

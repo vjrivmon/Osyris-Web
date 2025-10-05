@@ -17,6 +17,8 @@ interface PendingChange {
   contenido: any;
   metadata?: any;
   timestamp: number;
+  identificador?: string;
+  seccion?: string;
 }
 
 interface EditModeContextType {
