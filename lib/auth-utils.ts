@@ -3,6 +3,8 @@
  * Handles token storage and retrieval consistently across the application
  */
 
+import { getApiUrl as getCentralApiUrl, apiEndpoint } from './api-utils'
+
 export interface UserData {
   id: number
   nombre: string
@@ -158,106 +160,25 @@ export const clearAuthData = () => {
 }
 
 /**
- * IP del servidor de producción (fallback)
- */
-const PRODUCTION_SERVER_IP = '116.203.98.142'
-const API_URL_CACHE_KEY = 'osyris_api_url_cache'
-
-/**
- * Intenta hacer una petición HEAD a una URL para verificar si está disponible
- */
-const testApiConnection = async (url: string): Promise<boolean> => {
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 segundos timeout
-
-    const response = await fetch(`${url}/api/health`, {
-      method: 'HEAD',
-      signal: controller.signal,
-      cache: 'no-cache'
-    })
-
-    clearTimeout(timeoutId)
-    return response.ok || response.status === 404 // 404 es OK, significa que el servidor responde
-  } catch (error) {
-    console.warn(`Failed to connect to ${url}:`, error)
-    return false
-  }
-}
-
-/**
- * Get API URL based on environment with automatic fallback
+ * Get API URL based on environment with runtime detection
+ * This now uses the centralized implementation from lib/api-utils.ts
  */
 export const getApiUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    // En localhost, usar puerto 5000 directo
-    if (window.location.hostname === 'localhost') {
-      return 'http://localhost:5000'
-    }
-
-    // Si estamos usando la IP directamente, usar proxy nginx
-    if (window.location.hostname === PRODUCTION_SERVER_IP) {
-      return `${window.location.protocol}//${window.location.host}`
-    }
-
-    // Intentar usar URL cacheada si existe
-    const cachedUrl = localStorage.getItem(API_URL_CACHE_KEY)
-    if (cachedUrl) {
-      return cachedUrl
-    }
-
-    // Por defecto, usar el host actual
-    return `${window.location.protocol}//${window.location.host}`
-  }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  return getCentralApiUrl()
 }
 
 /**
- * Get API URL with automatic fallback to production server IP
- * Esta función intenta primero con el dominio actual, y si falla, usa la IP del servidor
+ * IP del servidor de producción (for backward compatibility)
+ * @deprecated Use getApiUrl() instead
+ */
+const PRODUCTION_SERVER_IP = '116.203.98.142'
+
+/**
+ * Get API URL with automatic fallback
+ * @deprecated This function is kept for backward compatibility but now uses the centralized getApiUrl()
  */
 export const getApiUrlWithFallback = async (): Promise<string> => {
-  if (typeof window === 'undefined') {
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-  }
-
-  // En localhost, siempre usar puerto 5000
-  if (window.location.hostname === 'localhost') {
-    return 'http://localhost:5000'
-  }
-
-  // Si ya estamos en la IP del servidor, usarla directamente
-  if (window.location.hostname === PRODUCTION_SERVER_IP) {
-    const ipUrl = `${window.location.protocol}//${window.location.host}`
-    localStorage.setItem(API_URL_CACHE_KEY, ipUrl)
-    return ipUrl
-  }
-
-  // Intentar con la URL actual primero
-  const currentUrl = `${window.location.protocol}//${window.location.host}`
-  console.log('🔍 Intentando conectar con:', currentUrl)
-
-  const currentWorks = await testApiConnection(currentUrl)
-  if (currentWorks) {
-    console.log('✅ Conexión exitosa con:', currentUrl)
-    localStorage.setItem(API_URL_CACHE_KEY, currentUrl)
-    return currentUrl
-  }
-
-  // Si falla, intentar con la IP del servidor como fallback
-  const fallbackUrl = `http://${PRODUCTION_SERVER_IP}`
-  console.log('⚠️ Fallback a IP del servidor:', fallbackUrl)
-
-  const fallbackWorks = await testApiConnection(fallbackUrl)
-  if (fallbackWorks) {
-    console.log('✅ Conexión exitosa con fallback:', fallbackUrl)
-    localStorage.setItem(API_URL_CACHE_KEY, fallbackUrl)
-    return fallbackUrl
-  }
-
-  // Si todo falla, usar la URL actual como último recurso
-  console.error('❌ No se pudo conectar a ninguna URL, usando URL actual')
-  return currentUrl
+  return getApiUrl()
 }
 
 /**

@@ -8,6 +8,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { apiEndpoint } from '@/lib/api-utils';
 
 // Tipos
 interface PendingChange {
@@ -146,7 +147,8 @@ function EditModeProviderInner({ children }: { children: React.ReactNode }) {
       const changes = Array.from(pendingChanges.values());
       const results = await Promise.all(
         changes.map(async (change) => {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/content/${change.contentId}`, {
+          const url = apiEndpoint(`/api/content/${change.contentId}`);
+          const response = await fetch(url, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',

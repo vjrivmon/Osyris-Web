@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Calendar, User, Edit } from "lucide-react"
 import Link from "next/link"
+import { apiEndpoint } from "@/lib/api-utils"
 
 interface Pagina {
   id: number
@@ -67,15 +68,13 @@ export default function PageBySlug({ params }: PageProps) {
 
       if (!slug) return
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/paginas/slug/${slug}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+      const url = apiEndpoint(`/api/paginas/slug/${slug}`)
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
         }
-      )
+      })
 
       if (!response.ok) {
         if (response.status === 404) {

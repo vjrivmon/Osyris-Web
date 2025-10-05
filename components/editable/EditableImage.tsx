@@ -9,6 +9,7 @@ import React, { useState, useRef } from 'react';
 import { useEditMode } from '@/contexts/EditModeContext';
 import { Upload, X, Check, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getApiUrl, apiEndpoint } from '@/lib/api-utils';
 
 interface EditableImageProps {
   // Identificación
@@ -62,7 +63,7 @@ export function EditableImage({
 
   // Si la imagen viene de uploads (path relativo), usar la URL del backend
   const imageSrc = rawImageSrc.startsWith('/uploads/')
-    ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${rawImageSrc}`
+    ? `${getApiUrl()}${rawImageSrc}`
     : rawImageSrc;
 
   // Validar archivo
@@ -123,7 +124,8 @@ export function EditableImage({
       formData.append('image', file);
 
       // Subir
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/content/upload`, {
+      const url = apiEndpoint('/api/content/upload');
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

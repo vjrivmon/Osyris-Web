@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { apiEndpoint } from '@/lib/api-utils';
 
 interface ContentBlock {
   id: number;
@@ -37,12 +38,8 @@ export function useSectionContent(seccion: string): UseSectionContentReturn {
       setIsLoading(true);
       setError(null);
 
-      // En el cliente, usar la URL del navegador para construir la API URL
-      const apiUrl = typeof window !== 'undefined'
-        ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000')
-        : 'http://localhost:5000';
-
-      const response = await fetch(`${apiUrl}/api/content/page/${seccion}`);
+      const url = apiEndpoint(`/api/content/page/${seccion}`);
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`Error al cargar contenido: ${response.status}`);
