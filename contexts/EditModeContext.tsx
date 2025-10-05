@@ -5,7 +5,7 @@
  * Gestiona el estado de edición en vivo para usuarios admin/editor
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -42,18 +42,41 @@ interface EditModeContextType {
 
 const EditModeContext = createContext<EditModeContextType | undefined>(undefined);
 
-// Provider
-export function EditModeProvider({ children }: { children: React.ReactNode }) {
-  const { user, token } = useAuth();
+// Componente interno que maneja los search params
+function EditModeUrlHandler({
+  canEdit,
+  onEnableEditMode
+}: {
+  canEdit: boolean;
+  onEnableEditMode: () => void;
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const processedEditModeParam = React.useRef(false);
+
+  useEffect(() => {
+    // Solo procesar el parámetro una vez por sesión
+    if (searchParams?.get('editMode') === 'true' && canEdit && !processedEditModeParam.current) {
+      console.log('🚀 Activando modo edición automáticamente desde admin panel');
+      onEnableEditMode();
+      processedEditModeParam.current = true;
+
+      // Limpiar el query param de la URL para que quede limpia
+      const newUrl = window.location.pathname;
+      router.replace(newUrl);
+    }
+  }, [searchParams, canEdit, router, onEnableEditMode]);
+
+  return null;
+}
+
+// Provider interno sin Suspense
+function EditModeProviderInner({ children }: { children: React.ReactNode }) {
+  const { user, token } = useAuth();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
   const [isSaving, setIsSaving] = useState(false);
-
-  // Ref para procesar el parámetro ?editMode=true solo una vez
-  const processedEditModeParam = React.useRef(false);
 
   // Permisos - SOLO administradores pueden editar
   const isAdmin = user?.rol === 'admin';
@@ -83,10 +106,6 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
   // Deshabilitar modo edición
   const disableEditMode = useCallback(() => {
     setIsEditMode(false);
-    // Resetear el ref para permitir reactivación con ?editMode=true
-    if (processedEditModeParam.current) {
-      processedEditModeParam.current = false;
-    }
   }, []);
 
   // Añadir cambio pendiente
@@ -169,20 +188,6 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
     console.log('Cambios descartados');
   }, []);
 
-  // Activar automáticamente modo edición si viene de admin con ?editMode=true
-  useEffect(() => {
-    // Solo procesar el parámetro una vez por sesión
-    if (searchParams?.get('editMode') === 'true' && canEdit && !processedEditModeParam.current) {
-      console.log('🚀 Activando modo edición automáticamente desde admin panel');
-      setIsEditMode(true);
-      processedEditModeParam.current = true;
-
-      // Limpiar el query param de la URL para que quede limpia
-      const newUrl = window.location.pathname;
-      router.replace(newUrl);
-    }
-  }, [searchParams, canEdit, router]);
-
   // Desactivar modo edición cuando el usuario cierra sesión
   useEffect(() => {
     if (!user) {
@@ -237,8 +242,20 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <EditModeContext.Provider value={value}>
+      <Suspense fallback={null}>
+        <EditModeUrlHandler canEdit={canEdit} onEnableEditMode={enableEditMode} />
+      </Suspense>
       {children}
     </EditModeContext.Provider>
+  );
+}
+
+// Provider público con Suspense
+export function EditModeProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <EditModeProviderInner>{children}</EditModeProviderInner>
+    </Suspense>
   );
 }
 
