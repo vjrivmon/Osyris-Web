@@ -61,8 +61,8 @@ services:
       JWT_EXPIRES_IN: 24h
 
       # CORS
-      FRONTEND_URL: https://gruposcoutsosyris.es
-      ALLOWED_ORIGINS: https://gruposcoutsosyris.es,https://www.gruposcoutsosyris.es
+      FRONTEND_URL: https://gruposcoutosyris.es
+      ALLOWED_ORIGINS: https://gruposcoutosyris.es,https://www.gruposcoutosyris.es
 
       # Storage local
       STORAGE_TYPE: local
@@ -97,13 +97,13 @@ services:
       context: .
       dockerfile: Dockerfile.prod
       args:
-        NEXT_PUBLIC_API_URL: https://gruposcoutsosyris.es
+        NEXT_PUBLIC_API_URL: https://gruposcoutosyris.es
         NEXT_PUBLIC_APP_NAME: Osyris Scout Management
     container_name: osyris-frontend
     restart: always
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://gruposcoutsosyris.es
+      NEXT_PUBLIC_API_URL: https://gruposcoutosyris.es
       NEXT_PUBLIC_APP_NAME: Osyris Scout Management
       NEXT_TELEMETRY_DISABLED: 1
     ports:
