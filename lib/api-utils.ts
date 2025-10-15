@@ -26,7 +26,7 @@ export function getApiUrl(): string {
   // 4. DETECCIÓN INTELIGENTE PARA PRODUCCIÓN
   // Para el dominio gruposcoutosyris.es, usar el API del mismo dominio
   if (hostname.includes('gruposcoutosyris.es')) {
-    return `${protocol}//api.gruposcoutosyris.es`;
+    return `${protocol}//gruposcoutosyris.es`;
   }
 
   // Para otros dominios, intentar usar API en el mismo dominio
