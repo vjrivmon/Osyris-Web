@@ -4,8 +4,7 @@ import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { EditableText } from "@/components/editable/EditableText"
-import { EditableImage } from "@/components/editable/EditableImage"
+import { StaticText, StaticImage } from "@/components/ui/static-content"
 import { useSectionContent } from "@/hooks/useSectionContent"
 import Link from "next/link"
 import { Mail, Loader2 } from "lucide-react"
@@ -179,7 +178,7 @@ export default function KraalPage() {
         {/* Hero Section */}
         <section className="relative bg-primary py-16 md:py-24">
           <div className="container mx-auto px-4 text-center text-primary-foreground">
-            <EditableText
+            <StaticText
               contentId={220}
               identificador="hero-title"
               seccion="kraal"
@@ -187,8 +186,8 @@ export default function KraalPage() {
               className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6"
             >
               Nuestro Kraal
-            </EditableText>
-            <EditableText
+            </StaticText>
+            <StaticText
               contentId={221}
               identificador="hero-subtitle"
               seccion="kraal"
@@ -197,14 +196,14 @@ export default function KraalPage() {
               className="mt-4 text-xl max-w-3xl mx-auto"
             >
               Conoce al equipo de monitores que hacen posible el Grupo Scout Osyris
-            </EditableText>
+            </StaticText>
           </div>
         </section>
 
         {/* Coordinación Section */}
         <section className="py-12">
           <div className="container mx-auto px-4">
-            <EditableText
+            <StaticText
               contentId={222}
               identificador="coordinacion-title"
               seccion="kraal"
@@ -212,12 +211,12 @@ export default function KraalPage() {
               className="text-2xl font-bold text-center mb-8"
             >
               Coordinación de Grupo
-            </EditableText>
+            </StaticText>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {coordinationTeam.map((member, i) => (
                 <Card key={i} className="overflow-hidden">
                   <div className="h-64 relative">
-                    <EditableImage
+                    <StaticImage
                       contentId={223 + i * 4}
                       identificador={`coord-${i}-photo`}
                       seccion="kraal"
@@ -225,10 +224,10 @@ export default function KraalPage() {
                       className="w-full h-full object-cover"
                     >
                       {getContent(`coord-${i}-photo`, member.photo)}
-                    </EditableImage>
+                    </StaticImage>
                   </div>
                   <CardContent className="p-6 text-center">
-                    <EditableText
+                    <StaticText
                       contentId={224 + i * 4}
                       identificador={`coord-${i}-name`}
                       seccion="kraal"
@@ -236,8 +235,8 @@ export default function KraalPage() {
                       className="text-xl font-bold mb-1"
                     >
                       {member.name}
-                    </EditableText>
-                    <EditableText
+                    </StaticText>
+                    <StaticText
                       contentId={225 + i * 4}
                       identificador={`coord-${i}-role`}
                       seccion="kraal"
@@ -245,8 +244,8 @@ export default function KraalPage() {
                       className="text-primary mb-2"
                     >
                       {member.role}
-                    </EditableText>
-                    <EditableText
+                    </StaticText>
+                    <StaticText
                       contentId={226 + i * 4}
                       identificador={`coord-${i}-description`}
                       seccion="kraal"
@@ -255,7 +254,7 @@ export default function KraalPage() {
                       className="text-sm text-muted-foreground mb-4"
                     >
                       {member.description}
-                    </EditableText>
+                    </StaticText>
                     <Button variant="outline" size="sm" className="w-full">
                       <Mail className="mr-2 h-4 w-4" />
                       Contactar
@@ -270,7 +269,7 @@ export default function KraalPage() {
         {/* Secciones Section */}
         <section className="py-12 bg-muted">
           <div className="container mx-auto px-4">
-            <EditableText
+            <StaticText
               contentId={235}
               identificador="secciones-title"
               seccion="kraal"
@@ -278,12 +277,12 @@ export default function KraalPage() {
               className="text-2xl font-bold text-center mb-12"
             >
               Scouters por Secciones
-            </EditableText>
+            </StaticText>
 
             {sections.map((section, i) => (
               <div key={i} className="mb-16 last:mb-0">
                 <div className={`h-2 ${section.colorClass} max-w-xs mx-auto mb-4 rounded`}></div>
-                <EditableText
+                <StaticText
                   contentId={236 + i * 20}
                   identificador={`section-${i}-title`}
                   seccion="kraal"
@@ -291,12 +290,12 @@ export default function KraalPage() {
                   className="text-xl font-bold text-center mb-8"
                 >
                   {section.name}
-                </EditableText>
+                </StaticText>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {section.members.map((member, j) => (
                     <Card key={j} className="overflow-hidden h-full">
                       <div className="h-48 relative">
-                        <EditableImage
+                        <StaticImage
                           contentId={237 + i * 20 + j * 4}
                           identificador={`section-${i}-member-${j}-photo`}
                           seccion="kraal"
@@ -304,10 +303,10 @@ export default function KraalPage() {
                           className="w-full h-full object-cover"
                         >
                           {getContent(`section-${i}-member-${j}-photo`, member.photo)}
-                        </EditableImage>
+                        </StaticImage>
                       </div>
                       <CardContent className="p-4 text-center">
-                        <EditableText
+                        <StaticText
                           contentId={238 + i * 20 + j * 4}
                           identificador={`section-${i}-member-${j}-name`}
                           seccion="kraal"
@@ -315,8 +314,8 @@ export default function KraalPage() {
                           className="font-bold mb-1"
                         >
                           {member.name}
-                        </EditableText>
-                        <EditableText
+                        </StaticText>
+                        <StaticText
                           contentId={239 + i * 20 + j * 4}
                           identificador={`section-${i}-member-${j}-role`}
                           seccion="kraal"
@@ -324,8 +323,8 @@ export default function KraalPage() {
                           className="text-sm text-muted-foreground mb-2"
                         >
                           {member.role}
-                        </EditableText>
-                        <EditableText
+                        </StaticText>
+                        <StaticText
                           contentId={240 + i * 20 + j * 4}
                           identificador={`section-${i}-member-${j}-experience`}
                           seccion="kraal"
@@ -333,7 +332,7 @@ export default function KraalPage() {
                           className="text-xs text-muted-foreground"
                         >
                           {member.experience}
-                        </EditableText>
+                        </StaticText>
                       </CardContent>
                     </Card>
                   ))}
@@ -346,7 +345,7 @@ export default function KraalPage() {
         {/* Join Us Section */}
         <section className="py-16 bg-primary text-primary-foreground">
           <div className="container mx-auto px-4 text-center">
-            <EditableText
+            <StaticText
               contentId={336}
               identificador="join-title"
               seccion="kraal"
@@ -354,8 +353,8 @@ export default function KraalPage() {
               className="text-3xl font-bold mb-6"
             >
               ¿Quieres formar parte de nuestro Kraal?
-            </EditableText>
-            <EditableText
+            </StaticText>
+            <StaticText
               contentId={337}
               identificador="join-description"
               seccion="kraal"
@@ -365,7 +364,7 @@ export default function KraalPage() {
             >
               Si tienes experiencia scout, ganas de aprender y quieres contribuir a la educación de niños y jóvenes,
               ¡únete a nuestro equipo!
-            </EditableText>
+            </StaticText>
             <Button asChild variant="secondary">
               <Link href="/contacto">Contacta con nosotros</Link>
             </Button>

@@ -81,7 +81,8 @@ const uploadFile = async (req, res) => {
         INSERT INTO documentos (
           titulo, descripcion, archivo_nombre, archivo_ruta,
           tipo_archivo, tamaño_archivo, subido_por, visible_para
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
       `, [
         finalTitle,
         altText,
@@ -97,7 +98,7 @@ const uploadFile = async (req, res) => {
         success: true,
         message: 'Archivo subido correctamente',
         data: {
-          id: result.insertId,
+          id: result[0]?.id || result.insertId,
           filename: file.filename,
           originalName: file.originalname,
           titulo: finalTitle,
@@ -188,7 +189,7 @@ const deleteFile = async (req, res) => {
     const { id } = req.params;
 
     // Obtener información del archivo
-    const files = await db.query('SELECT * FROM documentos WHERE id = ?', [id]);
+    const files = await db.query('SELECT * FROM documentos WHERE id = $1', [id]);
 
     if (files.length === 0) {
       return res.status(404).json({
@@ -206,7 +207,7 @@ const deleteFile = async (req, res) => {
     }
 
     // Eliminar registro de la base de datos
-    await db.query('DELETE FROM documentos WHERE id = ?', [id]);
+    await db.query('DELETE FROM documentos WHERE id = $1', [id]);
 
     return res.json({
       success: true,

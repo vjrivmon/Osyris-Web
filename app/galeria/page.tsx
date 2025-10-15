@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { EditableText } from "@/components/editable/EditableText"
+import { StaticText } from "@/components/ui/static-content"
 import { useSectionContent } from "@/hooks/useSectionContent"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LazyImage } from "@/components/ui/lazy-image"
@@ -157,7 +157,7 @@ export default function GaleriaPage() {
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-primary to-primary/80 py-16 md:py-24 text-primary-foreground">
           <div className="container mx-auto px-4 text-center">
-            <EditableText
+            <StaticText
               contentId={300}
               identificador="hero-title"
               seccion="galeria"
@@ -165,8 +165,8 @@ export default function GaleriaPage() {
               className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6"
             >
               {getContent('hero-title', 'Galería de Fotos')}
-            </EditableText>
-            <EditableText
+            </StaticText>
+            <StaticText
               contentId={301}
               identificador="hero-subtitle"
               seccion="galeria"
@@ -175,7 +175,7 @@ export default function GaleriaPage() {
               className="mt-4 text-xl max-w-3xl mx-auto"
             >
               {getContent('hero-subtitle', 'Revive nuestras aventuras y momentos especiales')}
-            </EditableText>
+            </StaticText>
           </div>
         </section>
 

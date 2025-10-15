@@ -33,12 +33,13 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(fileUpload({
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-  abortOnLimit: true,
-  useTempFiles: true,
-  tempFileDir: '/tmp/'
-}));
+// ⚠️ express-fileupload comentado - Usamos multer para uploads
+// app.use(fileUpload({
+//   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+//   abortOnLimit: true,
+//   useTempFiles: true,
+//   tempFileDir: '/tmp/'
+// }));
 
 // Opciones de Swagger
 const swaggerOptions = {

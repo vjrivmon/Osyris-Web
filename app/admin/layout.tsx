@@ -15,8 +15,7 @@ import {
   FileText,
   Users,
   Database,
-  ChevronLeft,
-  Edit
+  ChevronLeft
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -89,11 +88,7 @@ export default function AdminLayout({
     router.push("/")
   }
 
-  const goToEditMode = () => {
-    // Redirigir a la home con modo edición activado automáticamente
-    router.push("/?editMode=true")
-  }
-
+  
   return (
     <ProtectedRoute requiredRole="admin">
       <div className="flex h-screen overflow-hidden bg-background">
@@ -248,17 +243,6 @@ export default function AdminLayout({
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Botón para ir a editar contenido web */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToEditMode}
-                className="hidden md:inline-flex border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Contenido Web
-              </Button>
-
               <ThemeToggle />
 
               {/* Logout buttons */}

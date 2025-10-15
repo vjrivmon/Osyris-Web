@@ -6,10 +6,6 @@ import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DevSessionInit } from "@/components/dev-session-init"
 import { AuthProvider } from "@/contexts/AuthContext"
-import { EditModeProvider } from "@/contexts/EditModeContext"
-import { EditToolbar, EditModeToggle } from "@/components/editable"
-import { EditModeBoundary } from "@/components/editable/EditModeBoundary"
-import { EditModeWarning } from "@/components/editable/EditModeWarning"
 import { Toaster } from "@/components/ui/toaster"
 
 const fontSans = FontSans({
@@ -39,15 +35,7 @@ export default function RootLayout({
         <DevSessionInit />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange={false}>
           <AuthProvider>
-            <EditModeProvider>
-              {children}
-
-              {/* Componentes de edición (solo visibles para admin/editor) */}
-              <EditModeBoundary />
-              <EditModeWarning />
-              <EditModeToggle />
-              <EditToolbar />
-            </EditModeProvider>
+            {children}
             <Toaster />
           </AuthProvider>
         </ThemeProvider>

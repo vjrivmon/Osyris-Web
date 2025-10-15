@@ -20,8 +20,6 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { useIsMobile } from "@/components/ui/sidebar"
 import { useAuth } from "@/hooks/useAuth"
-import { useEditMode } from "@/contexts/EditModeContext"
-import { EditModeToggle } from "@/components/editable/EditModeToggle"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +39,6 @@ export function MainNav() {
   const [showLogoutDialog, setShowLogoutDialog] = React.useState(false)
   const isMobile = useIsMobile()
   const { isAuthenticated, user, logout } = useAuth()
-  const { disableEditMode } = useEditMode()
   const { toast } = useToast()
 
   const handleLogoutClick = () => {
@@ -49,7 +46,6 @@ export function MainNav() {
   }
 
   const confirmLogout = () => {
-    disableEditMode()
     logout()
     setIsOpen(false)
     setShowLogoutDialog(false)
@@ -216,9 +212,6 @@ export function MainNav() {
                             <div className="font-medium">{user.email}</div>
                             <div className="text-xs text-muted-foreground">Administrador</div>
                           </div>
-                        </div>
-                        <div className="w-full">
-                          <EditModeToggle />
                         </div>
                         <Button onClick={handleLogoutClick} variant="destructive" className="w-full">
                           <LogOut className="h-4 w-4 mr-2" />
@@ -401,9 +394,6 @@ export function MainNav() {
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              {isAuthenticated && user?.rol === 'admin' && (
-                <EditModeToggle />
-              )}
               {isAuthenticated && user?.rol === 'admin' ? (
                 <div className="hidden lg:flex items-center gap-3">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-md">

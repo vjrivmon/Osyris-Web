@@ -4,8 +4,7 @@ import React from 'react'
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
-import { EditableText } from "@/components/editable/EditableText"
-import { EditableImage } from "@/components/editable/EditableImage"
+import { StaticText, StaticImage } from "@/components/ui/static-content"
 import { useSectionContent } from "@/hooks/useSectionContent"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
@@ -132,7 +131,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         <section className={`relative bg-gradient-to-br ${sectionData.colors.from} ${sectionData.colors.to} py-16 md:py-24 text-white`}>
           <div className="container mx-auto px-4 text-center">
             <div className="inline-block mb-4 text-5xl">{sectionData.emoji}</div>
-            <EditableText
+            <StaticText
               contentId={baseId}
               identificador="hero-title"
               seccion={sectionData.slug}
@@ -140,8 +139,8 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
               className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6 text-white"
             >
               {getContent('hero-title', `${sectionData.name} - ${sectionData.fullName}`)}
-            </EditableText>
-            <EditableText
+            </StaticText>
+            <StaticText
               contentId={baseId + 1}
               identificador="hero-subtitle"
               seccion={sectionData.slug}
@@ -149,7 +148,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
               className="mt-4 text-xl max-w-3xl mx-auto text-white"
             >
               {getContent('hero-subtitle', `"${sectionData.motto}" - ${sectionData.ageRange}`)}
-            </EditableText>
+            </StaticText>
           </div>
         </section>
 
@@ -158,7 +157,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row gap-8 items-center">
               <div className="md:w-1/2">
-                <EditableImage
+                <StaticImage
                   contentId={baseId + 2}
                   identificador="hero-image"
                   seccion={sectionData.slug}
@@ -166,10 +165,10 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                   alt={`${sectionData.name} en actividad`}
                 >
                   {getContent('hero-image', '/placeholder.svg?height=400&width=600')}
-                </EditableImage>
+                </StaticImage>
               </div>
               <div className="md:w-1/2 space-y-4">
-                <EditableText
+                <StaticText
                   contentId={baseId + 3}
                   identificador="about-title"
                   seccion={sectionData.slug}
@@ -177,8 +176,8 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                   className="text-2xl font-bold"
                 >
                   {getContent('about-title', `¿Quiénes son los ${sectionData.name}?`)}
-                </EditableText>
-                <EditableText
+                </StaticText>
+                <StaticText
                   contentId={baseId + 4}
                   identificador="about-description"
                   seccion={sectionData.slug}
@@ -186,8 +185,8 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                   multiline
                 >
                   {getContent('about-description', sectionData.description)}
-                </EditableText>
-                <EditableText
+                </StaticText>
+                <StaticText
                   contentId={baseId + 5}
                   identificador="about-details"
                   seccion={sectionData.slug}
@@ -195,9 +194,9 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                   multiline
                 >
                   {getContent('about-details', sectionData.details)}
-                </EditableText>
+                </StaticText>
                 {sectionData.frame && (
-                  <EditableText
+                  <StaticText
                     contentId={baseId + 6}
                     identificador="about-frame"
                     seccion={sectionData.slug}
@@ -205,7 +204,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                     multiline
                   >
                     {getContent('about-frame', sectionData.frame)}
-                  </EditableText>
+                  </StaticText>
                 )}
               </div>
             </div>
@@ -215,7 +214,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         {/* Activities Section */}
         <section className="py-12 bg-muted">
           <div className="container mx-auto px-4">
-            <EditableText
+            <StaticText
               contentId={baseId + 7}
               identificador="activities-title"
               seccion={sectionData.slug}
@@ -223,12 +222,12 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
               className="text-2xl font-bold text-center mb-8"
             >
               {getContent('activities-title', `¿Qué hacen los ${sectionData.name}?`)}
-            </EditableText>
+            </StaticText>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {sectionData.activities.map((activity, i) => (
                 <div key={i} className="bg-background rounded-lg p-6 shadow-sm">
                   <div className="text-3xl mb-4">{activity.icon}</div>
-                  <EditableText
+                  <StaticText
                     contentId={baseId + 10 + (i * 2)}
                     identificador={`activity-${i}-title`}
                     seccion={sectionData.slug}
@@ -236,8 +235,8 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                     className="text-xl font-bold mb-2"
                   >
                     {getContent(`activity-${i}-title`, activity.title)}
-                  </EditableText>
-                  <EditableText
+                  </StaticText>
+                  <StaticText
                     contentId={baseId + 11 + (i * 2)}
                     identificador={`activity-${i}-description`}
                     seccion={sectionData.slug}
@@ -246,7 +245,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                     className="text-muted-foreground"
                   >
                     {getContent(`activity-${i}-description`, activity.description)}
-                  </EditableText>
+                  </StaticText>
                 </div>
               ))}
             </div>
@@ -257,7 +256,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
-              <EditableText
+              <StaticText
                 contentId={baseId + 20}
                 identificador="methodology-title"
                 seccion={sectionData.slug}
@@ -265,11 +264,11 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                 className="text-2xl font-bold text-center mb-8"
               >
                 {getContent('methodology-title', 'Metodología')}
-              </EditableText>
+              </StaticText>
               <div className="space-y-6">
                 {sectionData.methodology.map((method, i) => (
                   <div key={i} className={`${sectionClasses.methodology} p-4 rounded`}>
-                    <EditableText
+                    <StaticText
                       contentId={baseId + 21 + (i * 2)}
                       identificador={`methodology-${i}-title`}
                       seccion={sectionData.slug}
@@ -277,8 +276,8 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                       className="font-bold mb-2 text-foreground"
                     >
                       {getContent(`methodology-${i}-title`, method.title)}
-                    </EditableText>
-                    <EditableText
+                    </StaticText>
+                    <StaticText
                       contentId={baseId + 22 + (i * 2)}
                       identificador={`methodology-${i}-description`}
                       seccion={sectionData.slug}
@@ -287,7 +286,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                       className="text-foreground/90"
                     >
                       {getContent(`methodology-${i}-description`, method.description)}
-                    </EditableText>
+                    </StaticText>
                   </div>
                 ))}
               </div>
@@ -298,7 +297,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         {/* Team Section */}
         <section className={`py-12 ${sectionClasses.teamSection}`}>
           <div className="container mx-auto px-4">
-            <EditableText
+            <StaticText
               contentId={baseId + 30}
               identificador="team-title"
               seccion={sectionData.slug}
@@ -306,12 +305,12 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
               className="text-2xl font-bold text-center mb-8"
             >
               {getContent('team-title', 'Nuestro Equipo')}
-            </EditableText>
+            </StaticText>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
               {sectionData.team.map((member, i) => (
                 <div key={i} className={`${sectionClasses.teamCard} rounded-lg p-6 shadow-sm text-center`}>
                   <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 bg-muted">
-                    <EditableImage
+                    <StaticImage
                       contentId={baseId + 31 + (i * 3)}
                       identificador={`team-${i}-photo`}
                       seccion={sectionData.slug}
@@ -319,9 +318,9 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                       alt={member.name}
                     >
                       {getContent(`team-${i}-photo`, member.photo || "/placeholder.svg?height=100&width=100")}
-                    </EditableImage>
+                    </StaticImage>
                   </div>
-                  <EditableText
+                  <StaticText
                     contentId={baseId + 32 + (i * 3)}
                     identificador={`team-${i}-name`}
                     seccion={sectionData.slug}
@@ -329,8 +328,8 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                     className="font-bold text-foreground"
                   >
                     {getContent(`team-${i}-name`, member.name)}
-                  </EditableText>
-                  <EditableText
+                  </StaticText>
+                  <StaticText
                     contentId={baseId + 33 + (i * 3)}
                     identificador={`team-${i}-role`}
                     seccion={sectionData.slug}
@@ -338,7 +337,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                     className="text-sm text-muted-foreground"
                   >
                     {getContent(`team-${i}-role`, member.role)}
-                  </EditableText>
+                  </StaticText>
                 </div>
               ))}
             </div>
