@@ -51,8 +51,37 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Stub del hook - retorna valores por defecto seguros
+// Manejo seguro para server-side rendering
 export function useEditMode(): EditModeContextType {
-  return {
+  // Verificar si estamos en el servidor
+  if (typeof window === 'undefined') {
+    // Server-side: retornar valores por defecto sin usar useContext
+    return {
+      // Estado - siempre desactivado
+      isEditMode: false,
+      pendingChanges: new Map(),
+      isSaving: false,
+      hasUnsavedChanges: false,
+
+      // Acciones - todas no-op
+      toggleEditMode: () => {},
+      enableEditMode: () => {},
+      disableEditMode: () => {},
+      addPendingChange: () => {},
+      removePendingChange: () => {},
+      savePendingChanges: async () => true,
+      discardChanges: () => {},
+
+      // Permisos - siempre falsos
+      canEdit: false,
+      isAdmin: false,
+    };
+  }
+
+  // Client-side: usar el contexto (que retornará undefined porque el provider no está montado)
+  const context = useContext(EditModeContext);
+
+  return context || {
     // Estado - siempre desactivado
     isEditMode: false,
     pendingChanges: new Map(),

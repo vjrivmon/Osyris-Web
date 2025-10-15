@@ -21,6 +21,9 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // Deshabilitar prerendering para evitar errores
+  trailingSlash: true,
+  generateBuildId: () => 'build',
   // Reescribir rutas de uploads al backend
   async rewrites() {
     return [
