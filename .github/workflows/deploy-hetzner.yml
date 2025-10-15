@@ -182,8 +182,8 @@ jobs:
           echo "Esperando a que el servidor esté listo..."
           sleep 15
 
-          # Verificar que el servidor responde
-          if curl -f -s -o /dev/null http://${{ env.SERVER_HOST }}; then
+          # Verificar que el servidor responde (usar HTTPS porque Cloudflare fuerza HTTPS)
+          if curl -f -s -o /dev/null https://gruposcoutosyris.es; then
             echo "✅ Servidor respondiendo correctamente"
           else
             echo "❌ Servidor no responde"
@@ -200,7 +200,8 @@ jobs:
           echo "- **Server:** ${{ env.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🌐 Access" >> $GITHUB_STEP_SUMMARY
-          echo "- Server IP: http://${{ env.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: https://gruposcoutosyris.es" >> $GITHUB_STEP_SUMMARY
+          echo "- API: https://gruposcoutosyris.es/api/health" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Deployment completed successfully!" >> $GITHUB_STEP_SUMMARY
 
@@ -215,7 +216,8 @@ jobs:
         run: |
           if [ "${{ needs.deploy.result }}" == "success" ]; then
             echo "✅ Deploy exitoso a producción"
-            echo "🌐 http://${{ env.SERVER_HOST }}"
+            echo "🌐 Frontend: https://gruposcoutosyris.es"
+            echo "🔧 API: https://gruposcoutosyris.es/api/health"
           else
             echo "❌ Deploy falló - revisar logs"
           fi
