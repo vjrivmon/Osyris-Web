@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
+import { getApiUrl } from '@/lib/api-utils'
 import {
   Dialog,
   DialogContent,
@@ -99,7 +100,7 @@ export function ImagePicker({
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/uploads?tipo=imagen`,
+        `${getApiUrl()}/api/uploads?tipo=imagen`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -163,7 +164,7 @@ export function ImagePicker({
   }
 
   const copyImageUrl = async (image: ImageFile) => {
-    const url = `http://localhost:5000${image.archivo_ruta}`
+    const url = `${getApiUrl()}${image.archivo_ruta}`
     try {
       await navigator.clipboard.writeText(url)
       toast({
@@ -195,7 +196,7 @@ export function ImagePicker({
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {filteredImages.map((image) => {
         const isSelected = selectedImages.find(img => img.id === image.id)
-        const imageUrl = `http://localhost:5000${image.archivo_ruta}`
+        const imageUrl = `${getApiUrl()}${image.archivo_ruta}`
 
         return (
           <Card
@@ -256,7 +257,7 @@ export function ImagePicker({
     <div className="space-y-2">
       {filteredImages.map((image) => {
         const isSelected = selectedImages.find(img => img.id === image.id)
-        const imageUrl = `http://localhost:5000${image.archivo_ruta}`
+        const imageUrl = `${getApiUrl()}${image.archivo_ruta}`
 
         return (
           <Card

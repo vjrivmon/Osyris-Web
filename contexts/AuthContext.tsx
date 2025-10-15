@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { clearAuthData, isSessionExpired } from '@/lib/auth-utils'
+import { getApiUrl } from '@/lib/api-utils'
 
 interface User {
   id: number
@@ -61,13 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      // Verificar el token con el servidor
-      const response = await fetch('/api/auth/verify', {
+      // Verificar el token con el servidor usando la URL dinámica del API
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/auth/verify`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       }).catch((error) => {
         console.error('❌ Failed to connect to auth server:', error)
+        console.log('📡 API URL used for verify:', apiUrl)
         // Si el servidor no responde, limpiar sesión para forzar login
         clearAuthData()
         throw error

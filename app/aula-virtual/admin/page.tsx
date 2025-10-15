@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getApiUrl } from '@/lib/api-utils';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, FileText, Settings, Users, Image as ImageIcon, Trash2, Eye, Copy, Download, Edit3, Save, RotateCcw, UserPlus, Shield, Mail, Calendar, Server, Database, Key, Globe, HardDrive, AlertCircle } from 'lucide-react';
@@ -71,7 +72,7 @@ export default function AdminPanel() {
   const loadFiles = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/uploads`, {
+      const response = await fetch(`${getApiUrl()}/api/uploads`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -274,7 +275,7 @@ export default function AdminPanel() {
       formData.append('altText', altText);
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/uploads`, {
+      const response = await fetch(`${getApiUrl()}/api/uploads`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -327,7 +328,7 @@ export default function AdminPanel() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/uploads/${fileId}`, {
+      const response = await fetch(`${getApiUrl()}/api/uploads/${fileId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -356,7 +357,7 @@ export default function AdminPanel() {
   const loadUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/usuarios`, {
+      const response = await fetch(`${getApiUrl()}/api/usuarios`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -400,7 +401,7 @@ export default function AdminPanel() {
       setIsLoading(true);
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/usuarios`, {
+      const response = await fetch(`${getApiUrl()}/api/usuarios`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -464,7 +465,7 @@ export default function AdminPanel() {
       if (!user) return;
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/usuarios/${userId}`, {
+      const response = await fetch(`${getApiUrl()}/api/usuarios/${userId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -511,7 +512,7 @@ export default function AdminPanel() {
       setIsLoading(true);
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/usuarios/${userId}`, {
+      const response = await fetch(`${getApiUrl()}/api/usuarios/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

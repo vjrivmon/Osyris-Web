@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
+import { getApiUrl } from '@/lib/api-utils'
 
 /**
  * Ruta de verificación de autenticación
@@ -19,8 +20,8 @@ export async function GET(request: Request) {
       )
     }
 
-    // Proxy al backend para verificar el token
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+    // Proxy al backend para verificar el token usando URL dinámica
+    const backendUrl = getApiUrl()
 
     const response = await fetch(`${backendUrl}/api/auth/verify`, {
       method: 'GET',
