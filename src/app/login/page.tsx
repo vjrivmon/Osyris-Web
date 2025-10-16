@@ -7,7 +7,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { setAuthData, getCurrentUser, getApiUrlWithFallback } from "@/lib/auth-utils"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuthStatic } from "@/hooks/useAuthStatic"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -46,7 +46,7 @@ const MOCK_USERS = [
 export default function LoginPage() {
   noStore()
   const router = useRouter()
-  const { refreshUser } = useAuth()
+  const { refreshUser } = useAuthStatic()
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoggingIn, setIsLoggingIn] = useState(false)

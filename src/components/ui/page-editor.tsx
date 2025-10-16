@@ -30,7 +30,7 @@ import {
   Monitor,
   Smartphone
 } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuthStatic } from '@/hooks/useAuthStatic'
 import { toast } from 'sonner'
 
 interface EditableElement {
@@ -65,7 +65,7 @@ export function PageEditor({
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [pageData, setPageData] = useState<any>(null)
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated } = useAuthStatic()
   const fileInputRefs = useRef<Record<string, HTMLInputElement>>({})
 
   // Solo mostrar editor si el usuario es admin

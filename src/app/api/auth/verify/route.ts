@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { getApiUrl } from '@/lib/api-utils'
 
+// Forzar que esta ruta sea dinámica para evitar errores de static generation
+export const dynamic = 'force-dynamic'
+
 /**
  * Ruta de verificación de autenticación
  * Verifica el token del usuario y retorna información del usuario autenticado

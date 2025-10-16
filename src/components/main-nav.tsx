@@ -19,7 +19,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { useIsMobile } from "@/components/ui/sidebar"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuthStatic } from "@/hooks/useAuthStatic"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,26 +38,32 @@ export function MainNav() {
   const [isOpen, setIsOpen] = React.useState(false)
   const [showLogoutDialog, setShowLogoutDialog] = React.useState(false)
   const isMobile = useIsMobile()
-  const { isAuthenticated, user, logout } = useAuth()
+
+  // Usar hook seguro para build estático que no depende de useContext durante SSR
+  const { isAuthenticated, user, logout } = useAuthStatic()
   const { toast } = useToast()
 
   const handleLogoutClick = () => {
-    setShowLogoutDialog(true)
+    if (isAuthenticated) {
+      setShowLogoutDialog(true)
+    }
   }
 
   const confirmLogout = () => {
-    logout()
-    setIsOpen(false)
-    setShowLogoutDialog(false)
+    if (typeof logout === 'function') {
+      logout()
+      setIsOpen(false)
+      setShowLogoutDialog(false)
 
-    toast({
-      title: "✅ Sesión cerrada",
-      description: "Has cerrado sesión correctamente",
-      duration: 3000,
-      className: "!bg-green-600 !text-white !border-green-700",
-    })
+      toast({
+        title: "✅ Sesión cerrada",
+        description: "Has cerrado sesión correctamente",
+        duration: 3000,
+        className: "!bg-green-600 !text-white !border-green-700",
+      })
 
-    router.push('/')
+      router.push('/')
+    }
   }
 
   return (
@@ -421,7 +427,7 @@ export function MainNav() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
             <AlertDialogDescription>
-              Vas a cerrar la sesión de <strong>{user?.email}</strong>. Tendrás que volver a iniciar sesión para acceder al panel de administración.
+              Vas a cerrar la sesión de <strong>{user?.email || 'usuario'}</strong>. Tendrás que volver a iniciar sesión para acceder al panel de administración.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
