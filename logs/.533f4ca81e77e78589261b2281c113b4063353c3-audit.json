@@ -6,39 +6,14 @@
     "auditLog": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/.533f4ca81e77e78589261b2281c113b4063353c3-audit.json",
     "files": [
         {
-            "date": 1759474759651,
-            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-03.log",
-            "hash": "03a0005b83e60d441a263a50634a41c71133ce0ee0ecf7ee891163d1cbb5f4f9"
-        },
-        {
-            "date": 1759528985142,
-            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-04.log",
-            "hash": "21465b22c4b412d971dd5d462a230eb78be1483e8115a81fab3024f6ac959672"
-        },
-        {
-            "date": 1759662395607,
-            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-05.log",
-            "hash": "c805d07d1a7bdd427c79f6c3341bbd942e0f6fead9556900a19286e2f65b43f9"
-        },
-        {
-            "date": 1759740585219,
-            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-06.log",
-            "hash": "2edee206753f5f2094a69ed4b17449b2f396f277432d3946e1ea79cbb0a1092e"
-        },
-        {
-            "date": 1759921456777,
-            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-08.log",
-            "hash": "bb4805228133a28b7a3e20f2fb56de57ba754219154461457c7ec24b885c7249"
-        },
-        {
-            "date": 1760361585572,
-            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-13.log",
-            "hash": "67b09a16aa915171aad2ce101480183d3e92263c08de1e578a936c0d2c860c0c"
-        },
-        {
-            "date": 1760533886770,
+            "date": 1760557746068,
             "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-15.log",
-            "hash": "7fc93269048e2eeb7e58c24c9126498a65b1a9c5e8f584f39dd37c45db7f952d"
+            "hash": "65c56d4f6ec2245955396d3ba6a70e6e09a9644a2624366dd367c71f37de47fd"
+        },
+        {
+            "date": 1760597777370,
+            "name": "/home/vicente/RoadToDevOps/osyris/Osyris-Web/logs/mcp-puppeteer-2025-10-16.log",
+            "hash": "fd5a928aec2feb5605fb19bb452b54d48330ffa81543847f938a6df44ede71ac"
         }
     ],
     "hashType": "sha256"

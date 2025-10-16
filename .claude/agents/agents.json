@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0",
-  "description": "Comprehensive Unified Agent System for Claude Code with 108 specialized agents across 16 categories",
+  "version": "2.1.0",
+  "description": "Comprehensive Unified Agent System for Claude Code with 115 specialized agents across 16 categories, including Osyris project restructuring system",
   "agents": [
     {
       "name": "computer-vision-specialist",
@@ -882,6 +882,119 @@
       "dependencies": []
     },
     {
+      "name": "osyris-backup-agent",
+      "file": ".claude/agents/infrastructure/osyris-backup-agent.md",
+      "description": "Specialized agent for creating comprehensive project backups, branch management, and establishing safe restoration points before major restructuring operations. Ensures complete safety and rollback capability for the Osyris-Web project.",
+      "category": "infrastructure",
+      "proactive": false,
+      "triggers": [
+        "osyris backup agent",
+        "osyris-backup-agent",
+        "backup",
+        "restore point",
+        "project backup"
+      ],
+      "dependencies": []
+    },
+    {
+      "name": "osyris-gitignore-agent",
+      "file": ".claude/agents/infrastructure/osyris-gitignore-agent.md",
+      "description": "Specialized agent for updating and validating .gitignore files to prevent build artifacts, data files, logs, and temporary files from being tracked in git. Ensures clean repository hygiene for Osyris-Web.",
+      "category": "infrastructure",
+      "proactive": false,
+      "triggers": [
+        "osyris gitignore agent",
+        "osyris-gitignore-agent",
+        "gitignore",
+        "git ignore"
+      ],
+      "dependencies": ["osyris-backup-agent"]
+    },
+    {
+      "name": "osyris-cleanup-agent",
+      "file": ".claude/agents/infrastructure/osyris-cleanup-agent.md",
+      "description": "Specialized agent for removing duplicate HTML files, data directories, temporary files, and unnecessary artifacts from the Osyris-Web repository. Reduces repository size and eliminates technical debt.",
+      "category": "infrastructure",
+      "proactive": false,
+      "triggers": [
+        "osyris cleanup agent",
+        "osyris-cleanup-agent",
+        "cleanup",
+        "remove files"
+      ],
+      "dependencies": ["osyris-backup-agent", "osyris-gitignore-agent"]
+    },
+    {
+      "name": "osyris-restructure-agent",
+      "file": ".claude/agents/infrastructure/osyris-restructure-agent.md",
+      "description": "Specialized agent for restructuring the Osyris-Web project with modular src/ directory architecture. Moves source code to src/, updates all configuration files, and validates the new structure.",
+      "category": "infrastructure",
+      "proactive": false,
+      "triggers": [
+        "osyris restructure agent",
+        "osyris-restructure-agent",
+        "restructure",
+        "move to src"
+      ],
+      "dependencies": ["osyris-backup-agent", "osyris-gitignore-agent", "osyris-cleanup-agent"]
+    },
+    {
+      "name": "osyris-docs-agent",
+      "file": ".claude/agents/universal/osyris-docs-agent.md",
+      "description": "Specialized agent for consolidating and organizing project documentation. Creates structured docs/ directory, moves documentation files to appropriate categories, and updates CLAUDE.md with consolidated information.",
+      "category": "universal",
+      "proactive": false,
+      "triggers": [
+        "osyris docs agent",
+        "osyris-docs-agent",
+        "documentation",
+        "organize docs"
+      ],
+      "dependencies": ["osyris-backup-agent", "osyris-gitignore-agent", "osyris-cleanup-agent"]
+    },
+    {
+      "name": "osyris-imports-agent",
+      "file": ".claude/agents/universal/osyris-imports-agent.md",
+      "description": "Specialized agent for intelligently updating all import statements in TypeScript/JavaScript files after src/ restructuring. Uses precise pattern matching and validation to ensure all imports reference the new src/ structure.",
+      "category": "universal",
+      "proactive": false,
+      "triggers": [
+        "osyris imports agent",
+        "osyris-imports-agent",
+        "update imports",
+        "fix imports"
+      ],
+      "dependencies": ["osyris-backup-agent", "osyris-restructure-agent", "osyris-docs-agent"]
+    },
+    {
+      "name": "osyris-testing-agent",
+      "file": ".claude/agents/testing/osyris-testing-agent.md",
+      "description": "Specialized agent for comprehensive validation and testing after project restructuring. Verifies TypeScript compilation, structure integrity, import resolution, and generates detailed quality reports.",
+      "category": "testing",
+      "proactive": false,
+      "triggers": [
+        "osyris testing agent",
+        "osyris-testing-agent",
+        "validate restructure",
+        "test build"
+      ],
+      "dependencies": ["osyris-backup-agent", "osyris-restructure-agent", "osyris-docs-agent", "osyris-imports-agent"]
+    },
+    {
+      "name": "osyris-restructure-orchestrator",
+      "file": ".claude/agents/infrastructure/osyris-restructure-orchestrator.md",
+      "description": "Master orchestrator for complete project restructuring. Coordinates 8 specialized agents to restructure Osyris-Web with surgical precision, managing dependencies, parallel execution, and consolidated reporting.",
+      "category": "infrastructure",
+      "proactive": false,
+      "triggers": [
+        "osyris restructure orchestrator",
+        "osyris-restructure-orchestrator",
+        "restructure project",
+        "reorganize project"
+      ],
+      "dependencies": []
+    },
+    {
       "name": "activation-system",
       "file": ".claude/agents/orchestration/activation-system.md",
       "description": "Activation System specialist",
@@ -1482,7 +1595,8 @@
         "cicd-pipeline-engineer",
         "qa-automation-engineer",
         "release-manager",
-        "test-automation-expert"
+        "test-automation-expert",
+        "osyris-testing-agent"
       ]
     },
     "backend": {
@@ -1592,7 +1706,12 @@
         "pulumi-typescript-specialist",
         "serverless-architect",
         "site-reliability-engineer",
-        "terraform-specialist"
+        "terraform-specialist",
+        "osyris-backup-agent",
+        "osyris-gitignore-agent",
+        "osyris-cleanup-agent",
+        "osyris-restructure-agent",
+        "osyris-restructure-orchestrator"
       ]
     },
     "frontend": {
@@ -1636,9 +1755,12 @@
         "legacy-modernization-specialist",
         "logging-concepts-engineer",
         "pr-reviewer-specialist",
+        "pr-description-composer",
         "quality-system-engineer",
         "resilience-engineer",
-        "software-engineering-expert"
+        "software-engineering-expert",
+        "osyris-docs-agent",
+        "osyris-imports-agent"
       ]
     },
     "template": {
@@ -1736,9 +1858,14 @@
   },
   "metadata": {
     "created": "2024-01-15",
-    "last_updated": "2025-08-07",
-    "total_agents": 107,
+    "last_updated": "2025-10-15",
+    "total_agents": 115,
     "version_history": [
+      {
+        "version": "2.1.0",
+        "date": "2025-10-15",
+        "changes": "Added Osyris project restructuring system: 8 specialized agents (backup, gitignore, cleanup, restructure, docs, imports, testing, orchestrator) for modular src/ architecture migration"
+      },
       {
         "version": "2.0.0",
         "date": "2025-08-07",

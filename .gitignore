@@ -1,34 +1,142 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ========================================
+# OSYRIS-WEB .GITIGNORE
+# Actualizado por osyris-gitignore-agent
+# ========================================
 
-# dependencies
+# =====================================
+# Dependencies
+# =====================================
 /node_modules
+.pnp
+.pnp.js
 
-# next.js
-/.next/
+# =====================================
+# Testing
+# =====================================
+/coverage
+*.coverage
+.nyc_output
+
+# =====================================
+# Build Artifacts (Next.js)
+# =====================================
+/_next/
 /out/
 /build/
+/.next/
+.next/
 
-# Allow .nojekyll for GitHub Pages
-!.nojekyll
+# =====================================
+# Production Build
+# =====================================
+/dist/
+/build/
 
-# production
+# =====================================
+# Data Directories (NEVER IN GIT)
+# =====================================
+/database/
+/logs/
+/uploads/
+/backups/
+/reports/
 
-# debug
+# =====================================
+# Database Files
+# =====================================
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# =====================================
+# Log Files
+# =====================================
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+logs/
+*.log.*
 
-# env files
+# =====================================
+# Temporary and Backup Files
+# =====================================
+*.backup
+*.backup-*
+*.bak
+*.tmp
+*.temp
+.restructure-state.json
+
+# =====================================
+# Test Files (Temporary)
+# =====================================
+test-*.html
+test-*.js
+test-*.sh
+test-*.md
+test-*.ts
+test-*.tsx
+
+# =====================================
+# Environment Files
+# =====================================
+.env
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# vercel
-.vercel
+# =====================================
+# IDE and Editor
+# =====================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
-# typescript
+# =====================================
+# Operating System
+# =====================================
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# =====================================
+# TypeScript
+# =====================================
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 next-env.d.ts
 
-# lock files (use npm only)
+# =====================================
+# Vercel
+# =====================================
+.vercel
+
+# =====================================
+# Miscellaneous
+# =====================================
+.turbo
+traces/
+screenshots/
+
+# =====================================
+# Lock files (use npm only)
+# =====================================
 pnpm-lock.yaml
 yarn.lock
+
+# =====================================
+# Allow Important Files
+# =====================================
+!.gitkeep
+!.github/
+!.nojekyll
