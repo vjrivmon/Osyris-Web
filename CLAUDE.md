@@ -32,38 +32,80 @@
 
 ```
 Osyris-Web/
-├── 🖥️ Frontend (Next.js)
-│   ├── app/                          # App Router de Next.js
-│   │   ├── dashboard/                # Panel principal por roles
-│   │   │   ├── ajustes/             # Configuración usuario
-│   │   │   ├── calendar/            # Calendario actividades
-│   │   │   ├── communications/       # Centro mensajería
-│   │   │   ├── documents/           # Gestión documentos
-│   │   │   ├── inventory/           # Control inventario
-│   │   │   ├── kraal/               # Panel monitores (ÚNICO PERFIL ACTIVO)
-│   │   │   ├── members/             # Gestión miembros
-│   │   │   └── store/               # Tienda scout
-│   │   ├── secciones/               # Páginas secciones
-│   │   │   ├── castores/            # Colonia La Veleta (5-7 años)
-│   │   │   ├── lobatos/             # Manada Waingunga (7-10 años)
-│   │   │   ├── tropa/               # Tropa Brownsea (10-13 años)
-│   │   │   ├── pioneros/            # Posta Kanhiwara (13-16 años)
-│   │   │   └── rutas/               # Ruta Walhalla (16-19 años)
-│   │   ├── aula-virtual/            # Módulo formación online
-│   │   ├── login/                   # Autenticación
-│   │   ├── contacto/                # Información contacto
-│   │   ├── galeria/                 # Galería fotos
-│   │   └── globals.css              # Estilos globales
-│   ├── components/                   # Componentes React
-│   │   ├── ui/                      # Componentes Shadcn/ui
-│   │   ├── aula-virtual/            # Componentes aula virtual
-│   │   ├── dashboard-breadcrumb.tsx
-│   │   ├── main-nav.tsx
-│   │   ├── site-footer.tsx
-│   │   └── theme-provider.tsx
-│   ├── hooks/                       # Custom hooks
-│   ├── lib/                         # Utilidades y helpers
+├── 🖥️ Frontend (Next.js 15 con src/)
+│   ├── src/                         # Directorio fuente principal
+│   │   ├── app/                    # App Router de Next.js
+│   │   │   ├── dashboard/          # Panel principal por roles
+│   │   │   │   ├── ajustes/       # Configuración usuario
+│   │   │   │   ├── calendar/      # Calendario actividades
+│   │   │   │   ├── communications/ # Centro mensajería
+│   │   │   │   ├── documents/     # Gestión documentos
+│   │   │   │   ├── inventory/     # Control inventario
+│   │   │   │   ├── kraal/         # Panel monitores (ÚNICO PERFIL ACTIVO)
+│   │   │   │   ├── members/       # Gestión miembros
+│   │   │   │   └── store/         # Tienda scout
+│   │   │   ├── secciones/         # Páginas secciones
+│   │   │   │   ├── castores/      # Colonia La Veleta (5-7 años)
+│   │   │   │   ├── manada/        # Manada Waingunga (7-10 años)
+│   │   │   │   ├── tropa/         # Tropa Brownsea (10-13 años)
+│   │   │   │   ├── pioneros/      # Posta Kanhiwara (13-16 años)
+│   │   │   │   └── rutas/         # Ruta Walhalla (16-19 años)
+│   │   │   ├── aula-virtual/       # Módulo formación online
+│   │   │   ├── login/              # Autenticación
+│   │   │   ├── contacto/           # Información contacto
+│   │   │   ├── galeria/            # Galería fotos
+│   │   │   └── globals.css         # Estilos globales
+│   │   ├── components/             # Componentes React
+│   │   │   ├── ui/                # Componentes Shadcn/ui
+│   │   │   ├── aula-virtual/      # Componentes aula virtual
+│   │   │   ├── admin/              # Componentes admin
+│   │   │   ├── auth/               # Componentes autenticación
+│   │   │   ├── main-nav.tsx        # Navegación principal
+│   │   │   ├── site-footer.tsx     # Pie de página
+│   │   │   └── theme-provider.tsx  # Proveedor tema
+│   │   ├── hooks/                  # Custom hooks
+│   │   │   ├── useAuth.ts          # Hook autenticación
+│   │   │   ├── use-mobile.tsx      # Hook responsive
+│   │   │   ├── use-toast.ts        # Hook notificaciones
+│   │   │   └── useSectionContent.ts # Hook contenido secciones
+│   │   ├── lib/                    # Utilidades y helpers
+│   │   │   ├── api-utils.ts        # Utilidades API
+│   │   │   ├── auth-utils.ts       # Utilidades auth
+│   │   │   ├── dev-session-clear.ts # Limpieza sesión desarrollo
+│   │   │   ├── page-connector.ts   # Conector páginas
+│   │   │   └── utils.ts            # Utilidades generales
+│   │   ├── contexts/               # Contextos React
+│   │   │   ├── AuthContext.tsx     # Contexto autenticación
+│   │   │   └── EditModeContext.tsx # Contexto modo edición
+│   │   └── styles/                 # Estilos
+│   │       └── globals.css         # Estilos globales
 │   └── public/                      # Archivos estáticos
+├── 📚 Documentación Organizada
+│   └── docs/                        # Documentación consolidada
+│       ├── development/            # Guías desarrollo
+│       │   ├── restructure-system.md # Sistema reestructuración
+│       │   ├── GUIA_EDICION_EN_VIVO.md # Guía edición
+│       │   └── DONDE_VER_LOS_CAMBIOS.md # Cambios recientes
+│       ├── deployment/             # Documentación deploy
+│       │   ├── MIGRATION_TO_HETZNER.md # Migración producción
+│       │   ├── PRODUCTION_MAINTENANCE.md # Mantenimiento
+│       │   └── README_DEPLOYMENT.md # Guía deploy
+│       └── archive/                 # Documentación histórica
+│           ├── CHANGELOG-2025-10-03.md # Changelog histórico
+│           └── [otros documentos archivados]
+├── 🤖 Sistema de Agentes
+│   └── .claude/agents/             # Agentes especializados
+│       ├── infrastructure/         # Agentes infraestructura
+│       │   ├── osyris-backup-agent.md
+│       │   ├── osyris-cleanup-agent.md
+│       │   ├── osyris-gitignore-agent.md
+│       │   ├── osyris-restructure-agent.md
+│       │   └── osyris-restructure-orchestrator.md
+│       ├── universal/              # Agentes universales
+│       │   ├── osyris-docs-agent.md
+│       │   └── osyris-imports-agent.md
+│       └── testing/                # Agentes testing
+│           └── osyris-testing-agent.md
 ├── 🔧 Backend (Express.js)
 │   └── api-osyris/
 │       ├── src/
@@ -80,16 +122,16 @@ Osyris-Web/
 ├── 🛠️ Scripts de Desarrollo
 │   └── scripts/
 │       ├── dev-start.sh            # Inicio desarrollo automatizado
-│       ├── kill-services.sh        # Limpieza procesos
 │       └── setup-dev.sh            # Configuración inicial
 ├── 🐳 Docker
 │   ├── docker-compose.yml          # Orquestación servicios
 │   └── Dockerfile                  # Imagen aplicación
+├── 📝 Logs
+│   └── logs/                       # Logs del sistema
 └── ⚙️ Configuración
     ├── next.config.mjs             # Config Next.js
     ├── tailwind.config.ts          # Config Tailwind
     ├── tsconfig.json               # Config TypeScript
-    ├── jest.config.js              # Config testing
     └── package.json                # Dependencias principales
 ```
 
@@ -498,22 +540,27 @@ npm run build
 - `npm test` - **Ejecutar tests**
 
 ### Estructura Importante
-- **Frontend:** App Router de Next.js en `/app`
+- **Frontend:** App Router de Next.js en `/src/app`
+- **Componentes:** Componentes React en `/src/components`
+- **Hooks:** Custom hooks en `/src/hooks`
+- **Contextos:** Contextos React en `/src/contexts`
+- **Utils:** Utilidades en `/src/lib`
 - **Backend:** Express.js en `/api-osyris`
-- **Componentes:** Shadcn/ui en `/components/ui`
-- **Scripts:** Automatización en `/scripts`
+- **Documentación:** Organizada en `/docs`
+- **Agentes:** Sistema de agentes en `/.claude/agents`
 
 ### Tecnologías Clave
-- Next.js 15 con TypeScript
-- Express.js con SQLite/MariaDB
+- Next.js 15 con TypeScript y arquitectura `src/`
+- Express.js con PostgreSQL
 - Tailwind CSS + Shadcn/ui
 - JWT para autenticación
 - Docker para producción
+- Sistema de 115 agentes especializados
 
 ### Puertos
 - **3000** - Frontend desarrollo
 - **5000** - Backend API
-- **3306** - Base de datos (Docker)
+- **5432** - Base de datos PostgreSQL (Docker)
 
 ## 🎨 Design System y UX/UI
 
@@ -613,13 +660,13 @@ const isActive = item.href === "/base-route"
 **Las páginas de secciones (castores, manada, tropa, pioneros, rutas) NO usan contenido dinámico de base de datos.**
 
 #### 📄 Archivo de Contenido
-- **Ubicación:** `components/ui/dynamic-section-page.tsx`
+- **Ubicación:** `src/components/ui/dynamic-section-page.tsx`
 - **Comportamiento:** Carga SOLO datos estáticos locales
 - **Razón:** El contenido original y correcto está hardcoded en el componente
 
 #### ✅ Configuración Actual (Correcta)
 ```typescript
-// components/ui/dynamic-section-page.tsx:34-48
+// src/components/ui/dynamic-section-page.tsx:34-48
 const loadSectionData = async () => {
   // ⚠️ IMPORTANTE: Las páginas de secciones usan SOLO datos estáticos locales
   // NO se cargan desde base de datos para mantener el contenido correcto y original
@@ -652,7 +699,7 @@ Cada sección tiene definido en `dynamic-section-page.tsx` (líneas 69-240):
 - **navigation**: Enlaces de navegación (prev, next)
 
 #### 🔄 Si Necesitas Cambiar Contenido de Secciones
-1. **Editar:** `components/ui/dynamic-section-page.tsx`
+1. **Editar:** `src/components/ui/dynamic-section-page.tsx`
 2. **Buscar:** El objeto `fallbackSections` (línea ~69)
 3. **Modificar:** El contenido de la sección deseada
 4. **Recargar:** El navegador recompilará automáticamente
@@ -672,7 +719,7 @@ Cada sección tiene definido en `dynamic-section-page.tsx` (líneas 69-240):
 
 | Página | Fuente de Datos | Editable desde Admin |
 |--------|-----------------|---------------------|
-| Secciones Scout | `dynamic-section-page.tsx` | ❌ No |
+| Secciones Scout | `src/components/ui/dynamic-section-page.tsx` | ❌ No |
 | Contacto | Base de datos | ✅ Sí |
 | Sobre Nosotros | Base de datos | ✅ Sí |
 | Calendario | Base de datos | ✅ Sí |
@@ -730,6 +777,43 @@ Después de ejecutar el sistema:
 ### Documentación Completa
 
 Guía completa disponible en: `docs/development/restructure-system.md`
+
+### Estado Actual del Proyecto (2025-10-16)
+
+#### ✅ **Reestructuración Completada Exitosamente**
+- **Commit hash:** `813b89f` - feat: reestructuración completa del proyecto a arquitectura src/ modular
+- **Archivos afectados:** 326 archivos modificados
+- **Reducción de tamaño:** > 10MB eliminados
+- **Calidad:** Build exitoso, sin errores TypeScript
+
+#### 🏗️ **Nueva Arquitectura src/ Implementada**
+```
+src/
+├── app/           # 35 páginas Next.js movidas
+├── components/    # 78 componentes React movidos
+├── hooks/         # 5 custom hooks movidos
+├── lib/           # 5 utilidades movidas
+├── contexts/      # 2 contextos React movidos
+└── styles/        # 1 archivo de estilos movido
+```
+
+#### 📚 **Documentación Consolidada**
+- **docs/development/** - 3 guías de desarrollo activas
+- **docs/deployment/** - 3 guías de deploy
+- **docs/archive/** - 14 documentos históricos archivados
+
+#### 🤖 **Sistema de Agentes Especializados**
+- **Total:** 115 agentes en el ecosistema
+- **Infraestructura:** 5 agentes especializados
+- **Universales:** 2 agentes
+- **Testing:** 1 agente
+- **Todos registrados** en `.claude/agents/agents.json`
+
+#### 🧹 **Limpieza y Optimización**
+- **Archivos eliminados:** 200+ archivos duplicados/obsoletos
+- **.gitignore actualizado** con reglas completas
+- **Imports actualizados** (~500+ referencias)
+- **Tailwind config adaptado** a nueva estructura
 
 ### Características de Seguridad
 
