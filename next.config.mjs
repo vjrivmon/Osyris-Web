@@ -16,14 +16,6 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'standalone', // Para Docker
-  experimental: {
-    webpackBuildWorker: true,
-    parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
-  },
-  // Deshabilitar prerendering para evitar errores
-  trailingSlash: true,
-  generateBuildId: () => 'build',
   // Reescribir rutas de uploads al backend
   async rewrites() {
     return [
