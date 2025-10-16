@@ -43,6 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
+      // Verificar si estamos en el servidor
+      if (typeof window === 'undefined') {
+        setAuthState(prev => ({ ...prev, isLoading: false }))
+        return
+      }
+
       // Primero verificar si la sesión ha expirado
       if (isSessionExpired()) {
         console.log('🔒 Session expired or invalid, clearing auth data')

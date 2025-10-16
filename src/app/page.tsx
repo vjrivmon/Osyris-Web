@@ -1,4 +1,5 @@
 "use client"
+import { unstable_noStore as noStore } from 'next/cache'
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,7 @@ import {
 } from "lucide-react"
 
 export default function Home() {
+  noStore()
   return (
     <div className="flex flex-col min-h-screen">
       <MainNav />

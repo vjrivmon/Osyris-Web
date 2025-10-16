@@ -1,4 +1,5 @@
 "use client"
+import { unstable_noStore as noStore } from 'next/cache'
 
 import type React from "react"
 
@@ -43,6 +44,7 @@ const MOCK_USERS = [
 ]
 
 export default function LoginPage() {
+  noStore()
   const router = useRouter()
   const { refreshUser } = useAuth()
   const [error, setError] = useState<string | null>(null)
