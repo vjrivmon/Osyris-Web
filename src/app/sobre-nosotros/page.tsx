@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { StaticText, StaticImage, StaticList } from "@/components/ui/static-content"
-import { useSectionContent } from "@/hooks/useSectionContent"
+// import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import Link from "next/link"
 import { ArrowRight, Award, Calendar, FileText, Heart, MapPin, Users } from "lucide-react"
 
@@ -91,42 +91,17 @@ const sections = [
 ]
 
 export default function SobreNosotrosPage() {
-  // Cargar contenido desde la API
-  const { content, isLoading } = useSectionContent('sobre-nosotros')
+  // ⚠️ IMPORTANTE: Esta página usa SOLO datos estáticos locales
+  // NO se carga contenido desde la API
 
-  // Función helper para obtener contenido con fallback
+  // Función helper para obtener contenido con fallback (siempre devuelve fallback)
   const getContent = (key: string, fallback: string) => {
-    return content[key]?.contenido || fallback
+    return fallback
   }
 
-  // Función helper para obtener contenido JSON con fallback
+  // Función helper para obtener contenido JSON con fallback (siempre devuelve fallback)
   const getJson = <T,>(key: string, fallback: T[]): T[] => {
-    try {
-      const jsonContent = content[key]?.contenido
-
-      // Si ya es un array (JSON parseado por PostgreSQL), devolverlo directamente
-      if (Array.isArray(jsonContent)) {
-        return jsonContent as T[]
-      }
-
-      // Si es un string JSON, parsearlo
-      if (jsonContent && typeof jsonContent === 'string') {
-        const parsed = JSON.parse(jsonContent)
-        return Array.isArray(parsed) ? parsed : fallback
-      }
-
-      return fallback
-    } catch {
-      return fallback
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
+    return fallback
   }
 
   return (

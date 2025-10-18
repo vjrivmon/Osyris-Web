@@ -1,7 +1,0 @@
-# No ignorar nada - queremos trackear los estados en git
-# Los archivos JSON son la fuente de verdad del progreso
-
-# Solo ignorar archivos temporales si los hubiera
-*.tmp
-*.bak
-*~

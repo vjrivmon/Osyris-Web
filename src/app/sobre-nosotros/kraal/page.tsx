@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StaticText, StaticImage } from "@/components/ui/static-content"
-import { useSectionContent } from "@/hooks/useSectionContent"
+// import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import Link from "next/link"
 import { Mail, Loader2 } from "lucide-react"
 
@@ -150,20 +150,12 @@ const sections = [
 ]
 
 export default function KraalPage() {
-  // Cargar contenido desde la API
-  const { content, isLoading } = useSectionContent('kraal')
+  // ⚠️ IMPORTANTE: Esta página usa SOLO datos estáticos locales
+  // NO se carga contenido desde la API
 
-  // Función helper para obtener contenido con fallback
+  // Función helper para obtener contenido con fallback (siempre devuelve fallback)
   const getContent = (key: string, fallback: string) => {
-    return content[key]?.contenido || fallback
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return fallback
   }
 
   return (

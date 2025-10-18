@@ -1,0 +1,109 @@
+{
+  "workflow_phases": [
+    {
+      "id": "branch-preparation",
+      "agent": "osyris-branch-manager",
+      "dependencies": [],
+      "outputs": ["current_branch", "sync_status", "environment_ready"],
+      "entry_command": "/osyris-branch-create",
+      "success_criteria": {
+        "branch_created": true,
+        "sync_completed": true,
+        "environment_clean": true
+      }
+    },
+    {
+      "id": "feature-development",
+      "agent": "osyris-feature-developer", 
+      "dependencies": ["branch-preparation"],
+      "outputs": ["changes_made", "typescript_errors", "build_status"],
+      "entry_command": "/osyris-feature-implement",
+      "success_criteria": {
+        "implementation_complete": true,
+        "typescript_errors": 0,
+        "linting_issues": 0,
+        "build_successful": true
+      }
+    },
+    {
+      "id": "integration-testing",
+      "agent": "osyris-integration-tester",
+      "dependencies": ["feature-development"],
+      "outputs": ["tests_run", "coverage", "production_ready"],
+      "entry_command": "/osyris-test-integration",
+      "success_criteria": {
+        "all_tests_passed": true,
+        "coverage_threshold_met": true,
+        "no_breaking_changes": true,
+        "production_ready": true
+      }
+    },
+    {
+      "id": "deployment",
+      "agent": "osyris-deployment-coordinator",
+      "dependencies": ["integration-testing"],
+      "outputs": ["deployment_status", "production_services", "deployment_url"],
+      "entry_command": "/osyris-deploy-to-production",
+      "success_criteria": {
+        "deployment_successful": true,
+        "all_services_running": true,
+        "health_checks_passed": true
+      }
+    },
+    {
+      "id": "production-verification",
+      "agent": "osyris-production-verifier",
+      "dependencies": ["deployment"],
+      "outputs": ["production_verified", "evidence_captured", "performance_metrics"],
+      "entry_command": "/osyris-verify-production",
+      "success_criteria": {
+        "functionality_verified": true,
+        "performance_acceptable": true,
+        "evidence_captured": true,
+        "no_errors_detected": true
+      }
+    }
+  ],
+  "handoff_protocol": {
+    "format": "json",
+    "required_fields": [
+      "agent_from",
+      "agent_to", 
+      "phase_completed",
+      "outputs_produced",
+      "timestamp",
+      "success_status",
+      "error_details_if_any"
+    ],
+    "storage_location": ".claude/memory/agent-handoffs.json"
+  },
+  "error_recovery": {
+    "retry_attempts": 3,
+    "retry_delay": "30s",
+    "rollback_triggers": [
+      "build_failure",
+      "critical_test_failure", 
+      "deployment_failure",
+      "production_verification_failure"
+    ],
+    "recovery_strategies": {
+      "build_failure": "analyze_logs_and_fix_code",
+      "test_failure": "identify_failing_tests_and_fix",
+      "deployment_failure": "check_infrastructure_and_redeploy",
+      "production_failure": "automatic_rollback_and_investigate"
+    }
+  },
+  "notification_points": [
+    "workflow_started",
+    "phase_completed", 
+    "error_occurred",
+    "workflow_completed",
+    "rollback_executed"
+  ],
+  "memory_persistence": {
+    "session_file": ".claude/memory/session-state.json",
+    "handoffs_file": ".claude/memory/agent-handoffs.json",
+    "evidence_dir": ".claude/evidence/",
+    "reports_dir": ".claude/reports/"
+  }
+}

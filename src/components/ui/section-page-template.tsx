@@ -5,9 +5,9 @@ import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { StaticText, StaticImage } from "@/components/ui/static-content"
-import { useSectionContent } from "@/hooks/useSectionContent"
+// import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 
 interface SectionData {
   name: string
@@ -69,6 +69,11 @@ const accentClasses = {
     teamSection: 'bg-yellow-50 dark:bg-yellow-950/50',
     teamCard: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'
   },
+  blue: {
+    methodology: 'bg-blue-50 border-l-4 border-blue-500 dark:bg-blue-950 dark:border-blue-400',
+    teamSection: 'bg-blue-50 dark:bg-blue-950/50',
+    teamCard: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'
+  },
   green: {
     methodology: 'bg-green-50 border-l-4 border-green-500 dark:bg-green-950 dark:border-green-400',
     teamSection: 'bg-green-50 dark:bg-green-950/50',
@@ -82,12 +87,13 @@ const accentClasses = {
 }
 
 export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
-  // Cargar contenido desde la API
-  const { content, isLoading } = useSectionContent(sectionData.slug)
-
-  // Función helper para obtener contenido con fallback
+  // ⚠️ IMPORTANTE: Las páginas de secciones NO cargan contenido del API
+  // Usan SOLO datos estáticos pasados como prop desde DynamicSectionPage
+  // const { content, isLoading } = useSectionContent(sectionData.slug) // DESHABILITADO
+  
+  // Función helper - ahora siempre usa fallback (datos estáticos)
   const getContent = (key: string, fallback: string) => {
-    return content[key]?.contenido || fallback
+    return fallback // Siempre usar fallback (datos estáticos)
   }
 
   // Ensure sectionData has all required properties
@@ -104,14 +110,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
     )
   }
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+  // NO hay estado de loading - siempre usar datos estáticos
 
   // Obtener base ID para esta sección
   const baseId = SECTION_BASE_IDS[sectionData.slug] || 500

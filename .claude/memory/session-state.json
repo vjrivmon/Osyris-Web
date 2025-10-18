@@ -1,0 +1,18 @@
+{
+  "session_id": "",
+  "status": "idle",
+  "current_phase": "",
+  "current_branch": "",
+  "target_branch": "develop",
+  "workflow": "",
+  "agents_history": [],
+  "context": {
+    "last_commit": "",
+    "changes_made": [],
+    "tests_run": false,
+    "deployment_status": "",
+    "production_verified": false
+  },
+  "created_at": "",
+  "updated_at": ""
+}

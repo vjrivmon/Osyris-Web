@@ -135,9 +135,9 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
         motto: "Siempre listos",
         ageRange: "Chicos y chicas de 10 a 13 años",
         colors: {
-          from: "from-green-400",
-          to: "to-green-600",
-          accent: "green"
+          from: "from-blue-400",
+          to: "to-blue-600",
+          accent: "blue"
         },
         description: "La Tropa es donde los scouts desarrollan su autonomía, liderazgo y espíritu de servicio a través de las patrullas.",
         details: "En la Tropa Brownsea, los scouts viven la aventura en patrullas, desarrollando su carácter y habilidades.",

@@ -1,163 +1,302 @@
-# 🏕️ OSYRIS SPECIALIZED AGENTS SYSTEM
+# 🚀 Osyris Workflow System
 
-## 📋 DIRECTORIO DE AGENTES
+Sistema completo de orquestación de agentes para desarrollo automatizado del proyecto Osyris Web, desde creación de rama hasta verificación en producción.
 
-### 🚀 AGENTE MAESTRO
-- **Archivo**: `/agents/MASTER-INITIALIZATION-PROMPT.md`
-- **Función**: Coordinar e inicializar todos los agentes especializados
-- **Uso**: Prompt único para activar sistema completo
+## 🎯 Propósito
 
-### 🔧 AGENTES ESPECIALIZADOS
+Sistema integral que coordina 5 agentes especializados para ejecutar el ciclo completo de desarrollo:
 
-#### 1. 📁 FILE UPLOAD SPECIALIST
-- **Archivo**: `/agents/file-upload-specialist.md`
-- **Responsabilidad**: Flujo completo de subida de archivos
-- **Alcance**: Frontend drag&drop → Backend multer → BD SQLite → Storage físico
+1. **Branch Manager** - Gestión de ramas Git
+2. **Feature Developer** - Desarrollo de funcionalidades
+3. **Integration Tester** - Pruebas y validación
+4. **Deployment Coordinator** - Despliegue a producción
+5. **Production Verifier** - Verificación en vivo
 
-#### 2. 👥 USER MANAGEMENT SPECIALIST
-- **Archivo**: `/agents/user-management-specialist.md`
-- **Responsabilidad**: Gestión completa de usuarios
-- **Alcance**: Creación → Validación → Persistencia → Visualización en admin
+## 🏗️ Arquitectura del Sistema
 
-#### 3. 📄 PAGE EDITOR SPECIALIST
-- **Archivo**: `/agents/page-editor-specialist.md`
-- **Responsabilidad**: Edición de páginas con vista previa
-- **Alcance**: Selección → Modificación → Preview → Guardado → Landing
-
-#### 4. 🗄️ DATABASE INTEGRATION SPECIALIST
-- **Archivo**: `/agents/database-integration-specialist.md`
-- **Responsabilidad**: Integridad de base de datos
-- **Alcance**: Schemas → Conexiones → Transacciones → Optimización
-
----
-
-## 🎯 PROBLEMAS CRÍTICOS IDENTIFICADOS
-
-### ❌ PROBLEMA 1: Flujo de Subida de Archivos
-- **Síntoma**: Subidas "falsas" o no persistentes
-- **Causa**: Desconexión frontend-backend-storage
-- **Agente**: File Upload Specialist
-
-### ❌ PROBLEMA 2: Usuarios No Aparecen
-- **Síntoma**: http://localhost:3000/admin/users vacío
-- **Causa**: API calls incorrectas o problemas de rendering
-- **Agente**: User Management Specialist
-
-### ❌ PROBLEMA 3: Edición de Páginas Incompleta
-- **Síntoma**: No hay flujo completo admin→landing
-- **Causa**: Falta sistema de edición con vista previa
-- **Agente**: Page Editor Specialist
-
-### ❌ PROBLEMA 4: Integridad de Datos
-- **Síntoma**: Inconsistencias frontend-backend-BD
-- **Causa**: Validaciones y esquemas incorrectos
-- **Agente**: Database Integration Specialist
-
----
-
-## 🚀 QUICK START
-
-### Método 1: Prompt Único (RECOMENDADO)
 ```
-OSYRIS ADMIN CRISIS: Inicializar 4 agentes especializados en paralelo para reparar: (1) File Upload Specialist - arreglar subida real de archivos con persistencia BD, (2) User Management Specialist - solucionar por qué usuarios no aparecen en /admin/users, (3) Page Editor Specialist - implementar flujo completo edición→vista previa→guardado→landing, (4) Database Integration Specialist - validar integridad frontend-backend-SQLite. OBJETIVO: Admin funcional 100% con datos reales, sin mocks. Leer specs en .claude/agents/ y trabajar coordinadamente.
+.claude/
+├── .mcp.json                    # Configuración MCP completa
+├── agents/                      # Agentes especializados
+│   ├── osyris-workflow-orchestrator.md
+│   ├── osyris-branch-manager.md
+│   ├── osyris-feature-developer.md
+│   ├── osyris-integration-tester.md
+│   ├── osyris-deployment-coordinator.md
+│   └── osyris-production-verifier.md
+├── commands/                    # Comandos slash
+│   ├── osyris-workflow-start.md
+│   ├── coordinator-status.md
+│   └── coordinator-continue.md
+├── workflows/                   # Definiciones de workflows
+│   ├── osyris-complete-workflow.md
+│   └── workflow-coordinator.md
+├── memory/                      # Persistencia de estado
+│   ├── session-state.json
+│   ├── agent-handoffs.json
+│   └── README.md
+├── config/                      # Configuración del sistema
+│   └── agent-coordination.json
+└── evidence/                    # Evidencia generada (creada dinámicamente)
+    ├── screenshots/
+    ├── videos/
+    └── reports/
 ```
 
-### Método 2: Activación Manual por Fases
+## 🚀 Comando Principal
+
+### Iniciar Workflow Completo
+
 ```bash
-# FASE 1: Diagnóstico
-Task tool → Database Integration Specialist
-Task tool → User Management Specialist
-Task tool → File Upload Specialist
-Task tool → Page Editor Specialist
-
-# FASE 2: Coordinación
-Trabajar según prioridades identificadas
-
-# FASE 3: Testing integral
-Verificar flujos completos end-to-end
+/osyris-workflow-start "nombre-funcionalidad" "descripción detallada"
 ```
 
----
-
-## 📊 MÉTRICAS DE ÉXITO
-
-### ✅ CRITERIOS DE FINALIZACIÓN
-- [ ] Admin puede subir archivos y verlos inmediatamente en lista
-- [ ] Admin puede crear usuarios y aparecen en /admin/users
-- [ ] Admin puede editar páginas con vista previa funcional
-- [ ] Cambios en admin se reflejan inmediatamente en landing
-- [ ] Toda la información es real (BD SQLite), no mock data
-- [ ] Flujo completo: login → editar → guardar → ver en web
-
-### 🔍 TESTING CHECKLIST
-- [ ] Upload de imagen PNG funciona 100%
-- [ ] Creación de usuario aparece en lista admin
-- [ ] Edición de página se guarda en BD
-- [ ] Vista previa muestra cambios reales
-- [ ] Landing refleja modificaciones hechas en admin
-- [ ] No hay errores 404, 500, o conexión
-
----
-
-## 🛠️ STACK TECNOLÓGICO
-
-### Frontend (Next.js 15)
-- React 19.1.1 con hooks
-- Tailwind CSS + Shadcn/ui
-- TypeScript 5.9.2
-- Puerto: 3000
-
-### Backend (Express.js)
-- Node.js con Express 4.18.2
-- Multer para uploads
-- JWT + bcryptjs
-- Puerto: 5000
-
-### Database
-- SQLite (desarrollo)
-- Tablas: usuarios, paginas, documentos
-- WAL mode para performance
-
-### Storage
-- Sistema de archivos local: `/uploads/`
-- URLs públicas: `/uploads/{folder}/{file}`
-
----
-
-## 📝 NOTAS DE DESARROLLO
-
-### Comandos Útiles
+**Ejemplo:**
 ```bash
-# Iniciar sistema completo
-./scripts/dev-start.sh
-
-# Verificar base de datos
-sqlite3 api-osyris/database/osyris.db ".tables"
-
-# Testing API
-curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/usuarios
-
-# Ver uploads
-ls -la uploads/
+/osyris-workflow-start 
+  "calendario-interactivo-secciones" 
+  "Implementar calendario interactivo con colores por sección scout, navegación mensual y filtros"
 ```
 
-### Directorios Críticos
-- `/app/admin/` - Panel administrativo frontend
-- `/api-osyris/src/` - Backend API
-- `/uploads/` - Archivos subidos
-- `/.claude/agents/` - Documentación de agentes
+## 📋 Comandos de Coordinación
+
+### Estado del Workflow
+```bash
+/coordinator-status
+```
+
+### Continuar Workflow Pausado
+```bash
+/coordinator-continue [--force] [--from-phase phase] [--ignore-tests]
+```
+
+### Historial de Workflows
+```bash
+/coordinator-history
+```
+
+### Cancelar Workflow Actual
+```bash
+/coordinator-cancel [--rollback]
+```
+
+## 🔄 Flujo Completo de Ejecución
+
+### 🏁 Fase 1: Preparación (2-3 min)
+- **Agente**: osyris-branch-manager
+- **Acciones**: Sincronizar develop, crear rama feature
+- **Validación**: Entorno limpio, rama creada exitosamente
+
+### 🛠️ Fase 2: Desarrollo (10-30 min)
+- **Agente**: osyris-feature-developer
+- **Acciones**: Implementar componentes, modificar API
+- **Validación**: TypeScript sin errores, build exitoso
+
+### 🧪 Fase 3: Testing (5-10 min)
+- **Agente**: osyris-integration-tester
+- **Acciones**: Ejecutar tests, verificar compatibilidad
+- **Validación**: >80% cobertura, sin breaking changes
+
+### 🚀 Fase 4: Despliegue (5-15 min)
+- **Agente**: osyris-deployment-coordinator
+- **Acciones**: Push, GitHub Actions, deploy a Hetzner
+- **Validación**: Servicios corriendo en producción
+
+### ✅ Fase 5: Verificación (5-10 min)
+- **Agente**: osyris-production-verifier
+- **Acciones**: Navegar a cambios, probar funcionalidad
+- **Validación**: Funciona en producción, evidencia capturada
+
+## 🔧 Configuración MCP
+
+El sistema incluye 14 servicios MCP configurados:
+
+### Esenciales para el Workflow
+- **filesystem**: Gestión de archivos del proyecto
+- **github**: Operaciones Git y GitHub Actions
+- **memory**: Persistencia de estado y coordinación
+- **chrome-devtools**: Verificación en producción
+- **sequential-thinking**: Planificación compleja
+
+### Servicios Adicionales
+- **playwright**: Testing automatizado complementario
+- **web-search**: Búsqueda de información
+- **postgres**: Conexión a base de datos
+- **docker**: Gestión de contenedores
+- **slack**: Notificaciones (opcional)
+- **puppeteer**: Automatización de navegador
+- **brave-search**: Búsqueda alternativa
+- **google-drive**: Almacenamiento en la nube
+- **everything**: Búsqueda local de archivos
+
+## 📊 Estado y Persistencia
+
+### session-state.json
+```json
+{
+  "session_id": "workflow-1739854200-abc123",
+  "status": "in_progress",
+  "current_phase": "integration-testing",
+  "current_agent": "osyris-integration-tester",
+  "workflow": "osyris-complete-workflow",
+  "initiated_at": "2025-01-18T10:30:00Z",
+  "current_branch": "feature/calendario-interactivo-secciones",
+  "context": {
+    "changes_made": [...],
+    "tests_run": true,
+    "deployment_status": "",
+    "production_verified": false
+  }
+}
+```
+
+### agent-handoffs.json
+```json
+{
+  "handoffs": [
+    {
+      "agent_from": "osyris-branch-manager",
+      "agent_to": "osyris-feature-developer",
+      "phase_completed": "branch-preparation",
+      "timestamp": "2025-01-18T10:32:00Z",
+      "success_status": "success"
+    }
+  ]
+}
+```
+
+## 🖥️ Servidor de Producción
+
+**Configuración:**
+- **IP**: 116.203.98.142
+- **Frontend**: http://116.203.98.142:3000 (Next.js)
+- **Backend**: http://116.203.98.142:5000 (Express.js)
+- **Base de datos**: PostgreSQL en Docker
+- **Gestión**: PM2 + Docker Compose
+
+## 🎯 Resultados Esperados
+
+### ✅ Workflow Exitoso
+```
+🎉 WORKFLOW COMPLETADO EXITOSAMENTE
+
+📊 Estadísticas:
+- Duración total: 47 minutos
+- 5 fases completadas
+- 0 errores críticos
+- 100% funcionalidad verificada
+
+🔗 Producción:
+- URL: http://116.203.98.142:3000/dashboard/calendar
+- Verificado: ✅ Sí
+- Performance: 1.2s load time
+
+📁 Evidencia:
+- Screenshots: 5 capturas
+- Videos: 1 recorrido completo
+- Reporte PDF: .claude/reports/workflow-12345.pdf
+```
+
+## 🚨 Manejo de Errores
+
+### Estrategias de Recuperación
+- **Build failure**: Análisis de logs y fix automático
+- **Test failure**: Identificación de tests fallidos y corrección
+- **Deployment failure**: Verificación de infraestructura y re-deploy
+- **Production failure**: Rollback automático y investigación
+
+### Opciones de Recuperación
+```bash
+# Reanudar desde último punto exitoso
+/coordinator-continue
+
+# Forzar continuació (bajo riesgo)
+/coordinator-continue --force
+
+# Reintentar desde fase específica
+/coordinator-continue --from-phase integration-testing
+
+# Cancelar y hacer rollback
+/coordinator-cancel --rollback
+```
+
+## 📈 Métricas del Sistema
+
+### Indicadores Clave
+- **Tasa de éxito**: >95% de workflows completados
+- **Tiempo promedio**: 45-60 minutos por workflow
+- **Tiempo de recuperación**: <5 minutos
+- **Cobertura de tests**: >80% en todos los casos
+- **Uptime de producción**: >99.5%
+
+### Monitoreo en Tiempo Real
+- Estado del workflow: `/coordinator-status`
+- Logs detallados: `.claude/logs/`
+- Evidencia visual: `.claude/evidence/`
+- Historial completo: `/coordinator-history`
+
+## 🛠️ Prerrequisitos
+
+### Técnicos
+- **Node.js 18+**: Entorno de ejecución
+- **Docker**: Contenedores de base de datos
+- **Git**: Control de versiones
+- **Acceso a servidor**: Credenciales Hetzner
+
+### Configuración
+- **GitHub Token**: Personal Access Token con permisos
+- **MCPs activos**: 14 servicios configurados
+- **Repositorio limpio**: Working directory sin cambios pendientes
+
+### Servicios Externos
+- **GitHub**: Repositorio y Actions
+- **Hetzner Cloud**: Servidor de producción
+- **PostgreSQL**: Base de datos en Docker
+- **Chrome DevTools**: Para verificación final
+
+## 🎨 Design System Integrado
+
+El sistema respeta el design system de Osyris:
+- **Colores scout**: Castores (naranja), Manada (amarillo), etc.
+- **Componentes**: Basados en Shadcn/ui personalizados
+- **Tipografía**: Jerarquía clara y accesible
+- **Responsive**: Mobile-first design
+
+## 🔄 Integración con Flujo Existente
+
+### Compatible con
+- **Next.js 15**: App Router y src/ architecture
+- **Express.js**: Backend API con PostgreSQL
+- **Tailwind CSS**: Estilos y utilidades
+- **TypeScript**: Tipado estricto
+- **ESLint/Prettier**: Calidad de código
+
+### Sin Interferencia
+- **No modifica**: Scripts ni configuraciones existentes
+- **Respeta**: Convenciones del proyecto
+- **Integra**: Con herramientas ya existentes
+- **Preserva**: Código y funcionalidades
+
+## 📚 Documentación Adicional
+
+- **Workflow completo**: `.claude/workflows/osyris-complete-workflow.md`
+- **Coordinación**: `.claude/workflows/workflow-coordinator.md`
+- **Agentes**: `.claude/agents/` (documentación individual)
+- **Comandos**: `.claude/commands/` (documentación específica)
+
+## 🎯 Casos de Uso Ideales
+
+### ✅ Funciona Perfecto Para
+- **Nuevas funcionalidades**: Componentes, páginas, endpoints
+- **Mejoras iterativas**: Optimizaciones, refactoring
+- **Bug fixes**: Correcciones con testing completo
+- **Actualizaciones**: Dependencias, configuraciones
+
+### ⚠️ Consideraciones
+- **Cambios grandes**: Dividir en múltiples workflows
+- **Migraciones de datos**: Planificación adicional
+- **Cambios estructurales**: Revisión manual recomendada
 
 ---
 
-## 🔄 FLUJO DE TRABAJO RECOMENDADO
-
-1. **Leer este README** para contexto completo
-2. **Usar MASTER-INITIALIZATION-PROMPT** para activar agentes
-3. **Trabajar en paralelo** con Task tool
-4. **Documentar fixes** en archivos .claude/
-5. **Testing continuo** durante desarrollo
-6. **Validación final** con criterios de éxito
-
----
-
-*Creado para optimizar el desarrollo del sistema Osyris Scout Management*
+*Sistema de desarrollo automatizado que garantiza calidad desde código hasta producción verificada.*

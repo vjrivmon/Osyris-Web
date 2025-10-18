@@ -1,10 +1,21 @@
-# Memoria del Proyecto Osyris
+# Sistema de Memoria Persistente del Workflow
 
-Este directorio contiene el estado persistente del proyecto mantenido por el MCP de memoria.
+## Archivos
 
-## Estructura
-- `entities/` - Entidades del proyecto (features, bugs, decisions)
-- `relations/` - Relaciones entre entidades
-- `observations/` - Observaciones y contexto
+### session-state.json
+Estado actual de la sesión de trabajo. Contiene:
+- Información de la sesión actual
+- Fase del workflow en curso
+- Historial de agentes ejecutados
+- Contexto de cambios realizados
+- Estado de verificaciones
 
-El sistema de agentes usa esta memoria para mantener contexto entre sesiones.
+### agent-handoffs.json
+Registro de transferencias entre agentes. Cada entrada contiene:
+- Agente origen
+- Agente destino  
+- Timestamp
+- Contexto transferido
+- Estado de finalización
+
+Este sistema asegura que cada agente sabe exactamente dónde dejó el trabajo anterior.

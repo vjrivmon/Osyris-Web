@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StaticText } from "@/components/ui/static-content"
-import { useSectionContent } from "@/hooks/useSectionContent"
+// import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LazyImage } from "@/components/ui/lazy-image"
 import { ChevronLeft, ChevronRight, X, Search, Download, Share, Loader2 } from "lucide-react"
@@ -72,12 +72,12 @@ const photoAlbums = [
 
 // Componente para la galería
 export default function GaleriaPage() {
-  // Cargar contenido desde la API
-  const { content, isLoading } = useSectionContent('galeria')
+  // ⚠️ IMPORTANTE: Esta página usa SOLO datos estáticos locales
+  // NO se carga contenido desde la API
 
-  // Función helper para obtener contenido con fallback
+  // Función helper para obtener contenido con fallback (siempre devuelve fallback)
   const getContent = (key: string, fallback: string) => {
-    return content[key]?.contenido || fallback
+    return fallback
   }
 
   const [selectedImage, setSelectedImage] = useState<Photo | null>(null)
@@ -134,14 +134,6 @@ export default function GaleriaPage() {
     return photos.filter(photo =>
       photo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       photo.alt.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
     )
   }
 

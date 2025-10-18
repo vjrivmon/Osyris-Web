@@ -21,7 +21,8 @@
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-filesystem"
+        "@modelcontextprotocol/server-filesystem",
+        "/home/vicente/RoadToDevOps/osyris/Osyris-Web"
       ]
     },
     "github": {
@@ -31,7 +32,7 @@
         "@modelcontextprotocol/server-github"
       ],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_YOUR_TOKEN_HERE"
       }
     },
     "puppeteer": {
@@ -44,17 +45,76 @@
     "ide": {
       "command": "claude-code-mcp-server"
     },
-    "chakra-ui": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@chakra-ui/react-mcp"
-      ]
-    },
     "chrome-devtools": {
       "command": "npx",
       "args": [
         "chrome-devtools-mcp@latest"
+      ]
+    },
+    "web-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-web-search"
+      ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres"
+      ]
+    },
+    "slack": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-slack"
+      ],
+      "env": {
+        "SLACK_BOT_TOKEN": "xoxb-YOUR_SLACK_BOT_TOKEN",
+        "SLACK_USER_TOKEN": "xoxp-YOUR_SLACK_USER_TOKEN"
+      }
+    },
+    "puppeteer-browser": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "docker": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-docker"
+      ]
+    },
+    "google-drive": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-gdrive"
+      ],
+      "env": {
+        "GDRIVE_API_KEY": "YOUR_GDRIVE_API_KEY"
+      }
+    },
+    "everything": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-everything"
       ]
     }
   }
