@@ -20,6 +20,7 @@ const authRoutes = require('./routes/auth.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const paginasRoutes = require('./routes/paginas.routes');
 const contentRoutes = require('./routes/content.routes');
+const adminRoutes = require('./routes/admin.routes');
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
 
 // Configuración de variables de entorno
@@ -92,6 +93,7 @@ app.use('/api/mensajes', mensajesRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/paginas', paginasRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/admin', adminRoutes);
 // app.use('/api/preview', previewRoutes); // Temporarily disabled
 
 // Servir archivos estáticos desde uploads (debe ir después de las rutas API)

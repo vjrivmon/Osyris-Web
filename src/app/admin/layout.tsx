@@ -15,7 +15,11 @@ import {
   FileText,
   Users,
   Database,
-  ChevronLeft
+  ChevronLeft,
+  BarChart3,
+  TrendingUp,
+  Target,
+  ChevronDown
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -46,33 +50,45 @@ export default function AdminLayout({
 
   const navigationItems = [
     {
-      href: "/admin",
-      icon: Settings,
-      label: "PANEL PRINCIPAL",
-      id: "panel"
-    },
-    {
-      href: "/admin/files",
-      icon: Upload,
-      label: "ARCHIVOS",
-      id: "files"
-    },
-    {
-      href: "/admin/pages",
-      icon: FileText,
-      label: "PÁGINAS",
-      id: "pages"
+      href: "/admin/dashboard",
+      icon: BarChart3,
+      label: "Dashboard",
+      id: "dashboard"
     },
     {
       href: "/admin/users",
       icon: Users,
-      label: "USUARIOS",
-      id: "users"
+      label: "Usuarios",
+      id: "users",
+      submenu: [
+        {
+          href: "/admin/users",
+          label: "Lista de Usuarios",
+          id: "users-list"
+        },
+        {
+          href: "/admin/users/create",
+          label: "Agregar Usuario",
+          id: "users-create"
+        }
+      ]
+    },
+    {
+      href: "/admin/analytics",
+      icon: TrendingUp,
+      label: "Analytics",
+      id: "analytics"
+    },
+    {
+      href: "/admin/campaigns",
+      icon: Target,
+      label: "Campañas",
+      id: "campaigns"
     },
     {
       href: "/admin/system",
-      icon: Database,
-      label: "SISTEMA",
+      icon: Settings,
+      label: "Sistema",
       id: "system"
     }
   ]
@@ -108,8 +124,8 @@ export default function AdminLayout({
                     <Shield className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-sm text-red-900 dark:text-red-100">CMS Admin</span>
-                    <span className="text-xs text-red-600 dark:text-red-400">Grupo Scout Osyris</span>
+                    <span className="font-semibold text-sm text-red-900 dark:text-red-100">CRM Admin</span>
+                    <span className="text-xs text-red-600 dark:text-red-400">Panel de Gestión</span>
                   </div>
                 </div>
               )}
@@ -178,8 +194,8 @@ export default function AdminLayout({
                     <Shield className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-sm text-red-900 dark:text-red-100">CMS Admin</span>
-                    <span className="text-xs text-red-600 dark:text-red-400">Grupo Scout Osyris</span>
+                    <span className="font-semibold text-sm text-red-900 dark:text-red-100">CRM Admin</span>
+                    <span className="text-xs text-red-600 dark:text-red-400">Panel de Gestión</span>
                   </div>
                 </div>
               </div>
@@ -232,7 +248,7 @@ export default function AdminLayout({
                   <Shield className="h-3 w-3 text-white" />
                 </div>
                 <div className="flex flex-col">
-                  <h1 className="text-lg font-semibold text-red-900 dark:text-red-100">Panel de Administración</h1>
+                  <h1 className="text-lg font-semibold text-red-900 dark:text-red-100">Panel de Gestión CRM</h1>
                   {userInfo && (
                     <span className="text-xs text-muted-foreground">
                       {userInfo.nombre} {userInfo.apellidos} - Administrador

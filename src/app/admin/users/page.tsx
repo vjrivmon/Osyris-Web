@@ -3,528 +3,304 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Users } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { getAuthToken, makeAuthenticatedRequest } from "@/lib/auth-utils"
-import {
-  Users,
-  UserPlus,
-  Edit3,
-  Trash2,
-  Mail,
-  Shield,
-  Eye,
-  EyeOff,
-  Calendar,
-  Phone,
-  MapPin
-} from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 
-export default function AdminUsers() {
+// Importar los nuevos componentes
+import { SearchBar } from "@/components/admin/search-bar"
+import { UserTable } from "@/components/admin/user-table"
+import { QuickAddModal } from "@/components/admin/quick-add-modal"
+
+interface User {
+  id: number
+  email: string
+  nombre: string
+  apellidos: string
+  rol: string
+  estado: string
+  seccion?: string
+  ultimoAcceso?: string
+  fechaCreacion: string
+}
+
+interface UsersResponse {
+  users: User[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
+export default function AdminUsersPage() {
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
-  const [users, setUsers] = useState<any[]>([])
-  const [showAddUser, setShowAddUser] = useState(false)
-  const [editingUser, setEditingUser] = useState<any>(null)
-  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [users, setUsers] = useState<User[]>([])
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  })
 
-  const [newUser, setNewUser] = useState({
-    email: '',
-    password: '',
-    nombre: '',
-    apellidos: '',
-    telefono: '',
-    direccion: '',
-    fecha_nacimiento: '',
-    rol: 'scouter'
+  // Filtros de búsqueda
+  const [searchFilters, setSearchFilters] = useState({
+    query: "",
+    rol: "",
+    estado: "",
+    seccion: ""
   })
 
   useEffect(() => {
     loadUsers()
   }, [])
 
-  // Using centralized auth utils now - getAuthToken imported
-
-  const loadUsers = async () => {
+  // Cargar usuarios con filtros
+  const loadUsers = async (filters = searchFilters, page = 1) => {
+    setIsLoading(true)
     try {
-      const token = getAuthToken()
+      const token = localStorage.getItem("token")
       if (!token) {
-        setUsers([])
+        toast({
+          title: "Error",
+          description: "No hay token de autenticación",
+          variant: "destructive",
+        })
         return
       }
 
-      const data = await makeAuthenticatedRequest('/api/usuarios')
-
-      if (data.success && data.data) {
-        setUsers(data.data)
-      } else if (Array.isArray(data)) {
-        setUsers(data)
-      } else {
-        console.error('Failed to load users: Invalid response format')
-        setUsers([])
-      }
-    } catch (error) {
-      console.error('Error loading users:', error)
-      setUsers([])
-    }
-  }
-
-  const addUser = async () => {
-    try {
-      setIsLoading(true)
-      const token = getAuthToken()
-
-      const data = await makeAuthenticatedRequest('/api/usuarios', {
-        method: 'POST',
-        body: JSON.stringify(newUser)
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+        ...Object.fromEntries(
+          Object.entries(filters).filter(([_, value]) => value !== "")
+        )
       })
 
-      if (data.success) {
-        toast({
-          title: '✅ Usuario creado',
-          description: 'El usuario se ha creado correctamente'
-        })
-        setNewUser({
-          email: '',
-          password: '',
-          nombre: '',
-          apellidos: '',
-          telefono: '',
-          direccion: '',
-          fecha_nacimiento: '',
-          rol: 'scouter'
-        })
-        setShowAddUser(false)
-        loadUsers()
+      const response = await fetch(`/api/admin/users?${params}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      const result: UsersResponse = await response.json()
+
+      if (result.success) {
+        setUsers(result.data.users)
+        setPagination(result.data.pagination)
       } else {
-        throw new Error(data.message || 'Error al crear usuario')
+        toast({
+          title: "Error",
+          description: result.message || "No se pudieron cargar los usuarios",
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      console.error('Error:', error)
+      console.error("Error loading users:", error)
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Error al crear usuario',
-        variant: 'destructive'
+        title: "Error",
+        description: "Ocurrió un error al cargar los usuarios",
+        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const toggleUserStatus = async (userId: number, currentStatus: boolean) => {
-    try {
-      const token = getAuthToken()
-      const response = await makeAuthenticatedRequest(`/api/usuarios/${userId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ activo: !currentStatus })
-      })
+  // Manejar búsqueda
+  const handleSearch = (filters: any) => {
+    setSearchFilters(filters)
+    loadUsers(filters, 1)
+  }
 
-      if (response.ok) {
-        toast({
-          title: '✅ Estado actualizado',
-          description: `Usuario ${!currentStatus ? 'activado' : 'desactivado'} correctamente`
-        })
-        loadUsers()
-      } else {
-        throw new Error('Error al cambiar estado del usuario')
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'No se pudo cambiar el estado del usuario',
-        variant: 'destructive'
-      })
+  // Limpiar búsqueda
+  const handleClearSearch = () => {
+    const clearedFilters = {
+      query: "",
+      rol: "",
+      estado: "",
+      seccion: ""
+    }
+    setSearchFilters(clearedFilters)
+    loadUsers(clearedFilters, 1)
+  }
+
+  // Manejar adición de usuario
+  const handleUserAdded = (newUser: any) => {
+    toast({
+      title: "Usuario agregado",
+      description: "El usuario ha sido agregado exitosamente",
+    })
+    loadUsers(searchFilters, pagination.page)
+  }
+
+  // Manejar actualización de usuario
+  const handleUserUpdate = (userId: number, updates: Partial<User>) => {
+    setUsers(prev => prev.map(user =>
+      user.id === userId ? { ...user, ...updates } : user
+    ))
+    toast({
+      title: "Usuario actualizado",
+      description: "Los cambios han sido guardados exitosamente",
+    })
+  }
+
+  // Manejar eliminación de usuario
+  const handleUserDelete = (userId: number) => {
+    setUsers(prev => prev.filter(user => user.id !== userId))
+    toast({
+      title: "Usuario eliminado",
+      description: "El usuario ha sido eliminado exitosamente",
+    })
+
+    // Recargar si la página actual queda vacía
+    if (users.length === 1 && pagination.page > 1) {
+      loadUsers(searchFilters, pagination.page - 1)
+    } else {
+      loadUsers(searchFilters, pagination.page)
     }
   }
 
-  const deleteUser = async (userId: number) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este usuario?')) return
-
-    try {
-      const token = getAuthToken()
-      const response = await makeAuthenticatedRequest(`/api/usuarios/${userId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        toast({
-          title: '✅ Usuario eliminado',
-          description: 'El usuario se ha eliminado correctamente'
-        })
-        loadUsers()
-      } else {
-        throw new Error('Error al eliminar usuario')
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'No se pudo eliminar el usuario',
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const getRoleBadge = (rol: string) => {
-    switch (rol) {
-      case 'admin':
-        return <Badge variant="destructive" className="bg-red-600">Administrador</Badge>
-      case 'scouter':
-        return <Badge variant="secondary">Scouter</Badge>
-      default:
-        return <Badge variant="outline">{rol}</Badge>
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'No especificada'
-    return new Date(dateString).toLocaleDateString('es-ES')
-  }
-
-  const getInitials = (nombre: string, apellidos: string) => {
-    return `${nombre?.charAt(0) || ''}${apellidos?.charAt(0) || ''}`.toUpperCase()
+  // Cambiar de página
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }))
+    loadUsers(searchFilters, newPage)
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between border-b border-red-200 dark:border-red-800 pb-4">
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-red-900 dark:text-red-100">👥 Gestión de Usuarios</h1>
-          <p className="text-red-600 dark:text-red-400 mt-2">
-            Administra todos los usuarios del sistema
+          <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
+          <p className="text-muted-foreground">
+            Administra todos los usuarios del sistema Osyris
           </p>
         </div>
-        <Button
-          onClick={() => setShowAddUser(true)}
-          className="bg-red-600 hover:bg-red-700"
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Nuevo Usuario
-        </Button>
+        <div className="flex items-center gap-2">
+          <QuickAddModal onUserAdded={handleUserAdded} />
+          <Button variant="outline" onClick={() => loadUsers(searchFilters, pagination.page)}>
+            Actualizar lista
+          </Button>
+        </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-red-200 dark:border-red-800">
+      {/* Estadísticas */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Usuarios</p>
-                <p className="text-2xl font-bold text-red-600">{users.length}</p>
-              </div>
-              <Users className="h-8 w-8 text-red-500" />
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium">Total Usuarios</span>
+            </div>
+            <div className="text-2xl font-bold mt-2">{pagination.total}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <Badge className="bg-green-600">Activos</Badge>
+              <span className="text-sm font-medium">Usuarios Activos</span>
+            </div>
+            <div className="text-2xl font-bold mt-2">
+              {users.filter(u => u.estado === 'activo').length}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-red-200 dark:border-red-800">
+        <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Administradores</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {users.filter(u => u.rol === 'admin').length}
-                </p>
-              </div>
-              <Shield className="h-8 w-8 text-red-500" />
+            <div className="flex items-center gap-2">
+              <Badge variant="destructive">Admin</Badge>
+              <span className="text-sm font-medium">Administradores</span>
+            </div>
+            <div className="text-2xl font-bold mt-2">
+              {users.filter(u => u.rol === 'admin').length}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-red-200 dark:border-red-800">
+        <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Scouters</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {users.filter(u => u.rol === 'scouter').length}
-                </p>
-              </div>
-              <Users className="h-8 w-8 text-red-500" />
+            <div className="flex items-center gap-2">
+              <Badge className="bg-green-600">Scouter</Badge>
+              <span className="text-sm font-medium">Scouters</span>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-red-200 dark:border-red-800">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Activos</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {users.filter(u => u.activo).length}
-                </p>
-              </div>
-              <Eye className="h-8 w-8 text-green-500" />
+            <div className="text-2xl font-bold mt-2">
+              {users.filter(u => u.rol === 'scouter').length}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Users List */}
-      <Card className="border-red-200 dark:border-red-800">
+      {/* Lista de usuarios */}
+      <Card>
         <CardHeader>
-          <CardTitle className="text-red-900 dark:text-red-100">Lista de Usuarios</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Lista de Usuarios
+            </span>
+            <Badge variant="outline">
+              {pagination.total} usuarios
+            </Badge>
+          </CardTitle>
           <CardDescription>
-            Gestiona la información y permisos de todos los usuarios
+            Administra, edita y gestiona los permisos de los usuarios
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {users.length > 0 ? (
-              users.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between p-4 border rounded-lg border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    {/* Avatar */}
-                    <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
-                      {user.foto_perfil ? (
-                        <img
-                          src={user.foto_perfil}
-                          alt={`${user.nombre} ${user.apellidos}`}
-                          className="h-12 w-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-red-700 dark:text-red-300 font-medium">
-                          {getInitials(user.nombre, user.apellidos)}
-                        </span>
-                      )}
-                    </div>
+        <CardContent className="space-y-4">
+          {/* Barra de búsqueda */}
+          <SearchBar
+            onSearch={handleSearch}
+            onClear={handleClearSearch}
+            placeholder="Buscar usuarios por nombre, email o rol..."
+          />
 
-                    {/* User Info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">
-                          {user.nombre} {user.apellidos}
-                        </h3>
-                        {getRoleBadge(user.rol)}
-                        <Badge variant={user.activo ? 'default' : 'secondary'}>
-                          {user.activo ? 'Activo' : 'Inactivo'}
-                        </Badge>
-                      </div>
+          {/* Tabla de usuarios */}
+          <UserTable
+            users={users}
+            onUserUpdate={handleUserUpdate}
+            onUserDelete={handleUserDelete}
+            loading={isLoading}
+          />
 
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-4">
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {user.email}
-                          </span>
-                          {user.telefono && (
-                            <span className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {user.telefono}
-                            </span>
-                          )}
-                        </div>
-                        {(user.direccion || user.fecha_nacimiento) && (
-                          <div className="flex items-center gap-4">
-                            {user.direccion && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {user.direccion}
-                              </span>
-                            )}
-                            {user.fecha_nacimiento && (
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {formatDate(user.fecha_nacimiento)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditingUser(user)}
-                      className="text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-950"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleUserStatus(user.id, user.activo)}
-                      className={user.activo ?
-                        "text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-950" :
-                        "text-green-600 hover:bg-green-100 dark:hover:bg-green-950"
-                      }
-                    >
-                      {user.activo ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteUser(user.id)}
-                      className="text-red-600 hover:bg-red-100 dark:hover:bg-red-950"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No hay usuarios registrados</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Crea el primer usuario usando el botón "Nuevo Usuario"
-                </p>
+          {/* Paginación */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} de{' '}
+                {pagination.total} usuarios
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Add User Dialog */}
-      <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-red-900 dark:text-red-100">Nuevo Usuario</DialogTitle>
-            <DialogDescription>
-              Crea una nueva cuenta de usuario en el sistema
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="nombre">Nombre *</Label>
-                <Input
-                  id="nombre"
-                  value={newUser.nombre}
-                  onChange={(e) => setNewUser({...newUser, nombre: e.target.value})}
-                  className="border-red-200 dark:border-red-800"
-                  placeholder="Nombre"
-                />
-              </div>
-              <div>
-                <Label htmlFor="apellidos">Apellidos *</Label>
-                <Input
-                  id="apellidos"
-                  value={newUser.apellidos}
-                  onChange={(e) => setNewUser({...newUser, apellidos: e.target.value})}
-                  className="border-red-200 dark:border-red-800"
-                  placeholder="Apellidos"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                className="border-red-200 dark:border-red-800"
-                placeholder="usuario@example.com"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password">Contraseña *</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                  className="border-red-200 dark:border-red-800 pr-10"
-                  placeholder="Mínimo 6 caracteres"
-                />
+              <div className="flex items-center gap-2">
                 <Button
-                  type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  Anterior
+                </Button>
+                <span className="text-sm">
+                  Página {pagination.page} de {pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                >
+                  Siguiente
                 </Button>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="telefono">Teléfono</Label>
-                <Input
-                  id="telefono"
-                  value={newUser.telefono}
-                  onChange={(e) => setNewUser({...newUser, telefono: e.target.value})}
-                  className="border-red-200 dark:border-red-800"
-                  placeholder="666123456"
-                />
-              </div>
-              <div>
-                <Label htmlFor="fecha_nacimiento">Fecha Nacimiento</Label>
-                <Input
-                  id="fecha_nacimiento"
-                  type="date"
-                  value={newUser.fecha_nacimiento}
-                  onChange={(e) => setNewUser({...newUser, fecha_nacimiento: e.target.value})}
-                  className="border-red-200 dark:border-red-800"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="direccion">Dirección</Label>
-              <Input
-                id="direccion"
-                value={newUser.direccion}
-                onChange={(e) => setNewUser({...newUser, direccion: e.target.value})}
-                className="border-red-200 dark:border-red-800"
-                placeholder="Calle Principal 123"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="rol">Rol *</Label>
-              <Select value={newUser.rol} onValueChange={(value) => setNewUser({...newUser, rol: value})}>
-                <SelectTrigger className="border-red-200 dark:border-red-800">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="scouter">Scouter</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddUser(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={addUser}
-              disabled={isLoading || !newUser.email || !newUser.password || !newUser.nombre}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isLoading ? 'Creando...' : 'Crear Usuario'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
