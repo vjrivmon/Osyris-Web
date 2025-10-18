@@ -25,13 +25,17 @@ interface User {
 }
 
 interface UsersResponse {
-  users: User[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
+  success: boolean
+  data: {
+    users: User[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      totalPages: number
+    }
   }
+  message?: string
 }
 
 export default function AdminUsersPage() {
