@@ -19,7 +19,10 @@ import {
   Bell,
   Plus,
   RefreshCw,
-  BarChart3
+  BarChart3,
+  Clock,
+  Mail,
+  UserPlus
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getAuthToken, makeAuthenticatedRequest } from "@/lib/auth-utils"
@@ -67,6 +70,30 @@ interface User {
   fechaCreacion: string
 }
 
+interface ApiUser {
+  id: number
+  email: string
+  nombre: string
+  apellidos: string
+  rol: string
+  seccion_id?: number
+  ultimo_acceso?: string
+  fecha_registro: string
+  telefono?: string
+  direccion?: string
+}
+
+interface PendingUser {
+  id: number
+  email: string
+  nombre: string
+  apellidos: string
+  rol: string
+  seccion_id?: number
+  invitation_expires_at: string
+  fecha_registro: string
+}
+
 export default function AdminCRMDashboard() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
@@ -99,12 +126,15 @@ export default function AdminCRMDashboard() {
     totalPages: 0
   })
 
+  // Estado para usuarios pendientes
+  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([])
+  const [pendingUsersLoading, setPendingUsersLoading] = useState(false)
+
   // Filtros de búsqueda
   const [searchFilters, setSearchFilters] = useState({
     query: "",
     rol: "",
-    estado: "",
-    seccion: ""
+    seccion_id: ""
   })
 
   useEffect(() => {
@@ -120,7 +150,8 @@ export default function AdminCRMDashboard() {
         loadActivityData(),
         loadPopularPages(),
         loadAlerts(),
-        loadUsers()
+        loadUsers(),
+        loadPendingUsers()
       ])
     } catch (error) {
       console.error("Error loading dashboard data:", error)
@@ -211,13 +242,44 @@ export default function AdminCRMDashboard() {
 
       const response = await makeAuthenticatedRequest(`/api/admin/users?${params}`)
       if (response) {
-        setUsers(response.data.users)
+        // Mapear datos de la API a la interfaz del UserTable
+        const mappedUsers: User[] = response.data.users.map((apiUser: ApiUser) => ({
+          id: apiUser.id,
+          email: apiUser.email,
+          nombre: apiUser.nombre,
+          apellidos: apiUser.apellidos,
+          rol: apiUser.rol,
+          estado: "activo", // Todos los usuarios activos en el dashboard
+          seccion: apiUser.seccion_id ? `Sección ${apiUser.seccion_id}` : undefined,
+          ultimoAcceso: apiUser.ultimo_acceso,
+          fechaCreacion: apiUser.fecha_registro
+        }))
+
+        setUsers(mappedUsers)
         setUsersPagination(response.data.pagination)
       }
     } catch (error) {
       console.error("Error loading users:", error)
     } finally {
       setUsersLoading(false)
+    }
+  }
+
+  // Cargar usuarios pendientes
+  const loadPendingUsers = async () => {
+    setPendingUsersLoading(true)
+    try {
+      const token = getAuthToken()
+      if (!token) return
+
+      const response = await makeAuthenticatedRequest('/api/admin/users/pending')
+      if (response) {
+        setPendingUsers(response.data)
+      }
+    } catch (error) {
+      console.error("Error loading pending users:", error)
+    } finally {
+      setPendingUsersLoading(false)
     }
   }
 
@@ -233,8 +295,7 @@ export default function AdminCRMDashboard() {
     const clearedFilters = {
       query: "",
       rol: "",
-      estado: "",
-      seccion: ""
+      seccion_id: ""
     }
     setSearchFilters(clearedFilters)
     setUsersPagination(prev => ({ ...prev, page: 1 }))
@@ -263,6 +324,33 @@ export default function AdminCRMDashboard() {
   const handleUserDelete = (userId: number) => {
     setUsers(prev => prev.filter(user => user.id !== userId))
     loadMetrics()
+  }
+
+  // Reenviar invitación
+  const handleResendInvitation = async (userId: number) => {
+    try {
+      const token = getAuthToken()
+      if (!token) return
+
+      const response = await makeAuthenticatedRequest(`/api/admin/invitations/${userId}/resend`, {
+        method: 'POST'
+      })
+
+      if (response) {
+        toast({
+          title: "Invitación reenviada",
+          description: "Se ha enviado un nuevo correo de invitación",
+        })
+        loadPendingUsers()
+      }
+    } catch (error) {
+      console.error("Error resending invitation:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo reenviar la invitación",
+        variant: "destructive",
+      })
+    }
   }
 
   // Obtener icono para tipo de alerta
@@ -324,34 +412,36 @@ export default function AdminCRMDashboard() {
       </div>
 
       {/* Métricas principales */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <MetricsCard
           title="Total Usuarios"
           value={metrics.totalUsuarios}
           description="Usuarios registrados"
           icon={Users}
-          trend={{ value: 12.5, direction: "up" }}
         />
         <MetricsCard
           title="Usuarios Activos Hoy"
           value={metrics.usuariosActivosHoy}
           description="Últimas 24 horas"
           icon={Activity}
-          trend={{ value: 8.2, direction: "up" }}
         />
         <MetricsCard
           title="Actividades Totales"
           value={metrics.totalActividades}
           description="En el sistema"
           icon={BarChart3}
-          trend={{ value: 5.1, direction: "up" }}
         />
         <MetricsCard
           title="Engagement"
           value={`${metrics.engagementRate}%`}
           description="Usuarios activos semana"
           icon={TrendingUp}
-          trend={{ value: 2.3, direction: "up" }}
+        />
+        <MetricsCard
+          title="Invitaciones Pendientes"
+          value={pendingUsers.length}
+          description="Por completar registro"
+          icon={Mail}
         />
       </div>
 
@@ -394,6 +484,74 @@ export default function AdminCRMDashboard() {
 
         {/* Sidebar derecha - 1 columna */}
         <div className="space-y-6">
+          {/* Usuarios pendientes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Invitaciones Pendientes
+                </span>
+                <Badge variant={pendingUsers.length > 0 ? "secondary" : "outline"}>
+                  {pendingUsers.length}
+                </Badge>
+              </CardTitle>
+              <CardDescription>
+                Usuarios que deben completar su registro
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {pendingUsersLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                </div>
+              ) : pendingUsers.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No hay usuarios pendientes
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {pendingUsers.slice(0, 5).map((user) => (
+                    <div key={user.id} className="p-3 border rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {user.nombre} {user.apellidos}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {user.email}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {user.rol}
+                            </Badge>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {new Date(user.invitation_expires_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleResendInvitation(user.id)}
+                          className="ml-2"
+                        >
+                          <Mail className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {pendingUsers.length > 5 && (
+                    <p className="text-xs text-muted-foreground text-center pt-2">
+                      Y {pendingUsers.length - 5} más...
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Páginas más visitadas */}
           <Card>
             <CardHeader>

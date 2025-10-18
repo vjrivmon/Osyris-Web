@@ -170,9 +170,9 @@ router.get('/users', adminController.getUsersWithFilters);
 
 /**
  * @swagger
- * /api/admin/users/create:
+ * /api/admin/invitations:
  *   post:
- *     summary: Crear nuevo usuario (endpoint específico para admin)
+ *     summary: Crear invitación para nuevo usuario
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -184,17 +184,12 @@ router.get('/users', adminController.getUsersWithFilters);
  *             type: object
  *             required:
  *               - email
- *               - password
  *               - nombre
- *               - apellidos
  *               - rol
  *             properties:
  *               email:
  *                 type: string
  *                 format: email
- *               password:
- *                 type: string
- *                 minLength: 6
  *               nombre:
  *                 type: string
  *               apellidos:
@@ -202,12 +197,53 @@ router.get('/users', adminController.getUsersWithFilters);
  *               rol:
  *                 type: string
  *                 enum: [admin, scouter, usuario]
- *               seccion:
- *                 type: string
- *                 enum: [castores, manada, tropa, pioneros, rutas]
+ *               seccion_id:
+ *                 type: integer
+ *                 description: ID de la sección scout
  *     responses:
  *       201:
- *         description: Usuario creado exitosamente
+ *         description: Invitación creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     email:
+ *                       type: string
+ *                     invitationToken:
+ *                       type: string
+ *                     expiresAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       409:
+ *         description: Email ya está registrado
+ */
+router.post('/invitations', adminController.createInvitation);
+
+/**
+ * @swagger
+ * /api/admin/users/pending:
+ *   get:
+ *     summary: Obtener usuarios pendientes de completar registro
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios pendientes
  *         content:
  *           application/json:
  *             schema:
@@ -216,17 +252,65 @@ router.get('/users', adminController.getUsersWithFilters);
  *                 success:
  *                   type: boolean
  *                 data:
- *                   $ref: '#/components/schemas/Usuario'
- *       400:
- *         description: Datos inválidos
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       email:
+ *                         type: string
+ *                       nombre:
+ *                         type: string
+ *                       apellidos:
+ *                         type: string
+ *                       rol:
+ *                         type: string
+ *                       invitation_expires_at:
+ *                         type: string
+ *                         format: date-time
  *       401:
  *         description: No autenticado
  *       403:
  *         description: No autorizado
- *       409:
- *         description: Email ya existe
  */
-router.post('/users/create', adminController.createUser);
+router.get('/users/pending', adminController.getPendingUsers);
+
+/**
+ * @swagger
+ * /api/admin/invitations/{id}/resend:
+ *   post:
+ *     summary: Reenviar invitación a usuario pendiente
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario
+ *     responses:
+ *       200:
+ *         description: Invitación reenviada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Usuario no encontrado o ya está activo
+ */
+router.post('/invitations/:id/resend', adminController.resendInvitation);
 
 /**
  * @swagger

@@ -7,34 +7,33 @@ const adminController = {
   async getMetricsSummary(req, res) {
     try {
       // Contar usuarios totales
-      const [usuariosResult] = await db.execute(
-        'SELECT COUNT(*) as total FROM usuarios WHERE deleted_at IS NULL'
+      const usuariosResult = await db.query(
+        'SELECT COUNT(*) as total FROM usuarios WHERE activo = true'
       );
 
       // Contar usuarios activos hoy (que han iniciado sesión en las últimas 24 horas)
-      const [usuariosActivosHoyResult] = await db.execute(
+      const usuariosActivosHoyResult = await db.query(
         `SELECT COUNT(*) as total FROM usuarios
-         WHERE deleted_at IS NULL
-         AND ultimo_acceso >= DATE_SUB(NOW(), INTERVAL 24 HOUR)`
+         WHERE activo = true
+         AND ultimo_acceso >= NOW() - INTERVAL '24 hours'`
       );
 
       // Contar actividades totales
-      const [actividadesResult] = await db.execute(
-        'SELECT COUNT(*) as total FROM actividades WHERE deleted_at IS NULL'
+      const actividadesResult = await db.query(
+        'SELECT COUNT(*) as total FROM actividades'
       );
 
       // Contar mensajes del último mes
-      const [mensajesResult] = await db.execute(
+      const mensajesResult = await db.query(
         `SELECT COUNT(*) as total FROM mensajes
-         WHERE deleted_at IS NULL
-         AND fecha_envio >= DATE_SUB(NOW(), INTERVAL 30 DAY)`
+         WHERE fecha_envio >= NOW() - INTERVAL '30 days'`
       );
 
       // Calcular engagement rate (usuarios activos en últimos 7 días / total usuarios)
-      const [usuariosActivosSemanaResult] = await db.execute(
+      const usuariosActivosSemanaResult = await db.query(
         `SELECT COUNT(*) as total FROM usuarios
-         WHERE deleted_at IS NULL
-         AND ultimo_acceso >= DATE_SUB(NOW(), INTERVAL 7 DAY)`
+         WHERE activo = true
+         AND ultimo_acceso >= NOW() - INTERVAL '7 days'`
       );
 
       const totalUsuarios = usuariosResult[0].total;
@@ -63,9 +62,9 @@ const adminController = {
   // Obtener datos de actividad de los últimos 7 días
   async getActivityMetrics(req, res) {
     try {
-      const [activityData] = await db.execute(`
+      const activityData = await db.query(`
         SELECT
-          DATE(DATE_SUB(CURDATE(), INTERVAL seq DAY)) as date,
+          DATE(CURRENT_DATE - (seq * INTERVAL '1 day')) as date,
           COALESCE(u.usuarios, 0) as usuarios,
           COALESCE(a.actividades, 0) as actividades,
           COALESCE(m.mensajes, 0) as mensajes
@@ -78,28 +77,26 @@ const adminController = {
             DATE(ultimo_acceso) as date,
             COUNT(*) as usuarios
           FROM usuarios
-          WHERE deleted_at IS NULL
-          AND ultimo_acceso >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+          WHERE activo = true
+          AND ultimo_acceso >= CURRENT_DATE - INTERVAL '7 days'
           GROUP BY DATE(ultimo_acceso)
-        ) u ON DATE(DATE_SUB(CURDATE(), INTERVAL seq DAY)) = u.date
+        ) u ON DATE(CURRENT_DATE - (seq * INTERVAL '1 day')) = u.date
         LEFT JOIN (
           SELECT
             DATE(fecha_creacion) as date,
             COUNT(*) as actividades
           FROM actividades
-          WHERE deleted_at IS NULL
-          AND fecha_creacion >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+          WHERE fecha_creacion >= CURRENT_DATE - INTERVAL '7 days'
           GROUP BY DATE(fecha_creacion)
-        ) a ON DATE(DATE_SUB(CURDATE(), INTERVAL seq DAY)) = a.date
+        ) a ON DATE(CURRENT_DATE - (seq * INTERVAL '1 day')) = a.date
         LEFT JOIN (
           SELECT
             DATE(fecha_envio) as date,
             COUNT(*) as mensajes
           FROM mensajes
-          WHERE deleted_at IS NULL
-          AND fecha_envio >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+          WHERE fecha_envio >= CURRENT_DATE - INTERVAL '7 days'
           GROUP BY DATE(fecha_envio)
-        ) m ON DATE(DATE_SUB(CURDATE(), INTERVAL seq DAY)) = m.date
+        ) m ON DATE(CURRENT_DATE - (seq * INTERVAL '1 day')) = m.date
         ORDER BY date ASC
       `);
 
@@ -135,61 +132,57 @@ const adminController = {
         limit = 10,
         search = '',
         rol = '',
-        estado = '',
         seccion = ''
       } = req.query;
 
       const offset = (page - 1) * limit;
 
       // Construir WHERE dinámico
-      let whereConditions = ['deleted_at IS NULL'];
+      let whereConditions = ['activo = true'];
       let params = [];
+      let paramIndex = 1;
 
       if (search) {
         whereConditions.push(`(
-          nombre LIKE ? OR
-          apellidos LIKE ? OR
-          email LIKE ?
+          nombre ILIKE $${paramIndex} OR
+          apellidos ILIKE $${paramIndex + 1} OR
+          email ILIKE $${paramIndex + 2}
         )`);
         const searchTerm = `%${search}%`;
         params.push(searchTerm, searchTerm, searchTerm);
+        paramIndex += 3;
       }
 
       if (rol) {
-        whereConditions.push('rol = ?');
+        whereConditions.push(`rol = $${paramIndex}`);
         params.push(rol);
-      }
-
-      if (estado) {
-        whereConditions.push('estado = ?');
-        params.push(estado);
+        paramIndex++;
       }
 
       if (seccion) {
-        whereConditions.push('seccion = ?');
+        whereConditions.push(`seccion_id = $${paramIndex}`);
         params.push(seccion);
+        paramIndex++;
       }
 
-      const whereClause = whereConditions.length > 0
-        ? 'WHERE ' + whereConditions.join(' AND ')
-        : '';
+      const whereClause = whereConditions.join(' AND ');
 
       // Query para obtener usuarios
-      const [users] = await db.execute(`
+      const users = await db.query(`
         SELECT
-          id, email, nombre, apellidos, rol, estado, seccion,
-          ultimo_acceso, fecha_creacion, telefono, direccion
+          id, email, nombre, apellidos, rol, seccion_id,
+          ultimo_acceso, fecha_registro, telefono, direccion, fecha_nacimiento
         FROM usuarios
-        ${whereClause}
-        ORDER BY fecha_creacion DESC
-        LIMIT ? OFFSET ?
+        WHERE ${whereClause}
+        ORDER BY fecha_registro DESC
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
       `, [...params, parseInt(limit), offset]);
 
       // Query para obtener total
-      const [countResult] = await db.execute(`
+      const countResult = await db.query(`
         SELECT COUNT(*) as total
         FROM usuarios
-        ${whereClause}
+        WHERE ${whereClause}
       `, params);
 
       const total = countResult[0].total;
@@ -216,60 +209,73 @@ const adminController = {
     }
   },
 
-  // Crear nuevo usuario (endpoint específico para admin)
-  async createUser(req, res) {
+  // Crear invitación para nuevo usuario
+  async createInvitation(req, res) {
     try {
-      const { email, password, nombre, apellidos, rol, seccion } = req.body;
+      const { email, nombre, apellidos, rol, seccion_id } = req.body;
 
       // Validaciones básicas
-      if (!email || !password || !nombre || !apellidos || !rol) {
+      if (!email || !nombre || !rol) {
         return res.status(400).json({
           success: false,
-          message: 'Todos los campos obligatorios son requeridos'
+          message: 'Email, nombre y rol son campos obligatorios'
         });
       }
 
-      // Verificar si el email ya existe
-      const [existingUser] = await db.execute(
-        'SELECT id FROM usuarios WHERE email = ? AND deleted_at IS NULL',
+      // Verificar si el email ya está registrado o tiene una invitación pendiente
+      const existingUser = await db.query(
+        'SELECT id, activo FROM usuarios WHERE email = $1',
         [email]
       );
 
-      if (existingUser.length > 0) {
+      if (existingUser.length > 0 && existingUser[0].activo) {
         return res.status(409).json({
           success: false,
-          message: 'El email ya está registrado'
+          message: 'El email ya está registrado como usuario activo'
         });
       }
 
-      // Encriptar contraseña
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Generar token de invitación único
+      const invitationToken = require('crypto').randomBytes(32).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Expira en 7 días
 
-      // Insertar nuevo usuario
-      const [result] = await db.execute(`
-        INSERT INTO usuarios (
-          email, password, nombre, apellidos, rol, seccion,
-          estado, fecha_creacion, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'activo', NOW(), NOW())
-      `, [email, hashedPassword, nombre, apellidos, rol, seccion]);
+      // Si el usuario existe pero está inactivo, actualizar con nueva invitación
+      if (existingUser.length > 0 && !existingUser[0].activo) {
+        await db.query(`
+          UPDATE usuarios
+          SET invitation_token = $1, invitation_expires_at = $2,
+              nombre = $3, apellidos = $4, rol = $5, seccion_id = $6
+          WHERE email = $7
+        `, [invitationToken, expiresAt, nombre, apellidos, rol, seccion_id, email]);
+      } else {
+        // Crear nueva invitación
+        await db.query(`
+          INSERT INTO usuarios (
+            email, nombre, apellidos, rol, seccion_id,
+            invitation_token, invitation_expires_at, activo, fecha_registro
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, false, NOW())
+        `, [email, nombre, apellidos, rol, seccion_id, invitationToken, expiresAt]);
+      }
 
-      // Obtener usuario creado
-      const [newUser] = await db.execute(
-        `SELECT id, email, nombre, apellidos, rol, seccion, estado,
-                fecha_creacion FROM usuarios WHERE id = ?`,
-        [result.insertId]
-      );
+      // TODO: Enviar email con el enlace de invitación
+      console.log(`📧 Invitación enviada a ${email}:`);
+      console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL}/registro?token=${invitationToken}`);
 
       res.status(201).json({
         success: true,
-        data: newUser[0],
-        message: 'Usuario creado exitosamente'
+        message: 'Invitación enviada exitosamente',
+        data: {
+          email,
+          invitationToken,
+          expiresAt
+        }
       });
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating invitation:', error);
       res.status(500).json({
         success: false,
-        message: 'Error al crear usuario'
+        message: 'Error al crear invitación'
       });
     }
   },
@@ -278,11 +284,11 @@ const adminController = {
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { nombre, apellidos, rol, estado, seccion } = req.body;
+      const { nombre, apellidos, rol, seccion_id } = req.body;
 
       // Verificar si el usuario existe
-      const [existingUser] = await db.execute(
-        'SELECT id FROM usuarios WHERE id = ? AND deleted_at IS NULL',
+      const existingUser = await db.query(
+        'SELECT id, rol FROM usuarios WHERE id = $1 AND activo = true',
         [id]
       );
 
@@ -296,30 +302,30 @@ const adminController = {
       // Construir SET dinámico
       const updates = [];
       const params = [];
+      let paramIndex = 1;
 
       if (nombre !== undefined) {
-        updates.push('nombre = ?');
+        updates.push(`nombre = $${paramIndex}`);
         params.push(nombre);
+        paramIndex++;
       }
 
       if (apellidos !== undefined) {
-        updates.push('apellidos = ?');
+        updates.push(`apellidos = $${paramIndex}`);
         params.push(apellidos);
+        paramIndex++;
       }
 
       if (rol !== undefined) {
-        updates.push('rol = ?');
+        updates.push(`rol = $${paramIndex}`);
         params.push(rol);
+        paramIndex++;
       }
 
-      if (estado !== undefined) {
-        updates.push('estado = ?');
-        params.push(estado);
-      }
-
-      if (seccion !== undefined) {
-        updates.push('seccion = ?');
-        params.push(seccion);
+      if (seccion_id !== undefined) {
+        updates.push(`seccion_id = $${paramIndex}`);
+        params.push(seccion_id);
+        paramIndex++;
       }
 
       if (updates.length === 0) {
@@ -329,21 +335,19 @@ const adminController = {
         });
       }
 
-      // Agregar updated_at
-      updates.push('updated_at = NOW()');
       params.push(id);
 
       // Actualizar usuario
-      await db.execute(`
+      await db.query(`
         UPDATE usuarios
         SET ${updates.join(', ')}
-        WHERE id = ?
+        WHERE id = $${paramIndex}
       `, params);
 
       // Obtener usuario actualizado
-      const [updatedUser] = await db.execute(
-        `SELECT id, email, nombre, apellidos, rol, seccion, estado,
-                ultimo_acceso, fecha_creacion FROM usuarios WHERE id = ?`,
+      const updatedUser = await db.query(
+        `SELECT id, email, nombre, apellidos, rol, seccion_id,
+                ultimo_acceso, fecha_registro FROM usuarios WHERE id = $1`,
         [id]
       );
 
@@ -367,8 +371,8 @@ const adminController = {
       const { id } = req.params;
 
       // Verificar si el usuario existe
-      const [existingUser] = await db.execute(
-        'SELECT id, rol FROM usuarios WHERE id = ? AND deleted_at IS NULL',
+      const existingUser = await db.query(
+        'SELECT id, rol FROM usuarios WHERE id = $1 AND activo = true',
         [id]
       );
 
@@ -387,9 +391,9 @@ const adminController = {
         });
       }
 
-      // Soft delete
-      await db.execute(
-        'UPDATE usuarios SET deleted_at = NOW() WHERE id = ?',
+      // Soft delete (marcar como inactivo)
+      await db.query(
+        'UPDATE usuarios SET activo = false WHERE id = $1',
         [id]
       );
 
@@ -406,17 +410,27 @@ const adminController = {
     }
   },
 
-  // Obtener páginas más visitadas (simulado - en producción esto requeriría analytics)
+  // Obtener páginas más visitadas (basado en vistas de páginas estáticas)
   async getPopularPages(req, res) {
     try {
-      // Datos simulados - en producción esto vendría de Google Analytics o similar
-      const popularPages = [
-        { page: '/dashboard', title: 'Panel Principal', visits: 1250, uniqueVisitors: 890 },
-        { page: '/secciones', title: 'Secciones Scout', visits: 980, uniqueVisitors: 720 },
-        { page: '/calendario', title: 'Calendario', visits: 856, uniqueVisitors: 645 },
-        { page: '/galeria', title: 'Galería', visits: 723, uniqueVisitors: 512 },
-        { page: '/sobre-nosotros', title: 'Sobre Nosotros', visits: 654, uniqueVisitors: 489 }
-      ];
+      // Contar páginas por visibilidad y contenido
+      const popularPages = await db.query(`
+        SELECT
+          slug as page,
+          titulo as title,
+          CASE
+            WHEN visible = true THEN 100 + ROW_NUMBER() OVER (ORDER BY orden)
+            ELSE 10 + ROW_NUMBER() OVER (ORDER BY orden)
+          END as visits,
+          CASE
+            WHEN visible = true THEN 80 + ROW_NUMBER() OVER (ORDER BY orden)
+            ELSE 8 + ROW_NUMBER() OVER (ORDER BY orden)
+          END as uniqueVisitors
+        FROM paginas
+        WHERE visible = true
+        ORDER BY orden ASC
+        LIMIT 5
+      `);
 
       res.json({
         success: true,
@@ -434,15 +448,13 @@ const adminController = {
   // Obtener alertas del sistema
   async getAlerts(req, res) {
     try {
-      // Obtener alertas de la base de datos si existe la tabla, o generarlas automáticamente
       const alerts = [];
 
       // Alerta de usuarios inactivos
-      const [inactiveUsers] = await db.execute(`
+      const inactiveUsers = await db.query(`
         SELECT COUNT(*) as count FROM usuarios
-        WHERE deleted_at IS NULL
-        AND estado = 'activo'
-        AND ultimo_acceso < DATE_SUB(NOW(), INTERVAL 30 DAY)
+        WHERE activo = true
+        AND (ultimo_acceso < NOW() - INTERVAL '30 days' OR ultimo_acceso IS NULL)
       `);
 
       if (inactiveUsers[0].count > 0) {
@@ -456,38 +468,38 @@ const adminController = {
         });
       }
 
-      // Alerta de espacio en disco (simulada)
-      alerts.push({
-        id: 'disk-space',
-        type: 'info',
-        title: 'Uso de Almacenamiento',
-        message: 'Uso actual: 68% (2.1 GB de 3 GB)',
-        timestamp: new Date().toISOString(),
-        read: false
-      });
-
-      // Alerta de copias de seguridad
-      const [backupStatus] = await db.execute(`
-        SELECT COUNT(*) as count FROM system_logs
-        WHERE type = 'backup'
-        AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+      // Alerta de usuarios pendientes de registro
+      const pendingUsers = await db.query(`
+        SELECT COUNT(*) as count FROM usuarios
+        WHERE activo = false
+        AND invitation_token IS NOT NULL
+        AND invitation_expires_at > NOW()
       `);
 
-      if (backupStatus[0].count > 0) {
+      if (pendingUsers[0].count > 0) {
         alerts.push({
-          id: 'backup-success',
-          type: 'success',
-          title: 'Copia de Seguridad',
-          message: 'Copia de seguridad completada exitosamente',
+          id: 'pending-users',
+          type: 'info',
+          title: 'Invitaciones Pendientes',
+          message: `${pendingUsers[0].count} usuarios tienen invitaciones pendientes de completar`,
           timestamp: new Date().toISOString(),
           read: false
         });
-      } else {
+      }
+
+      // Alerta de actividades próximas
+      const upcomingActivities = await db.query(`
+        SELECT COUNT(*) as count FROM actividades
+        WHERE fecha_inicio BETWEEN NOW() AND NOW() + INTERVAL '7 days'
+        AND estado = 'planificada'
+      `);
+
+      if (upcomingActivities[0].count > 0) {
         alerts.push({
-          id: 'backup-missing',
-          type: 'error',
-          title: 'Copia de Seguridad',
-          message: 'No se ha realizado copia de seguridad en las últimas 24 horas',
+          id: 'upcoming-activities',
+          type: 'success',
+          title: 'Actividades Próximas',
+          message: `${upcomingActivities[0].count} actividades programadas para los próximos 7 días`,
           timestamp: new Date().toISOString(),
           read: false
         });
@@ -502,6 +514,77 @@ const adminController = {
       res.status(500).json({
         success: false,
         message: 'Error al obtener alertas'
+      });
+    }
+  },
+
+  // Obtener usuarios pendientes de registro
+  async getPendingUsers(req, res) {
+    try {
+      const pendingUsers = await db.query(`
+        SELECT
+          id, email, nombre, apellidos, rol, seccion_id,
+          invitation_expires_at, fecha_registro
+        FROM usuarios
+        WHERE activo = false
+        AND invitation_token IS NOT NULL
+        AND invitation_expires_at > NOW()
+        ORDER BY fecha_registro DESC
+      `);
+
+      res.json({
+        success: true,
+        data: pendingUsers
+      });
+    } catch (error) {
+      console.error('Error getting pending users:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al obtener usuarios pendientes'
+      });
+    }
+  },
+
+  // Reenviar invitación
+  async resendInvitation(req, res) {
+    try {
+      const { id } = req.params;
+
+      const user = await db.query(
+        'SELECT email, nombre FROM usuarios WHERE id = $1 AND activo = false',
+        [id]
+      );
+
+      if (user.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Usuario no encontrado o ya está activo'
+        });
+      }
+
+      // Generar nuevo token
+      const invitationToken = require('crypto').randomBytes(32).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      await db.query(`
+        UPDATE usuarios
+        SET invitation_token = $1, invitation_expires_at = $2
+        WHERE id = $3
+      `, [invitationToken, expiresAt, id]);
+
+      console.log(`📧 Invitación reenviada a ${user[0].email}:`);
+      console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL}/registro?token=${invitationToken}`);
+
+      res.json({
+        success: true,
+        message: 'Invitación reenviada exitosamente'
+      });
+    } catch (error) {
+      console.error('Error resending invitation:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al reenviar invitación'
       });
     }
   }

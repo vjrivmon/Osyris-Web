@@ -24,45 +24,48 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, UserPlus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-interface NewUser {
+interface NewInvitation {
   email: string
-  password: string
   nombre: string
   apellidos: string
-  rol: "admin" | "scouter" | "usuario"
+  rol: "admin" | "scouter"
+  seccion_id?: number
 }
 
 interface QuickAddModalProps {
-  onUserAdded?: (user: NewUser) => void
+  onUserAdded?: (user: NewInvitation) => void
   trigger?: React.ReactNode
 }
 
 export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState<NewUser>({
+  const [formData, setFormData] = useState<NewInvitation>({
     email: "",
-    password: "",
     nombre: "",
     apellidos: "",
-    rol: "scouter"
+    rol: "scouter",
+    seccion_id: undefined
   })
-  const [errors, setErrors] = useState<Partial<NewUser>>({})
+  const [errors, setErrors] = useState<Partial<NewInvitation>>({})
+
+  // Secciones disponibles
+  const secciones = [
+    { id: 1, nombre: "Castores" },
+    { id: 2, nombre: "Lobatos" },
+    { id: 3, nombre: "Tropa" },
+    { id: 4, nombre: "Pioneros" },
+    { id: 5, nombre: "Rutas" }
+  ]
   const { toast } = useToast()
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<NewUser> = {}
+    const newErrors: Partial<NewInvitation> = {}
 
     if (!formData.email) {
       newErrors.email = "El email es obligatorio"
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email inválido"
-    }
-
-    if (!formData.password) {
-      newErrors.password = "La contraseña es obligatoria"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Mínimo 6 caracteres"
     }
 
     if (!formData.nombre) {
@@ -88,7 +91,7 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch("/api/admin/users/create", {
+      const response = await fetch("/api/admin/invitations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,17 +104,17 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
 
       if (result.success) {
         toast({
-          title: "Usuario creado",
-          description: `${formData.nombre} ${formData.apellidos} ha sido agregado exitosamente.`,
+          title: "Invitación enviada",
+          description: `Se ha enviado una invitación a ${formData.email}. El usuario deberá completar su registro.`,
         })
 
         // Reset form
         setFormData({
           email: "",
-          password: "",
           nombre: "",
           apellidos: "",
-          rol: "scouter"
+          rol: "scouter",
+          seccion_id: undefined
         })
         setErrors({})
 
@@ -123,15 +126,15 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
       } else {
         toast({
           title: "Error",
-          description: result.message || "No se pudo crear el usuario",
+          description: result.message || "No se pudo enviar la invitación",
           variant: "destructive",
         })
       }
     } catch (error) {
-      console.error("Error creating user:", error)
+      console.error("Error creating invitation:", error)
       toast({
         title: "Error",
-        description: "Ocurrió un error al crear el usuario",
+        description: "Ocurrió un error al enviar la invitación",
         variant: "destructive",
       })
     } finally {
@@ -139,7 +142,7 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
     }
   }
 
-  const handleInputChange = (field: keyof NewUser, value: string) => {
+  const handleInputChange = (field: keyof NewInvitation, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
@@ -150,7 +153,7 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
   const defaultTrigger = (
     <Button className="bg-green-600 hover:bg-green-700">
       <UserPlus className="h-4 w-4 mr-2" />
-      Agregar Usuario
+      Enviar Invitación
     </Button>
   )
 
@@ -164,10 +167,10 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Agregar Nuevo Usuario
+              Enviar Invitación
             </DialogTitle>
             <DialogDescription>
-              Crea un nuevo usuario para el sistema de gestión Osyris.
+              Envía una invitación por correo para que un nuevo usuario complete su registro.
             </DialogDescription>
           </DialogHeader>
 
@@ -218,21 +221,6 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange("password", e.target.value)}
-                className={errors.password ? "border-red-500" : ""}
-                placeholder="Mínimo 6 caracteres"
-              />
-              {errors.password && (
-                <p className="text-xs text-red-500">{errors.password}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="rol">Rol *</Label>
               <Select
                 value={formData.rol}
@@ -254,15 +242,30 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
                       <span>Monitor/Coordinador</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="usuario">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">Usuario</Badge>
-                      <span>Acceso limitado</span>
-                    </div>
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {formData.rol === "scouter" && (
+              <div className="space-y-2">
+                <Label htmlFor="seccion">Sección Scout</Label>
+                <Select
+                  value={formData.seccion_id?.toString() || ""}
+                  onValueChange={(value: string) => handleInputChange("seccion_id", value ? parseInt(value) : undefined)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una sección (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {secciones.map((seccion) => (
+                      <SelectItem key={seccion.id} value={seccion.id.toString()}>
+                        {seccion.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -275,7 +278,7 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creando..." : "Crear Usuario"}
+              {isLoading ? "Enviando..." : "Enviar Invitación"}
             </Button>
           </DialogFooter>
         </form>

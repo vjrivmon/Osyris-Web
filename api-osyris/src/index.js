@@ -24,6 +24,7 @@ const uploadRoutes = require('./routes/upload.routes');
 const paginasRoutes = require('./routes/paginas.routes');
 const contentRoutes = require('./routes/content.routes');
 const adminRoutes = require('./routes/admin.routes');
+const registrationRoutes = require('./routes/registration.routes');
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
 
 // Inicialización de Express
@@ -84,6 +85,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', registrationRoutes); // Nuevas rutas de registro
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/secciones', seccionesRoutes);
 app.use('/api/actividades', actividadesRoutes);
