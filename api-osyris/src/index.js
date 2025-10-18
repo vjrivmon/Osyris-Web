@@ -6,6 +6,9 @@ const fileUpload = require('express-fileupload');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 
+// 🚀 CONFIGURACIÓN DE VARIABLES DE ENTORNO (PRIMERO)
+dotenv.config();
+
 // 🐘 CONFIGURACIÓN POSTGRESQL
 const db = require('./config/db.config');
 
@@ -22,9 +25,6 @@ const paginasRoutes = require('./routes/paginas.routes');
 const contentRoutes = require('./routes/content.routes');
 const adminRoutes = require('./routes/admin.routes');
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
-
-// Configuración de variables de entorno
-dotenv.config();
 
 // Inicialización de Express
 const app = express();
