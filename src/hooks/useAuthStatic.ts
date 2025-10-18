@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { getApiUrl } from '@/lib/api-utils'
 
 interface User {
   id: number
@@ -79,9 +80,9 @@ export function useAuthStatic(): AuthContextType {
   const login = async (email: string, password: string): Promise<boolean> => {
     if (typeof window === 'undefined') return false
 
-    // Simulación de login - en producción esto haría una llamada API real
+    // Login dinámico usando getApiUrl() para producción/desarrollo
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${getApiUrl()}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +133,7 @@ export function useAuthStatic(): AuthContextType {
     if (!token) return
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify', {
+      const response = await fetch(`${getApiUrl()}/api/auth/verify`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

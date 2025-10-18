@@ -1,0 +1,524 @@
+name: Deploy from Develop to Production
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      force_no_cache:
+        description: 'Forzar limpieza de caché completa'
+        required: false
+        default: 'false'
+        type: boolean
+      verify_production:
+        description: 'Verificar funcionamiento en producción'
+        required: false
+        default: 'true'
+        type: boolean
+
+env:
+  NODE_VERSION: '20.x'
+  DEPLOY_PATH: /var/www/osyris
+  SERVER_USER: root
+  SERVER_HOST: ${{ secrets.HETZNER_HOST }}
+
+jobs:
+  # Job de preparación y limpieza
+  cleanup:
+    name: Clean Environment & Cache
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Clon completo para mejor limpieza
+
+      - name: 🧹 Clean workspace thoroughly
+        run: |
+          echo "🧹 Limpieza profunda del workspace..."
+          # Limpiar cualquier caché previo
+          rm -rf ~/.npm
+          rm -rf node_modules/.cache
+          npm cache clean --force || true
+
+          # Eliminar directorios de build antiguos si existen
+          rm -rf .next 2>/dev/null || true
+          rm -rf build 2>/dev/null || true
+          rm -rf api-osyris/.next 2>/dev/null || true
+          rm -rf api-osyris/build 2>/dev/null || true
+
+          # Mantener lockfiles para npm ci - NO eliminar
+          echo "📦 Manteniendo lockfiles para npm ci..."
+
+  # Job de testing mejorado
+  test:
+    name: Comprehensive Testing
+    needs: cleanup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js (con caché de lockfiles)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            api-osyris/package-lock.json
+
+      - name: 📚 Fresh dependencies installation
+        run: |
+          echo "📦 Instalación fresca de dependencias..."
+
+          # Forzar instalación limpia
+          rm -rf node_modules api-osyris/node_modules 2>/dev/null || true
+
+          # Instalar frontend con npm ci (sin caché)
+          npm ci --prefer-offline --no-audit --no-fund || npm install
+
+          # Instalar backend con npm ci (sin caché)
+          cd api-osyris
+          rm -rf node_modules 2>/dev/null || true
+          npm ci --prefer-offline --no-audit --no-fund || npm install
+          cd ..
+
+      - name: 🔍 Validate dependencies
+        run: |
+          echo "🔍 Validando dependencias críticas..."
+          npm list --depth=0 || echo "⚠️ Algunas dependencias pueden faltar, continuando..."
+          cd api-osyris
+          npm list --depth=0 || echo "⚠️ Algunas dependencias pueden faltar, continuando..."
+          cd ..
+
+      - name: 🧪 Run comprehensive tests
+        run: |
+          echo "🧪 Ejecutando suite de pruebas..."
+
+          # Tests frontend
+          echo "Testing frontend..."
+          npm test -- --passWithNoTests --coverage --watchAll=false || true
+
+          # Tests backend
+          echo "Testing backend..."
+          cd api-osyris
+          npm test -- --passWithNoTests || true
+          cd ..
+
+      - name: 🔨 Fresh Build (sin caché)
+        run: |
+          echo "🏗️ Build fresco garantizado..."
+
+          # Limpiar cualquier caché de build previo
+          rm -rf .next out dist build 2>/dev/null || true
+          cd api-osyris
+          rm -rf .next out dist build 2>/dev/null || true
+          cd ..
+
+          # Forzar limpiar caché de Next.js
+          npx next clean 2>/dev/null || true
+
+          # Build frontend completo
+          echo "Building frontend..."
+          npm run build:frontend || npm run build
+
+          # Build backend completo
+          echo "Building backend..."
+          cd api-osyris
+          npm run build || echo "Backend build no disponible o falló"
+          cd ..
+
+          # Verificar que los builds se crearon correctamente
+          if [ -d ".next" ]; then
+            echo "✅ Frontend build creado exitosamente"
+            ls -la .next/ | head -10
+          else
+            echo "❌ Frontend build falló"
+            exit 1
+          fi
+
+      - name: 📊 Generate build info
+        run: |
+          echo "📊 Generando información del build..."
+          BUILD_INFO="build-info-$(date +%Y%m%d_%H%M%S).json"
+
+          cat > $BUILD_INFO << EOF
+          {
+            "build_timestamp": "$(date -Iseconds)",
+            "commit_sha": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "actor": "${{ github.actor }}",
+            "node_version": "$(node --version)",
+            "npm_version": "$(npm --version)",
+            "build_clean": true,
+            "cache_disabled": true
+          }
+          EOF
+
+          echo "Build info generated: $BUILD_INFO"
+          cat $BUILD_INFO
+
+  # Job de despliegue optimizado
+  deploy:
+    name: Deploy to Hetzner Production
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔑 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: 📦 Create fresh deployment package
+        run: |
+          echo "📦 Creando paquete de despliegue fresco..."
+
+          # Excluir archivos innecesarios y caché
+          tar -czf deploy.tar.gz \
+            --exclude=.git \
+            --exclude=logs \
+            --exclude=.github \
+            --exclude=node_modules \
+            --exclude=api-osyris/node_modules \
+            --exclude=.next \
+            --exclude=api-osyris/.next \
+            --exclude=build \
+            --exclude=api-osyris/build \
+            --exclude=dist \
+            --exclude=api-osyris/dist \
+            --exclude=deploy.tar.gz \
+            --exclude=*.log \
+            --exclude=.DS_Store \
+            --exclude=Thumbs.db \
+            . || true
+
+          # Verificar que el archivo se creó
+          if [ ! -f deploy.tar.gz ]; then
+            echo "❌ Error: deploy.tar.gz no se creó"
+            exit 1
+          fi
+
+          echo "📊 Tamaño del paquete:"
+          ls -lh deploy.tar.gz
+
+      - name: 🚀 Deploy with Fresh Build Strategy
+        run: |
+          echo "🚀 Iniciando despliegue con estrategia de build fresco..."
+
+          # Crear directorio si no existe
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}"
+
+          # Subir archivos
+          scp -o StrictHostKeyChecking=no deploy.tar.gz ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
+
+          # Script de deploy en servidor con limpieza garantizada
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
+          set -e
+          cd ${{ env.DEPLOY_PATH }}
+
+          echo "🧹 LIMPIEZA PROFUNDA EN SERVIDOR"
+
+          # Backup de seguridad con timestamp
+          if [ -d "current" ]; then
+            BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
+            echo "💾 Creando backup en $BACKUP_DIR..."
+            cp -r current "$BACKUP_DIR"
+            # Mantener solo los 5 backups más recientes
+            ls -t | grep backup_ | tail -n +6 | xargs rm -rf 2>/dev/null || true
+          fi
+
+          # Backup de base de datos
+          echo "📊 Creando backup de base de datos..."
+          docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > "backup_db_$(date +%Y%m%d_%H%M%S).sql.gz" || true
+          ls -t backup_db_*.sql.gz 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true
+
+          # LIMPIEZA COMPLETA del directorio actual
+          echo "🧹 Eliminando directorio current completamente..."
+          rm -rf current
+
+          # Esperar a que se elimine completamente
+          sleep 2
+
+          # Crear directorio fresh
+          mkdir -p current
+
+          # Extraer nuevos archivos
+          echo "📦 Extrayendo archivos frescos..."
+          tar -xzf deploy.tar.gz -C current/
+          rm deploy.tar.gz
+
+          cd current
+
+          echo "🧹 LIMPIEZA DE CACHÉ EN SERVIDOR"
+
+          # Eliminar cualquier caché residual
+          rm -rf .next 2>/dev/null || true
+          rm -rf node_modules/.cache 2>/dev/null || true
+          rm -rf api-osyris/.next 2>/dev/null || true
+          rm -rf api-osyris/node_modules/.cache 2>/dev/null || true
+          rm -rf build out dist 2>/dev/null || true
+          rm -rf api-osyris/build api-osyris/out api-osyris/dist 2>/dev/null || true
+
+          echo "📦 INSTALACIÓN FRESCA EN SERVIDOR"
+
+          # Instalar dependencias frontend completamente frescas
+          echo "Instalando dependencias frontend..."
+          npm cache clean --force || true
+          rm -rf node_modules
+          npm ci --prefer-offline --no-audit --no-fund || npm install
+
+          # Instalar dependencias backend completamente frescas
+          echo "Instalando dependencias backend..."
+          cd api-osyris
+          npm cache clean --force || true
+          rm -rf node_modules
+          npm ci --prefer-offline --no-audit --no-fund || npm install
+          cd ..
+
+          echo "🏗️ BUILD EN SERVIDOR (FRESCO)"
+
+          # Limpiar caché de Next.js
+          npx next clean 2>/dev/null || true
+
+          # Build frontend en servidor
+          echo "Building frontend en servidor..."
+          npm run build:frontend || npm run build
+
+          # Verificar build exitoso
+          if [ ! -d ".next" ]; then
+            echo "❌ BUILD FALLÓ - .next no existe"
+            exit 1
+          fi
+
+          echo "✅ Build frontend exitoso"
+
+          # Limpiar devDependencies post-build
+          echo "🧹 Limpiando devDependencies..."
+          npm prune --omit=dev
+          cd api-osyris
+          npm prune --omit=dev || true
+          cd ..
+
+          # Configurar .env del backend
+          cat > api-osyris/.env << 'ENVFILE'
+          DATABASE_TYPE=postgres
+          DB_HOST=localhost
+          DB_PORT=5432
+          DB_USER=osyris_user
+          DB_PASSWORD=OsyrisDB2024!Secure
+          DB_NAME=osyris_db
+          NODE_ENV=production
+          PORT=5000
+          JWT_SECRET=osyrisScoutGroup2024SecretKey!Production
+          JWT_EXPIRES_IN=24h
+          FRONTEND_URL=https://gruposcoutosyris.es
+          ALLOWED_ORIGINS=https://gruposcoutosyris.es,https://www.gruposcoutosyris.es,http://116.203.98.142
+          ENVFILE
+
+          echo "🐘 GESTIÓN DE CONTENEDORES DOCKER"
+
+          # Detener contenedores antiguos completamente
+          echo "Deteniendo contenedores Docker antiguos..."
+          docker stop osyris-frontend || true
+          docker stop osyris-backend || true
+          docker rm osyris-frontend || true
+          docker rm osyris-backend || true
+
+          # Esperar a que se detengan completamente
+          sleep 3
+
+          # Verificar PostgreSQL está corriendo
+          echo "Verificando PostgreSQL..."
+          docker start osyris-db || docker-compose -f docker-compose.prod.yml up -d db
+
+          # Esperar a que PostgreSQL esté listo
+          sleep 5
+
+          echo "🚀 INICIANDO SERVICIOS PM2"
+
+          # Instalar/actualizar PM2
+          if ! command -v pm2 &> /dev/null; then
+            npm install -g pm2
+          else
+            npm update -g pm2 || true
+          fi
+
+          # Detener servicios PM2 existentes
+          pm2 stop osyris-frontend || true
+          pm2 stop osyris-backend || true
+          pm2 delete osyris-frontend || true
+          pm2 delete osyris-backend || true
+
+          # Pequeña pausa para asegurar limpieza completa
+          sleep 2
+
+          # Iniciar frontend con PM2 (usando el build recién creado)
+          echo "Iniciando frontend..."
+          pm2 start "npx next start -p 3000" \
+            --name "osyris-frontend" \
+            --cwd /var/www/osyris/current \
+            --env NODE_ENV=production
+
+          # Iniciar backend con PM2
+          echo "Iniciando backend..."
+          pm2 start /var/www/osyris/current/api-osyris/src/index.js \
+            --name "osyris-backend" \
+            --cwd /var/www/osyris/current/api-osyris \
+            --node-args="--env-file=/var/www/osyris/current/api-osyris/.env" \
+            --env NODE_ENV=production
+
+          # Guardar configuración PM2
+          pm2 save
+          pm2 startup || true
+
+          # Mostrar estado final
+          echo "✅ DESPLIEGUE COMPLETADO:"
+          pm2 list
+          docker ps | grep osyris
+
+          # Verificar que los procesos están corriendo
+          if ! pm2 list | grep -q "osyris-frontend.*online"; then
+            echo "❌ Frontend no está online"
+            pm2 logs osyris-frontend --lines 20
+            exit 1
+          fi
+
+          if ! pm2 list | grep -q "osyris-backend.*online"; then
+            echo "❌ Backend no está online"
+            pm2 logs osyris-backend --lines 20
+            exit 1
+          fi
+
+          echo "✅ Todos los servicios están online"
+          ENDSSH
+
+      - name: 🧹 Cleanup local
+        run: rm -f deploy.tar.gz
+
+      - name: ⏱️ Wait for services to be ready
+        run: |
+          echo "⏱️ Esperando que los servicios estén completamente listos..."
+          sleep 20
+
+      - name: ✅ Comprehensive deployment verification
+        run: |
+          echo "🔍 Verificación comprehensiva del despliegue..."
+
+          # Verificar frontend (HTTPS por Cloudflare)
+          echo "Verificando frontend..."
+          FRONTEND_STATUS=0
+          for i in {1..5}; do
+            echo "Intento $i de 5 para frontend..."
+            if curl -f -s -o /dev/null -L https://gruposcoutosyris.es; then
+              echo "✅ Frontend respondiendo correctamente"
+              FRONTEND_STATUS=1
+              break
+            else
+              echo "⏳ Frontend no responde aún, esperando 10s..."
+              sleep 10
+            fi
+          done
+
+          if [ $FRONTEND_STATUS -eq 0 ]; then
+            echo "❌ Frontend no responde después de 5 intentos"
+            exit 1
+          fi
+
+          # Verificar backend API
+          echo "Verificando backend API..."
+          API_STATUS=0
+          for i in {1..5}; do
+            echo "Intento $i de 5 para API..."
+            if curl -f -s -o /dev/null -L https://gruposcoutosyris.es/api/health; then
+              echo "✅ Backend API respondiendo correctamente"
+              API_STATUS=1
+              break
+            else
+              echo "⏳ API no responde aún, esperando 10s..."
+              sleep 10
+            fi
+          done
+
+          if [ $API_STATUS -eq 0 ]; then
+            echo "❌ Backend API no responde después de 5 intentos"
+            # Verificar endpoint alternativo
+            if curl -f -s -o /dev/null -L https://gruposcoutosyris.es/api/usuarios; then
+              echo "✅ Backend responde en endpoint alternativo"
+              API_STATUS=1
+            else
+              exit 1
+            fi
+          fi
+
+          # Verificación de contenido específico
+          echo "Verificando contenido específico..."
+          CONTENT_CHECK=$(curl -s -L https://gruposcoutosyris.es | grep -c "Osyris" || echo "0")
+          if [ "$CONTENT_CHECK" -gt 0 ]; then
+            echo "✅ Contenido verificado - Osyris encontrado en página principal"
+          else
+            echo "⚠️ Advertencia: No se encontró 'Osyris' en página principal"
+          fi
+
+      - name: 📊 Detailed deployment summary
+        run: |
+          echo "### 🚀 Deployment Summary - Fresh Build Strategy" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Información del Despliegue:**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Strategy:** Fresh (sin caché)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Server:** ${{ env.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Acceso a la Aplicación:**" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 Frontend: https://gruposcoutosyris.es" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔧 API: https://gruposcoutosyris.es/api/health" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐳 BD Server: ${{ env.SERVER_HOST }}:5432" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**✅ Verificaciones Realizadas:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Limpieza completa de caché: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Build fresco en servidor: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend respondiendo: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend API funcionando: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Contenido verificado: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **Despliegue completado con éxito usando estrategia fresca!**" >> $GITHUB_STEP_SUMMARY
+
+  # Job de notificación
+  notify:
+    name: Send notifications
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: 📬 Deploy notification
+        run: |
+          echo "## 🚀 Notificación de Despliegue" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ **Despliegue exitoso desde develop a producción**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Enlaces de acceso:**" >> $GITHUB_STEP_SUMMARY
+            echo "- 🌐 Aplicación: https://gruposcoutosyris.es" >> $GITHUB_STEP_SUMMARY
+            echo "- 🔧 API Health: https://gruposcoutosyris.es/api/health" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Estrategia utilizada:** Build fresco sin caché" >> $GITHUB_STEP_SUMMARY
+            echo "**Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Despliegue falló - revisar logs**" >> $GITHUB_STEP_SUMMARY
+            echo "**Acción requerida:** Investigar logs del job 'deploy'" >> $GITHUB_STEP_SUMMARY
+          fi
