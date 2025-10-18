@@ -17,6 +17,7 @@ interface StaticTextProps {
   fallback?: string
   tag?: "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "span"
   as?: "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "span"
+  multiline?: boolean
   children?: React.ReactNode
 }
 
@@ -26,6 +27,7 @@ export function StaticText({
   fallback = "",
   tag,
   as,
+  multiline,
   children
 }: StaticTextProps) {
   // Usar children si está disponible, sino content, sino fallback
