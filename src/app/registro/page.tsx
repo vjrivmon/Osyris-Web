@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,8 @@ interface InvitationData {
   expiresAt: string
 }
 
-export default function RegisterPage() {
+// Componente que usa useSearchParams - debe estar envuelto en Suspense
+function RegisterPageContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
   const { toast } = useToast()
@@ -209,7 +210,7 @@ export default function RegisterPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <Loader2 className="h-6 w-6 animate-spin mx-auto text-green-600" />
+              <Loader2 className="h-6 w-8 animate-spin mx-auto text-green-600" />
             </CardContent>
           </Card>
         </div>
@@ -358,5 +359,21 @@ export default function RegisterPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+// Componente principal con Suspense boundary
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-green-600" />
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    }>
+      <RegisterPageContent />
+    </Suspense>
   )
 }
