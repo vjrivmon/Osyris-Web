@@ -195,10 +195,13 @@ jobs:
           NEXT_PUBLIC_STAGING=true
           ENVFRONTEND
 
-          # Copiar archivos al directorio final
-          cd ..
-          rm -rf ${{ env.STAGING_PATH }}/*
-          mv current_files/* ${{ env.STAGING_PATH }}/
+          # Mover archivos al directorio final de staging
+          cd ${{ env.STAGING_PATH }}
+          
+          # Mover todo desde current_files/ al directorio staging (estamos en /var/www/osyris-staging/current)
+          rm -rf * 2>/dev/null || true
+          mv current_files/* . 2>/dev/null || true
+          mv current_files/.* . 2>/dev/null || true
           rm -rf current_files
 
           echo "🚀 REINICIANDO SERVICIOS STAGING"
