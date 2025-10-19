@@ -94,6 +94,21 @@ async function getUserById(id) {
   return result[0] || null;
 }
 
+async function getUserByInvitationToken(token) {
+  const result = await query('SELECT * FROM usuarios WHERE invitation_token = $1', [token]);
+  return result[0] || null;
+}
+
+async function updateUser(id, updates) {
+  const keys = Object.keys(updates);
+  const setClause = keys.map((key, index) => `${key} = $${index + 2}`).join(', ');
+  const values = [id, ...keys.map(key => updates[key])];
+  
+  const sql = `UPDATE usuarios SET ${setClause} WHERE id = $1 RETURNING *`;
+  const result = await pool.query(sql, values);
+  return result.rows[0] || null;
+}
+
 // Función helper para páginas estáticas
 async function getAllPages(filters = {}) {
   let sql = 'SELECT * FROM paginas WHERE 1=1';
@@ -132,5 +147,7 @@ module.exports = {
   pool,
   getUserByEmail,
   getUserById,
+  getUserByInvitationToken,
+  updateUser,
   getAllPages
 };

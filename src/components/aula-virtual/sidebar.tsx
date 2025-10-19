@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -10,18 +10,53 @@ import {
   MessageSquare,
   ChevronLeft,
   Settings,
+  User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface AulaVirtualSidebarProps {
   collapsed: boolean
   onToggle: () => void
-  isAdmin?: boolean
 }
 
-export function AulaVirtualSidebar({ collapsed, onToggle, isAdmin = false }: AulaVirtualSidebarProps) {
+export function AulaVirtualSidebar({ collapsed, onToggle }: AulaVirtualSidebarProps) {
   const pathname = usePathname()
+  const [userData, setUserData] = useState<any>(null)
+
+  useEffect(() => {
+    // Obtener datos del usuario desde localStorage
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        setUserData(user)
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+      }
+    }
+  }, [])
+
+  const getInitials = (nombre: string, apellidos?: string) => {
+    if (!nombre) return "U"
+    const firstInitial = nombre.charAt(0).toUpperCase()
+    const lastInitial = apellidos ? apellidos.charAt(0).toUpperCase() : ""
+    return firstInitial + lastInitial
+  }
+
+  const getRoleBadgeColor = (rol: string) => {
+    switch (rol) {
+      case 'admin':
+        return 'text-red-600 dark:text-red-400'
+      case 'scouter':
+        return 'text-green-600 dark:text-green-400'
+      case 'familia':
+        return 'text-blue-600 dark:text-blue-400'
+      default:
+        return 'text-gray-600 dark:text-gray-400'
+    }
+  }
 
   const navigationItems = [
     {
@@ -108,7 +143,42 @@ export function AulaVirtualSidebar({ collapsed, onToggle, isAdmin = false }: Aul
           );
         })}
       </nav>
-      {/* Footer - Removed logout button as it's now in the top toolbar */}
+      
+      {/* User Profile Footer */}
+      {userData && (
+        <div className="border-t p-3">
+          <Link
+            href="/aula-virtual/ajustes"
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors",
+              "hover:bg-accent hover:text-accent-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              collapsed && "justify-center"
+            )}
+            title={collapsed ? "Perfil y ajustes" : undefined}
+          >
+            <Avatar className="h-8 w-8 flex-shrink-0">
+              <AvatarImage src={userData.avatar || undefined} alt={userData.nombre} />
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                {getInitials(userData.nombre, userData.apellidos)}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {userData.nombre} {userData.apellidos}
+                </p>
+                <p className={cn("text-xs capitalize truncate", getRoleBadgeColor(userData.rol))}>
+                  {userData.rol === 'scouter' ? 'Kraal' : userData.rol}
+                </p>
+              </div>
+            )}
+            {!collapsed && (
+              <Settings className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+            )}
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
