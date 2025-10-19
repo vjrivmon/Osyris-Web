@@ -26,15 +26,7 @@ export default function AulaVirtualLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
-
-  // Check if user is admin (this should be replaced with real auth check)
-  useEffect(() => {
-    // For now, check if user has admin role from localStorage or session
-    const userRole = localStorage.getItem('userRole')
-    setIsAdmin(userRole === 'admin')
-  }, [])
 
   const handleLogout = () => {
     // Limpiar sesión del localStorage
@@ -51,7 +43,6 @@ export default function AulaVirtualLayout({
         <AulaVirtualSidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          isAdmin={isAdmin}
         />
       </div>
 
@@ -63,7 +54,6 @@ export default function AulaVirtualLayout({
             <AulaVirtualSidebar
               collapsed={false}
               onToggle={() => setMobileMenuOpen(false)}
-              isAdmin={isAdmin}
             />
           </div>
         </div>
@@ -87,19 +77,6 @@ export default function AulaVirtualLayout({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Admin Panel Button - Solo para admins */}
-            {isAdmin && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/admin')}
-                className="hidden md:inline-flex border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Panel Admin
-              </Button>
-            )}
-
             <ThemeToggle />
 
             {/* Logout button - Mobile (icon only) */}

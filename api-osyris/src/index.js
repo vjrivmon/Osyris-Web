@@ -16,15 +16,15 @@ const db = require('./config/db.config');
 const usuariosRoutes = require('./routes/usuarios.routes');
 const seccionesRoutes = require('./routes/secciones.routes');
 const actividadesRoutes = require('./routes/actividades.routes');
-const documentosRoutes = require('./routes/documentos.routes');
 const mensajesRoutes = require('./routes/mensajes.routes');
 const authRoutes = require('./routes/auth.routes');
-// 🚀 NUEVAS RUTAS CMS
+// 🚀 NUEVAS RUTAS
 const uploadRoutes = require('./routes/upload.routes');
-const paginasRoutes = require('./routes/paginas.routes');
-const contentRoutes = require('./routes/content.routes');
 const adminRoutes = require('./routes/admin.routes');
 const registrationRoutes = require('./routes/registration.routes');
+const googleDriveRoutes = require('./routes/google-drive.routes');
+// 🚀 FEATURE FLAGS
+const featureFlagsRoutes = require('./routes/feature-flags.routes');
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
 
 // Inicialización de Express
@@ -89,13 +89,13 @@ app.use('/api/auth', registrationRoutes); // Nuevas rutas de registro
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/secciones', seccionesRoutes);
 app.use('/api/actividades', actividadesRoutes);
-app.use('/api/documentos', documentosRoutes);
 app.use('/api/mensajes', mensajesRoutes);
-// 🚀 NUEVAS RUTAS CMS
+// 🚀 NUEVAS RUTAS
 app.use('/api/uploads', uploadRoutes);
-app.use('/api/paginas', paginasRoutes);
-app.use('/api/content', contentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/drive', googleDriveRoutes);
+// 🚀 FEATURE FLAGS
+app.use('/api/feature-flags', featureFlagsRoutes);
 // app.use('/api/preview', previewRoutes); // Temporarily disabled
 
 // Servir archivos estáticos desde uploads (debe ir después de las rutas API)

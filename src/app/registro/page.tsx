@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getApiUrl } from "@/lib/api-utils"
+import { PasswordStrength } from "@/components/ui/password-strength"
 
 interface InvitationData {
   email: string
@@ -38,12 +40,17 @@ function RegisterPageContent() {
     confirmPassword: "",
     telefono: "",
     direccion: "",
-    fecha_nacimiento: ""
+    fecha_nacimiento: "",
+    apellidos: ""
   })
 
   const [formErrors, setFormErrors] = useState({
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    telefono: "",
+    direccion: "",
+    fecha_nacimiento: "",
+    apellidos: ""
   })
 
   useEffect(() => {
@@ -58,7 +65,8 @@ function RegisterPageContent() {
 
   const verifyInvitation = async () => {
     try {
-      const response = await fetch(`/api/auth/verify-invitation?token=${token}`)
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/auth/verify-invitation?token=${token}`)
       const result = await response.json()
 
       if (result.success) {
@@ -77,7 +85,15 @@ function RegisterPageContent() {
   const validateForm = (): boolean => {
     const errors = {
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      telefono: "",
+      direccion: "",
+      fecha_nacimiento: "",
+      apellidos: ""
+    }
+
+    if (!formData.apellidos) {
+      errors.apellidos = "Los apellidos son obligatorios"
     }
 
     if (!formData.password) {
@@ -92,8 +108,29 @@ function RegisterPageContent() {
       errors.confirmPassword = "Las contraseñas no coinciden"
     }
 
+    if (!formData.telefono) {
+      errors.telefono = "El teléfono es obligatorio"
+    }
+
+    if (!formData.direccion) {
+      errors.direccion = "La dirección es obligatoria"
+    }
+
+    if (!formData.fecha_nacimiento) {
+      errors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
+    }
+
+    if (!invitationData?.seccion_id) {
+      toast({
+        title: "Error",
+        description: "Debes tener una sección asignada para completar el registro",
+        variant: "destructive"
+      })
+      return false
+    }
+
     setFormErrors(errors)
-    return !errors.password && !errors.confirmPassword
+    return !errors.password && !errors.confirmPassword && !errors.telefono && !errors.direccion && !errors.fecha_nacimiento && !errors.apellidos
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,7 +143,8 @@ function RegisterPageContent() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/auth/complete-registration", {
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/auth/complete-registration`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -114,9 +152,10 @@ function RegisterPageContent() {
         body: JSON.stringify({
           token,
           password: formData.password,
-          telefono: formData.telefono || undefined,
-          direccion: formData.direccion || undefined,
-          fecha_nacimiento: formData.fecha_nacimiento || undefined
+          apellidos: formData.apellidos,
+          telefono: formData.telefono,
+          direccion: formData.direccion,
+          fecha_nacimiento: formData.fecha_nacimiento
         })
       })
 
@@ -131,11 +170,19 @@ function RegisterPageContent() {
 
         // Guardar token
         localStorage.setItem("token", result.data.token)
-        localStorage.setItem("user", JSON.stringify(result.data.user))
+        localStorage.setItem("user", JSON.stringify(result.data.usuario))
 
-        // Redirigir al dashboard después de un breve momento
+        // Redirigir al dashboard según el rol del usuario
+        const rol = result.data.usuario?.rol || "scouter"
+        let dashboardUrl = "/aula-virtual"
+        
+        if (rol === "admin") {
+          dashboardUrl = "/admin/dashboard"
+        }
+        // Todos los demás usuarios (scouter, familia, educando) van a /aula-virtual
+
         setTimeout(() => {
-          window.location.href = "/dashboard"
+          window.location.href = dashboardUrl
         }, 2000)
       } else {
         setError(result.message || "No se pudo completar el registro")
@@ -244,13 +291,17 @@ function RegisterPageContent() {
                   {invitationData.nombre} {invitationData.apellidos}
                 </p>
                 <p className="text-sm text-blue-700">{invitationData.email}</p>
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
                   <Badge variant="outline" className="text-xs">
-                    {invitationData.rol === "admin" ? "Administrador" : "Scouter"}
+                    {invitationData.rol === "admin" ? "🔐 Administrador" : "⚜️ Scouter"}
                   </Badge>
                   {invitationData.seccion_id && (
-                    <Badge variant="outline" className="text-xs">
-                      Sección asignada
+                    <Badge className="text-xs bg-green-600 hover:bg-green-700 text-white">
+                      {invitationData.seccion_id === 1 && "🦫 Castores"}
+                      {invitationData.seccion_id === 2 && "🐺 Manada"}
+                      {invitationData.seccion_id === 3 && "⚜️ Tropa"}
+                      {invitationData.seccion_id === 4 && "🏔️ Pioneros"}
+                      {invitationData.seccion_id === 5 && "🎒 Rutas"}
                     </Badge>
                   )}
                 </div>
@@ -285,6 +336,7 @@ function RegisterPageContent() {
                   {formErrors.password && (
                     <p className="text-xs text-red-500">{formErrors.password}</p>
                   )}
+                  <PasswordStrength password={formData.password} />
                 </div>
 
                 <div className="space-y-2">
@@ -303,34 +355,61 @@ function RegisterPageContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="telefono">Teléfono (opcional)</Label>
+                  <Label htmlFor="apellidos">Apellidos *</Label>
+                  <Input
+                    id="apellidos"
+                    type="text"
+                    value={formData.apellidos}
+                    onChange={(e) => handleInputChange("apellidos", e.target.value)}
+                    className={formErrors.apellidos ? "border-red-500" : ""}
+                    placeholder="Tus apellidos"
+                  />
+                  {formErrors.apellidos && (
+                    <p className="text-xs text-red-500">{formErrors.apellidos}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="telefono">Teléfono *</Label>
                   <Input
                     id="telefono"
                     type="tel"
                     value={formData.telefono}
                     onChange={(e) => handleInputChange("telefono", e.target.value)}
+                    className={formErrors.telefono ? "border-red-500" : ""}
                     placeholder="+34 600 000 000"
                   />
+                  {formErrors.telefono && (
+                    <p className="text-xs text-red-500">{formErrors.telefono}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="direccion">Dirección (opcional)</Label>
+                  <Label htmlFor="direccion">Dirección *</Label>
                   <Input
                     id="direccion"
                     value={formData.direccion}
                     onChange={(e) => handleInputChange("direccion", e.target.value)}
+                    className={formErrors.direccion ? "border-red-500" : ""}
                     placeholder="Calle, número, ciudad"
                   />
+                  {formErrors.direccion && (
+                    <p className="text-xs text-red-500">{formErrors.direccion}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="fecha_nacimiento">Fecha de Nacimiento (opcional)</Label>
+                  <Label htmlFor="fecha_nacimiento">Fecha de Nacimiento *</Label>
                   <Input
                     id="fecha_nacimiento"
                     type="date"
                     value={formData.fecha_nacimiento}
                     onChange={(e) => handleInputChange("fecha_nacimiento", e.target.value)}
+                    className={formErrors.fecha_nacimiento ? "border-red-500" : ""}
                   />
+                  {formErrors.fecha_nacimiento && (
+                    <p className="text-xs text-red-500">{formErrors.fecha_nacimiento}</p>
+                  )}
                 </div>
 
                 <Button

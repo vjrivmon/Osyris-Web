@@ -1,6 +1,7 @@
 const db = require('../config/db.config');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { sendInvitationEmail, sendWelcomeEmail } = require('../utils/email');
 
 const adminController = {
   // Obtener métricas resumidas del dashboard
@@ -138,15 +139,15 @@ const adminController = {
       const offset = (page - 1) * limit;
 
       // Construir WHERE dinámico
-      let whereConditions = ['activo = true'];
+      let whereConditions = [];
       let params = [];
       let paramIndex = 1;
 
       if (search) {
         whereConditions.push(`(
-          nombre ILIKE $${paramIndex} OR
-          apellidos ILIKE $${paramIndex + 1} OR
-          email ILIKE $${paramIndex + 2}
+          u.nombre ILIKE $${paramIndex} OR
+          u.apellidos ILIKE $${paramIndex + 1} OR
+          u.email ILIKE $${paramIndex + 2}
         )`);
         const searchTerm = `%${search}%`;
         params.push(searchTerm, searchTerm, searchTerm);
@@ -154,35 +155,37 @@ const adminController = {
       }
 
       if (rol) {
-        whereConditions.push(`rol = $${paramIndex}`);
+        whereConditions.push(`u.rol = $${paramIndex}`);
         params.push(rol);
         paramIndex++;
       }
 
       if (seccion) {
-        whereConditions.push(`seccion_id = $${paramIndex}`);
+        whereConditions.push(`u.seccion_id = $${paramIndex}`);
         params.push(seccion);
         paramIndex++;
       }
 
-      const whereClause = whereConditions.join(' AND ');
+      const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
-      // Query para obtener usuarios
+      // Query para obtener usuarios con JOIN a secciones
       const users = await db.query(`
         SELECT
-          id, email, nombre, apellidos, rol, seccion_id,
-          ultimo_acceso, fecha_registro, telefono, direccion, fecha_nacimiento
-        FROM usuarios
-        WHERE ${whereClause}
-        ORDER BY fecha_registro DESC
+          u.id, u.email, u.nombre, u.apellidos, u.rol, u.activo,
+          u.seccion_id, s.nombre AS seccion,
+          u.ultimo_acceso, u.fecha_registro, u.telefono, u.direccion, u.fecha_nacimiento
+        FROM usuarios u
+        LEFT JOIN secciones s ON u.seccion_id = s.id
+        ${whereClause}
+        ORDER BY u.fecha_registro DESC
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
       `, [...params, parseInt(limit), offset]);
 
       // Query para obtener total
       const countResult = await db.query(`
         SELECT COUNT(*) as total
-        FROM usuarios
-        WHERE ${whereClause}
+        FROM usuarios u
+        ${whereClause}
       `, params);
 
       const total = countResult[0].total;
@@ -258,9 +261,15 @@ const adminController = {
         `, [email, nombre, apellidos, rol, seccion_id, invitationToken, expiresAt]);
       }
 
-      // TODO: Enviar email con el enlace de invitación
-      console.log(`📧 Invitación enviada a ${email}:`);
-      console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL}/registro?token=${invitationToken}`);
+      // Enviar email con el enlace de invitación
+      try {
+        await sendInvitationEmail(email, nombre, invitationToken);
+        console.log(`✅ Email de invitación enviado a ${email}`);
+      } catch (emailError) {
+        console.error(`⚠️ Error enviando email a ${email}:`, emailError.message);
+        // No fallar la invitación si el email falla
+        console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL}/registro?token=${invitationToken}`);
+      }
 
       res.status(201).json({
         success: true,
@@ -284,11 +293,11 @@ const adminController = {
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { nombre, apellidos, rol, seccion_id } = req.body;
+      const { nombre, apellidos, rol, seccion_id, estado } = req.body;
 
       // Verificar si el usuario existe
       const existingUser = await db.query(
-        'SELECT id, rol FROM usuarios WHERE id = $1 AND activo = true',
+        'SELECT id, rol FROM usuarios WHERE id = $1',
         [id]
       );
 
@@ -313,6 +322,14 @@ const adminController = {
       if (apellidos !== undefined) {
         updates.push(`apellidos = $${paramIndex}`);
         params.push(apellidos);
+        paramIndex++;
+      }
+
+      if (estado !== undefined) {
+        // Mapear 'activo'/'inactivo' a boolean
+        const activoValue = estado === 'activo';
+        updates.push(`activo = $${paramIndex}`);
+        params.push(activoValue);
         paramIndex++;
       }
 
@@ -372,7 +389,7 @@ const adminController = {
 
       // Verificar si el usuario existe
       const existingUser = await db.query(
-        'SELECT id, rol FROM usuarios WHERE id = $1 AND activo = true',
+        'SELECT id, rol FROM usuarios WHERE id = $1',
         [id]
       );
 
@@ -391,9 +408,9 @@ const adminController = {
         });
       }
 
-      // Soft delete (marcar como inactivo)
+      // Hard delete (eliminar completamente)
       await db.query(
-        'UPDATE usuarios SET activo = false WHERE id = $1',
+        'DELETE FROM usuarios WHERE id = $1',
         [id]
       );
 

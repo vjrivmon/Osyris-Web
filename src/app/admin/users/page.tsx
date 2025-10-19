@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Users } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getApiUrl } from "@/lib/api-utils"
 
 // Importar los nuevos componentes
 import { SearchBar } from "@/components/admin/search-bar"
@@ -83,7 +84,8 @@ export default function AdminUsersPage() {
         )
       })
 
-      const response = await fetch(`/api/admin/users?${params}`, {
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/admin/users?${params}`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -92,7 +94,14 @@ export default function AdminUsersPage() {
       const result: UsersResponse = await response.json()
 
       if (result.success) {
-        setUsers(result.data.users)
+        // Mapear los datos del backend al formato esperado por el componente
+        const mappedUsers = result.data.users.map((user: any) => ({
+          ...user,
+          estado: user.activo ? "activo" : "inactivo",
+          fechaCreacion: user.fecha_registro,
+          ultimoAcceso: user.ultimo_acceso
+        }))
+        setUsers(mappedUsers)
         setPagination(result.data.pagination)
       } else {
         toast({

@@ -248,4 +248,69 @@ router.post('/change-password', verifyToken, authController.changePassword);
  */
 router.get('/verify', verifyToken, authController.verifyAuth);
 
+/**
+ * @swagger
+ * /api/auth/verify-invitation:
+ *   get:
+ *     summary: Verificar token de invitación
+ *     tags: [Autenticación]
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de invitación
+ *     responses:
+ *       200:
+ *         description: Invitación válida
+ *       400:
+ *         description: Token inválido o expirado
+ *       404:
+ *         description: Invitación no encontrada
+ *       500:
+ *         description: Error del servidor
+ */
+router.get('/verify-invitation', authController.verifyInvitation);
+
+/**
+ * @swagger
+ * /api/auth/complete-registration:
+ *   post:
+ *     summary: Completar registro con contraseña
+ *     tags: [Autenticación]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               telefono:
+ *                 type: string
+ *               direccion:
+ *                 type: string
+ *               fecha_nacimiento:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Registro completado
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Invitación no encontrada
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/complete-registration', authController.completeRegistration);
+
 module.exports = router; 

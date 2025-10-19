@@ -55,7 +55,15 @@ const login = async (req, res) => {
     }
 
     // Verificar contraseña
-    const validPassword = await Usuario.verifyPassword(value.password, usuario.password || usuario.contraseña);
+    const storedHash = usuario.password || usuario.contraseña;
+    console.log('🔍 Debug login para:', value.email);
+    console.log('🔍 Hash almacenado:', storedHash);
+    console.log('🔍 Longitud hash:', storedHash ? storedHash.length : 'null');
+    console.log('🔍 Campo password:', usuario.password);
+    console.log('🔍 Campo contraseña:', usuario.contraseña);
+
+    const validPassword = await Usuario.verifyPassword(value.password, storedHash);
+    console.log('🔍 Resultado verifyPassword:', validPassword);
 
     if (!validPassword) {
       console.log('❌ Contraseña incorrecta para:', value.email);
@@ -381,10 +389,217 @@ const verifyAuth = async (req, res) => {
   }
 };
 
+// Verificar token de invitación
+const verifyInvitation = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token de invitación requerido'
+      });
+    }
+
+    // Buscar usuario con el token
+    const usuario = await db.getUserByInvitationToken(token);
+
+    if (!usuario) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invitación no válida o ha expirado'
+      });
+    }
+
+    // Verificar si la invitación ya fue completada
+    if (usuario.registration_completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Esta invitación ya ha sido utilizada'
+      });
+    }
+
+    // Verificar si la invitación ha expirado
+    const expiresAt = new Date(usuario.invitation_expires_at);
+    if (expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Esta invitación ha expirado'
+      });
+    }
+
+    // Devolver datos de la invitación
+    res.status(200).json({
+      success: true,
+      message: 'Invitación válida',
+      data: {
+        email: usuario.email,
+        nombre: usuario.nombre,
+        rol: usuario.rol,
+        seccion_id: usuario.seccion_id,
+        expiresAt: usuario.invitation_expires_at
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error verifying invitation:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al verificar la invitación',
+      error: error.message
+    });
+  }
+};
+
+// Completar registro con contraseña
+const completeRegistration = async (req, res) => {
+  try {
+    const { token, password, apellidos, telefono, direccion, fecha_nacimiento } = req.body;
+
+    // Validar campos obligatorios
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token y contraseña son requeridos'
+      });
+    }
+
+    if (!apellidos || !telefono || !direccion || !fecha_nacimiento) {
+      return res.status(400).json({
+        success: false,
+        message: 'Todos los campos son obligatorios: apellidos, teléfono, dirección y fecha de nacimiento'
+      });
+    }
+
+    // Validar fortaleza de contraseña
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe tener al menos 8 caracteres'
+      });
+    }
+
+    const passwordRegex = {
+      uppercase: /[A-Z]/,
+      lowercase: /[a-z]/,
+      number: /[0-9]/,
+      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/
+    };
+
+    if (!passwordRegex.uppercase.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe contener al menos una letra mayúscula'
+      });
+    }
+
+    if (!passwordRegex.lowercase.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe contener al menos una letra minúscula'
+      });
+    }
+
+    if (!passwordRegex.number.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe contener al menos un número'
+      });
+    }
+
+    if (!passwordRegex.special.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe contener al menos un símbolo especial (!@#$%...)'
+      });
+    }
+
+    // Buscar usuario con el token
+    const usuario = await db.getUserByInvitationToken(token);
+
+    if (!usuario) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invitación no válida'
+      });
+    }
+
+    // Verificar si la invitación ya fue completada
+    if (usuario.registration_completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Esta invitación ya ha sido utilizada'
+      });
+    }
+
+    // Verificar si la invitación ha expirado
+    const expiresAt = new Date(usuario.invitation_expires_at);
+    if (expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Esta invitación ha expirado'
+      });
+    }
+
+    // Hash de la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Actualizar usuario con la nueva contraseña y datos adicionales
+    await db.updateUser(usuario.id, {
+      contraseña: hashedPassword,
+      apellidos: apellidos,
+      telefono: telefono,
+      direccion: direccion,
+      fecha_nacimiento: fecha_nacimiento,
+      activo: true, // Activar el usuario al completar el registro
+      invitation_token: null, // Eliminar el token usado
+      registration_completed_at: new Date().toISOString()
+    });
+
+    console.log(`✅ Registro completado para ${usuario.email}`);
+
+    // Generar token JWT para login automático
+    const jwtToken = jwt.sign(
+      {
+        id: usuario.id,
+        email: usuario.email,
+        rol: usuario.rol
+      },
+      process.env.JWT_SECRET || 'osyrisScoutGroup2024SecretKey',
+      { expiresIn: '24h' }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Registro completado exitosamente',
+      data: {
+        token: jwtToken,
+        usuario: {
+          id: usuario.id,
+          email: usuario.email,
+          nombre: usuario.nombre,
+          apellidos: usuario.apellidos,
+          rol: usuario.rol
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error completing registration:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al completar el registro',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   login,
   register,
   profile,
   changePassword,
-  verifyAuth
+  verifyAuth,
+  verifyInvitation,
+  completeRegistration
 };

@@ -43,6 +43,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { getApiUrl } from "@/lib/api-utils"
 
 interface User {
   id: number
@@ -131,7 +132,8 @@ export function UserTable({
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`/api/admin/users/${userToDelete.id}`, {
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/admin/users/${userToDelete.id}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`
@@ -173,8 +175,9 @@ export function UserTable({
     try {
       const newStatus = user.estado === "activo" ? "inactivo" : "activo"
       const token = localStorage.getItem("token")
+      const apiUrl = getApiUrl()
 
-      const response = await fetch(`/api/admin/users/${user.id}`, {
+      const response = await fetch(`${apiUrl}/api/admin/users/${user.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

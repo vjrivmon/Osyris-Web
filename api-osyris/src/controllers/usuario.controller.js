@@ -63,17 +63,30 @@ const getAll = async (req, res) => {
 const getById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+    console.log(`🔍 getById - Obteniendo usuario con ID: ${id}`);
 
     if (isNaN(id)) {
+      console.log('❌ getById - ID inválido');
       return res.status(400).json({
         success: false,
         message: 'ID de usuario inválido'
       });
     }
 
+    // Verificar que el usuario solo pueda ver su propia información (a menos que sea admin)
+    console.log(`🔐 getById - Usuario autenticado: ${req.usuario.id} (${req.usuario.rol}), solicitando: ${id}`);
+    if (req.usuario.rol !== 'admin' && req.usuario.id !== id) {
+      console.log('❌ getById - Sin permisos');
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver este usuario'
+      });
+    }
+
     let usuario;
 
     if (process.env.DATABASE_TYPE === 'supabase') {
+      console.log('🔄 getById - Usando Supabase');
       try {
         usuario = await db.usuarios.getById(id);
       } catch (error) {
@@ -84,21 +97,29 @@ const getById = async (req, res) => {
         }
       }
     } else {
-      usuario = await Usuario.findById(id);
+      // PostgreSQL o SQLite
+      console.log('🔄 getById - Usando PostgreSQL/SQLite');
+      console.log('🔄 getById - Llamando a db.getUserById...');
+      usuario = await db.getUserById(id);
+      console.log(`✅ getById - Usuario obtenido:`, usuario ? 'Encontrado' : 'No encontrado');
     }
 
     if (!usuario) {
+      console.log('❌ getById - Usuario no encontrado en BD');
       return res.status(404).json({
         success: false,
         message: `Usuario con ID ${id} no encontrado`
       });
     }
 
+    console.log('✅ getById - Enviando respuesta exitosa');
     res.status(200).json({
       success: true,
       data: usuario
     });
   } catch (error) {
+    console.error('❌ getById - Error capturado:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el usuario',
@@ -183,6 +204,14 @@ const update = async (req, res) => {
       });
     }
 
+    // Verificar que el usuario solo pueda actualizar su propia información (a menos que sea admin)
+    if (req.usuario.rol !== 'admin' && req.usuario.id !== id) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para actualizar este usuario'
+      });
+    }
+
     // Verificar que el usuario existe usando configuración dual
     let usuario;
 
@@ -197,7 +226,8 @@ const update = async (req, res) => {
         }
       }
     } else {
-      usuario = await Usuario.findById(id);
+      // PostgreSQL o SQLite
+      usuario = await db.getUserById(id);
     }
 
     if (!usuario) {
@@ -255,7 +285,13 @@ const update = async (req, res) => {
       }
       updatedUser = await db.usuarios.update(id, value);
     } else {
-      updatedUser = await Usuario.update(id, value);
+      // PostgreSQL o SQLite
+      // Si se está actualizando la contraseña, necesitamos hashearla
+      if (value.password) {
+        const bcrypt = require('bcryptjs');
+        value.password = await bcrypt.hash(value.password, 10);
+      }
+      updatedUser = await db.updateUser(id, value);
     }
     
     res.status(200).json({

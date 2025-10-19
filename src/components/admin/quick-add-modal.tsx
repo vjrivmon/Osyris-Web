@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Plus, UserPlus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { makeAuthenticatedRequest } from "@/lib/auth-utils"
 
 interface NewInvitation {
   email: string
@@ -90,17 +91,10 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
     setIsLoading(true)
 
     try {
-      const token = localStorage.getItem("token")
-      const response = await fetch("/api/admin/invitations", {
+      const result = await makeAuthenticatedRequest("/api/admin/invitations", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
         body: JSON.stringify(formData)
       })
-
-      const result = await response.json()
 
       if (result.success) {
         toast({

@@ -81,6 +81,7 @@ router.get('/', verifyToken, checkRole(['admin', 'monitor']), usuarioController.
  *       500:
  *         description: Error del servidor
  */
+// Permitir que un usuario vea su propia información o que admin vea cualquiera
 router.get('/:id', verifyToken, usuarioController.getById);
 
 /**
@@ -201,7 +202,8 @@ router.post('/', verifyToken, checkRole(['admin']), usuarioController.create);
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id', verifyToken, checkRole(['admin', 'monitor']), usuarioController.update);
+// Permitir que un usuario actualice su propia información o que admin actualice cualquiera
+router.put('/:id', verifyToken, usuarioController.update);
 
 /**
  * @swagger
