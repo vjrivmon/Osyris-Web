@@ -141,14 +141,18 @@ jobs:
           rm -rf build out dist 2>/dev/null || true
 
           echo "📦 INSTALACIÓN DE DEPENDENCIAS STAGING"
-          # Instalar dependencias
+          # Limpiar caché corrupta de npm en servidor
+          rm -rf /root/.npm/_cacache 2>/dev/null || true
           npm cache clean --force || true
+          
+          # Instalar dependencias frontend
           rm -rf node_modules 2>/dev/null || true
-          npm ci --prefer-offline --no-audit --no-fund
+          npm ci --prefer-offline --no-audit --no-fund --legacy-peer-deps
 
+          # Instalar dependencias backend
           cd api-osyris
           rm -rf node_modules 2>/dev/null || true
-          npm ci --prefer-offline --no-audit --no-fund
+          npm ci --prefer-offline --no-audit --no-fund --legacy-peer-deps
           cd ..
 
           echo "🏗️ BUILD STAGING"
@@ -196,13 +200,25 @@ jobs:
           ENVFRONTEND
 
           # Mover archivos al directorio final de staging
+          echo "📁 Moviendo archivos al directorio staging..."
           cd ${{ env.STAGING_PATH }}
           
-          # Mover todo desde current_files/ al directorio staging (estamos en /var/www/osyris-staging/current)
-          rm -rf * 2>/dev/null || true
-          mv current_files/* . 2>/dev/null || true
-          mv current_files/.* . 2>/dev/null || true
-          rm -rf current_files
+          # Usar rsync para copiar archivos de forma segura
+          # (preservando permisos y sin borrar hasta confirmar copia)
+          if command -v rsync &> /dev/null; then
+            rsync -av --delete current_files/ . --exclude current_files
+          else
+            # Fallback: mover archivos manualmente si rsync no está disponible
+            shopt -s dotglob  # Incluir archivos ocultos
+            for item in current_files/*; do
+              if [ -e "$item" ]; then
+                mv -f "$item" .
+              fi
+            done
+            shopt -u dotglob
+          fi
+          
+          rm -rf current_files 2>/dev/null || true
 
           echo "🚀 REINICIANDO SERVICIOS STAGING"
 
