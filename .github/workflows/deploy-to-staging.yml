@@ -1,9 +1,9 @@
-name: Deploy to Staging Environment
+name: Deploy to Staging Environment (DESHABILITADO - Usar scripts locales)
 
 on:
-  push:
-    branches:
-      - develop
+  # push:
+  #   branches:
+  #     - develop
   workflow_dispatch:
     inputs:
       rebuild_frontend:
