@@ -22,9 +22,9 @@ const authRoutes = require('./routes/auth.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const adminRoutes = require('./routes/admin.routes');
 const registrationRoutes = require('./routes/registration.routes');
-const googleDriveRoutes = require('./routes/google-drive.routes');
+// const googleDriveRoutes = require('./routes/google-drive.routes'); // ⚠️ DESHABILITADO: falta dependencia googleapis
 // 🚀 FEATURE FLAGS
-const featureFlagsRoutes = require('./routes/feature-flags.routes');
+// const featureFlagsRoutes = require('./routes/feature-flags.routes'); // ⚠️ DESHABILITADO: módulo incompleto
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
 
 // Inicialización de Express
@@ -93,9 +93,9 @@ app.use('/api/mensajes', mensajesRoutes);
 // 🚀 NUEVAS RUTAS
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/drive', googleDriveRoutes);
+// app.use('/api/drive', googleDriveRoutes); // ⚠️ DESHABILITADO: falta dependencia googleapis
 // 🚀 FEATURE FLAGS
-app.use('/api/feature-flags', featureFlagsRoutes);
+// app.use('/api/feature-flags', featureFlagsRoutes); // ⚠️ DESHABILITADO: módulo incompleto
 // app.use('/api/preview', previewRoutes); // Temporarily disabled
 
 // Servir archivos estáticos desde uploads (debe ir después de las rutas API)
