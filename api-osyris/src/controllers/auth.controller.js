@@ -57,10 +57,13 @@ const login = async (req, res) => {
     // Verificar contraseña
     const storedHash = usuario.password || usuario.contraseña;
     console.log('🔍 Debug login para:', value.email);
+    console.log('🔍 Datos recibidos del frontend:', JSON.stringify(req.body));
+    console.log('🔍 Valor validado password:', value.password);
+    console.log('🔍 Tipo de value.password:', typeof value.password);
     console.log('🔍 Hash almacenado:', storedHash);
     console.log('🔍 Longitud hash:', storedHash ? storedHash.length : 'null');
-    console.log('🔍 Campo password:', usuario.password);
-    console.log('🔍 Campo contraseña:', usuario.contraseña);
+    console.log('🔍 Campo password en DB:', usuario.password);
+    console.log('🔍 Campo contraseña en DB:', usuario.contraseña);
 
     const validPassword = await Usuario.verifyPassword(value.password, storedHash);
     console.log('🔍 Resultado verifyPassword:', validPassword);

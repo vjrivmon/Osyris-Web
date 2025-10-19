@@ -243,9 +243,9 @@ jobs:
 
           # Iniciar frontend
           echo "Iniciando frontend..."
-          pm2 start "$DEPLOY_PATH/current/node_modules/.bin/next" \
+          pm2 start /var/www/osyris/current/node_modules/.bin/next \
             --name "osyris-frontend" \
-            --cwd "$DEPLOY_PATH/current" \
+            --cwd /var/www/osyris/current \
             -- start -p 3000
 
           # Guardar configuración PM2
