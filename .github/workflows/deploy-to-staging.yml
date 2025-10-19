@@ -141,18 +141,18 @@ jobs:
           rm -rf build out dist 2>/dev/null || true
 
           echo "📦 INSTALACIÓN DE DEPENDENCIAS STAGING"
-          # Limpiar caché corrupta de npm en servidor
-          rm -rf /root/.npm/_cacache 2>/dev/null || true
-          npm cache clean --force || true
+          # Limpiar TODA la caché de npm (más agresivo para evitar corrupción)
+          rm -rf /root/.npm 2>/dev/null || true
+          npm cache clean --force 2>/dev/null || true
           
-          # Instalar dependencias frontend
+          # Instalar dependencias frontend (usar npm install en lugar de ci para evitar problemas de caché)
           rm -rf node_modules 2>/dev/null || true
-          npm ci --prefer-offline --no-audit --no-fund --legacy-peer-deps
+          npm install --production=false --no-audit --no-fund --legacy-peer-deps
 
           # Instalar dependencias backend
           cd api-osyris
           rm -rf node_modules 2>/dev/null || true
-          npm ci --prefer-offline --no-audit --no-fund --legacy-peer-deps
+          npm install --production=false --no-audit --no-fund --legacy-peer-deps
           cd ..
 
           echo "🏗️ BUILD STAGING"
