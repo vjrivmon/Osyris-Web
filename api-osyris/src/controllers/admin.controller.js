@@ -133,7 +133,8 @@ const adminController = {
         limit = 10,
         search = '',
         rol = '',
-        seccion = ''
+        seccion = '',
+        estado = ''
       } = req.query;
 
       const offset = (page - 1) * limit;
@@ -158,6 +159,15 @@ const adminController = {
         whereConditions.push(`u.rol = $${paramIndex}`);
         params.push(rol);
         paramIndex++;
+      }
+
+      if (estado) {
+        const activoValue = estado === 'activo' ? true : estado === 'inactivo' ? false : null;
+        if (activoValue !== null) {
+          whereConditions.push(`u.activo = $${paramIndex}`);
+          params.push(activoValue);
+          paramIndex++;
+        }
       }
 
       if (seccion) {
