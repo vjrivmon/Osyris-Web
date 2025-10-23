@@ -204,56 +204,58 @@ export default function KraalPage() {
             >
               Coordinación de Grupo
             </StaticText>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              {coordinationTeam.map((member, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <div className="h-64 relative">
-                    <StaticImage
-                      contentId={223 + i * 4}
-                      identificador={`coord-${i}-photo`}
-                      seccion="kraal"
-                      alt={member.name}
-                      className="w-full h-full object-cover"
-                    >
-                      {getContent(`coord-${i}-photo`, member.photo)}
-                    </StaticImage>
-                  </div>
-                  <CardContent className="p-6 text-center">
-                    <StaticText
-                      contentId={224 + i * 4}
-                      identificador={`coord-${i}-name`}
-                      seccion="kraal"
-                      as="h3"
-                      className="text-xl font-bold mb-1"
-                    >
-                      {member.name}
-                    </StaticText>
-                    <StaticText
-                      contentId={225 + i * 4}
-                      identificador={`coord-${i}-role`}
-                      seccion="kraal"
-                      as="p"
-                      className="text-primary mb-2"
-                    >
-                      {member.role}
-                    </StaticText>
-                    <StaticText
-                      contentId={226 + i * 4}
-                      identificador={`coord-${i}-description`}
-                      seccion="kraal"
-                      as="p"
-                      multiline
-                      className="text-sm text-muted-foreground mb-4"
-                    >
-                      {member.description}
-                    </StaticText>
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Mail className="mr-2 h-4 w-4" />
-                      Contactar
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="flex justify-center">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
+                {coordinationTeam.map((member, i) => (
+                  <Card key={i} className="overflow-hidden">
+                    <div className="h-64 relative">
+                      <StaticImage
+                        contentId={223 + i * 4}
+                        identificador={`coord-${i}-photo`}
+                        seccion="kraal"
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      >
+                        {getContent(`coord-${i}-photo`, member.photo)}
+                      </StaticImage>
+                    </div>
+                    <CardContent className="p-6 text-center">
+                      <StaticText
+                        contentId={224 + i * 4}
+                        identificador={`coord-${i}-name`}
+                        seccion="kraal"
+                        as="h3"
+                        className="text-xl font-bold mb-1"
+                      >
+                        {member.name}
+                      </StaticText>
+                      <StaticText
+                        contentId={225 + i * 4}
+                        identificador={`coord-${i}-role`}
+                        seccion="kraal"
+                        as="p"
+                        className="text-primary mb-2"
+                      >
+                        {member.role}
+                      </StaticText>
+                      <StaticText
+                        contentId={226 + i * 4}
+                        identificador={`coord-${i}-description`}
+                        seccion="kraal"
+                        as="p"
+                        multiline
+                        className="text-sm text-muted-foreground mb-4"
+                      >
+                        {member.description}
+                      </StaticText>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Mail className="mr-2 h-4 w-4" />
+                        Contactar
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -283,51 +285,53 @@ export default function KraalPage() {
                 >
                   {section.name}
                 </StaticText>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {section.members.map((member, j) => (
-                    <Card key={j} className="overflow-hidden h-full">
-                      <div className="h-48 relative">
-                        <StaticImage
-                          contentId={237 + i * 20 + j * 4}
-                          identificador={`section-${i}-member-${j}-photo`}
-                          seccion="kraal"
-                          alt={member.name}
-                          className="w-full h-full object-cover"
-                        >
-                          {getContent(`section-${i}-member-${j}-photo`, member.photo)}
-                        </StaticImage>
-                      </div>
-                      <CardContent className="p-4 text-center">
-                        <StaticText
-                          contentId={238 + i * 20 + j * 4}
-                          identificador={`section-${i}-member-${j}-name`}
-                          seccion="kraal"
-                          as="h4"
-                          className="font-bold mb-1"
-                        >
-                          {member.name}
-                        </StaticText>
-                        <StaticText
-                          contentId={239 + i * 20 + j * 4}
-                          identificador={`section-${i}-member-${j}-role`}
-                          seccion="kraal"
-                          as="p"
-                          className="text-sm text-muted-foreground mb-2"
-                        >
-                          {member.role}
-                        </StaticText>
-                        <StaticText
-                          contentId={240 + i * 20 + j * 4}
-                          identificador={`section-${i}-member-${j}-experience`}
-                          seccion="kraal"
-                          as="p"
-                          className="text-xs text-muted-foreground"
-                        >
-                          {member.experience}
-                        </StaticText>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="flex justify-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl">
+                    {section.members.map((member, j) => (
+                      <Card key={j} className="overflow-hidden h-full">
+                        <div className="h-48 relative">
+                          <StaticImage
+                            contentId={237 + i * 20 + j * 4}
+                            identificador={`section-${i}-member-${j}-photo`}
+                            seccion="kraal"
+                            alt={member.name}
+                            className="w-full h-full object-cover"
+                          >
+                            {getContent(`section-${i}-member-${j}-photo`, member.photo)}
+                          </StaticImage>
+                        </div>
+                        <CardContent className="p-4 text-center">
+                          <StaticText
+                            contentId={238 + i * 20 + j * 4}
+                            identificador={`section-${i}-member-${j}-name`}
+                            seccion="kraal"
+                            as="h4"
+                            className="font-bold mb-1"
+                          >
+                            {member.name}
+                          </StaticText>
+                          <StaticText
+                            contentId={239 + i * 20 + j * 4}
+                            identificador={`section-${i}-member-${j}-role`}
+                            seccion="kraal"
+                            as="p"
+                            className="text-sm text-muted-foreground mb-2"
+                          >
+                            {member.role}
+                          </StaticText>
+                          <StaticText
+                            contentId={240 + i * 20 + j * 4}
+                            identificador={`section-${i}-member-${j}-experience`}
+                            seccion="kraal"
+                            as="p"
+                            className="text-xs text-muted-foreground"
+                          >
+                            {member.experience}
+                          </StaticText>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}

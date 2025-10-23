@@ -73,7 +73,7 @@ export function MainNav() {
           {/* Logo - Always on the left */}
           <Link
             href="/"
-            className="flex items-center transition-transform hover:scale-105">
+            className="flex items-center transition-opacity hover:opacity-90">
             <img
               src="/images/logo-osyris.png"
               alt="Logo Grupo Scout Osyris"
@@ -166,28 +166,6 @@ export function MainNav() {
                   </div>
 
                   <Link
-                    href="/calendario"
-                    onClick={() => setIsOpen(false)}
-                    className={cn(
-                      "text-lg font-medium transition-colors hover:text-primary p-2 rounded-md",
-                      pathname === "/calendario" ? "text-primary bg-primary/10" : "text-foreground hover:bg-muted",
-                    )}
-                  >
-                    Calendario
-                  </Link>
-
-                  <Link
-                    href="/galeria"
-                    onClick={() => setIsOpen(false)}
-                    className={cn(
-                      "text-lg font-medium transition-colors hover:text-primary p-2 rounded-md",
-                      pathname === "/galeria" ? "text-primary bg-primary/10" : "text-foreground hover:bg-muted",
-                    )}
-                  >
-                    Galería
-                  </Link>
-
-                  <Link
                     href="/sobre-nosotros"
                     onClick={() => setIsOpen(false)}
                     className={cn(
@@ -196,6 +174,17 @@ export function MainNav() {
                     )}
                   >
                     Sobre Nosotros
+                  </Link>
+
+                  <Link
+                    href="/faq"
+                    onClick={() => setIsOpen(false)}
+                    className={cn(
+                      "text-lg font-medium transition-colors hover:text-primary p-2 rounded-md",
+                      pathname === "/faq" ? "text-primary bg-primary/10" : "text-foreground hover:bg-muted",
+                    )}
+                  >
+                    Preguntas Frecuentes
                   </Link>
 
                   <Link
@@ -325,34 +314,6 @@ export function MainNav() {
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href="/calendario"
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        pathname === "/calendario" ? "text-primary font-medium" : "text-foreground",
-                      )}
-                    >
-                      Calendario
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href="/galeria"
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        pathname === "/galeria" ? "text-primary font-medium" : "text-foreground",
-                      )}
-                    >
-                      Galería
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
                   <NavigationMenuTrigger
                     className={cn(
                       pathname === "/sobre-nosotros" || pathname === "/contacto"
@@ -385,15 +346,36 @@ export function MainNav() {
                       >
                         Familias y colaboradores
                       </ListItem>
-                      <ListItem
-                        href="/contacto"
-                        title="Contacto"
-                        icon={<span className="w-3 h-3 rounded-full bg-primary mr-2"></span>}
-                      >
-                        Cómo contactar con nosotros
-                      </ListItem>
                     </ul>
                   </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/faq"
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        pathname === "/faq" ? "text-primary font-medium" : "text-foreground",
+                      )}
+                    >
+                      FAQ
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/contacto"
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        pathname === "/contacto" ? "text-primary font-medium" : "text-foreground",
+                      )}
+                    >
+                      Contacto
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>

@@ -4,8 +4,8 @@ import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react"
 export function SiteFooter() {
   return (
     <footer className="bg-primary text-primary-foreground">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <img src="/images/logo-osyris.png" alt="Logo Grupo Scout Osyris" className="h-12 w-12" />
@@ -138,8 +138,8 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-primary-foreground/60">
-          <p>&copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.</p>
+        <div className="border-t border-primary-foreground/20 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-primary-foreground/60">
+          <p className="text-sm sm:text-base">&copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>
