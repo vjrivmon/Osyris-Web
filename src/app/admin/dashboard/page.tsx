@@ -9,6 +9,7 @@ import { ActivityChart } from "@/components/admin/activity-chart"
 import { SearchBar } from "@/components/admin/search-bar"
 import { UserTable } from "@/components/admin/user-table"
 import { QuickAddModal } from "@/components/admin/quick-add-modal"
+import { BulkInviteModal } from "@/components/admin/bulk-invite-modal"
 import {
   Users,
   Activity,
@@ -226,15 +227,15 @@ export default function AdminCRMDashboard() {
     }
   }
 
-  // Cargar usuarios con filtros
-  const loadUsers = async (filters = searchFilters) => {
+  // Cargar usuarios con filtros y paginación
+  const loadUsers = async (filters = searchFilters, page = usersPagination.page) => {
     setUsersLoading(true)
     try {
       const token = getAuthToken()
       if (!token) return
 
       const params = new URLSearchParams({
-        page: usersPagination.page.toString(),
+        page: page.toString(),
         limit: usersPagination.limit.toString(),
         ...Object.fromEntries(
           Object.entries(filters).filter(([_, value]) => value !== "")
@@ -327,6 +328,12 @@ export default function AdminCRMDashboard() {
     loadMetrics()
   }
 
+  // Manejar cambio de página
+  const handlePageChange = (page: number) => {
+    setUsersPagination(prev => ({ ...prev, page }))
+    loadUsers(searchFilters, page)
+  }
+
   // Reenviar invitación
   const handleResendInvitation = async (userId: number) => {
     try {
@@ -405,6 +412,11 @@ export default function AdminCRMDashboard() {
         </div>
         <div className="flex gap-2">
           <QuickAddModal onUserAdded={handleUserAdded} />
+          <BulkInviteModal onInvitesSent={() => {
+            loadUsers(searchFilters)
+            loadPendingUsers()
+            loadMetrics()
+          }} />
           <Button variant="outline" onClick={loadDashboardData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
@@ -478,6 +490,8 @@ export default function AdminCRMDashboard() {
                 onUserUpdate={handleUserUpdate}
                 onUserDelete={handleUserDelete}
                 loading={usersLoading}
+                pagination={usersPagination}
+                onPageChange={handlePageChange}
               />
             </CardContent>
           </Card>

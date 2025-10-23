@@ -51,15 +51,15 @@ export function SearchBar({
 }: SearchBarProps) {
   const [filters, setFilters] = useState<SearchFilters>({
     query: "",
-    rol: "",
-    estado: "",
-    seccion: ""
+    rol: "all",
+    estado: "all",
+    seccion: "all"
   })
   const [activeFiltersCount, setActiveFiltersCount] = useState(0)
 
   useEffect(() => {
     const count = Object.values(filters).filter(value =>
-      value && value !== ""
+      value && value !== "" && value !== "all"
     ).length
     setActiveFiltersCount(count)
   }, [filters])
@@ -71,9 +71,9 @@ export function SearchBar({
   const handleClear = () => {
     const clearedFilters = {
       query: "",
-      rol: "",
-      estado: "",
-      seccion: ""
+      rol: "all",
+      estado: "all",
+      seccion: "all"
     }
     setFilters(clearedFilters)
     onClear()
@@ -81,9 +81,11 @@ export function SearchBar({
   }
 
   const handleInputChange = (key: keyof SearchFilters, value: string) => {
-    const newFilters = { ...filters, [key]: value }
-    setFilters(newFilters)
-    onSearch(newFilters)
+    // Convertir "all" a string vacío para el filtrado
+    const filterValue = value === "all" ? "" : value
+    const newFilters = { ...filters, [key]: filterValue }
+    setFilters({ ...filters, [key]: value }) // Mantener "all" en el estado
+    onSearch(newFilters) // Enviar "" para el filtrado
   }
 
   const hasActiveFilters = activeFiltersCount > 0
@@ -155,7 +157,7 @@ export function SearchBar({
                     <SelectValue placeholder="Todos los roles" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos los roles</SelectItem>
+                    <SelectItem value="all">Todos los roles</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
                     <SelectItem value="scouter">Scouter</SelectItem>
                     <SelectItem value="usuario">Usuario</SelectItem>
@@ -175,7 +177,7 @@ export function SearchBar({
                     <SelectValue placeholder="Todos los estados" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos los estados</SelectItem>
+                    <SelectItem value="all">Todos los estados</SelectItem>
                     <SelectItem value="activo">Activo</SelectItem>
                     <SelectItem value="inactivo">Inactivo</SelectItem>
                     <SelectItem value="suspendido">Suspendido</SelectItem>
@@ -195,7 +197,7 @@ export function SearchBar({
                     <SelectValue placeholder="Todas las secciones" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las secciones</SelectItem>
+                    <SelectItem value="all">Todas las secciones</SelectItem>
                     <SelectItem value="castores">Castores</SelectItem>
                     <SelectItem value="manada">Manada</SelectItem>
                     <SelectItem value="tropa">Tropa</SelectItem>

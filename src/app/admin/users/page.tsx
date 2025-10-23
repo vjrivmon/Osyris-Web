@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users } from "lucide-react"
+import { Users, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getApiUrl } from "@/lib/api-utils"
 
@@ -12,6 +12,7 @@ import { getApiUrl } from "@/lib/api-utils"
 import { SearchBar } from "@/components/admin/search-bar"
 import { UserTable } from "@/components/admin/user-table"
 import { QuickAddModal } from "@/components/admin/quick-add-modal"
+import { BulkInviteModal } from "@/components/admin/bulk-invite-modal"
 
 interface User {
   id: number
@@ -194,8 +195,12 @@ export default function AdminUsersPage() {
         </div>
         <div className="flex items-center gap-2">
           <QuickAddModal onUserAdded={handleUserAdded} />
+          <BulkInviteModal onInvitesSent={() => {
+            loadUsers(searchFilters, pagination.page)
+          }} />
           <Button variant="outline" onClick={() => loadUsers(searchFilters, pagination.page)}>
-            Actualizar lista
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualizar
           </Button>
         </div>
       </div>

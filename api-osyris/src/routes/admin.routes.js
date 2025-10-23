@@ -235,6 +235,56 @@ router.post('/invitations', adminController.createInvitation);
 
 /**
  * @swagger
+ * /api/admin/invitations/bulk:
+ *   post:
+ *     summary: Crear múltiples invitaciones simultáneamente
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - invitations
+ *             properties:
+ *               invitations:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - email
+ *                     - nombre
+ *                     - rol
+ *                   properties:
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                     nombre:
+ *                       type: string
+ *                     apellidos:
+ *                       type: string
+ *                     rol:
+ *                       type: string
+ *                       enum: [admin, scouter]
+ *                     seccion_id:
+ *                       type: integer
+ *     responses:
+ *       201:
+ *         description: Invitaciones procesadas exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ */
+router.post('/invitations/bulk', adminController.createBulkInvitations);
+
+/**
+ * @swagger
  * /api/admin/users/pending:
  *   get:
  *     summary: Obtener usuarios pendientes de completar registro

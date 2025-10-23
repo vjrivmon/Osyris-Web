@@ -96,6 +96,22 @@ function RegisterPageContent() {
       errors.apellidos = "Los apellidos son obligatorios"
     }
 
+    if (!formData.telefono) {
+      errors.telefono = "El teléfono es obligatorio"
+    } else if (!/^\+?[\d\s-()]+$/.test(formData.telefono)) {
+      errors.telefono = "El teléfono solo puede contener números, espacios, guiones y paréntesis"
+    } else if (formData.telefono.replace(/\D/g, "").length < 9) {
+      errors.telefono = "El teléfono debe tener al menos 9 dígitos"
+    }
+
+    if (!formData.direccion) {
+      errors.direccion = "La dirección es obligatoria"
+    }
+
+    if (!formData.fecha_nacimiento) {
+      errors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
+    }
+
     if (!formData.password) {
       errors.password = "La contraseña es obligatoria"
     } else if (formData.password.length < 6) {
@@ -106,18 +122,6 @@ function RegisterPageContent() {
       errors.confirmPassword = "Confirma tu contraseña"
     } else if (formData.password !== formData.confirmPassword) {
       errors.confirmPassword = "Las contraseñas no coinciden"
-    }
-
-    if (!formData.telefono) {
-      errors.telefono = "El teléfono es obligatorio"
-    }
-
-    if (!formData.direccion) {
-      errors.direccion = "La dirección es obligatoria"
-    }
-
-    if (!formData.fecha_nacimiento) {
-      errors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
     }
 
     if (!invitationData?.seccion_id) {
@@ -196,10 +200,29 @@ function RegisterPageContent() {
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    // Validación especial para teléfono: solo permitir números, espacios, guiones y paréntesis
+    if (field === "telefono") {
+      const sanitized = value.replace(/[^\d\s\-+()]/g, "")
+      setFormData(prev => ({ ...prev, [field]: sanitized }))
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
+    
     // Limpiar errores cuando el usuario empieza a escribir
     if (formErrors[field as keyof typeof formErrors]) {
       setFormErrors(prev => ({ ...prev, [field]: "" }))
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent, field: string) => {
+    // Prevenir pegar en el campo de confirmación de contraseña
+    if (field === "confirmPassword") {
+      e.preventDefault()
+      toast({
+        title: "Acción no permitida",
+        description: "Debes escribir la contraseña manualmente para confirmarla",
+        variant: "destructive"
+      })
     }
   }
 
@@ -267,13 +290,13 @@ function RegisterPageContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
-      <div className="max-w-md w-full">
+      <div className="max-w-5xl w-full">
         <Card>
-          <CardHeader className="text-center">
+          <CardHeader className="text-center pb-2">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <span className="text-2xl">🏕️</span>
             </div>
-            <CardTitle className="text-2xl text-green-800">
+            <CardTitle className="text-3xl text-green-800">
               Completa tu Registro
             </CardTitle>
             <CardDescription>
@@ -283,11 +306,11 @@ function RegisterPageContent() {
 
           {invitationData && (
             <CardContent>
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-800 mb-2">
                   <strong>Invitación para:</strong>
                 </p>
-                <p className="font-medium text-blue-900">
+                <p className="font-medium text-blue-900 text-lg">
                   {invitationData.nombre} {invitationData.apellidos}
                 </p>
                 <p className="text-sm text-blue-700">{invitationData.email}</p>
@@ -307,119 +330,153 @@ function RegisterPageContent() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña *</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
-                      className={formErrors.password ? "border-red-500" : ""}
-                      placeholder="Mínimo 6 caracteres"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Sección: Información Personal */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">
+                    📋 Información Personal
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="apellidos">Apellidos *</Label>
+                      <Input
+                        id="apellidos"
+                        type="text"
+                        value={formData.apellidos}
+                        onChange={(e) => handleInputChange("apellidos", e.target.value)}
+                        className={formErrors.apellidos ? "border-red-500" : ""}
+                        placeholder="Tus apellidos"
+                      />
+                      {formErrors.apellidos && (
+                        <p className="text-xs text-red-500">{formErrors.apellidos}</p>
                       )}
-                    </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fecha_nacimiento">Fecha de Nacimiento *</Label>
+                      <Input
+                        id="fecha_nacimiento"
+                        type="date"
+                        value={formData.fecha_nacimiento}
+                        onChange={(e) => handleInputChange("fecha_nacimiento", e.target.value)}
+                        className={formErrors.fecha_nacimiento ? "border-red-500" : ""}
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                      {formErrors.fecha_nacimiento && (
+                        <p className="text-xs text-red-500">{formErrors.fecha_nacimiento}</p>
+                      )}
+                    </div>
                   </div>
-                  {formErrors.password && (
-                    <p className="text-xs text-red-500">{formErrors.password}</p>
-                  )}
-                  <PasswordStrength password={formData.password} />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Contraseña *</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    className={formErrors.confirmPassword ? "border-red-500" : ""}
-                    placeholder="Repite tu contraseña"
-                  />
-                  {formErrors.confirmPassword && (
-                    <p className="text-xs text-red-500">{formErrors.confirmPassword}</p>
-                  )}
+                {/* Sección: Información de Contacto */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">
+                    📞 Información de Contacto
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="telefono">Teléfono *</Label>
+                      <Input
+                        id="telefono"
+                        type="tel"
+                        value={formData.telefono}
+                        onChange={(e) => handleInputChange("telefono", e.target.value)}
+                        className={formErrors.telefono ? "border-red-500" : ""}
+                        placeholder="+34 600 000 000"
+                        maxLength={15}
+                      />
+                      {formErrors.telefono && (
+                        <p className="text-xs text-red-500">{formErrors.telefono}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">Solo números y caracteres permitidos: + - ( ) espacio</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="direccion">Dirección *</Label>
+                      <Input
+                        id="direccion"
+                        value={formData.direccion}
+                        onChange={(e) => handleInputChange("direccion", e.target.value)}
+                        className={formErrors.direccion ? "border-red-500" : ""}
+                        placeholder="Calle, número, ciudad"
+                      />
+                      {formErrors.direccion && (
+                        <p className="text-xs text-red-500">{formErrors.direccion}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="apellidos">Apellidos *</Label>
-                  <Input
-                    id="apellidos"
-                    type="text"
-                    value={formData.apellidos}
-                    onChange={(e) => handleInputChange("apellidos", e.target.value)}
-                    className={formErrors.apellidos ? "border-red-500" : ""}
-                    placeholder="Tus apellidos"
-                  />
-                  {formErrors.apellidos && (
-                    <p className="text-xs text-red-500">{formErrors.apellidos}</p>
-                  )}
-                </div>
+                {/* Sección: Contraseña */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">
+                    🔒 Configuración de Contraseña
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Contraseña *</Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={(e) => handleInputChange("password", e.target.value)}
+                          className={formErrors.password ? "border-red-500 pr-10" : "pr-10"}
+                          placeholder="Mínimo 6 caracteres"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {formErrors.password && (
+                        <p className="text-xs text-red-500">{formErrors.password}</p>
+                      )}
+                      <PasswordStrength password={formData.password} />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="telefono">Teléfono *</Label>
-                  <Input
-                    id="telefono"
-                    type="tel"
-                    value={formData.telefono}
-                    onChange={(e) => handleInputChange("telefono", e.target.value)}
-                    className={formErrors.telefono ? "border-red-500" : ""}
-                    placeholder="+34 600 000 000"
-                  />
-                  {formErrors.telefono && (
-                    <p className="text-xs text-red-500">{formErrors.telefono}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="direccion">Dirección *</Label>
-                  <Input
-                    id="direccion"
-                    value={formData.direccion}
-                    onChange={(e) => handleInputChange("direccion", e.target.value)}
-                    className={formErrors.direccion ? "border-red-500" : ""}
-                    placeholder="Calle, número, ciudad"
-                  />
-                  {formErrors.direccion && (
-                    <p className="text-xs text-red-500">{formErrors.direccion}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="fecha_nacimiento">Fecha de Nacimiento *</Label>
-                  <Input
-                    id="fecha_nacimiento"
-                    type="date"
-                    value={formData.fecha_nacimiento}
-                    onChange={(e) => handleInputChange("fecha_nacimiento", e.target.value)}
-                    className={formErrors.fecha_nacimiento ? "border-red-500" : ""}
-                  />
-                  {formErrors.fecha_nacimiento && (
-                    <p className="text-xs text-red-500">{formErrors.fecha_nacimiento}</p>
-                  )}
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">
+                        Confirmar Contraseña *
+                        <span className="text-xs text-orange-600 ml-2">(No se puede copiar/pegar)</span>
+                      </Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                        onPaste={(e) => handlePaste(e, "confirmPassword")}
+                        onCopy={(e) => e.preventDefault()}
+                        className={formErrors.confirmPassword ? "border-red-500" : ""}
+                        placeholder="Repite tu contraseña"
+                        autoComplete="off"
+                      />
+                      {formErrors.confirmPassword && (
+                        <p className="text-xs text-red-500">{formErrors.confirmPassword}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">Debes escribir la contraseña manualmente para confirmar</p>
+                    </div>
+                  </div>
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                       Completando registro...
                     </>
                   ) : (
