@@ -76,6 +76,7 @@ interface ApiUser {
   nombre: string
   apellidos: string
   rol: string
+  activo: boolean
   seccion_id?: number
   ultimo_acceso?: string
   fecha_registro: string
@@ -249,7 +250,7 @@ export default function AdminCRMDashboard() {
           nombre: apiUser.nombre,
           apellidos: apiUser.apellidos,
           rol: apiUser.rol,
-          estado: "activo", // Todos los usuarios activos en el dashboard
+          estado: apiUser.activo ? "activo" : "inactivo", // Usar el estado real del usuario
           seccion: apiUser.seccion_id ? `Sección ${apiUser.seccion_id}` : undefined,
           ultimoAcceso: apiUser.ultimo_acceso,
           fechaCreacion: apiUser.fecha_registro

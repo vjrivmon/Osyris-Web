@@ -600,6 +600,15 @@ const adminController = {
         WHERE id = $3
       `, [invitationToken, expiresAt, id]);
 
+      // Enviar email con el enlace de invitación
+      try {
+        await sendInvitationEmail(user[0].email, user[0].nombre, invitationToken);
+        console.log(`✅ Email de invitación reenviado a ${user[0].email}`);
+      } catch (emailError) {
+        console.error(`⚠️ Error enviando email a ${user[0].email}:`, emailError.message);
+        // No fallar la invitación si el email falla
+      }
+
       console.log(`📧 Invitación reenviada a ${user[0].email}:`);
       console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL}/registro?token=${invitationToken}`);
 
