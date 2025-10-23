@@ -88,13 +88,13 @@ echo ""
 # Reiniciar el backend
 echo -e "${BLUE}🔄 Reiniciando el backend para aplicar cambios...${NC}"
 cd /var/www/osyris/current
-pm2 restart api-osyris
+pm2 restart osyris-backend
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Backend reiniciado correctamente${NC}"
 else
     echo -e "${RED}❌ Error al reiniciar el backend${NC}"
-    echo -e "${YELLOW}💡 Intenta reiniciarlo manualmente: cd /var/www/osyris/current && pm2 restart api-osyris${NC}"
+    echo -e "${YELLOW}💡 Intenta reiniciarlo manualmente: cd /var/www/osyris/current && pm2 restart osyris-backend${NC}"
     exit 1
 fi
 

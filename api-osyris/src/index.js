@@ -1,13 +1,22 @@
+// 🚀 CONFIGURACIÓN DE VARIABLES DE ENTORNO (ABSOLUTAMENTE PRIMERO)
+// IMPORTANTE: Esto DEBE estar antes de cualquier otro require()
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Cargar .env desde el directorio raíz del backend
+const envPath = path.resolve(__dirname, '..', '.env');
+console.log('📁 Cargando variables de entorno desde:', envPath);
+dotenv.config({ path: envPath });
+console.log('✅ Variables de entorno cargadas');
+console.log('📧 EMAIL_USER:', process.env.EMAIL_USER ? 'Configurado' : 'NO configurado');
+console.log('📧 EMAIL_APP_PASSWORD:', process.env.EMAIL_APP_PASSWORD ? 'Configurado' : 'NO configurado');
+
+// Ahora sí, importar el resto de módulos
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const path = require('path');
 const fileUpload = require('express-fileupload');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
-
-// 🚀 CONFIGURACIÓN DE VARIABLES DE ENTORNO (PRIMERO)
-dotenv.config();
 
 // 🐘 CONFIGURACIÓN POSTGRESQL
 const db = require('./config/db.config');
