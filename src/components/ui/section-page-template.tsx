@@ -127,15 +127,15 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
       </header>
       <main className="flex-1">
         {/* Hero Section */}
-        <section className={`relative bg-gradient-to-br ${sectionData.colors.from} ${sectionData.colors.to} py-16 md:py-24 text-white`}>
-          <div className="container mx-auto px-4 text-center">
-            <div className="inline-block mb-4 text-5xl">{sectionData.emoji}</div>
+        <section className={`relative bg-gradient-to-br ${sectionData.colors.from} ${sectionData.colors.to} py-12 sm:py-16 md:py-24 text-white`}>
+          <div className="container mx-auto px-4 sm:px-6 text-center">
+            <div className="inline-block mb-3 sm:mb-4 text-4xl sm:text-5xl">{sectionData.emoji}</div>
             <StaticText
               contentId={baseId}
               identificador="hero-title"
               seccion={sectionData.slug}
               as="h1"
-              className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6 text-white"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 sm:mb-6 text-white px-2"
             >
               {getContent('hero-title', `${sectionData.name} - ${sectionData.fullName}`)}
             </StaticText>
@@ -144,7 +144,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
               identificador="hero-subtitle"
               seccion={sectionData.slug}
               as="p"
-              className="mt-4 text-xl max-w-3xl mx-auto text-white"
+              className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl max-w-3xl mx-auto text-white px-4"
             >
               {getContent('hero-subtitle', `"${sectionData.motto}" - ${sectionData.ageRange}`)}
             </StaticText>
@@ -152,21 +152,21 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         </section>
 
         {/* About Section */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="md:w-1/2">
+        <section className="py-8 sm:py-12">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-center">
+              <div className="lg:w-1/2 w-full">
                 <StaticImage
                   contentId={baseId + 2}
                   identificador="hero-image"
                   seccion={sectionData.slug}
-                  className="rounded-lg w-full h-auto"
+                  className="rounded-lg w-full h-64 sm:h-72 md:h-80"
                   alt={`${sectionData.name} en actividad`}
                 >
                   {getContent('hero-image', '/placeholder.svg?height=400&width=600')}
                 </StaticImage>
               </div>
-              <div className="md:w-1/2 space-y-4">
+              <div className="lg:w-1/2 w-full space-y-3 sm:space-y-4">
                 <StaticText
                   contentId={baseId + 3}
                   identificador="about-title"
@@ -211,18 +211,18 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         </section>
 
         {/* Activities Section */}
-        <section className="py-12 bg-muted">
-          <div className="container mx-auto px-4">
+        <section className="py-8 sm:py-12 bg-muted">
+          <div className="container mx-auto px-4 sm:px-6">
             <StaticText
               contentId={baseId + 7}
               identificador="activities-title"
               seccion={sectionData.slug}
               as="h2"
-              className="text-2xl font-bold text-center mb-8"
+              className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8"
             >
               {getContent('activities-title', `¿Qué hacen los ${sectionData.name}?`)}
             </StaticText>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {sectionData.activities.map((activity, i) => (
                 <div key={i} className="bg-background rounded-lg p-6 shadow-sm">
                   <div className="text-3xl mb-4">{activity.icon}</div>
@@ -252,19 +252,19 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         </section>
 
         {/* Methodology Section */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
+        <section className="py-8 sm:py-12">
+          <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-3xl mx-auto">
               <StaticText
                 contentId={baseId + 20}
                 identificador="methodology-title"
                 seccion={sectionData.slug}
                 as="h2"
-                className="text-2xl font-bold text-center mb-8"
+                className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8"
               >
                 {getContent('methodology-title', 'Metodología')}
               </StaticText>
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {sectionData.methodology.map((method, i) => (
                   <div key={i} className={`${sectionClasses.methodology} p-4 rounded`}>
                     <StaticText
@@ -294,18 +294,18 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         </section>
 
         {/* Team Section */}
-        <section className={`py-12 ${sectionClasses.teamSection}`}>
-          <div className="container mx-auto px-4">
+        <section className={`py-8 sm:py-12 ${sectionClasses.teamSection}`}>
+          <div className="container mx-auto px-4 sm:px-6">
             <StaticText
               contentId={baseId + 30}
               identificador="team-title"
               seccion={sectionData.slug}
               as="h2"
-              className="text-2xl font-bold text-center mb-8"
+              className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8"
             >
               {getContent('team-title', 'Nuestro Equipo')}
             </StaticText>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
               {sectionData.team.map((member, i) => (
                 <div key={i} className={`${sectionClasses.teamCard} rounded-lg p-6 shadow-sm text-center`}>
                   <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 bg-muted">
@@ -344,9 +344,9 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         </section>
 
         {/* Navigation Section */}
-        <section className="py-8 bg-muted">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col sm:flex-row justify-between items-center">
+        <section className="py-6 sm:py-8 bg-muted">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
               {sectionData.navigation.prev ? (
                 <Button asChild variant="outline">
                   <Link href={sectionData.navigation.prev.href}>

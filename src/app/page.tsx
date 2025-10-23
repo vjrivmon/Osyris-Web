@@ -5,7 +5,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { StaticText, StaticImage, StaticList } from "@/components/ui/static-content"
 import {
   CalendarDays,
@@ -18,7 +20,14 @@ import {
   ChevronRight,
   Heart,
   Compass,
-  Loader2
+  Loader2,
+  Send,
+  UsersRound,
+  HandHeart,
+  Target,
+  TreePine,
+  TrendingUp,
+  GraduationCap
 } from "lucide-react"
 
 export default function Home() {
@@ -28,31 +37,31 @@ export default function Home() {
       <MainNav />
       <main className="flex-1">
         {/* Hero Section - Improved with better visuals and call to action */}
-        <section className="relative bg-hero-pattern bg-cover bg-center py-32 md:py-48">
+        <section className="relative bg-hero-pattern bg-cover bg-center py-20 sm:py-28 md:py-36 lg:py-48">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70"></div>
-          <div className="container relative z-10 mx-auto px-4 text-center">
-            <div className="mb-6 inline-block rounded-full bg-white px-4 py-1.5 text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
+          <div className="container relative z-10 mx-auto px-4 sm:px-6 text-center">
+            <div className="mb-4 sm:mb-6 inline-block rounded-full bg-white px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
               Educando en valores desde 1981
             </div>
             <StaticText
               content="Grupo Scout Osyris"
               tag="h1"
-              className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl text-white"
+              className="mb-4 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white px-2"
             />
             <StaticText
               content="Formando jóvenes a través del método scout, promoviendo valores, aventura y servicio a la comunidad desde 1981."
               tag="p"
-              className="mx-auto mt-6 max-w-3xl text-xl leading-relaxed text-white"
+              className="mx-auto mt-4 sm:mt-6 max-w-3xl text-base sm:text-lg md:text-xl leading-relaxed text-white px-4"
             />
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <Button asChild size="lg" className="bg-secondary text-black hover:bg-secondary/90">
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 px-4">
+              <Button asChild size="lg" className="bg-secondary text-black hover:bg-secondary/90 w-full sm:w-auto">
                 <Link href="/secciones">Descubre nuestras secciones</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-white bg-white/10 text-white hover:bg-white/20"
+                className="border-white bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
               >
                 <Link href="/contacto">Contacta con nosotros</Link>
               </Button>
@@ -61,9 +70,9 @@ export default function Home() {
         </section>
 
         {/* Featured Section - New section highlighting key aspects */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <section className="py-12 sm:py-16">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 rounded-full bg-primary/10 p-4">
                   <Compass className="h-8 w-8 text-primary" />
@@ -113,22 +122,42 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Stats Section - Trust indicators */}
+        <section className="py-12 sm:py-16 bg-primary">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-6 md:gap-8">
+              <div className="flex flex-col items-center text-center">
+                <div className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-2 sm:mb-3">45</div>
+                <p className="text-base sm:text-lg md:text-xl font-medium text-white">Años de experiencia</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-2 sm:mb-3">130+</div>
+                <p className="text-base sm:text-lg md:text-xl font-medium text-white">Educandos activos</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-2 sm:mb-3">100%</div>
+                <p className="text-base sm:text-lg md:text-xl font-medium text-white">Compromiso scout</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Secciones - Improved with better visuals and layout */}
-        <section className="bg-section-pattern py-16">
-          <div className="container mx-auto px-4">
-            <div className="mb-12 text-center">
+        <section className="bg-section-pattern py-12 sm:py-16">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="mb-8 sm:mb-12 text-center">
               <StaticText
                 content="Nuestras Secciones"
                 tag="h2"
-                className="mb-4 text-3xl font-bold"
+                className="mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold"
               />
               <StaticText
                 content="El escultismo se adapta a las diferentes etapas de desarrollo de niños y jóvenes, ofreciendo actividades y metodologías específicas para cada edad."
                 tag="p"
-                className="mx-auto max-w-2xl text-muted-foreground"
+                className="mx-auto max-w-2xl text-sm sm:text-base text-muted-foreground px-4"
               />
             </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
               {sections.map((section, i) => (
                 <Link href={section.href} key={i} className="group" >
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg group-hover:translate-y-[-5px]">
@@ -147,98 +176,25 @@ export default function Home() {
                 </Link>
               ))}
             </div>
-            <div className="mt-8 text-center">
-              <Button asChild>
-                <Link href="/secciones" className="group" >
-                  Conoce todas nuestras secciones
-                  <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* Próximas Actividades - Enhanced with better cards and visuals */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <div className="mb-12 text-center">
-              <StaticText
-                content="Próximas Actividades"
-                tag="h2"
-                className="mb-4 text-3xl font-bold"
-              />
-              <StaticText
-                content="Descubre las actividades que tenemos programadas para las próximas semanas."
-                tag="p"
-                className="mx-auto max-w-2xl text-muted-foreground"
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {upcomingActivities.map((activity, i) => (
-                <Card key={i} className="h-full overflow-hidden transition-all hover:shadow-md">
-                  <div className="relative h-48 bg-muted">
-                    <div className="absolute left-0 top-0 z-10 flex h-16 w-16 flex-col items-center justify-center bg-primary text-primary-foreground">
-                      <span className="text-xl font-bold">{activity.day}</span>
-                      <span className="text-xs">{activity.month}</span>
-                    </div>
-                    <img
-                      src={activity.image || "/placeholder.svg?height=200&width=400"}
-                      alt={activity.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="mb-2 text-xl font-bold">{activity.title}</h3>
-                    <div className="mb-4 flex flex-wrap items-center gap-4 text-muted-foreground">
-                      <div className="flex items-center">
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        <span className="text-sm">{activity.date}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <MapPin className="mr-2 h-4 w-4" />
-                        <span className="text-sm">{activity.location}</span>
-                      </div>
-                    </div>
-                    <p className="mb-4 text-muted-foreground">{activity.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${activity.sectionClass}`}>
-                        {activity.section}
-                      </span>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/actividades/${activity.id}`}>Ver detalles</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="mt-8 text-center">
-              <Button asChild>
-                <Link href="/calendario" className="group" >
-                  Ver calendario completo
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-            </div>
           </div>
         </section>
 
         {/* Valores - Enhanced with better visuals */}
-        <section className="bg-primary py-16 text-primary-foreground">
-          <div className="container mx-auto px-4">
-            <div className="mb-12 text-center">
+        <section className="bg-primary py-12 sm:py-16 text-primary-foreground">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="mb-8 sm:mb-12 text-center">
               <StaticText
                 content="Nuestros Valores"
                 tag="h2"
-                className="mb-4 text-3xl font-bold"
+                className="mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold"
               />
               <StaticText
                 content="El escultismo se basa en valores fundamentales que guían nuestras actividades y nuestra forma de entender la educación."
                 tag="p"
-                className="mx-auto max-w-2xl text-primary-foreground/80"
+                className="mx-auto max-w-2xl text-sm sm:text-base text-primary-foreground/80 px-4"
               />
             </div>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               {values.map((value, i) => (
                 <div
                   key={i}
@@ -260,43 +216,73 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <div className="mt-10 text-center">
-              <Button asChild variant="secondary">
-                <Link href="/sobre-nosotros" className="group" >
-                  Conoce más sobre nosotros
-                  <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-            </div>
           </div>
         </section>
 
-        {/* Join Us Section - New call to action section */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <div className="rounded-xl bg-muted p-8 md:p-12">
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                <div>
-                  <StaticText
-                    content="¿Quieres formar parte de nuestra familia scout?"
-                    tag="h2"
-                    className="mb-4 text-3xl font-bold"
-                  />
-                  <StaticText
-                    content="Si estás interesado en que tu hijo/a forme parte del Grupo Scout Osyris o quieres unirte como monitor, no dudes en contactar con nosotros. ¡Te esperamos con los brazos abiertos!"
-                    tag="p"
-                    className="mb-6 text-muted-foreground"
-                  />
-                  <Button asChild size="lg">
-                    <Link href="/contacto">Contacta con nosotros</Link>
-                  </Button>
-                </div>
-                <div className="flex items-center justify-center">
+        {/* Join Us Section - With image and form */}
+        <section className="py-12 sm:py-16 lg:py-20 bg-white dark:bg-background">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center">
+                {/* Left side - Image */}
+                <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] rounded-xl overflow-hidden shadow-xl order-2 lg:order-1">
                   <StaticImage
-                    src="/placeholder.svg?height=300&width=400"
-                    alt="Grupo Scout Osyris"
-                    className="rounded-lg"
+                    src="/placeholder.svg?height=500&width=600"
+                    alt="Grupo Scout Osyris - Aventura"
+                    className="w-full h-full object-cover"
                   />
+                </div>
+
+                {/* Right side - Title and Form */}
+                <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
+                  <div>
+                    
+                    <StaticText
+                      content="Únete al grupo"
+                      tag="h2"
+                      className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4"
+                    />
+                    <StaticText
+                      content="Descubre una comunidad donde tus hijos crecerán rodeados de valores, naturaleza y amistad."
+                      tag="p"
+                      className="text-base sm:text-lg text-muted-foreground"
+                    />
+                  </div>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Déjanos tus datos</CardTitle>
+                      <CardDescription>
+                        Actualmente tenemos lista de espera. Mándanos una solicitud y nos pondremos en contacto contigo lo antes posible.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="join-name">Tu nombre</Label>
+                          <Input
+                            id="join-name"
+                            type="text"
+                            placeholder="Ej: María García"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="join-email">Tu correo electrónico</Label>
+                          <Input
+                            id="join-email"
+                            type="email"
+                            placeholder="tu@email.com"
+                          />
+                        </div>
+                      </form>
+                    </CardContent>
+                    <CardFooter>
+                      <Button className="w-full" size="lg">
+                        <Send className="mr-2 h-4 w-4" />
+                        Enviar
+                      </Button>
+                    </CardFooter>
+                  </Card>
                 </div>
               </div>
             </div>
@@ -304,23 +290,23 @@ export default function Home() {
         </section>
 
         {/* Testimonios - Enhanced with better cards */}
-        <section className="bg-section-pattern py-16">
-          <div className="container mx-auto px-4">
-            <div className="mb-12 text-center">
+        <section className="bg-gray-100 dark:bg-slate-900 py-12 sm:py-16">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="mb-8 sm:mb-12 text-center">
               <StaticText
                 content="Testimonios"
                 tag="h2"
-                className="mb-4 text-3xl font-bold"
+                className="mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold"
               />
               <StaticText
                 content="Descubre lo que opinan las familias y antiguos miembros sobre su experiencia en el Grupo Scout Osyris."
                 tag="p"
-                className="mx-auto max-w-2xl text-muted-foreground"
+                className="mx-auto max-w-2xl text-sm sm:text-base text-muted-foreground px-4"
               />
             </div>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {testimonials.map((testimonial, index) => (
-                <Card key={index} className="h-full bg-muted/50">
+                <Card key={index} className="h-full bg-white">
                   <CardContent className="p-6">
                     <div className="mb-6 text-4xl">"</div>
                     <p className="mb-6 italic">{testimonial.text}</p>
@@ -396,23 +382,23 @@ const sections = [
 // Valores data
 const values = [
   {
-    icon: <Users className="h-12 w-12" />,
+    icon: <UsersRound className="h-12 w-12" />,
     title: "Comunidad",
     description:
       "Fomentamos el sentido de pertenencia y el trabajo en equipo, creando vínculos fuertes entre todos los miembros.",
   },
   {
-    icon: <Tent className="h-12 w-12" />,
+    icon: <TreePine className="h-12 w-12" />,
     title: "Naturaleza",
     description: "Promovemos el respeto y cuidado del medio ambiente a través de actividades al aire libre.",
   },
   {
-    icon: <Award className="h-12 w-12" />,
+    icon: <Target className="h-12 w-12" />,
     title: "Compromiso",
     description: "Desarrollamos la responsabilidad personal y el compromiso con los demás y con la sociedad.",
   },
   {
-    icon: <FileText className="h-12 w-12" />,
+    icon: <GraduationCap className="h-12 w-12" />,
     title: "Educación",
     description: "Trabajamos por el desarrollo integral de niños y jóvenes a través del método scout.",
   },
