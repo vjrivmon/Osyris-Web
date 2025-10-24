@@ -13,7 +13,14 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: "Grupo Scout Osyris",
   description: "Plataforma integral para la gestión y comunicación del Grupo Scout Osyris",
-  generator: 'v0.dev'
+  generator: "v0.dev",
+  icons: {
+    icon: [
+      { url: "/images/logo-osyris.png", type: "image/png" },
+    ],
+    shortcut: "/images/logo-osyris.png",
+    apple: "/images/logo-osyris.png",
+  },
 }
 
 export default function RootLayout({

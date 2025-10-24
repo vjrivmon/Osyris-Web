@@ -306,12 +306,12 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {testimonials.map((testimonial, index) => (
-                <Card key={index} className="h-full bg-white">
-                  <CardContent className="p-6">
+                <Card key={index} className="flex h-full flex-col bg-white">
+                  <CardContent className="flex h-full flex-col p-6">
                     <div className="mb-6 text-4xl">"</div>
-                    <p className="mb-6 italic">{testimonial.text}</p>
-                    <div className="flex items-center">
-                      <div className="mr-4 h-12 w-12 overflow-hidden rounded-full">
+                    <p className="italic">{testimonial.text}</p>
+                    <div className="mt-auto flex items-center gap-4 pt-8">
+                      <div className="h-12 w-12 overflow-hidden rounded-full">
                         <img
                           src={testimonial.avatar || "/placeholder.svg?height=100&width=100"}
                           alt={testimonial.name}
@@ -446,21 +446,21 @@ const upcomingActivities = [
 
 const testimonials = [
   {
-    name: "María García",
-    role: "Madre de Lobato",
+    name: "Antonio Almela",
+    role: "Antiguo Scouter",
     avatar: "/placeholder.svg?height=100&width=100",
-    text: "El grupo scout ha sido una experiencia transformadora para mi hijo. Ha ganado confianza, independencia y ha hecho amigos para toda la vida.",
+    text: "Un gran grupo scout con gente buena de verdad y valores que hacen que los niños y niñas crezcan y disfruten cada momento",
   },
   {
-    name: "Carlos Rodríguez",
-    role: "Antiguo Ruta",
+    name: "Juanjo",
+    role: "Antiguo Scouter",
     avatar: "/placeholder.svg?height=100&width=100",
-    text: "Mis años en el Grupo Scout Osyris marcaron mi vida. Los valores que aprendí me han acompañado siempre y me han ayudado a ser quien soy hoy.",
+    text: "Magnífico grupo con gente variada en cuanto a edad y procedencia, valores y principios Scouts, excelente Proyecto Educativo y un Kraal implicado al máximo. Grupo 100% recomendable.",
   },
   {
-    name: "Ana Martínez",
-    role: "Scouter de Pioneros",
+    name: "Eva Bujanda",
+    role: "Antigua Scouter",
     avatar: "/placeholder.svg?height=100&width=100",
-    text: "Ver crecer a los chicos y chicas, superar retos y convertirse en personas comprometidas es la mayor recompensa de ser monitor scout.",
+    text: "Un grupo con muchos años de experiencia educando en valores. Geniales sus monitores y sus niños!",
   },
 ]
