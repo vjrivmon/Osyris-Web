@@ -36,6 +36,7 @@ function RegisterPageContent() {
   const [isCompleted, setIsCompleted] = useState(false)
 
   const [formData, setFormData] = useState({
+    nombre: "",
     password: "",
     confirmPassword: "",
     telefono: "",
@@ -45,6 +46,7 @@ function RegisterPageContent() {
   })
 
   const [formErrors, setFormErrors] = useState({
+    nombre: "",
     password: "",
     confirmPassword: "",
     telefono: "",
@@ -84,12 +86,17 @@ function RegisterPageContent() {
 
   const validateForm = (): boolean => {
     const errors = {
+      nombre: "",
       password: "",
       confirmPassword: "",
       telefono: "",
       direccion: "",
       fecha_nacimiento: "",
       apellidos: ""
+    }
+
+    if (!formData.nombre) {
+      errors.nombre = "El nombre es obligatorio"
     }
 
     if (!formData.apellidos) {
@@ -124,7 +131,8 @@ function RegisterPageContent() {
       errors.confirmPassword = "Las contraseñas no coinciden"
     }
 
-    if (!invitationData?.seccion_id) {
+    // Solo validar sección para scouters, no para familias
+    if (invitationData?.rol === 'scouter' && !invitationData?.seccion_id) {
       toast({
         title: "Error",
         description: "Debes tener una sección asignada para completar el registro",
@@ -134,7 +142,7 @@ function RegisterPageContent() {
     }
 
     setFormErrors(errors)
-    return !errors.password && !errors.confirmPassword && !errors.telefono && !errors.direccion && !errors.fecha_nacimiento && !errors.apellidos
+    return !errors.nombre && !errors.password && !errors.confirmPassword && !errors.telefono && !errors.direccion && !errors.fecha_nacimiento && !errors.apellidos
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,6 +163,7 @@ function RegisterPageContent() {
         },
         body: JSON.stringify({
           token,
+          nombre: formData.nombre,
           password: formData.password,
           apellidos: formData.apellidos,
           telefono: formData.telefono,
@@ -179,11 +188,13 @@ function RegisterPageContent() {
         // Redirigir al dashboard según el rol del usuario
         const rol = result.data.usuario?.rol || "scouter"
         let dashboardUrl = "/aula-virtual"
-        
+
         if (rol === "admin") {
           dashboardUrl = "/admin/dashboard"
+        } else if (rol === "familia") {
+          dashboardUrl = "/familia/dashboard"
         }
-        // Todos los demás usuarios (scouter, familia, educando) van a /aula-virtual
+        // scouter y educando van a /aula-virtual
 
         setTimeout(() => {
           window.location.href = dashboardUrl
@@ -316,7 +327,10 @@ function RegisterPageContent() {
                 <p className="text-sm text-blue-700">{invitationData.email}</p>
                 <div className="flex items-center gap-2 mt-3 flex-wrap">
                   <Badge variant="outline" className="text-xs">
-                    {invitationData.rol === "admin" ? "🔐 Administrador" : "⚜️ Scouter"}
+                    {invitationData.rol === "admin" && "👑 Administrador"}
+                    {invitationData.rol === "scouter" && "⚜️ Scouter"}
+                    {invitationData.rol === "familia" && "👨‍👩‍👧‍👦 Familia"}
+                    {invitationData.rol === "educando" && "🧒 Educando"}
                   </Badge>
                   {invitationData.seccion_id && (
                     <Badge className="text-xs bg-green-600 hover:bg-green-700 text-white">
@@ -337,6 +351,21 @@ function RegisterPageContent() {
                     📋 Información Personal
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="nombre">Nombre *</Label>
+                      <Input
+                        id="nombre"
+                        type="text"
+                        value={formData.nombre}
+                        onChange={(e) => handleInputChange("nombre", e.target.value)}
+                        className={formErrors.nombre ? "border-red-500" : ""}
+                        placeholder="Tu nombre"
+                      />
+                      {formErrors.nombre && (
+                        <p className="text-xs text-red-500">{formErrors.nombre}</p>
+                      )}
+                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="apellidos">Apellidos *</Label>
                       <Input
@@ -448,7 +477,6 @@ function RegisterPageContent() {
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">
                         Confirmar Contraseña *
-                        <span className="text-xs text-orange-600 ml-2">(No se puede copiar/pegar)</span>
                       </Label>
                       <Input
                         id="confirmPassword"

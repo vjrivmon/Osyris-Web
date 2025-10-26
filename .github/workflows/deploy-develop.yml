@@ -1,4 +1,4 @@
-name: Deploy from Develop to Production
+name: Deploy from Develop to Staging
 
 on:
   push:
@@ -9,17 +9,20 @@ on:
       force_no_cache:
         description: 'Forzar limpieza de caché completa'
         required: false
-        default: 'false'
+        default: false
         type: boolean
-      verify_production:
-        description: 'Verificar funcionamiento en producción'
+      verify_staging:
+        description: 'Verificar funcionamiento en staging'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 env:
   NODE_VERSION: '20.x'
-  DEPLOY_PATH: /var/www/osyris
+  DEPLOY_PATH: /var/www/osyris-staging/current
+  FRONTEND_PORT: 3001
+  BACKEND_PORT: 5001
+  DB_NAME: osyris_staging_db
   SERVER_USER: root
   SERVER_HOST: ${{ secrets.HETZNER_HOST }}
 
@@ -311,30 +314,31 @@ jobs:
           npm prune --omit=dev || true
           cd ..
 
-          # Configurar .env del backend
+          # Configurar .env del backend para STAGING
           cat > api-osyris/.env << 'ENVFILE'
           DATABASE_TYPE=postgres
           DB_HOST=localhost
           DB_PORT=5432
           DB_USER=osyris_user
           DB_PASSWORD=OsyrisDB2024!Secure
-          DB_NAME=osyris_db
-          NODE_ENV=production
-          PORT=5000
-          JWT_SECRET=osyrisScoutGroup2024SecretKey!Production
+          DB_NAME=osyris_staging_db
+          NODE_ENV=staging
+          PORT=5001
+          JWT_SECRET=osyrisScoutGroup2024SecretKey!Staging
           JWT_EXPIRES_IN=24h
-          FRONTEND_URL=https://gruposcoutosyris.es
-          ALLOWED_ORIGINS=https://gruposcoutosyris.es,https://www.gruposcoutosyris.es,http://116.203.98.142
+          FRONTEND_URL=http://116.203.98.142:3001
+          ALLOWED_ORIGINS=http://116.203.98.142:3001,http://localhost:3001
+          STAGING_MODE=true
           ENVFILE
 
           echo "🐘 GESTIÓN DE CONTENEDORES DOCKER"
 
-          # Detener contenedores antiguos completamente
-          echo "Deteniendo contenedores Docker antiguos..."
-          docker stop osyris-frontend || true
-          docker stop osyris-backend || true
-          docker rm osyris-frontend || true
-          docker rm osyris-backend || true
+          # Detener contenedores antiguos de staging completamente
+          echo "Deteniendo contenedores Docker antiguos de staging..."
+          docker stop osyris-staging-frontend || true
+          docker stop osyris-staging-backend || true
+          docker rm osyris-staging-frontend || true
+          docker rm osyris-staging-backend || true
 
           # Esperar a que se detengan completamente
           sleep 3
@@ -355,29 +359,33 @@ jobs:
             npm update -g pm2 || true
           fi
 
-          # Detener servicios PM2 existentes
-          pm2 stop osyris-frontend || true
-          pm2 stop osyris-backend || true
-          pm2 delete osyris-frontend || true
-          pm2 delete osyris-backend || true
+          # Detener servicios PM2 existentes de STAGING
+          pm2 stop osyris-staging-frontend || true
+          pm2 stop osyris-staging-backend || true
+          pm2 delete osyris-staging-frontend || true
+          pm2 delete osyris-staging-backend || true
+
+          # Limpiar puertos de staging
+          fuser -k 3001/tcp 2>/dev/null || true
+          fuser -k 5001/tcp 2>/dev/null || true
 
           # Pequeña pausa para asegurar limpieza completa
           sleep 2
 
-          # Iniciar frontend con PM2 (usando el build recién creado)
-          echo "Iniciando frontend..."
-          pm2 start "npx next start -p 3000" \
-            --name "osyris-frontend" \
-            --cwd /var/www/osyris/current \
-            --env NODE_ENV=production
+          # Iniciar frontend staging con PM2 (usando el build recién creado)
+          echo "Iniciando frontend staging en puerto 3001..."
+          pm2 start "npx next start -p 3001" \
+            --name "osyris-staging-frontend" \
+            --cwd ${{ env.DEPLOY_PATH }} \
+            --env NODE_ENV=staging
 
-          # Iniciar backend con PM2
-          echo "Iniciando backend..."
-          pm2 start /var/www/osyris/current/api-osyris/src/index.js \
-            --name "osyris-backend" \
-            --cwd /var/www/osyris/current/api-osyris \
-            --node-args="--env-file=/var/www/osyris/current/api-osyris/.env" \
-            --env NODE_ENV=production
+          # Iniciar backend staging con PM2
+          echo "Iniciando backend staging en puerto 5001..."
+          pm2 start ${{ env.DEPLOY_PATH }}/api-osyris/src/index.js \
+            --name "osyris-staging-backend" \
+            --cwd ${{ env.DEPLOY_PATH }}/api-osyris \
+            --node-args="--env-file=${{ env.DEPLOY_PATH }}/api-osyris/.env" \
+            --env NODE_ENV=staging
 
           # Guardar configuración PM2
           pm2 save
@@ -388,20 +396,20 @@ jobs:
           pm2 list
           docker ps | grep osyris
 
-          # Verificar que los procesos están corriendo
-          if ! pm2 list | grep -q "osyris-frontend.*online"; then
-            echo "❌ Frontend no está online"
-            pm2 logs osyris-frontend --lines 20
+          # Verificar que los procesos de STAGING están corriendo
+          if ! pm2 list | grep -q "osyris-staging-frontend.*online"; then
+            echo "❌ Frontend staging no está online"
+            pm2 logs osyris-staging-frontend --lines 20
             exit 1
           fi
 
-          if ! pm2 list | grep -q "osyris-backend.*online"; then
-            echo "❌ Backend no está online"
-            pm2 logs osyris-backend --lines 20
+          if ! pm2 list | grep -q "osyris-staging-backend.*online"; then
+            echo "❌ Backend staging no está online"
+            pm2 logs osyris-staging-backend --lines 20
             exit 1
           fi
 
-          echo "✅ Todos los servicios están online"
+          echo "✅ Todos los servicios de STAGING están online"
           ENDSSH
 
       - name: 🧹 Cleanup local
@@ -412,90 +420,94 @@ jobs:
           echo "⏱️ Esperando que los servicios estén completamente listos..."
           sleep 20
 
-      - name: ✅ Comprehensive deployment verification
+      - name: ✅ Comprehensive staging verification
         run: |
-          echo "🔍 Verificación comprehensiva del despliegue..."
+          echo "🔍 Verificación comprehensiva del despliegue en STAGING..."
 
-          # Verificar frontend (HTTPS por Cloudflare)
-          echo "Verificando frontend..."
+          # Verificar frontend staging (HTTP puerto 3001)
+          echo "Verificando frontend staging..."
           FRONTEND_STATUS=0
           for i in {1..5}; do
-            echo "Intento $i de 5 para frontend..."
-            if curl -f -s -o /dev/null -L https://gruposcoutosyris.es; then
-              echo "✅ Frontend respondiendo correctamente"
+            echo "Intento $i de 5 para frontend staging..."
+            if curl -f -s -o /dev/null -L http://116.203.98.142:3001; then
+              echo "✅ Frontend staging respondiendo correctamente"
               FRONTEND_STATUS=1
               break
             else
-              echo "⏳ Frontend no responde aún, esperando 10s..."
+              echo "⏳ Frontend staging no responde aún, esperando 10s..."
               sleep 10
             fi
           done
 
           if [ $FRONTEND_STATUS -eq 0 ]; then
-            echo "❌ Frontend no responde después de 5 intentos"
+            echo "❌ Frontend staging no responde después de 5 intentos"
             exit 1
           fi
 
-          # Verificar backend API
-          echo "Verificando backend API..."
+          # Verificar backend API staging
+          echo "Verificando backend API staging..."
           API_STATUS=0
           for i in {1..5}; do
-            echo "Intento $i de 5 para API..."
-            if curl -f -s -o /dev/null -L https://gruposcoutosyris.es/api/health; then
-              echo "✅ Backend API respondiendo correctamente"
+            echo "Intento $i de 5 para API staging..."
+            if curl -f -s -o /dev/null -L http://116.203.98.142:5001/api/health; then
+              echo "✅ Backend API staging respondiendo correctamente"
               API_STATUS=1
               break
             else
-              echo "⏳ API no responde aún, esperando 10s..."
+              echo "⏳ API staging no responde aún, esperando 10s..."
               sleep 10
             fi
           done
 
           if [ $API_STATUS -eq 0 ]; then
-            echo "❌ Backend API no responde después de 5 intentos"
+            echo "⚠️ Backend API staging no responde en /health, verificando endpoint alternativo..."
             # Verificar endpoint alternativo
-            if curl -f -s -o /dev/null -L https://gruposcoutosyris.es/api/usuarios; then
-              echo "✅ Backend responde en endpoint alternativo"
+            if curl -f -s -o /dev/null -L http://116.203.98.142:5001/api/usuarios; then
+              echo "✅ Backend staging responde en endpoint alternativo"
               API_STATUS=1
             else
+              echo "❌ Backend staging no responde"
               exit 1
             fi
           fi
 
           # Verificación de contenido específico
-          echo "Verificando contenido específico..."
-          CONTENT_CHECK=$(curl -s -L https://gruposcoutosyris.es | grep -c "Osyris" || echo "0")
+          echo "Verificando contenido específico en staging..."
+          CONTENT_CHECK=$(curl -s -L http://116.203.98.142:3001 | grep -c "Osyris" || echo "0")
           if [ "$CONTENT_CHECK" -gt 0 ]; then
-            echo "✅ Contenido verificado - Osyris encontrado en página principal"
+            echo "✅ Contenido verificado - Osyris encontrado en página principal de staging"
           else
-            echo "⚠️ Advertencia: No se encontró 'Osyris' en página principal"
+            echo "⚠️ Advertencia: No se encontró 'Osyris' en página principal de staging"
           fi
 
-      - name: 📊 Detailed deployment summary
+      - name: 📊 Detailed staging deployment summary
         run: |
-          echo "### 🚀 Deployment Summary - Fresh Build Strategy" >> $GITHUB_STEP_SUMMARY
+          echo "### 🧪 Staging Deployment Summary - Fresh Build Strategy" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Información del Despliegue:**" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** 🧪 STAGING" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Strategy:** Fresh (sin caché)" >> $GITHUB_STEP_SUMMARY
           echo "- **Server:** ${{ env.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Acceso a la Aplicación:**" >> $GITHUB_STEP_SUMMARY
-          echo "- 🌐 Frontend: https://gruposcoutosyris.es" >> $GITHUB_STEP_SUMMARY
-          echo "- 🔧 API: https://gruposcoutosyris.es/api/health" >> $GITHUB_STEP_SUMMARY
-          echo "- 🐳 BD Server: ${{ env.SERVER_HOST }}:5432" >> $GITHUB_STEP_SUMMARY
+          echo "**Acceso a STAGING:**" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 Frontend: http://116.203.98.142:3001" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔧 API: http://116.203.98.142:5001/api/health" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐳 BD Server: ${{ env.SERVER_HOST }}:5432 (DB: ${{ env.DB_NAME }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**✅ Verificaciones Realizadas:**" >> $GITHUB_STEP_SUMMARY
           echo "- Limpieza completa de caché: ✅" >> $GITHUB_STEP_SUMMARY
           echo "- Build fresco en servidor: ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- Frontend respondiendo: ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- Backend API funcionando: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend staging respondiendo: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend API staging funcionando: ✅" >> $GITHUB_STEP_SUMMARY
           echo "- Contenido verificado: ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🎉 **Despliegue completado con éxito usando estrategia fresca!**" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **Despliegue a STAGING completado con éxito!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Nota:** Este es el entorno de STAGING. Para desplegar a PRODUCCIÓN, mergea a \`main\`." >> $GITHUB_STEP_SUMMARY
 
   # Job de notificación
   notify:
@@ -505,20 +517,23 @@ jobs:
     if: always()
 
     steps:
-      - name: 📬 Deploy notification
+      - name: 📬 Staging deploy notification
         run: |
-          echo "## 🚀 Notificación de Despliegue" >> $GITHUB_STEP_SUMMARY
+          echo "## 🧪 Notificación de Despliegue a STAGING" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ needs.deploy.result }}" == "success" ]; then
-            echo "✅ **Despliegue exitoso desde develop a producción**" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **Despliegue exitoso desde develop a STAGING**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Enlaces de acceso:**" >> $GITHUB_STEP_SUMMARY
-            echo "- 🌐 Aplicación: https://gruposcoutosyris.es" >> $GITHUB_STEP_SUMMARY
-            echo "- 🔧 API Health: https://gruposcoutosyris.es/api/health" >> $GITHUB_STEP_SUMMARY
+            echo "**Enlaces de acceso a STAGING:**" >> $GITHUB_STEP_SUMMARY
+            echo "- 🌐 Frontend: http://116.203.98.142:3001" >> $GITHUB_STEP_SUMMARY
+            echo "- 🔧 API Health: http://116.203.98.142:5001/api/health" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Estrategia utilizada:** Build fresco sin caché" >> $GITHUB_STEP_SUMMARY
+            echo "**Environment:** STAGING (para testing)" >> $GITHUB_STEP_SUMMARY
             echo "**Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "➡️ **Próximo paso:** Testear en staging y mergear a \`main\` para desplegar a producción" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ **Despliegue falló - revisar logs**" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Despliegue a STAGING falló - revisar logs**" >> $GITHUB_STEP_SUMMARY
             echo "**Acción requerida:** Investigar logs del job 'deploy'" >> $GITHUB_STEP_SUMMARY
           fi

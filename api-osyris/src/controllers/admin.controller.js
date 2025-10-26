@@ -349,25 +349,25 @@ const adminController = {
           // Insertar usuario inactivo con token de invitación
           await db.query(`
             INSERT INTO usuarios (
-              email, nombre, apellidos, rol, seccion_id, 
+              email, nombre, apellidos, rol, seccion_id,
               activo, invitation_token, invitation_expires_at,
-              password
+              contraseña
             ) VALUES ($1, $2, $3, $4, $5, false, $6, $7, $8)
           `, [
-            email, 
-            nombre, 
-            apellidos || '', 
-            rol, 
-            seccion_id || null, 
-            invitationToken, 
+            email,
+            nombre,
+            apellidos || '',
+            rol,
+            seccion_id || null,
+            invitationToken,
             expiresAt,
-            'pending' // Password temporal
+            'pending' // Contraseña temporal
           ]);
 
           // Enviar email con el enlace de invitación
           try {
-            await sendInvitationEmail(email, nombre, invitationToken);
-            console.log(`✅ Email de invitación enviado a ${email}`);
+            await sendInvitationEmail(email, nombre, invitationToken, rol);
+            console.log(`✅ Email de invitación enviado a ${email} (rol: ${rol})`);
           } catch (emailError) {
             console.error(`⚠️ Error enviando email a ${email}:`, emailError.message);
             // No fallar la invitación si el email falla

@@ -415,7 +415,8 @@ const verifyInvitation = async (req, res) => {
     }
 
     // Verificar si la invitación ya fue completada
-    if (usuario.registration_completed_at) {
+    // Un usuario activo sin invitation_token significa que ya completó el registro
+    if (usuario.activo && !usuario.invitation_token) {
       return res.status(400).json({
         success: false,
         message: 'Esta invitación ya ha sido utilizada'
@@ -457,7 +458,7 @@ const verifyInvitation = async (req, res) => {
 // Completar registro con contraseña
 const completeRegistration = async (req, res) => {
   try {
-    const { token, password, apellidos, telefono, direccion, fecha_nacimiento } = req.body;
+    const { token, nombre, password, apellidos, telefono, direccion, fecha_nacimiento } = req.body;
 
     // Validar campos obligatorios
     if (!token || !password) {
@@ -467,10 +468,10 @@ const completeRegistration = async (req, res) => {
       });
     }
 
-    if (!apellidos || !telefono || !direccion || !fecha_nacimiento) {
+    if (!nombre || !apellidos || !telefono || !direccion || !fecha_nacimiento) {
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos son obligatorios: apellidos, teléfono, dirección y fecha de nacimiento'
+        message: 'Todos los campos son obligatorios: nombre, apellidos, teléfono, dirección y fecha de nacimiento'
       });
     }
 
@@ -528,7 +529,8 @@ const completeRegistration = async (req, res) => {
     }
 
     // Verificar si la invitación ya fue completada
-    if (usuario.registration_completed_at) {
+    // Un usuario activo sin invitation_token significa que ya completó el registro
+    if (usuario.activo && !usuario.invitation_token) {
       return res.status(400).json({
         success: false,
         message: 'Esta invitación ya ha sido utilizada'
@@ -550,13 +552,13 @@ const completeRegistration = async (req, res) => {
     // Actualizar usuario con la nueva contraseña y datos adicionales
     await db.updateUser(usuario.id, {
       contraseña: hashedPassword,
+      nombre: nombre,
       apellidos: apellidos,
       telefono: telefono,
       direccion: direccion,
       fecha_nacimiento: fecha_nacimiento,
       activo: true, // Activar el usuario al completar el registro
-      invitation_token: null, // Eliminar el token usado
-      registration_completed_at: new Date().toISOString()
+      invitation_token: null // Eliminar el token usado
     });
 
     console.log(`✅ Registro completado para ${usuario.email}`);

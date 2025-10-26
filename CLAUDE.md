@@ -5,10 +5,244 @@
 **Sistema de gestión integral para el Grupo Scout Osyris**
 
 - **Nombre:** Osyris Scout Management System
-- **Versión:** 1.0.0
+- **Versión:** 2.0.0
 - **Autor:** Vicente Rivas Monferrer
 - **Licencia:** ISC
 - **Descripción:** Sistema completo de gestión para actividades, miembros, documentos y comunicaciones del Grupo Scout Osyris
+
+## 🎉 Últimas Actualizaciones (Octubre 2025)
+
+### ✅ Portal Familia Completo (IMPLEMENTADO)
+Sistema completo de gestión familiar con todas las funcionalidades:
+
+#### 🔐 Registro y Autenticación
+- Registro de familias con validación de emails
+- Sistema de autenticación JWT dedicado para familias
+- Recuperación de contraseñas
+- Protección de rutas mediante ProtectedFamiliaRoute
+
+#### 👨‍👩‍👧‍👦 Vinculación de Educandos
+- Sistema de códigos únicos de vinculación
+- Vinculación múltiple (varios educandos por familia)
+- Validación de códigos con expiración
+- Interface intuitiva de vinculación
+
+#### 📊 Dashboard Familiar
+- Vista consolidada de todos los educandos vinculados
+- Información por sección (Castores, Manada, Tropa, Pioneros, Rutas)
+- Calendario de actividades personalizado
+- Notificaciones importantes
+- Acceso a galería privada de fotos
+
+#### ✅ Confirmaciones de Asistencia
+- Confirmación a actividades próximas
+- Estados: pendiente, confirmada, rechazada
+- Notificaciones automáticas de recordatorio
+- Historial de confirmaciones
+
+#### 📷 Galería Privada
+- Acceso a fotos de actividades de sus educandos
+- Organizada por fecha y sección
+- Sistema seguro de permisos
+- Descarga de fotos
+
+#### 📄 Gestión de Documentos
+- Acceso a documentos relevantes
+- Circulares y comunicados
+- Autorizaciones y permisos
+- Descarga segura de documentos
+
+### 🎯 Panel Admin - Gestión de Familias (IMPLEMENTADO)
+
+#### 📧 Invitación Masiva de Familias
+- Sistema de invitación por email
+- Emails personalizados con credenciales
+- Invitación masiva mediante archivo Excel/CSV
+- Tracking de emails enviados
+
+#### 📊 Estadísticas Completas
+- Total de familias registradas
+- Total de familiares activos
+- Total de educandos vinculados
+- Tasa de vinculación
+- Gráficos y métricas
+
+#### 👥 Gestión de Familiares
+- Lista completa de familias
+- Edición de datos familiares
+- Gestión de vinculaciones
+- Desactivación de cuentas
+
+#### 📋 Gestión de Confirmaciones
+- Vista de todas las confirmaciones
+- Filtrado por actividad y familia
+- Exportación de datos
+- Estadísticas de asistencia
+
+### 🧒 Sistema de Educandos (IMPLEMENTADO)
+
+#### 📥 Importación Masiva
+- Importación desde archivos Excel
+- Validación de datos automática
+- Asignación automática a secciones
+- Generación de códigos de vinculación
+
+#### 🔗 Códigos de Vinculación
+- Generación automática de códigos únicos
+- Códigos alfanuméricos de 8 caracteres
+- Sistema de expiración configurable
+- Regeneración de códigos
+
+#### 📊 Gestión Completa
+- CRUD completo de educandos
+- Asignación a secciones
+- Gestión de estado (activo/inactivo)
+- Búsqueda y filtrado avanzado
+
+### 🚀 Infraestructura y Deploy (MEJORADO)
+
+#### 🔄 CI/CD con GitHub Actions
+- Deploy automático en 2 fases:
+  1. **Staging** (puerto 3001) - Pruebas pre-producción
+  2. **Production** (puerto 3000) - Deploy final
+- Validación automática de tests
+- Build optimizado sin caché
+- Verificación de salud de servicios
+
+#### 🗄️ Base de Datos
+- PostgreSQL 15 en producción y staging
+- Backups automáticos diarios (9:00 AM)
+- Scripts de migración automatizados
+- Sincronización staging ↔ producción
+
+#### 📧 Configuración Gmail
+- Sistema de emails transaccionales
+- Credenciales persistentes en servidor
+- Configuración automatizada mediante scripts
+- Testing de envío de emails
+
+#### 🛠️ Scripts Optimizados
+Scripts activos y necesarios:
+- `dev-start.sh` - Inicio desarrollo local
+- `setup-dev.sh` - Setup inicial
+- `deploy-production-complete.sh` - Deploy completo a producción
+- `deploy-to-production-from-staging.sh` - Promoción staging→prod
+- `deploy-to-staging.sh` - Deploy a staging
+- `configure-gmail-production.sh` - Config Gmail
+- `set-gmail-credentials-production.sh` - Credenciales Gmail
+- `migrate-database-production.sh` - Migración BD producción
+- `migrate-database-staging.sh` - Migración BD staging
+- `rebuild-staging-clean.sh` - Rebuild limpio staging
+- `restart-staging-pm2.sh` - Restart PM2 staging
+- `sync-local-to-production.sh` - Sync local→prod
+- `sync-local-to-staging.sh` - Sync local→staging
+- `verify-deployment.sh` - Verificación deploy
+- `verify-config-production.sh` - Verificación config
+- `emergency-rollback.sh` - Rollback de emergencia
+
+### 🗂️ Estructura de Base de Datos Actualizada
+
+Nuevas tablas implementadas:
+- `familia` - Datos de familias registradas
+- `familiar` - Familiares (madre, padre, tutor)
+- `educando` - Educandos/scouts del grupo
+- `familiar_educando` - Relación N:N familiares-educandos
+- `codigo_vinculacion_educando` - Códigos de vinculación
+- `confirmaciones` - Confirmaciones de asistencia
+- `galeria_fotos` - Fotos de actividades
+- `notificaciones_familia` - Notificaciones para familias
+- `documentos_familia` - Documentos compartidos
+
+### 📱 Nuevas Rutas Frontend
+
+#### Portal Familia
+- `/familia/dashboard` - Dashboard principal
+- `/familia/vinculacion` - Vinculación de educandos
+- `/familia/calendario` - Calendario de actividades
+- `/familia/galeria` - Galería privada de fotos
+- `/familia/documentos` - Documentos compartidos
+- `/familia/perfil` - Perfil familiar
+- `/registro` - Registro de nuevas familias
+
+#### Panel Admin
+- `/admin/familiares` - Gestión de familias
+- `/admin/familiares/estadisticas` - Estadísticas
+- `/admin/educandos` - Gestión de educandos
+- `/admin/educandos/import` - Importación masiva
+
+### 🔌 Nuevos Endpoints API
+
+#### Familias
+```
+POST   /api/familia/register          # Registro de familia
+POST   /api/familia/login             # Login familia
+GET    /api/familia/dashboard         # Dashboard familiar
+POST   /api/familia/vincular          # Vincular educando
+GET    /api/familia/educandos         # Educandos vinculados
+```
+
+#### Confirmaciones
+```
+GET    /api/confirmaciones            # Listar confirmaciones
+POST   /api/confirmaciones            # Crear confirmación
+PUT    /api/confirmaciones/:id        # Actualizar confirmación
+```
+
+#### Galería Privada
+```
+GET    /api/galeria_privada           # Fotos accesibles
+GET    /api/galeria_privada/:id       # Foto específica
+```
+
+#### Notificaciones
+```
+GET    /api/notificaciones_familia    # Notificaciones familia
+PUT    /api/notificaciones/:id/leer   # Marcar como leída
+```
+
+#### Documentos Familia
+```
+GET    /api/documentos_familia        # Documentos accesibles
+GET    /api/documentos_familia/:id    # Descargar documento
+```
+
+### 🧪 Testing Actualizado
+
+#### Tests Backend
+- Tests de autenticación familias
+- Tests de vinculación educandos
+- Tests de confirmaciones
+- Tests de galería privada
+
+#### Tests Frontend
+- Tests hooks personalizados:
+  - `useAdminFamiliares.ts`
+  - `useFamiliaData.ts`
+  - `useVinculacion.ts`
+  - `useGaleriaFamilia.ts`
+  - `useDocumentosFamilia.ts`
+  - `useNotificacionesFamilia.ts`
+
+### 🎨 Componentes UI Nuevos
+
+#### Familia
+- `FamiliaDashboard` - Dashboard principal
+- `VinculacionForm` - Formulario vinculación
+- `EducandoCard` - Tarjeta de educando
+- `CalendarioFamilia` - Calendario familiar
+- `GaleriaFamilia` - Galería de fotos
+- `DocumentosList` - Lista de documentos
+- `NotificacionesList` - Notificaciones
+
+#### Admin
+- `FamiliaresList` - Lista de familias
+- `FamiliaresStats` - Estadísticas
+- `InvitarFamiliarForm` - Invitación individual
+- `BulkInviteModal` - Invitación masiva
+- `EducandosList` - Lista educandos
+- `ImportEducandosForm` - Importación masiva
+
+---
 
 ## 🏗️ Arquitectura del Sistema
 
@@ -35,21 +269,28 @@ Osyris-Web/
 ├── 🖥️ Frontend (Next.js 15 con src/)
 │   ├── src/                         # Directorio fuente principal
 │   │   ├── app/                    # App Router de Next.js
-│   │   │   ├── dashboard/          # Panel principal por roles
-│   │   │   │   ├── ajustes/       # Configuración usuario
-│   │   │   │   ├── calendar/      # Calendario actividades
-│   │   │   │   ├── communications/ # Centro mensajería
-│   │   │   │   ├── documents/     # Gestión documentos
-│   │   │   │   ├── inventory/     # Control inventario
-│   │   │   │   ├── kraal/         # Panel monitores (ÚNICO PERFIL ACTIVO)
-│   │   │   │   ├── members/       # Gestión miembros
-│   │   │   │   └── store/         # Tienda scout
+│   │   │   ├── admin/              # Panel de administración
+│   │   │   │   ├── educandos/     # Gestión educandos
+│   │   │   │   ├── familiares/    # Gestión familias
+│   │   │   │   └── ...            # Otros módulos admin
+│   │   │   ├── familia/            # Portal familias (NUEVO)
+│   │   │   │   ├── dashboard/     # Dashboard familiar
+│   │   │   │   ├── vinculacion/   # Vinculación educandos
+│   │   │   │   ├── calendario/    # Calendario actividades
+│   │   │   │   ├── galeria/       # Galería privada
+│   │   │   │   ├── documentos/    # Documentos compartidos
+│   │   │   │   └── perfil/        # Perfil familiar
+│   │   │   ├── registro/           # Registro familias (NUEVO)
 │   │   │   ├── secciones/         # Páginas secciones
 │   │   │   │   ├── castores/      # Colonia La Veleta (5-7 años)
 │   │   │   │   ├── manada/        # Manada Waingunga (7-10 años)
 │   │   │   │   ├── tropa/         # Tropa Brownsea (10-13 años)
 │   │   │   │   ├── pioneros/      # Posta Kanhiwara (13-16 años)
 │   │   │   │   └── rutas/         # Ruta Walhalla (16-19 años)
+│   │   │   ├── api/                # API Routes (NUEVO)
+│   │   │   │   ├── confirmaciones/# Confirmaciones asistencia
+│   │   │   │   ├── familia/       # Endpoints familias
+│   │   │   │   └── galeria_privada/ # Galería privada
 │   │   │   ├── aula-virtual/       # Módulo formación online
 │   │   │   ├── login/              # Autenticación
 │   │   │   ├── contacto/           # Información contacto
@@ -59,12 +300,22 @@ Osyris-Web/
 │   │   │   ├── ui/                # Componentes Shadcn/ui
 │   │   │   ├── aula-virtual/      # Componentes aula virtual
 │   │   │   ├── admin/              # Componentes admin
+│   │   │   │   └── familiares/    # Componentes gestión familias (NUEVO)
+│   │   │   ├── familia/            # Componentes portal familia (NUEVO)
 │   │   │   ├── auth/               # Componentes autenticación
+│   │   │   │   └── protected-familia-route.tsx # Protección rutas familia (NUEVO)
 │   │   │   ├── main-nav.tsx        # Navegación principal
 │   │   │   ├── site-footer.tsx     # Pie de página
 │   │   │   └── theme-provider.tsx  # Proveedor tema
 │   │   ├── hooks/                  # Custom hooks
 │   │   │   ├── useAuth.ts          # Hook autenticación
+│   │   │   ├── useAdminFamiliares.ts # Hook admin familias (NUEVO)
+│   │   │   ├── useFamiliaData.ts   # Hook datos familia (NUEVO)
+│   │   │   ├── useVinculacion.ts   # Hook vinculación (NUEVO)
+│   │   │   ├── useEducandos.ts     # Hook educandos (NUEVO)
+│   │   │   ├── useGaleriaFamilia.ts # Hook galería (NUEVO)
+│   │   │   ├── useDocumentosFamilia.ts # Hook documentos (NUEVO)
+│   │   │   ├── useNotificacionesFamilia.ts # Hook notificaciones (NUEVO)
 │   │   │   ├── use-mobile.tsx      # Hook responsive
 │   │   │   ├── use-toast.ts        # Hook notificaciones
 │   │   │   └── useSectionContent.ts # Hook contenido secciones
@@ -77,6 +328,8 @@ Osyris-Web/
 │   │   ├── contexts/               # Contextos React
 │   │   │   ├── AuthContext.tsx     # Contexto autenticación
 │   │   │   └── EditModeContext.tsx # Contexto modo edición
+│   │   ├── types/                  # TypeScript types (NUEVO)
+│   │   │   └── ...                # Definiciones de tipos
 │   │   └── styles/                 # Estilos
 │   │       └── globals.css         # Estilos globales
 │   └── public/                      # Archivos estáticos
@@ -110,14 +363,49 @@ Osyris-Web/
 │   └── api-osyris/
 │       ├── src/
 │       │   ├── config/              # Configuración BD
+│       │   │   └── db.config.js    # Config PostgreSQL
 │       │   ├── controllers/         # Lógica negocio API
+│       │   │   ├── auth.controller.js # Autenticación
+│       │   │   ├── admin.controller.js # Admin general
+│       │   │   ├── familia.controller.js # Portal familias (NUEVO)
+│       │   │   ├── familiar.controller.js # Gestión familiares (NUEVO)
+│       │   │   ├── educando.controller.js # Gestión educandos (NUEVO)
+│       │   │   ├── confirmaciones.controller.js # Confirmaciones (NUEVO)
+│       │   │   ├── galeria_fotos.controller.js # Galería (NUEVO)
+│       │   │   ├── notificaciones_familia.controller.js # Notificaciones (NUEVO)
+│       │   │   ├── documentos_familia.controller.js # Documentos (NUEVO)
+│       │   │   ├── upload.controller.js # Upload archivos
+│       │   │   └── ...              # Otros controladores
 │       │   ├── middleware/          # Auth y validaciones
+│       │   │   ├── auth.middleware.js # Verificación JWT
+│       │   │   └── ...              # Otros middlewares
 │       │   ├── models/              # Modelos datos
+│       │   │   ├── familiar.model.js # Modelo Familiar (NUEVO)
+│       │   │   ├── educando.model.js # Modelo Educando (NUEVO)
+│       │   │   ├── familiar_educando.model.js # Relación N:N (NUEVO)
+│       │   │   ├── confirmaciones.model.js # Confirmaciones (NUEVO)
+│       │   │   ├── galeria_fotos.model.js # Galería (NUEVO)
+│       │   │   ├── notificaciones_familia.model.js # Notificaciones (NUEVO)
+│       │   │   ├── documentos_familia.model.js # Documentos (NUEVO)
+│       │   │   └── ...              # Otros modelos
 │       │   ├── routes/              # Endpoints API
+│       │   │   ├── auth.routes.js   # Rutas autenticación
+│       │   │   ├── admin.routes.js  # Rutas admin
+│       │   │   ├── familia.routes.js # Rutas familias (NUEVO)
+│       │   │   ├── familiares.routes.js # Rutas familiares (NUEVO)
+│       │   │   ├── educandos.routes.js # Rutas educandos (NUEVO)
+│       │   │   ├── confirmaciones.routes.js # Rutas confirmaciones (NUEVO)
+│       │   │   ├── galeria_privada.routes.js # Rutas galería (NUEVO)
+│       │   │   ├── notificaciones_familia.routes.js # Rutas notificaciones (NUEVO)
+│       │   │   ├── documentos_familia.routes.js # Rutas documentos (NUEVO)
+│       │   │   └── ...              # Otras rutas
 │       │   ├── utils/               # Funciones auxiliares
+│       │   │   ├── email.js        # Envío de emails
+│       │   │   └── ...              # Otras utilidades
 │       │   └── index.js             # Servidor principal
 │       ├── database/
-│       │   └── init.sql            # Scripts inicialización PostgreSQL
+│       │   ├── init.sql            # Scripts inicialización PostgreSQL
+│       │   └── import-educandos.sql # Import educandos (NUEVO)
 │       └── package.json
 ├── 🛠️ Scripts de Desarrollo
 │   └── scripts/
@@ -344,12 +632,25 @@ PUT  /api/mensajes/:id/leido   # Marcar como leído
 - **Retención:** 2 backups más recientes
 
 ### Tablas Principales
-- `usuarios` - Información usuarios y roles
-- `secciones` - Secciones scout
-- `actividades` - Eventos y actividades
-- `documentos` - Archivos y circulares
-- `mensajes` - Sistema mensajería
+
+#### Tablas Existentes
+- `usuarios` - Información usuarios y roles (admin/monitores)
+- `secciones` - Secciones scout (Castores, Manada, Tropa, Pioneros, Rutas)
+- `actividades` - Eventos y actividades del grupo
+- `documentos` - Archivos y circulares generales
+- `mensajes` - Sistema mensajería interna
 - `paginas_estaticas` - Contenido web editable
+
+#### Nuevas Tablas (Portal Familia)
+- `familia` - Datos de familias registradas (email, password_hash, estado)
+- `familiar` - Familiares individuales (nombre, rol: padre/madre/tutor)
+- `educando` - Educandos/scouts del grupo (nombre, fecha_nacimiento, sección)
+- `familiar_educando` - Relación N:N entre familiares y educandos
+- `codigo_vinculacion_educando` - Códigos únicos para vincular educandos
+- `confirmaciones` - Confirmaciones de asistencia a actividades
+- `galeria_fotos` - Fotos de actividades por sección
+- `notificaciones_familia` - Notificaciones para familias
+- `documentos_familia` - Documentos compartidos con familias
 
 ## 🐳 Infraestructura y Despliegue
 

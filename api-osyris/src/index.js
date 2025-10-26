@@ -31,6 +31,15 @@ const authRoutes = require('./routes/auth.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const adminRoutes = require('./routes/admin.routes');
 const registrationRoutes = require('./routes/registration.routes');
+// 🏕️ RUTAS DEL SISTEMA FAMILIAR
+const familiaresRoutes = require('./routes/familiares.routes');
+const documentosFamiliaRoutes = require('./routes/documentos_familia.routes');
+const notificacionesFamiliaRoutes = require('./routes/notificaciones_familia.routes');
+const galeriaPrivadaRoutes = require('./routes/galeria_privada.routes');
+const confirmacionesRoutes = require('./routes/confirmaciones.routes');
+// 👨‍👩‍👧‍👦 RUTAS DE EDUCANDOS Y PORTAL FAMILIAS
+const educandosRoutes = require('./routes/educandos.routes');
+const familiaRoutes = require('./routes/familia.routes');
 // const googleDriveRoutes = require('./routes/google-drive.routes'); // ⚠️ DESHABILITADO: falta dependencia googleapis
 // 🚀 FEATURE FLAGS
 // const featureFlagsRoutes = require('./routes/feature-flags.routes'); // ⚠️ DESHABILITADO: módulo incompleto
@@ -102,6 +111,15 @@ app.use('/api/mensajes', mensajesRoutes);
 // 🚀 NUEVAS RUTAS
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
+// 🏕️ RUTAS DEL SISTEMA FAMILIAR
+app.use('/api/familiares', familiaresRoutes);
+app.use('/api/documentos-familia', documentosFamiliaRoutes);
+app.use('/api/notificaciones-familia', notificacionesFamiliaRoutes);
+app.use('/api/galeria-privada', galeriaPrivadaRoutes);
+app.use('/api/confirmaciones', confirmacionesRoutes);
+// 👨‍👩‍👧‍👦 RUTAS DE EDUCANDOS Y PORTAL FAMILIAS
+app.use('/api/educandos', educandosRoutes);
+app.use('/api/familia', familiaRoutes);
 // app.use('/api/drive', googleDriveRoutes); // ⚠️ DESHABILITADO: falta dependencia googleapis
 // 🚀 FEATURE FLAGS
 // app.use('/api/feature-flags', featureFlagsRoutes); // ⚠️ DESHABILITADO: módulo incompleto

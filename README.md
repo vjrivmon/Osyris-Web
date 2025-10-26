@@ -1,28 +1,46 @@
 # 🏕️ Osyris Scout Management System
 
-**Sistema de gestión inteligente para el Grupo Scout Osyris con IA integrada**
+**Sistema de gestión integral para el Grupo Scout Osyris - Versión 2.0**
 
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green.svg)](https://nodejs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
 
 ---
 
 ## 🌟 Descripción
 
-Sistema completo de gestión para grupos scout que combina tecnologías modernas con inteligencia artificial para automatizar y optimizar todas las tareas de gestión scout. Desarrollado específicamente para el Grupo Scout Osyris con un enfoque en usabilidad y eficiencia.
+Sistema completo de gestión para grupos scout con **Portal para Familias** integrado. Permite a las familias hacer seguimiento de sus educandos, confirmar asistencia a actividades, acceder a documentos y fotos, todo desde una interfaz moderna y responsive.
+
+Desarrollado específicamente para el Grupo Scout Osyris con enfoque en **usabilidad**, **seguridad** y **comunicación familiar**.
 
 ### 🎯 Características Principales
 
-- **🤖 IA Integrada**: Agentes especializados para cada área de desarrollo
+#### 👨‍👩‍👧‍👦 Portal Familias (NUEVO)
+- **Registro y autenticación** de familias con emails personalizados
+- **Vinculación de educandos** mediante códigos únicos
+- **Dashboard familiar** con información consolidada
+- **Confirmación de asistencia** a actividades
+- **Galería privada** de fotos por sección
+- **Documentos compartidos** y circulares
+
+#### 🎯 Panel Administración
+- **Gestión completa de familias** y familiares
+- **Invitación masiva** mediante emails automáticos
+- **Importación de educandos** desde Excel
+- **Estadísticas completas** de vinculación y participación
+- **Gestión de confirmaciones** y asistencias
+
+#### 🚀 Infraestructura
 - **📱 Responsive Design**: Optimizado para móviles, tablets y desktop
-- **🔄 Automatización Completa**: Scripts y comandos para tareas repetitivas
-- **🎨 UI/UX Inteligente**: Análisis automático de interfaz con capturas de pantalla
-- **🧪 Testing Automatizado**: Suite completa de tests con reporting
+- **🔐 Autenticación JWT**: Doble sistema (Admin + Familias)
 - **🌙 Modo Oscuro**: Soporte nativo para temas claro/oscuro
-- **🔐 Autenticación JWT**: Sistema seguro de autenticación y autorización
-- **📊 Google Drive Integration**: Conectividad con Google Drive para gestión de archivos
+- **🐳 Docker + PM2**: Deploy automatizado en producción
+- **🔄 CI/CD**: GitHub Actions con deploy en 2 fases (Staging → Production)
+- **🗄️ PostgreSQL 15**: Base de datos en producción y desarrollo
+- **📧 Sistema de Emails**: Notificaciones automáticas con Gmail
 
 ---
 
@@ -30,114 +48,168 @@ Sistema completo de gestión para grupos scout que combina tecnologías modernas
 
 ### Stack Tecnológico
 
-#### Frontend
-- **Framework**: Next.js 15 + React 19
+#### Frontend (Next.js 15)
+- **Framework**: Next.js 15.5.4 con App Router
+- **React**: React 19.1.1 con hooks personalizados
 - **UI Library**: shadcn/ui + Radix UI
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS 3.x
+- **TypeScript**: TypeScript 5.9.2 con tipado estricto
 - **Forms**: React Hook Form + Zod validation
-- **State Management**: React Context + Hooks
+- **State Management**: React Context + Custom Hooks
 - **Testing**: Jest + React Testing Library + Playwright
+- **Autenticación**: Sistema dual (Admin + Familias)
 
-#### Backend
-- **Framework**: Express.js + Node.js
-- **Database**: MySQL2 + SQLite3 (desarrollo)
+#### Backend (Express.js)
+- **Framework**: Express.js 4.18.2
+- **Runtime**: Node.js 20+
+- **Database**: PostgreSQL 15 (producción y desarrollo)
+- **ORM/Query Builder**: Pool de conexiones nativo pg
 - **Authentication**: JWT + bcryptjs
-- **API Documentation**: Swagger/OpenAPI
-- **File Upload**: Multer + Google Drive API
+- **Email Service**: Nodemailer con Gmail
+- **File Upload**: Multer + Sistema de archivos local
 - **Testing**: Jest + Supertest
 
-#### IA y Automatización
-- **Claude Code**: Sistema de agentes especializados
+#### Infraestructura
+- **Production Server**: Hetzner Cloud (116.203.98.142)
+- **Process Manager**: PM2
+- **Database**: PostgreSQL 15 en Docker
+- **CI/CD**: GitHub Actions (2-Phase Deploy)
+- **Backup**: Automático diario (9:00 AM)
+- **Monitoring**: PM2 + Logs estructurados
 - **MCPs**: Model Context Protocols para integración
 - **Playwright**: Capturas automáticas y testing E2E
 - **Memory**: Persistencia de decisiones y aprendizajes
 
 ---
 
-## 🤖 Sistema de Agentes IA
+## 🎉 Novedades v2.0 (Octubre 2025)
 
-### Agentes Especializados
+### ✅ Portal para Familias - Sistema Completo
 
-#### 🎯 Decision Orchestrator
-**Agente principal que coordina y toma decisiones estratégicas**
-- Análisis de opciones y recursos
-- Coordinación entre agentes especializados
-- Priorización de tareas y features
-- Gestión de calidad y estándares
+El mayor avance de esta versión es la **implementación completa del Portal para Familias**, que permite a las familias:
 
-#### 🎨 Frontend Developer
-**Especialista en Next.js, React 19 y shadcn/ui**
-- Desarrollo de componentes UI
-- Optimización de performance
-- Responsive design y accesibilidad
-- Integración con backend APIs
+#### 📝 Registro y Acceso
+- Registro de familias con validación de email
+- Autenticación JWT independiente del sistema admin
+- Recuperación de contraseñas
+- Protección de rutas específicas
 
-#### ⚙️ Backend Developer
-**Experto en Express.js, MySQL y APIs REST**
-- Desarrollo de endpoints seguros
-- Gestión de base de datos
-- Integración con servicios externos
-- Optimización de queries
+#### 🔗 Vinculación de Educandos
+- Sistema de códigos únicos de 8 caracteres
+- Vinculación de múltiples educandos por familia
+- Validación automática de códigos
+- Interface intuitiva paso a paso
 
-#### 📸 UI/UX Analyzer
-**Analista de interfaz con capturas automáticas**
-- Screenshots automáticos multi-dispositivo
-- Análisis de usabilidad y accesibilidad
-- Recomendaciones específicas para scouts
-- Métricas de performance visual
+#### 📊 Dashboard Familiar
+- Vista consolidada de todos los educandos vinculados
+- Información por sección scout
+- Próximas actividades
+- Notificaciones importantes
+- Acceso rápido a funciones principales
 
-#### 🧪 Test Engineer
-**Especialista en QA y testing automatizado**
-- Tests unitarios, integración y E2E
-- Análisis de cobertura de código
-- Performance testing y benchmarks
-- Quality gates y validaciones
+#### ✅ Confirmaciones de Asistencia
+- Confirmación/rechazo de asistencia a actividades
+- Estados: pendiente, confirmada, rechazada
+- Notificaciones de recordatorio
+- Historial de confirmaciones
 
-### 🚀 Comandos Inteligentes
+#### 📷 Galería Privada
+- Acceso a fotos de actividades de sus educandos
+- Organización por fecha y sección
+- Sistema de permisos seguro
+- Descarga de fotos individual
 
-#### `/dev-start`
-**Inicio completo del entorno de desarrollo**
-```bash
-# Levanta frontend (3001) + backend (3000) automáticamente
-# Configura base de datos y verifica dependencias
-# Monitorea salud de servicios
-```
+#### 📄 Documentos y Circulares
+- Acceso a documentos relevantes
+- Circulares y comunicados
+- Autorizaciones
+- Descarga segura
 
-#### `/new-feature`
-**Creación inteligente de features**
-```bash
-# Crea branch siguiendo convenciones: feature/OSYR-{ID}-{type}-{description}
-# Configura estructura de archivos según tipo
-# Genera checklist de desarrollo automático
-# Integra con agentes especializados
-```
+### 🎯 Mejoras en Administración
 
-#### `/smart-commit`
-**Commits inteligentes con Conventional Commits**
-```bash
-# Analiza cambios automáticamente
-# Sugiere tipo y scope apropiados
-# Valida código con linters y tests
-# Genera mensajes descriptivos
-```
+#### 📧 Invitación Masiva de Familias
+- Sistema de emails automáticos con credenciales
+- Plantillas personalizadas
+- Importación desde Excel/CSV
+- Tracking de invitaciones enviadas
 
-#### `/ui-analyze`
-**Análisis completo de interfaz**
-```bash
-# Capturas multi-dispositivo automáticas
-# Análisis de accesibilidad con axe-core
-# Recomendaciones específicas para scouts
-# Reportes detallados con métricas
-```
+#### 📊 Panel de Estadísticas
+- Total de familias registradas
+- Familiares activos
+- Educandos vinculados
+- Tasa de vinculación
+- Gráficos interactivos
 
-#### `/run-tests`
-**Suite completa de testing**
-```bash
-# Tests unitarios (Frontend + Backend)
-# Tests de integración con APIs
-# Tests E2E con Playwright
-# Análisis de performance y cobertura
-```
+#### 👥 Gestión Completa
+- CRUD de familias y familiares
+- Gestión de vinculaciones
+- Edición de datos
+- Desactivación de cuentas
+- Búsqueda y filtrado avanzado
+
+### 🧒 Sistema de Educandos
+
+#### 📥 Importación Masiva
+- Importación desde archivos Excel
+- Validación automática de datos
+- Asignación a secciones
+- Generación automática de códigos de vinculación
+
+#### 🔗 Códigos de Vinculación
+- Generación automática
+- Códigos alfanuméricos únicos
+- Sistema de expiración configurable
+- Regeneración cuando sea necesario
+
+### 🚀 Infraestructura Mejorada
+
+#### 🔄 CI/CD con GitHub Actions
+- Deploy automático en push a `main`
+- **Fase 1 - Staging**: Deploy a puerto 3001 para pruebas
+- **Fase 2 - Production**: Deploy a puerto 3000 tras validación
+- Build optimizado sin caché
+- Verificación automática de servicios
+
+#### 🗄️ PostgreSQL 15
+- Base de datos en producción y staging
+- Backups automáticos diarios (9:00 AM)
+- Scripts de migración
+- Sincronización entre entornos
+
+#### 📧 Sistema de Emails
+- Gmail SMTP configurado
+- Credenciales persistentes en servidor
+- Envío de invitaciones automáticas
+- Notificaciones a familias
+
+### 🗂️ Nuevas Tablas de Base de Datos
+
+- **familia**: Datos de familias registradas
+- **familiar**: Información de familiares (padre/madre/tutor)
+- **educando**: Scouts del grupo
+- **familiar_educando**: Relación N:N
+- **codigo_vinculacion_educando**: Códigos de vinculación
+- **confirmaciones**: Confirmaciones de asistencia
+- **galeria_fotos**: Fotos por sección
+- **notificaciones_familia**: Notificaciones
+- **documentos_familia**: Documentos compartidos
+
+### 📱 Nuevas Rutas
+
+#### Portal Familia
+- `/familia/dashboard` - Dashboard principal
+- `/familia/vinculacion` - Vincular educandos
+- `/familia/calendario` - Calendario de actividades
+- `/familia/galeria` - Galería privada
+- `/familia/documentos` - Documentos
+- `/familia/perfil` - Perfil familiar
+- `/registro` - Registro de familias
+
+#### Panel Admin
+- `/admin/familiares` - Gestión de familias
+- `/admin/familiares/estadisticas` - Estadísticas
+- `/admin/educandos` - Gestión de educandos
+- `/admin/educandos/import` - Importación masiva
 
 ---
 

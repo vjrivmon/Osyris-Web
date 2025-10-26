@@ -186,11 +186,192 @@ CREATE TRIGGER update_paginas_updated_at
   EXECUTE FUNCTION update_updated_at();
 
 -- ========================================
+-- TABLA: educandos (scouts/niños del grupo)
+-- ========================================
+CREATE TABLE IF NOT EXISTS educandos (
+  id SERIAL PRIMARY KEY,
+
+  -- Datos básicos
+  nombre VARCHAR(100) NOT NULL,
+  apellidos VARCHAR(200) NOT NULL,
+  genero VARCHAR(20) CHECK (genero IN ('masculino', 'femenino', 'otro', 'prefiero_no_decir')),
+  fecha_nacimiento DATE NOT NULL,
+
+  -- Identificación
+  dni VARCHAR(20) UNIQUE,
+  pasaporte VARCHAR(50),
+
+  -- Contacto
+  direccion TEXT,
+  codigo_postal VARCHAR(10),
+  municipio VARCHAR(100),
+  telefono_casa VARCHAR(20),
+  telefono_movil VARCHAR(20),
+  email VARCHAR(100),
+
+  -- Salud
+  alergias TEXT,
+  notas_medicas TEXT,
+
+  -- Scout
+  seccion_id INTEGER NOT NULL REFERENCES secciones(id) ON DELETE RESTRICT,
+  foto_perfil TEXT,
+  activo BOOLEAN DEFAULT true,
+
+  -- Notas generales
+  notas TEXT,
+
+  -- IDs externos (migración desde sistema anterior)
+  id_externo INTEGER UNIQUE, -- ID del sistema anterior MEV
+
+  -- Control
+  fecha_alta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  fecha_baja TIMESTAMP,
+  fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  actualizado_por INTEGER REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+-- ========================================
+-- TABLA: familiares_scouts (relación N:M)
+-- ========================================
+CREATE TABLE IF NOT EXISTS familiares_educandos (
+  id SERIAL PRIMARY KEY,
+  familiar_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  educando_id INTEGER REFERENCES educandos(id) ON DELETE CASCADE,
+  relacion VARCHAR(50) CHECK (relacion IN ('padre', 'madre', 'tutor_legal', 'abuelo', 'otro')),
+  es_contacto_principal BOOLEAN DEFAULT false,
+  fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(familiar_id, educando_id)
+);
+
+-- ========================================
+-- TABLA: documentos_familia
+-- ========================================
+CREATE TABLE IF NOT EXISTS documentos_familia (
+  id SERIAL PRIMARY KEY,
+  educando_id INTEGER REFERENCES educandos(id) ON DELETE CASCADE,
+  familiar_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  tipo_documento VARCHAR(100) NOT NULL,
+  titulo VARCHAR(255) NOT NULL,
+  descripcion TEXT,
+  archivo_nombre VARCHAR(255),
+  archivo_ruta TEXT,
+  tipo_archivo VARCHAR(100),
+  tamaño_archivo BIGINT,
+  fecha_vencimiento DATE,
+  estado VARCHAR(50) DEFAULT 'vigente' CHECK (estado IN ('vigente', 'por_vencer', 'vencido', 'pendiente')),
+  fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  aprobado BOOLEAN DEFAULT false,
+  aprobado_por INTEGER REFERENCES usuarios(id)
+);
+
+-- ========================================
+-- TABLA: notificaciones_familia
+-- ========================================
+CREATE TABLE IF NOT EXISTS notificaciones_familia (
+  id SERIAL PRIMARY KEY,
+  familiar_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  educando_id INTEGER REFERENCES educandos(id) ON DELETE CASCADE,
+  titulo VARCHAR(255) NOT NULL,
+  mensaje TEXT NOT NULL,
+  tipo VARCHAR(50) NOT NULL CHECK (tipo IN ('urgente', 'importante', 'informativo', 'recordatorio')),
+  prioridad VARCHAR(20) DEFAULT 'normal' CHECK (prioridad IN ('alta', 'normal', 'baja')),
+  categoria VARCHAR(100),
+  leida BOOLEAN DEFAULT false,
+  fecha_lectura TIMESTAMP,
+  fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  fecha_expiracion TIMESTAMP,
+  enlace_accion VARCHAR(500),
+  metadata JSONB
+);
+
+-- ========================================
+-- TABLA: confirmaciones_asistencia
+-- ========================================
+CREATE TABLE IF NOT EXISTS confirmaciones_asistencia (
+  id SERIAL PRIMARY KEY,
+  actividad_id INTEGER REFERENCES actividades(id) ON DELETE CASCADE,
+  familiar_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  educando_id INTEGER REFERENCES educandos(id) ON DELETE CASCADE,
+  asistira BOOLEAN NOT NULL,
+  comentarios TEXT,
+  confirmado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  confirmado_por INTEGER REFERENCES usuarios(id),
+  UNIQUE(actividad_id, educando_id)
+);
+
+-- ========================================
+-- TABLA: galeria_fotos_privada
+-- ========================================
+CREATE TABLE IF NOT EXISTS galeria_fotos_privada (
+  id SERIAL PRIMARY KEY,
+  album_id VARCHAR(100) NOT NULL,
+  nombre_album VARCHAR(255) NOT NULL,
+  nombre_archivo VARCHAR(255) NOT NULL,
+  archivo_ruta TEXT NOT NULL,
+  descripcion TEXT,
+  fotografiado_ids INTEGER[], -- Array de IDs de scouts en la foto
+  fecha_tomada DATE,
+  evento_id INTEGER REFERENCES actividades(id) ON DELETE SET NULL,
+  subido_por INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  visible_para_familiares BOOLEAN DEFAULT true,
+  fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  etiquetas VARCHAR(500)[]
+);
+
+-- ========================================
+-- ÍNDICES PARA TABLA EDUCANDOS
+-- ========================================
+CREATE INDEX IF NOT EXISTS idx_educandos_nombre ON educandos(nombre);
+CREATE INDEX IF NOT EXISTS idx_educandos_apellidos ON educandos(apellidos);
+CREATE INDEX IF NOT EXISTS idx_educandos_dni ON educandos(dni);
+CREATE INDEX IF NOT EXISTS idx_educandos_seccion_id ON educandos(seccion_id);
+CREATE INDEX IF NOT EXISTS idx_educandos_activo ON educandos(activo);
+CREATE INDEX IF NOT EXISTS idx_educandos_fecha_nacimiento ON educandos(fecha_nacimiento);
+CREATE INDEX IF NOT EXISTS idx_educandos_id_externo ON educandos(id_externo);
+
+-- ========================================
+-- ÍNDICES ADICIONALES PARA TABLAS FAMILIARES
+-- ========================================
+CREATE INDEX IF NOT EXISTS idx_familiares_educandos_familiar_id ON familiares_educandos(familiar_id);
+CREATE INDEX IF NOT EXISTS idx_familiares_educandos_educando_id ON familiares_educandos(educando_id);
+CREATE INDEX IF NOT EXISTS idx_familiares_educandos_relacion ON familiares_educandos(relacion);
+
+CREATE INDEX IF NOT EXISTS idx_documentos_familia_educando_id ON documentos_familia(educando_id);
+CREATE INDEX IF NOT EXISTS idx_documentos_familia_familiar_id ON documentos_familia(familiar_id);
+CREATE INDEX IF NOT EXISTS idx_documentos_familia_tipo_documento ON documentos_familia(tipo_documento);
+CREATE INDEX IF NOT EXISTS idx_documentos_familia_estado ON documentos_familia(estado);
+CREATE INDEX IF NOT EXISTS idx_documentos_familia_fecha_vencimiento ON documentos_familia(fecha_vencimiento);
+
+CREATE INDEX IF NOT EXISTS idx_notificaciones_familia_familiar_id ON notificaciones_familia(familiar_id);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_familia_educando_id ON notificaciones_familia(educando_id);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_familia_tipo ON notificaciones_familia(tipo);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_familia_prioridad ON notificaciones_familia(prioridad);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_familia_leida ON notificaciones_familia(leida);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_familia_fecha_creacion ON notificaciones_familia(fecha_creacion);
+
+CREATE INDEX IF NOT EXISTS idx_confirmaciones_asistencia_actividad_id ON confirmaciones_asistencia(actividad_id);
+CREATE INDEX IF NOT EXISTS idx_confirmaciones_asistencia_familiar_id ON confirmaciones_asistencia(familiar_id);
+CREATE INDEX IF NOT EXISTS idx_confirmaciones_asistencia_educando_id ON confirmaciones_asistencia(educando_id);
+
+CREATE INDEX IF NOT EXISTS idx_galeria_fotos_privada_album_id ON galeria_fotos_privada(album_id);
+CREATE INDEX IF NOT EXISTS idx_galeria_fotos_privada_evento_id ON galeria_fotos_privada(evento_id);
+CREATE INDEX IF NOT EXISTS idx_galeria_fotos_privada_fechatomada ON galeria_fotos_privada(fecha_tomada);
+CREATE INDEX IF NOT EXISTS idx_galeria_fotos_privada_visible_familiares ON galeria_fotos_privada(visible_para_familiares);
+CREATE INDEX IF NOT EXISTS idx_galeria_fotos_privada_fotografiado_ids ON galeria_fotos_privada USING GIN(fotografiado_ids);
+
+-- ========================================
 -- COMENTARIOS EN TABLAS
 -- ========================================
-COMMENT ON TABLE usuarios IS 'Tabla de usuarios del sistema Osyris';
+COMMENT ON TABLE usuarios IS 'Tabla de usuarios del sistema Osyris (monitores, familiares, admin)';
+COMMENT ON TABLE educandos IS 'Tabla de educandos/scouts del grupo (niños/jóvenes participantes)';
 COMMENT ON TABLE secciones IS 'Secciones scout del grupo';
 COMMENT ON TABLE paginas IS 'Páginas de contenido del CMS';
 COMMENT ON TABLE documentos IS 'Archivos y documentos subidos';
 COMMENT ON TABLE actividades IS 'Actividades y eventos scout';
 COMMENT ON TABLE mensajes IS 'Sistema de mensajería interna';
+COMMENT ON TABLE familiares_educandos IS 'Relación N:M entre familiares y educandos (un educando puede tener varios familiares)';
+COMMENT ON TABLE documentos_familia IS 'Documentos específicos para familias (autorizaciones, informes médicos, etc.)';
+COMMENT ON TABLE notificaciones_familia IS 'Notificaciones específicas para familiares sobre sus educandos';
+COMMENT ON TABLE confirmaciones_asistencia IS 'Confirmaciones de asistencia de educandos a actividades';
+COMMENT ON TABLE galeria_fotos_privada IS 'Galería de fotos privadas visible para familiares';

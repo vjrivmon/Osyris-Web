@@ -538,4 +538,656 @@ router.get('/pages/popular', adminController.getPopularPages);
  */
 router.get('/alerts', adminController.getAlerts);
 
+// ========== GESTIÓN DE VINCULACIÓN FAMILIA-EDUCANDO ==========
+const familiarController = require('../controllers/familiar.controller');
+const educandoController = require('../controllers/educando.controller');
+
+/**
+ * @swagger
+ * /api/admin/familiares/activas:
+ *   get:
+ *     summary: Obtener todas las familias activas
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de familias activas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 familiares:
+ *                   type: array
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ */
+router.get('/familiares/activas', async (req, res) => {
+  try {
+    const { query } = require('../config/db.config');
+
+    const familiares = await query(`
+      SELECT u.id, u.nombre, u.apellidos, u.email, u.telefono, u.activo as estado,
+             u.fecha_registro as "fechaCreacion", u.ultimo_acceso as "ultimoAcceso",
+             COUNT(DISTINCT fe.educando_id) as "educandosVinculados"
+      FROM usuarios u
+      LEFT JOIN familiares_educandos fe ON u.id = fe.familiar_id
+      WHERE u.rol = 'familia' AND u.activo = true
+      GROUP BY u.id
+      ORDER BY u.nombre, u.apellidos
+    `);
+
+    // Obtener educandos vinculados para cada familiar
+    for (const familiar of familiares) {
+      const educandos = await query(`
+        SELECT e.id, e.nombre, e.apellidos, s.nombre as seccion,
+               fe.relacion, fe.es_contacto_principal as "esContactoPrincipal",
+               fe.fecha_creacion as "fechaVinculacion"
+        FROM familiares_educandos fe
+        JOIN educandos e ON fe.educando_id = e.id
+        LEFT JOIN secciones s ON e.seccion_id = s.id
+        WHERE fe.familiar_id = $1
+      `, [familiar.id]);
+
+      familiar.educandosVinculados = educandos;
+      familiar.emailVerificado = true;
+      familiar.documentosPendientes = 0;
+    }
+
+    res.json({
+      success: true,
+      familiares
+    });
+  } catch (error) {
+    console.error('Error obteniendo familiares activas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener familiares activas',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/educandos/disponibles:
+ *   get:
+ *     summary: Obtener todos los educandos disponibles
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de educandos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 educandos:
+ *                   type: array
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ */
+router.get('/educandos/disponibles', async (req, res) => {
+  try {
+    const { query } = require('../config/db.config');
+
+    const educandos = await query(`
+      SELECT e.id, e.nombre, e.apellidos, e.email, e.telefono_movil as telefono,
+             s.nombre as seccion, e.seccion_id
+      FROM educandos e
+      LEFT JOIN secciones s ON e.seccion_id = s.id
+      WHERE e.activo = true
+      ORDER BY e.apellidos, e.nombre
+    `);
+
+    res.json({
+      success: true,
+      educandos
+    });
+  } catch (error) {
+    console.error('Error obteniendo educandos disponibles:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener educandos disponibles',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/familiares/vincular-scout:
+ *   post:
+ *     summary: Vincular un educando a un familiar
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - familiarId
+ *               - educandoId
+ *               - relationType
+ *             properties:
+ *               familiarId:
+ *                 type: integer
+ *               educandoId:
+ *                 type: integer
+ *               relationType:
+ *                 type: string
+ *                 enum: [PADRE, MADRE, TUTOR_LEGAL, ABUELO, OTRO]
+ *               relationDescription:
+ *                 type: string
+ *               esContactoPrincipal:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Vinculación creada exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       409:
+ *         description: Ya existe la vinculación
+ */
+router.post('/familiares/vincular-scout', async (req, res) => {
+  try {
+    const { query } = require('../config/db.config');
+    const { sendVinculacionEmail } = require('../utils/email');
+    const { familiarId, educandoId, relationType, relationDescription, esContactoPrincipal } = req.body;
+
+    // Mapear tipo de relación de frontend a backend
+    const relationMap = {
+      'PADRE': 'padre',
+      'MADRE': 'madre',
+      'TUTOR_LEGAL': 'tutor_legal',
+      'ABUELO': 'abuelo',
+      'OTRO': 'otro'
+    };
+
+    const relacion = relationMap[relationType] || 'otro';
+
+    // Verificar si ya existe
+    const existente = await query(`
+      SELECT id FROM familiares_educandos
+      WHERE familiar_id = $1 AND educando_id = $2
+    `, [familiarId, educandoId]);
+
+    if (existente.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe una vinculación entre este familiar y educando'
+      });
+    }
+
+    // Obtener datos del familiar y educando para el email
+    const [familiar] = await query(`
+      SELECT nombre, apellidos, email
+      FROM usuarios
+      WHERE id = $1 AND rol = 'familia'
+    `, [familiarId]);
+
+    const [educando] = await query(`
+      SELECT e.nombre, e.apellidos, s.nombre as seccion
+      FROM educandos e
+      LEFT JOIN secciones s ON e.seccion_id = s.id
+      WHERE e.id = $1
+    `, [educandoId]);
+
+    if (!familiar || !educando) {
+      return res.status(404).json({
+        success: false,
+        message: 'Familiar o educando no encontrado'
+      });
+    }
+
+    // Crear vinculación
+    await query(`
+      INSERT INTO familiares_educandos (familiar_id, educando_id, relacion, es_contacto_principal)
+      VALUES ($1, $2, $3, $4)
+    `, [familiarId, educandoId, relacion, esContactoPrincipal || false]);
+
+    // Enviar email de notificación (no bloqueante)
+    const nombreFamiliar = `${familiar.nombre} ${familiar.apellidos}`;
+    const nombreEducando = `${educando.nombre} ${educando.apellidos}`;
+    const seccion = educando.seccion || 'Sin sección';
+
+    sendVinculacionEmail(familiar.email, nombreFamiliar, nombreEducando, seccion, relacion)
+      .then(() => {
+        console.log(`✅ Email de vinculación enviado a ${familiar.email}`);
+      })
+      .catch(err => {
+        console.error(`⚠️ No se pudo enviar email de vinculación a ${familiar.email}:`, err.message);
+        // No fallar la petición si el email falla
+      });
+
+    res.status(201).json({
+      success: true,
+      message: 'Vinculación creada correctamente'
+    });
+  } catch (error) {
+    console.error('Error vinculando scout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al vincular scout',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/familiares/desvincular-scout:
+ *   delete:
+ *     summary: Desvincular un educando de un familiar
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - familiarId
+ *               - educandoId
+ *             properties:
+ *               familiarId:
+ *                 type: integer
+ *               educandoId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Desvinculación exitosa
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Vinculación no encontrada
+ */
+router.delete('/familiares/desvincular-scout', async (req, res) => {
+  try {
+    const { query } = require('../config/db.config');
+    const { sendDesvinculacionEmail } = require('../utils/email');
+    const { familiarId, educandoId } = req.body;
+
+    // Obtener datos del familiar y educando antes de eliminar (para enviar email)
+    const [familiar] = await query(`
+      SELECT nombre, apellidos, email
+      FROM usuarios
+      WHERE id = $1 AND rol = 'familia'
+    `, [familiarId]);
+
+    const [educando] = await query(`
+      SELECT e.nombre, e.apellidos, s.nombre as seccion
+      FROM educandos e
+      LEFT JOIN secciones s ON e.seccion_id = s.id
+      WHERE e.id = $1
+    `, [educandoId]);
+
+    // Eliminar vinculación
+    const result = await query(`
+      DELETE FROM familiares_educandos
+      WHERE familiar_id = $1 AND educando_id = $2
+    `, [familiarId, educandoId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vinculación no encontrada'
+      });
+    }
+
+    // Enviar email de notificación si tenemos los datos (no bloqueante)
+    if (familiar && educando) {
+      const nombreFamiliar = `${familiar.nombre} ${familiar.apellidos}`;
+      const nombreEducando = `${educando.nombre} ${educando.apellidos}`;
+      const seccion = educando.seccion || 'Sin sección';
+
+      sendDesvinculacionEmail(familiar.email, nombreFamiliar, nombreEducando, seccion)
+        .then(() => {
+          console.log(`✅ Email de desvinculación enviado a ${familiar.email}`);
+        })
+        .catch(err => {
+          console.error(`⚠️ No se pudo enviar email de desvinculación a ${familiar.email}:`, err.message);
+          // No fallar la petición si el email falla
+        });
+    }
+
+    res.json({
+      success: true,
+      message: 'Vinculación eliminada correctamente'
+    });
+  } catch (error) {
+    console.error('Error desvinculando scout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al desvincular scout',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/familiares/relaciones:
+ *   get:
+ *     summary: Obtener todas las relaciones familia-educando
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de relaciones
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ */
+router.get('/familiares/relaciones', async (req, res) => {
+  try {
+    const { query } = require('../config/db.config');
+
+    const relaciones = await query(`
+      SELECT fe.id, fe.relacion, fe.es_contacto_principal as "esContactoPrincipal",
+             fe.fecha_creacion as "fechaCreacion",
+             u.id as "familiarId", u.nombre as "familiarNombre",
+             u.apellidos as "familiarApellidos", u.email as "familiarEmail",
+             e.id as "educandoId", e.nombre as "educandoNombre",
+             e.apellidos as "educandoApellidos",
+             s.nombre as "educandoSeccion"
+      FROM familiares_educandos fe
+      JOIN usuarios u ON fe.familiar_id = u.id
+      JOIN educandos e ON fe.educando_id = e.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
+      WHERE u.activo = true AND e.activo = true
+      ORDER BY fe.fecha_creacion DESC
+    `);
+
+    res.json({
+      success: true,
+      relaciones,
+      total: relaciones.length
+    });
+  } catch (error) {
+    console.error('Error obteniendo relaciones:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener relaciones',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/familiares/listar:
+ *   get:
+ *     summary: Listar familiares con paginación
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/familiares/listar', async (req, res) => {
+  try {
+    const { query } = require('../config/db.config');
+    const { page = 1, limit = 10, estado = '', busqueda = '' } = req.query;
+
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    let whereConditions = ["u.rol = 'familia'"];
+    const params = [];
+    let paramIndex = 1;
+
+    if (estado) {
+      whereConditions.push(`u.activo = $${paramIndex}`);
+      params.push(estado === 'ACTIVO');
+      paramIndex++;
+    }
+
+    if (busqueda) {
+      whereConditions.push(`(u.nombre ILIKE $${paramIndex} OR u.apellidos ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`);
+      params.push(`%${busqueda}%`);
+      paramIndex++;
+    }
+
+    // Contar total
+    const countQuery = `SELECT COUNT(*) as total FROM usuarios u WHERE ${whereConditions.join(' AND ')}`;
+    const countResult = await query(countQuery, params);
+    const total = parseInt(countResult[0].total);
+
+    // Obtener familiares
+    params.push(parseInt(limit));
+    params.push(offset);
+
+    const familiares = await query(`
+      SELECT u.id, u.nombre, u.apellidos, u.email, u.telefono,
+             CASE WHEN u.activo THEN 'ACTIVO' ELSE 'INACTIVO' END as estado,
+             u.fecha_registro as "fechaCreacion", u.ultimo_acceso as "ultimoAcceso",
+             COUNT(DISTINCT fe.educando_id) as "educandosCount"
+      FROM usuarios u
+      LEFT JOIN familiares_educandos fe ON u.id = fe.familiar_id
+      WHERE ${whereConditions.join(' AND ')}
+      GROUP BY u.id
+      ORDER BY u.fecha_registro DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `, params);
+
+    // Obtener educandos vinculados
+    for (const familiar of familiares) {
+      const educandos = await query(`
+        SELECT e.id, e.nombre, e.apellidos, s.nombre as seccion, s.id as seccion_id,
+               fe.relacion, fe.es_contacto_principal as "esContactoPrincipal",
+               fe.fecha_creacion as "fechaVinculacion"
+        FROM familiares_educandos fe
+        JOIN educandos e ON fe.educando_id = e.id
+        LEFT JOIN secciones s ON e.seccion_id = s.id
+        WHERE fe.familiar_id = $1
+      `, [familiar.id]);
+
+      familiar.educandosVinculados = educandos;
+      familiar.emailVerificado = true;
+      familiar.documentosPendientes = 0;
+    }
+
+    res.json({
+      success: true,
+      familiares,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      total
+    });
+  } catch (error) {
+    console.error('Error listando familiares:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al listar familiares',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/familiares/estadisticas:
+ *   get:
+ *     summary: Obtener estadísticas de familiares
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/familiares/estadisticas', async (req, res) => {
+  try {
+    const { query } = require('../config/db.config');
+
+    // Total familias
+    const totalResult = await query(`SELECT COUNT(*) as total FROM usuarios WHERE rol = 'familia'`);
+    const totalFamilias = parseInt(totalResult[0].total);
+
+    // Familias activas
+    const activasResult = await query(`SELECT COUNT(*) as total FROM usuarios WHERE rol = 'familia' AND activo = true`);
+    const familiasActivas = parseInt(activasResult[0].total);
+
+    // Familias pendientes
+    const familiasPendientes = totalFamilias - familiasActivas;
+
+    // Educandos con familia
+    const educandosResult = await query(`
+      SELECT COUNT(DISTINCT e.id) as total
+      FROM educandos e
+      JOIN familiares_educandos fe ON e.id = fe.educando_id
+      WHERE e.activo = true
+    `);
+    const educandosConFamilia = parseInt(educandosResult[0].total);
+
+    res.json({
+      success: true,
+      estadisticas: {
+        totalFamilias,
+        familiasActivas,
+        familiasPendientes,
+        educandosConFamilia,
+        documentosPendientes: 0,
+        documentosAprobados: 0,
+        usoUltimos30Dias: 0,
+        familiasSinAcceso60Dias: 0,
+        estadisticasPorSeccion: []
+      }
+    });
+  } catch (error) {
+    console.error('Error obteniendo estadísticas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener estadísticas',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/familiares/documentos-pendientes:
+ *   get:
+ *     summary: Obtener documentos pendientes de aprobación
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/familiares/documentos-pendientes', async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      documentos: []
+    });
+  } catch (error) {
+    console.error('Error obteniendo documentos pendientes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener documentos pendientes',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/familiares/invitar:
+ *   post:
+ *     summary: Invitar nuevo familiar
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/familiares/invitar', async (req, res) => {
+  try {
+    const { query } = require('../config/db.config');
+    const bcrypt = require('bcryptjs');
+    const { email, nombre, apellidos, telefono, educandosIds, relationType, mensajePersonalizado } = req.body;
+
+    // Verificar si el email ya existe
+    const existente = await query(`SELECT id FROM usuarios WHERE email = $1`, [email]);
+    if (existente.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe un usuario con este email'
+      });
+    }
+
+    // Generar contraseña temporal
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Crear usuario
+    const userResult = await query(`
+      INSERT INTO usuarios (email, password, nombre, apellidos, telefono, rol, activo)
+      VALUES ($1, $2, $3, $4, $5, 'familia', true)
+      RETURNING id
+    `, [email, hashedPassword, nombre, apellidos, telefono || null]);
+
+    const userId = userResult[0].id;
+
+    // Vincular educandos si se proporcionaron
+    if (educandosIds && educandosIds.length > 0) {
+      const relationMap = {
+        'PADRE': 'padre',
+        'MADRE': 'madre',
+        'TUTOR_LEGAL': 'tutor_legal',
+        'ABUELO': 'abuelo',
+        'OTRO': 'otro'
+      };
+      const relacion = relationMap[relationType] || 'otro';
+
+      for (const educandoId of educandosIds) {
+        await query(`
+          INSERT INTO familiares_educandos (familiar_id, educando_id, relacion, es_contacto_principal)
+          VALUES ($1, $2, $3, false)
+        `, [userId, educandoId, relacion]);
+      }
+    }
+
+    // TODO: Enviar email con credenciales
+    console.log(`📧 Email que se enviaría a ${email}:`);
+    console.log(`Contraseña temporal: ${tempPassword}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Familiar invitado correctamente',
+      data: {
+        id: userId,
+        email,
+        nombre,
+        apellidos
+      }
+    });
+  } catch (error) {
+    console.error('Error invitando familiar:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al invitar familiar',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

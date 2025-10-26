@@ -145,7 +145,7 @@ export function SearchBar({
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-64" align="end">
+          <DropdownMenuContent className="w-64 z-50" align="end">
             {showFilters.rol && (
               <div className="p-2">
                 <label className="text-sm font-medium mb-2 block">Rol</label>
@@ -156,7 +156,7 @@ export function SearchBar({
                   <SelectTrigger>
                     <SelectValue placeholder="Todos los roles" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[60]">
                     <SelectItem value="all">Todos los roles</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
                     <SelectItem value="scouter">Scouter</SelectItem>
@@ -176,7 +176,7 @@ export function SearchBar({
                   <SelectTrigger>
                     <SelectValue placeholder="Todos los estados" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[60]">
                     <SelectItem value="all">Todos los estados</SelectItem>
                     <SelectItem value="activo">Activo</SelectItem>
                     <SelectItem value="inactivo">Inactivo</SelectItem>
@@ -196,7 +196,7 @@ export function SearchBar({
                   <SelectTrigger>
                     <SelectValue placeholder="Todas las secciones" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[60]">
                     <SelectItem value="all">Todas las secciones</SelectItem>
                     <SelectItem value="castores">Castores</SelectItem>
                     <SelectItem value="manada">Manada</SelectItem>

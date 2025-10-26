@@ -8,18 +8,15 @@ import { getCurrentUser, clearAuthData } from "@/lib/auth-utils"
 import {
   Menu,
   LogOut,
-  ArrowLeft,
   Shield,
   Settings,
-  Upload,
-  FileText,
   Users,
-  Database,
   ChevronLeft,
   BarChart3,
   TrendingUp,
   Target,
-  ChevronDown
+  ChevronDown,
+  UsersRound
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -59,19 +56,13 @@ export default function AdminLayout({
       href: "/admin/users",
       icon: Users,
       label: "Usuarios",
-      id: "users",
-      submenu: [
-        {
-          href: "/admin/users",
-          label: "Lista de Usuarios",
-          id: "users-list"
-        },
-        {
-          href: "/admin/users/create",
-          label: "Agregar Usuario",
-          id: "users-create"
-        }
-      ]
+      id: "users"
+    },
+    {
+      href: "/admin/familiares",
+      icon: UsersRound,
+      label: "Gestión de Familias",
+      id: "familiares"
     },
     {
       href: "/admin/analytics",
@@ -104,7 +95,7 @@ export default function AdminLayout({
     router.push("/")
   }
 
-  
+
   return (
     <ProtectedRoute requiredRole="admin">
       <div className="flex h-screen overflow-hidden bg-background">

@@ -67,6 +67,8 @@ export default function LoginPage() {
       // Redireccionar según el rol
       if (currentUser.rol === "admin") {
         router.push("/admin")
+      } else if (currentUser.rol === "familia") {
+        router.push("/familia/dashboard")
       } else {
         router.push("/aula-virtual")
       }
@@ -116,8 +118,11 @@ export default function LoginPage() {
         if (userRole === 'admin') {
           // Admin va al panel de administración separado
           router.push('/admin');
+        } else if (userRole === 'familia') {
+          // Familiares van al dashboard familiar
+          router.push('/familia/dashboard');
         } else {
-          // Todos los demás van al aula virtual
+          // Los demás van al aula virtual
           router.push('/aula-virtual');
         }
       } else {

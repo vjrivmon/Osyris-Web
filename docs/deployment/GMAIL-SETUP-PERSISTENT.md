@@ -447,3 +447,12 @@ grep -r "DROP TABLE\|TRUNCATE" api-osyris/src/
 **Autor:** Vicente Rivas Monferrer
 **Estado:** ✅ Completado y Verificado
 
+
+
+
+
+
+
+
+
+
