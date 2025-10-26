@@ -169,7 +169,7 @@ jobs:
 
   # Job de despliegue optimizado
   deploy:
-    name: Deploy to Hetzner Production
+    name: Deploy to Hetzner Staging
     needs: test
     runs-on: ubuntu-latest
 
