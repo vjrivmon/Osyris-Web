@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { StaticText, StaticImage, StaticList } from "@/components/ui/static-content"
 // import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import Link from "next/link"
-import { ArrowRight, Award, Calendar, FileText, Heart, MapPin, Users } from "lucide-react"
+import { ArrowRight, Award, Calendar, FileText, Heart, MapPin, Users, UsersRound, HandHeart, Target, TreePine, TrendingUp, GraduationCap } from "lucide-react"
 
 // Timeline events data
 const timelineEvents = [
@@ -27,35 +27,35 @@ const timelineEvents = [
 // Values data
 const values = [
   {
-    icon: <Users className="h-8 w-8" />,
+    icon: <UsersRound className="h-8 w-8" />,
     title: "Comunidad",
     description:
       "Fomentamos el sentido de pertenencia y el trabajo en equipo, creando vínculos fuertes entre todos los miembros.",
   },
   {
-    icon: <Heart className="h-8 w-8" />,
+    icon: <HandHeart className="h-8 w-8" />,
     title: "Servicio",
     description:
       "Promovemos la actitud de ayuda desinteresada hacia los demás y el compromiso con la mejora de la sociedad.",
   },
   {
-    icon: <Award className="h-8 w-8" />,
+    icon: <Target className="h-8 w-8" />,
     title: "Compromiso",
     description: "Desarrollamos la responsabilidad personal y el compromiso con los demás y con la sociedad.",
   },
   {
-    icon: <MapPin className="h-8 w-8" />,
+    icon: <TreePine className="h-8 w-8" />,
     title: "Naturaleza",
     description: "Fomentamos el respeto y cuidado del medio ambiente a través de actividades al aire libre.",
   },
   {
-    icon: <Calendar className="h-8 w-8" />,
+    icon: <TrendingUp className="h-8 w-8" />,
     title: "Progresión Personal",
     description:
       "Acompañamos el desarrollo individual de cada persona, respetando sus ritmos y potenciando sus capacidades.",
   },
   {
-    icon: <FileText className="h-8 w-8" />,
+    icon: <GraduationCap className="h-8 w-8" />,
     title: "Educación",
     description: "Trabajamos por el desarrollo integral de niños y jóvenes a través del método scout.",
   },
@@ -113,14 +113,14 @@ export default function SobreNosotrosPage() {
       </header>
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-primary py-16 md:py-24">
-          <div className="container mx-auto px-4 text-center text-primary-foreground">
+        <section className="relative bg-primary py-12 sm:py-16 md:py-24">
+          <div className="container mx-auto px-4 sm:px-6 text-center text-primary-foreground">
             <StaticText
               contentId={200}
               identificador="hero-title"
               seccion="sobre-nosotros"
               as="h1"
-              className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 sm:mb-6"
             >
               Sobre Nosotros
             </StaticText>
@@ -130,7 +130,7 @@ export default function SobreNosotrosPage() {
               seccion="sobre-nosotros"
               as="p"
               multiline
-              className="mt-4 text-xl max-w-3xl mx-auto"
+              className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl max-w-3xl mx-auto px-4"
             >
               Conoce la historia, valores y personas que forman el Grupo Scout Osyris
             </StaticText>
@@ -138,11 +138,11 @@ export default function SobreNosotrosPage() {
         </section>
 
         {/* Tabs Section */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <Tabs defaultValue="historia" className="space-y-8">
-              <div className="flex justify-center">
-                <TabsList className="grid w-full max-w-2xl grid-cols-3">
+        <section className="py-8 sm:py-12">
+          <div className="container mx-auto px-4 sm:px-6">
+            <Tabs defaultValue="historia" className="space-y-6 sm:space-y-8">
+              <div className="flex justify-center overflow-x-auto">
+                <TabsList className="grid w-full max-w-2xl grid-cols-3 gap-1">
                   <TabsTrigger value="historia">Historia</TabsTrigger>
                   <TabsTrigger value="valores">Valores</TabsTrigger>
                   <TabsTrigger value="metodologia">Metodología</TabsTrigger>
@@ -288,19 +288,32 @@ export default function SobreNosotrosPage() {
                   contentId={210}
                   identificador="valores-list"
                   seccion="sobre-nosotros"
-                  fallback={values.map(v => ({ icon: 'Users', title: v.title, description: v.description }))}
-                  emptyItem={{ icon: 'Users', title: '', description: '' }}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                  fallback={[
+                    { icon: 'UsersRound', title: values[0].title, description: values[0].description },
+                    { icon: 'HandHeart', title: values[1].title, description: values[1].description },
+                    { icon: 'Target', title: values[2].title, description: values[2].description },
+                    { icon: 'TreePine', title: values[3].title, description: values[3].description },
+                    { icon: 'TrendingUp', title: values[4].title, description: values[4].description },
+                    { icon: 'GraduationCap', title: values[5].title, description: values[5].description }
+                  ]}
+                  emptyItem={{ icon: 'UsersRound', title: '', description: '' }}
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
                   addButtonText="Añadir valor"
                   render={(value) => {
                     const IconComponent = {
                       Users: <Users className="h-8 w-8" />,
+                      UsersRound: <UsersRound className="h-8 w-8" />,
                       Heart: <Heart className="h-8 w-8" />,
+                      HandHeart: <HandHeart className="h-8 w-8" />,
                       Award: <Award className="h-8 w-8" />,
+                      Target: <Target className="h-8 w-8" />,
                       MapPin: <MapPin className="h-8 w-8" />,
+                      TreePine: <TreePine className="h-8 w-8" />,
                       Calendar: <Calendar className="h-8 w-8" />,
-                      FileText: <FileText className="h-8 w-8" />
-                    }[value.icon as keyof typeof IconComponent] || <Users className="h-8 w-8" />
+                      TrendingUp: <TrendingUp className="h-8 w-8" />,
+                      FileText: <FileText className="h-8 w-8" />,
+                      GraduationCap: <GraduationCap className="h-8 w-8" />
+                    }[value.icon as keyof typeof IconComponent] || <UsersRound className="h-8 w-8" />
 
                     return (
                       <Card className="overflow-hidden">
@@ -324,6 +337,12 @@ export default function SobreNosotrosPage() {
                           onChange={(e) => onChange({ ...item, icon: e.target.value })}
                           className="w-full border rounded px-3 py-2"
                         >
+                          <option value="UsersRound">UsersRound (Comunidad)</option>
+                          <option value="HandHeart">HandHeart (Servicio)</option>
+                          <option value="Target">Target (Compromiso)</option>
+                          <option value="TreePine">TreePine (Naturaleza)</option>
+                          <option value="TrendingUp">TrendingUp (Progresión)</option>
+                          <option value="GraduationCap">GraduationCap (Educación)</option>
                           <option value="Users">Users</option>
                           <option value="Heart">Heart</option>
                           <option value="Award">Award</option>
@@ -353,42 +372,59 @@ export default function SobreNosotrosPage() {
                     </div>
                   )}
                 >
-                  {JSON.stringify(getJson('valores-list', values.map(v => ({ icon: 'Users', title: v.title, description: v.description }))))}
+                  {JSON.stringify(getJson('valores-list', [
+                    { icon: 'UsersRound', title: values[0].title, description: values[0].description },
+                    { icon: 'HandHeart', title: values[1].title, description: values[1].description },
+                    { icon: 'Target', title: values[2].title, description: values[2].description },
+                    { icon: 'TreePine', title: values[3].title, description: values[3].description },
+                    { icon: 'TrendingUp', title: values[4].title, description: values[4].description },
+                    { icon: 'GraduationCap', title: values[5].title, description: values[5].description }
+                  ]))}
                 </StaticList>
 
-                <div className="mt-12 bg-muted p-6 rounded-lg">
-                  <StaticText
-                    contentId={209}
-                    identificador="mision-title"
-                    seccion="sobre-nosotros"
-                    as="h3"
-                    className="text-xl font-bold mb-4"
-                  >
-                    Nuestra Misión
-                  </StaticText>
-                  <StaticText
-                    contentId={210}
-                    identificador="mision-parrafo-1"
-                    seccion="sobre-nosotros"
-                    as="p"
-                    multiline
-                    className="mb-4"
-                  >
-                    El Moviment Escolta de la Diòcesi de València – M.S.C. (M.E.V. M.SC.) tiene por fin contribuir a la
-                    educación y desarrollo integral de la infancia y la juventud a través de la vivencia de los valores
-                    del Escultismo, en conformidad con las enseñanzas y vida de la Iglesia Católica.
-                  </StaticText>
-                  <StaticText
-                    contentId={211}
-                    identificador="mision-parrafo-2"
-                    seccion="sobre-nosotros"
-                    as="p"
-                    multiline
-                  >
-                    De esta manera, el Grupo Scout Osyris promueve la formación de personas que ejerzan la ciudadanía
-                    responsable y comprometida con la sociedad, para que sean así agentes de cambio en la comunidad
-                    local, nacional e internacional.
-                  </StaticText>
+                <div className="mt-12 relative">
+                  <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-8 rounded-xl shadow-lg border-2 border-primary/20 dark:border-primary/40">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                        <Target className="h-6 w-6 text-primary" />
+                      </div>
+                      <StaticText
+                        contentId={209}
+                        identificador="mision-title"
+                        seccion="sobre-nosotros"
+                        as="h3"
+                        className="text-2xl font-bold text-primary"
+                      >
+                        Nuestra Misión
+                      </StaticText>
+                    </div>
+                    <div className="space-y-4 pl-0 md:pl-15">
+                      <StaticText
+                        contentId={210}
+                        identificador="mision-parrafo-1"
+                        seccion="sobre-nosotros"
+                        as="p"
+                        multiline
+                        className="text-lg leading-relaxed text-foreground"
+                      >
+                        El Moviment Escolta de la Diòcesi de València – M.S.C. (M.E.V. M.SC.) tiene por fin contribuir a la
+                        educación y desarrollo integral de la infancia y la juventud a través de la vivencia de los valores
+                        del Escultismo, en conformidad con las enseñanzas y vida de la Iglesia Católica.
+                      </StaticText>
+                      <StaticText
+                        contentId={211}
+                        identificador="mision-parrafo-2"
+                        seccion="sobre-nosotros"
+                        as="p"
+                        multiline
+                        className="text-lg leading-relaxed text-foreground"
+                      >
+                        De esta manera, el Grupo Scout Osyris promueve la formación de personas que ejerzan la ciudadanía
+                        responsable y comprometida con la sociedad, para que sean así agentes de cambio en la comunidad
+                        local, nacional e internacional.
+                      </StaticText>
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
 

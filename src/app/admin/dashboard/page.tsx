@@ -9,6 +9,7 @@ import { ActivityChart } from "@/components/admin/activity-chart"
 import { SearchBar } from "@/components/admin/search-bar"
 import { UserTable } from "@/components/admin/user-table"
 import { QuickAddModal } from "@/components/admin/quick-add-modal"
+import { BulkInviteModal } from "@/components/admin/bulk-invite-modal"
 import {
   Users,
   Activity,
@@ -76,6 +77,7 @@ interface ApiUser {
   nombre: string
   apellidos: string
   rol: string
+  activo: boolean
   seccion_id?: number
   ultimo_acceso?: string
   fecha_registro: string
@@ -225,15 +227,15 @@ export default function AdminCRMDashboard() {
     }
   }
 
-  // Cargar usuarios con filtros
-  const loadUsers = async (filters = searchFilters) => {
+  // Cargar usuarios con filtros y paginación
+  const loadUsers = async (filters = searchFilters, page = usersPagination.page) => {
     setUsersLoading(true)
     try {
       const token = getAuthToken()
       if (!token) return
 
       const params = new URLSearchParams({
-        page: usersPagination.page.toString(),
+        page: page.toString(),
         limit: usersPagination.limit.toString(),
         ...Object.fromEntries(
           Object.entries(filters).filter(([_, value]) => value !== "")
@@ -249,7 +251,7 @@ export default function AdminCRMDashboard() {
           nombre: apiUser.nombre,
           apellidos: apiUser.apellidos,
           rol: apiUser.rol,
-          estado: "activo", // Todos los usuarios activos en el dashboard
+          estado: apiUser.activo ? "activo" : "inactivo", // Usar el estado real del usuario
           seccion: apiUser.seccion_id ? `Sección ${apiUser.seccion_id}` : undefined,
           ultimoAcceso: apiUser.ultimo_acceso,
           fechaCreacion: apiUser.fecha_registro
@@ -324,6 +326,12 @@ export default function AdminCRMDashboard() {
   const handleUserDelete = (userId: number) => {
     setUsers(prev => prev.filter(user => user.id !== userId))
     loadMetrics()
+  }
+
+  // Manejar cambio de página
+  const handlePageChange = (page: number) => {
+    setUsersPagination(prev => ({ ...prev, page }))
+    loadUsers(searchFilters, page)
   }
 
   // Reenviar invitación
@@ -404,6 +412,11 @@ export default function AdminCRMDashboard() {
         </div>
         <div className="flex gap-2">
           <QuickAddModal onUserAdded={handleUserAdded} />
+          <BulkInviteModal onInvitesSent={() => {
+            loadUsers(searchFilters)
+            loadPendingUsers()
+            loadMetrics()
+          }} />
           <Button variant="outline" onClick={loadDashboardData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
@@ -477,6 +490,8 @@ export default function AdminCRMDashboard() {
                 onUserUpdate={handleUserUpdate}
                 onUserDelete={handleUserDelete}
                 loading={usersLoading}
+                pagination={usersPagination}
+                onPageChange={handlePageChange}
               />
             </CardContent>
           </Card>

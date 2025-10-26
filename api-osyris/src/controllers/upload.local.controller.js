@@ -162,7 +162,7 @@ const getFiles = async (req, res) => {
       ...file,
       url: file.archivo_ruta?.startsWith('http')
         ? file.archivo_ruta
-        : `http://localhost:5000${file.archivo_ruta}`
+        : `${process.env.BACKEND_URL || 'http://localhost:5000'}${file.archivo_ruta}`
     }));
 
     return res.json({

@@ -242,7 +242,7 @@ const getStorageConfig = async (req, res) => {
     config.local = {
       uploadPath: './uploads/',
       maxFileSize: 10 * 1024 * 1024, // 10MB
-      baseUrl: 'http://localhost:5000/uploads'
+      baseUrl: `${process.env.BACKEND_URL || 'http://localhost:5000'}/uploads`
     };
   }
 

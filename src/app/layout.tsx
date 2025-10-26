@@ -4,6 +4,7 @@ import { Inter as FontSans } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/contexts/AuthContext"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -13,7 +14,14 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: "Grupo Scout Osyris",
   description: "Plataforma integral para la gestión y comunicación del Grupo Scout Osyris",
-  generator: 'v0.dev'
+  generator: "v0.dev",
+  icons: {
+    icon: [
+      { url: "/images/logo-osyris.png", type: "image/png" },
+    ],
+    shortcut: "/images/logo-osyris.png",
+    apple: "/images/logo-osyris.png",
+  },
 }
 
 export default function RootLayout({
@@ -30,7 +38,9 @@ export default function RootLayout({
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange={false}>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -179,6 +179,9 @@ JWT_EXPIRES_IN=24h
 FRONTEND_URL=https://gruposcoutosyris.es
 ALLOWED_ORIGINS=https://gruposcoutosyris.es,https://www.gruposcoutosyris.es,http://116.203.98.142
 STAGING_MODE=false
+# Gmail Configuration
+EMAIL_USER=vicenterivasmonferrer12@gmail.com
+EMAIL_APP_PASSWORD=ukxqohptbomnbavm
 PRODENV
 
 echo "✅ Archivos sincronizados"

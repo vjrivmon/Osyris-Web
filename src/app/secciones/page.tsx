@@ -14,35 +14,35 @@ export default function SeccionesPage() {
       </header>
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-primary py-16 md:py-24">
-          <div className="container mx-auto px-4 text-center text-primary-foreground">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">Nuestras Secciones</h1>
-            <p className="mt-4 text-xl max-w-3xl mx-auto">
+        <section className="relative bg-primary py-12 sm:py-16 md:py-24">
+          <div className="container mx-auto px-4 sm:px-6 text-center text-primary-foreground">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 sm:mb-6">Nuestras Secciones</h1>
+            <p className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl max-w-3xl mx-auto px-4">
               El escultismo se adapta a las diferentes etapas de desarrollo de niños y jóvenes
             </p>
           </div>
         </section>
 
         {/* Secciones Overview */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 className="text-2xl font-bold mb-4">El Método Scout por Edades</h2>
-              <p className="text-muted-foreground">
+        <section className="py-8 sm:py-12">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-12">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">El Método Scout por Edades</h2>
+              <p className="text-sm sm:text-base text-muted-foreground px-4">
                 En el Grupo Scout Osyris, adaptamos la metodología scout a las diferentes etapas de desarrollo,
                 dividiendo a los educandos en cinco secciones según su edad. Cada sección tiene su propio simbolismo,
                 objetivos educativos y actividades adaptadas.
               </p>
             </div>
 
-            <div className="space-y-16">
+            <div className="space-y-12 sm:space-y-16">
               {sections.map((section, i) => (
                 <div
                   key={i}
-                  className={`flex flex-col md:flex-row gap-8 items-center ${i % 2 !== 0 ? "md:flex-row-reverse" : ""}`}
+                  className={`flex flex-col lg:flex-row gap-6 sm:gap-8 items-center ${i % 2 !== 0 ? "lg:flex-row-reverse" : ""}`}
                 >
-                  <div className="md:w-1/2">
-                    <div className={`rounded-lg overflow-hidden h-64 ${section.gradientClass}`}>
+                  <div className="lg:w-1/2 w-full">
+                    <div className={`rounded-lg overflow-hidden h-48 sm:h-56 md:h-64 ${section.gradientClass}`}>
                       <img
                         src={section.image || "/placeholder.svg?height=300&width=600"}
                         alt={section.title}
@@ -50,14 +50,14 @@ export default function SeccionesPage() {
                       />
                     </div>
                   </div>
-                  <div className="md:w-1/2 space-y-4">
-                    <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${section.badgeClass}`}>
+                  <div className="lg:w-1/2 w-full space-y-3 sm:space-y-4">
+                    <div className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${section.badgeClass}`}>
                       {section.ageRange}
                     </div>
-                    <h3 className="text-2xl font-bold">{section.title}</h3>
-                    <p className="text-lg font-medium">{section.subtitle}</p>
-                    <p className="text-muted-foreground">{section.description}</p>
-                    <div className="pt-4">
+                    <h3 className="text-xl sm:text-2xl font-bold">{section.title}</h3>
+                    <p className="text-base sm:text-lg font-medium">{section.subtitle}</p>
+                    <p className="text-sm sm:text-base text-muted-foreground">{section.description}</p>
+                    <div className="pt-2 sm:pt-4">
                       <Button asChild>
                         <Link href={section.href} >
                           Conocer más
@@ -73,11 +73,11 @@ export default function SeccionesPage() {
         </section>
 
         {/* Progression Section */}
-        <section className="py-16 bg-muted">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 className="text-2xl font-bold mb-4">Progresión Personal</h2>
-              <p className="text-muted-foreground">
+        <section className="py-12 sm:py-16 bg-muted">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-12">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Progresión Personal</h2>
+              <p className="text-sm sm:text-base text-muted-foreground px-4">
                 El escultismo se basa en la progresión personal, donde cada niño y joven avanza a su propio ritmo,
                 adquiriendo habilidades y valores a través de un sistema de etapas y especialidades.
               </p>
@@ -96,14 +96,14 @@ export default function SeccionesPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 bg-primary text-primary-foreground">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-6">¿Quieres formar parte de nuestra familia scout?</h2>
-            <p className="max-w-2xl mx-auto mb-8">
+        <section className="py-12 sm:py-16 bg-primary text-primary-foreground">
+          <div className="container mx-auto px-4 sm:px-6 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">¿Quieres formar parte de nuestra familia scout?</h2>
+            <p className="max-w-2xl mx-auto mb-6 sm:mb-8 text-sm sm:text-base px-4">
               Si estás interesado en que tu hijo/a forme parte del Grupo Scout Osyris o quieres unirte como monitor, no
               dudes en contactar con nosotros.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
               <Button asChild variant="secondary">
                 <Link href="/contacto">Contacta con nosotros</Link>
               </Button>

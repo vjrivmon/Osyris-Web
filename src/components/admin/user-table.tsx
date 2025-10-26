@@ -62,13 +62,31 @@ interface UserTableProps {
   onUserUpdate?: (userId: number, updates: Partial<User>) => void
   onUserDelete?: (userId: number) => void
   loading?: boolean
+  pagination?: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+  onPageChange?: (page: number) => void
+}
+
+// Mapeo de IDs de sección a nombres reales
+const SECTION_NAMES: Record<number, string> = {
+  1: "Castores",
+  2: "Manada",
+  3: "Tropa",
+  4: "Pioneros",
+  5: "Rutas"
 }
 
 export function UserTable({
   users,
   onUserUpdate,
   onUserDelete,
-  loading = false
+  loading = false,
+  pagination,
+  onPageChange
 }: UserTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
@@ -230,6 +248,22 @@ export function UserTable({
     })
   }
 
+  const getSectionName = (seccion?: string): string | null => {
+    if (!seccion) return null
+    
+    // Si ya es un nombre (no empieza con "Sección"), devolverlo
+    if (!seccion.startsWith("Sección")) return seccion
+    
+    // Extraer el ID de "Sección X"
+    const idMatch = seccion.match(/Sección (\d+)/)
+    if (idMatch) {
+      const id = parseInt(idMatch[1])
+      return SECTION_NAMES[id] || seccion
+    }
+    
+    return seccion
+  }
+
   return (
     <>
       <div className="rounded-md border">
@@ -280,7 +314,7 @@ export function UserTable({
                   <TableCell>
                     {user.seccion ? (
                       <Badge variant="outline" className="capitalize">
-                        {user.seccion}
+                        {getSectionName(user.seccion)}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground text-sm">-</span>
@@ -365,6 +399,47 @@ export function UserTable({
           </TableBody>
         </Table>
       </div>
+
+      {/* Paginador */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between px-2 py-4">
+          <div className="text-sm text-muted-foreground">
+            Mostrando {((pagination.page - 1) * pagination.limit) + 1} a {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} usuarios
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange?.(pagination.page - 1)}
+              disabled={pagination.page === 1 || loading}
+            >
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={page === pagination.page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange?.(page)}
+                  disabled={loading}
+                  className="w-8 h-8"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange?.(pagination.page + 1)}
+              disabled={pagination.page === pagination.totalPages || loading}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

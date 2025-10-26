@@ -133,7 +133,8 @@ const adminController = {
         limit = 10,
         search = '',
         rol = '',
-        seccion = ''
+        seccion = '',
+        estado = ''
       } = req.query;
 
       const offset = (page - 1) * limit;
@@ -158,6 +159,15 @@ const adminController = {
         whereConditions.push(`u.rol = $${paramIndex}`);
         params.push(rol);
         paramIndex++;
+      }
+
+      if (estado) {
+        const activoValue = estado === 'activo' ? true : estado === 'inactivo' ? false : null;
+        if (activoValue !== null) {
+          whereConditions.push(`u.activo = $${paramIndex}`);
+          params.push(activoValue);
+          paramIndex++;
+        }
       }
 
       if (seccion) {
@@ -285,6 +295,106 @@ const adminController = {
       res.status(500).json({
         success: false,
         message: 'Error al crear invitación'
+      });
+    }
+  },
+
+  // Crear invitaciones múltiples
+  async createBulkInvitations(req, res) {
+    try {
+      const { invitations } = req.body;
+
+      if (!invitations || !Array.isArray(invitations) || invitations.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Debes proporcionar un array de invitaciones'
+        });
+      }
+
+      const results = {
+        successful: 0,
+        failed: 0,
+        errors: []
+      };
+
+      // Procesar cada invitación
+      for (const invitation of invitations) {
+        try {
+          const { email, nombre, apellidos, rol, seccion_id } = invitation;
+
+          // Validaciones básicas
+          if (!email || !nombre || !rol) {
+            results.failed++;
+            results.errors.push({ email, error: 'Faltan campos obligatorios' });
+            continue;
+          }
+
+          // Verificar si el email ya está registrado
+          const existingUser = await db.query(
+            'SELECT id FROM usuarios WHERE email = $1',
+            [email]
+          );
+
+          if (existingUser.length > 0) {
+            results.failed++;
+            results.errors.push({ email, error: 'Email ya está registrado' });
+            continue;
+          }
+
+          // Generar token de invitación único
+          const invitationToken = require('crypto').randomBytes(32).toString('hex');
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 7); // Expira en 7 días
+
+          // Insertar usuario inactivo con token de invitación
+          await db.query(`
+            INSERT INTO usuarios (
+              email, nombre, apellidos, rol, seccion_id,
+              activo, invitation_token, invitation_expires_at,
+              contraseña
+            ) VALUES ($1, $2, $3, $4, $5, false, $6, $7, $8)
+          `, [
+            email,
+            nombre,
+            apellidos || '',
+            rol,
+            seccion_id || null,
+            invitationToken,
+            expiresAt,
+            'pending' // Contraseña temporal
+          ]);
+
+          // Enviar email con el enlace de invitación
+          try {
+            await sendInvitationEmail(email, nombre, invitationToken, rol);
+            console.log(`✅ Email de invitación enviado a ${email} (rol: ${rol})`);
+          } catch (emailError) {
+            console.error(`⚠️ Error enviando email a ${email}:`, emailError.message);
+            // No fallar la invitación si el email falla
+            console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL}/registro?token=${invitationToken}`);
+          }
+
+          results.successful++;
+        } catch (error) {
+          console.error(`Error procesando invitación para ${invitation.email}:`, error);
+          results.failed++;
+          results.errors.push({ 
+            email: invitation.email, 
+            error: 'Error al procesar invitación' 
+          });
+        }
+      }
+
+      res.status(201).json({
+        success: true,
+        message: `Se procesaron ${invitations.length} invitaciones: ${results.successful} exitosas, ${results.failed} fallidas`,
+        data: results
+      });
+    } catch (error) {
+      console.error('Error creating bulk invitations:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al crear invitaciones múltiples'
       });
     }
   },
@@ -589,6 +699,15 @@ const adminController = {
         SET invitation_token = $1, invitation_expires_at = $2
         WHERE id = $3
       `, [invitationToken, expiresAt, id]);
+
+      // Enviar email con el enlace de invitación
+      try {
+        await sendInvitationEmail(user[0].email, user[0].nombre, invitationToken);
+        console.log(`✅ Email de invitación reenviado a ${user[0].email}`);
+      } catch (emailError) {
+        console.error(`⚠️ Error enviando email a ${user[0].email}:`, emailError.message);
+        // No fallar la invitación si el email falla
+      }
 
       console.log(`📧 Invitación reenviada a ${user[0].email}:`);
       console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL}/registro?token=${invitationToken}`);

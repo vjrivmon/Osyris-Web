@@ -9,7 +9,7 @@ interface User {
   nombre: string
   apellidos: string
   email: string
-  rol: 'admin' | 'editor' | 'coordinador' | 'scouter' | 'padre' | 'educando'
+  rol: 'admin' | 'editor' | 'coordinador' | 'scouter' | 'familia' | 'educando'
   seccion_id?: number
   activo: boolean
 }
@@ -63,36 +63,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const token = localStorage.getItem('token')
-      if (!token) {
+      const userStr = localStorage.getItem('user')
+
+      console.log('🔍 [AuthContext] Verificando sesión...')
+      console.log('🔍 [AuthContext] Token:', token ? 'Existe' : 'NO existe')
+      console.log('🔍 [AuthContext] User:', userStr ? 'Existe' : 'NO existe')
+
+      if (!token || !userStr) {
+        console.log('❌ [AuthContext] No hay token o usuario en localStorage')
         setAuthState(prev => ({ ...prev, isLoading: false }))
         return
       }
 
-      // Verificar el token con el servidor usando la URL dinámica del API
-      const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/auth/verify`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }).catch((error) => {
-        console.error('❌ Failed to connect to auth server:', error)
-        console.log('📡 API URL used for verify:', apiUrl)
-        // Si el servidor no responde, limpiar sesión para forzar login
-        clearAuthData()
-        throw error
-      })
+      try {
+        const user = JSON.parse(userStr)
+        console.log('✅ [AuthContext] Usuario cargado desde localStorage:', user)
 
-      if (response.ok) {
-        const data = await response.json()
         setAuthState({
-          user: data.user,
+          user,
           token,
           isAuthenticated: true,
           isLoading: false
         })
-      } else {
-        // Token inválido o servidor rechazó la sesión
-        console.warn('⚠️ Invalid token or unauthorized, clearing session')
+      } catch (parseError) {
+        console.error('❌ [AuthContext] Error parseando usuario de localStorage:', parseError)
         clearAuthData()
         setAuthState({
           user: null,
@@ -128,7 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json()
         const { token, usuario } = data
 
+        // Guardar TANTO el token COMO el usuario en localStorage
         localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(usuario))
+
+        console.log('✅ [AuthContext] Usuario y token guardados en localStorage:', usuario)
+
         setAuthState({
           user: usuario,
           token,

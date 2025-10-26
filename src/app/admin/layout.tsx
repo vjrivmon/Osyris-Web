@@ -8,18 +8,15 @@ import { getCurrentUser, clearAuthData } from "@/lib/auth-utils"
 import {
   Menu,
   LogOut,
-  ArrowLeft,
   Shield,
   Settings,
-  Upload,
-  FileText,
   Users,
-  Database,
   ChevronLeft,
   BarChart3,
   TrendingUp,
   Target,
-  ChevronDown
+  ChevronDown,
+  UsersRound
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -59,19 +56,13 @@ export default function AdminLayout({
       href: "/admin/users",
       icon: Users,
       label: "Usuarios",
-      id: "users",
-      submenu: [
-        {
-          href: "/admin/users",
-          label: "Lista de Usuarios",
-          id: "users-list"
-        },
-        {
-          href: "/admin/users/create",
-          label: "Agregar Usuario",
-          id: "users-create"
-        }
-      ]
+      id: "users"
+    },
+    {
+      href: "/admin/familiares",
+      icon: UsersRound,
+      label: "Gestión de Familias",
+      id: "familiares"
     },
     {
       href: "/admin/analytics",
@@ -104,7 +95,7 @@ export default function AdminLayout({
     router.push("/")
   }
 
-  
+
   return (
     <ProtectedRoute requiredRole="admin">
       <div className="flex h-screen overflow-hidden bg-background">
@@ -112,20 +103,20 @@ export default function AdminLayout({
         <div className="hidden md:flex">
           <div
             className={cn(
-              "flex flex-col h-full border-r bg-card transition-all duration-300 ease-in-out border-red-200 dark:border-red-800",
+              "flex flex-col h-full border-r bg-card transition-all duration-300 ease-in-out border-gray-700 dark:border-gray-600",
               sidebarCollapsed ? "w-16" : "w-64"
             )}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-red-200 dark:border-red-800">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700 dark:border-gray-600">
               {!sidebarCollapsed && (
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center">
                     <Shield className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-sm text-red-900 dark:text-red-100">CRM Admin</span>
-                    <span className="text-xs text-red-600 dark:text-red-400">Panel de Gestión</span>
+                    <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">CRM Admin</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Panel de Gestión</span>
                   </div>
                 </div>
               )}
@@ -133,7 +124,7 @@ export default function AdminLayout({
                 variant="ghost"
                 size="icon"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="h-8 w-8 text-red-600 hover:bg-red-100 dark:hover:bg-red-900"
+                className="h-8 w-8 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <ChevronLeft className={cn("h-4 w-4 transition-transform", sidebarCollapsed && "rotate-180")} />
               </Button>
@@ -152,9 +143,9 @@ export default function AdminLayout({
                     href={item.href}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 mb-1 rounded-lg text-sm font-medium transition-colors",
-                      "hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950 dark:hover:text-red-300",
+                      "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-gray-100",
                       isActive
-                        ? "bg-red-600 text-white"
+                        ? "bg-gray-700 text-white dark:bg-gray-600"
                         : "text-muted-foreground"
                     )}
                   >
@@ -166,14 +157,14 @@ export default function AdminLayout({
             </nav>
 
             {/* Footer */}
-            <div className="p-4 border-t border-red-200 dark:border-red-800">
+            <div className="p-4 border-t border-gray-700 dark:border-gray-600">
               {!sidebarCollapsed && (
-                <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-red-800 dark:text-red-300">
+                <div className="bg-gray-100 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-700 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-gray-800 dark:text-gray-300">
                     <Shield className="h-4 w-4" />
                     <span className="text-xs font-medium">Modo Admin</span>
                   </div>
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                     Acceso completo al sistema
                   </p>
                 </div>
@@ -186,16 +177,16 @@ export default function AdminLayout({
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-50 md:hidden">
             <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-            <div className="fixed left-0 top-0 h-full w-64 bg-card border-r border-red-200 dark:border-red-800">
+            <div className="fixed left-0 top-0 h-full w-64 bg-card border-r border-gray-700 dark:border-gray-600">
               {/* Mobile navigation content - same as desktop but not collapsed */}
-              <div className="flex items-center justify-between p-4 border-b border-red-200 dark:border-red-800">
+              <div className="flex items-center justify-between p-4 border-b border-gray-700 dark:border-gray-600">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center">
                     <Shield className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-sm text-red-900 dark:text-red-100">CRM Admin</span>
-                    <span className="text-xs text-red-600 dark:text-red-400">Panel de Gestión</span>
+                    <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">CRM Admin</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Panel de Gestión</span>
                   </div>
                 </div>
               </div>
@@ -213,9 +204,9 @@ export default function AdminLayout({
                       onClick={() => setMobileMenuOpen(false)}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 mb-1 rounded-lg text-sm font-medium transition-colors",
-                        "hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950 dark:hover:text-red-300",
+                        "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-gray-100",
                         isActive
-                          ? "bg-red-600 text-white"
+                          ? "bg-gray-700 text-white dark:bg-gray-600"
                           : "text-muted-foreground"
                       )}
                     >
@@ -232,7 +223,7 @@ export default function AdminLayout({
         {/* Main Content */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Top Header */}
-          <header className="flex items-center justify-between border-b bg-card px-4 py-3 border-red-200 dark:border-red-800">
+          <header className="flex items-center justify-between border-b bg-card px-4 py-3 border-gray-700 dark:border-gray-600">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -244,11 +235,11 @@ export default function AdminLayout({
               </Button>
 
               <div className="flex items-center gap-3">
-                <div className="h-6 w-6 rounded-full bg-red-600 flex items-center justify-center">
+                <div className="h-6 w-6 rounded-full bg-gray-700 flex items-center justify-center">
                   <Shield className="h-3 w-3 text-white" />
                 </div>
                 <div className="flex flex-col">
-                  <h1 className="text-lg font-semibold text-red-900 dark:text-red-100">Panel de Gestión CRM</h1>
+                  <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Panel de Gestión CRM</h1>
                   {userInfo && (
                     <span className="text-xs text-muted-foreground">
                       {userInfo.nombre} {userInfo.apellidos} - Administrador
@@ -266,14 +257,14 @@ export default function AdminLayout({
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowLogoutDialog(true)}
-                className="md:hidden text-red-600 hover:bg-red-100 dark:hover:bg-red-900"
+                className="md:hidden text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
 
               <button
                 onClick={() => setShowLogoutDialog(true)}
-                className="hidden md:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-red-50 hover:text-red-700 transition-colors text-red-600 dark:hover:bg-red-950 dark:hover:text-red-300"
+                className="hidden md:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-100"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Cerrar sesión</span>
@@ -282,7 +273,7 @@ export default function AdminLayout({
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-auto bg-red-50/30 dark:bg-red-950/10">
+          <main className="flex-1 overflow-auto bg-gray-50/50 dark:bg-gray-900/50">
             {children}
           </main>
         </div>
@@ -303,7 +294,7 @@ export default function AdminLayout({
                   setShowLogoutDialog(false)
                   handleLogout()
                 }}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-gray-700 hover:bg-gray-800"
               >
                 Cerrar sesión
               </AlertDialogAction>
