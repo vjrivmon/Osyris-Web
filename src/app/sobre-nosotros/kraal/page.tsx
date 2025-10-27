@@ -9,26 +9,26 @@ import { StaticText, StaticImage } from "@/components/ui/static-content"
 import Link from "next/link"
 import { Mail, Loader2 } from "lucide-react"
 
-// Mock data - En fase futura se cargará dinámicamente de BD
+// Jefatura del Grupo Scout Osyris
 const coordinationTeam = [
   {
-    name: "María García",
-    role: "Coordinadora de Grupo",
+    name: "María",
+    role: "Jefatura de Grupo",
     description:
-      "Más de 10 años de experiencia en el escultismo. Coordina y supervisa todas las actividades del grupo.",
-    photo: "/placeholder.svg?height=300&width=300",
+      "Miembro de la jefatura del Grupo Scout Osyris. Coordina y supervisa todas las actividades del grupo.",
+    photo: "/images/kraal/maria.png",
   },
   {
-    name: "Carlos Rodríguez",
-    role: "Secretario de Grupo",
-    description: "Responsable de la gestión administrativa y documentación del grupo.",
-    photo: "/placeholder.svg?height=300&width=300",
+    name: "Lucía",
+    role: "Jefatura de Grupo",
+    description: "Miembro de la jefatura del Grupo Scout Osyris. Colabora en la gestión y coordinación del grupo.",
+    photo: "/images/kraal/lucia.png",
   },
   {
-    name: "Ana Martínez",
-    role: "Tesorera de Grupo",
-    description: "Encargada de la gestión económica y financiera del grupo.",
-    photo: "/placeholder.svg?height=300&width=300",
+    name: "Dani",
+    role: "Jefatura de Grupo",
+    description: "Miembro de la jefatura del Grupo Scout Osyris. Apoya en la organización y dirección del grupo.",
+    photo: "/images/kraal/dani.png",
   },
 ]
 
@@ -38,52 +38,55 @@ const sections = [
     colorClass: "bg-orange-500",
     members: [
       {
-        name: "Laura Sánchez",
-        role: "Coordinadora de Castores",
-        experience: "5 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Lekes",
+        role: "Jefa de Sección y Tesorera",
+        photo: "/images/kraal/noelia.png",
       },
       {
-        name: "Pedro Gómez",
-        role: "Scouter de Castores",
-        experience: "3 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Rasti",
+        role: "Scouter",
+        photo: "/images/kraal/joan.png",
       },
       {
-        name: "Lucía Fernández",
-        role: "Scouter de Castores",
-        experience: "2 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Barú",
+        role: "Scouter",
+        photo: "/images/kraal/jaume.png",
+      },
+      {
+        name: "Kibu",
+        role: "Scouter",
+        photo: "/images/kraal/alvaros.png",
       },
     ],
   },
   {
-    name: "Lobatos - Manada Waingunga",
+    name: "Manada - Manada Waingunga",
     colorClass: "bg-yellow-400",
     members: [
       {
-        name: "Miguel Torres",
-        role: "Coordinador de Lobatos",
-        experience: "7 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Germà Gris",
+        role: "Jefe de Sección",
+        photo: "/images/kraal/lopo.png",
       },
       {
-        name: "Carmen Ruiz",
-        role: "Scouter de Lobatos",
-        experience: "4 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Akhela",
+        role: "Tesorería y Botiquín",
+        photo: "/images/kraal/itziar.png",
       },
       {
-        name: "Javier Serrano",
-        role: "Scouter de Lobatos",
-        experience: "3 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Baloo",
+        role: "Material",
+        photo: "/images/kraal/hector.png",
       },
       {
-        name: "Elena Moreno",
-        role: "Scouter de Lobatos",
-        experience: "2 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Brymby",
+        role: "Scouter",
+        photo: "/images/kraal/asier.png",
+      },
+      {
+        name: "Oonai",
+        role: "Scouter",
+        photo: "/images/kraal/maria.png",
       },
     ],
   },
@@ -92,22 +95,29 @@ const sections = [
     colorClass: "bg-blue-500",
     members: [
       {
-        name: "Raúl Jiménez",
-        role: "Coordinador de Tropa",
-        experience: "6 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Mireia",
+        role: "Jefa de Sección",
+        photo: "/images/kraal/mireia.png",
       },
       {
-        name: "Cristina Díaz",
-        role: "Scouter de Tropa",
-        experience: "4 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Vicente",
+        role: "Tesorero y Secretario",
+        photo: "/images/kraal/vicente.png",
       },
       {
-        name: "Antonio Navarro",
-        role: "Scouter de Tropa",
-        experience: "3 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Amelia",
+        role: "Scouter",
+        photo: "/images/kraal/amelia.png",
+      },
+      {
+        name: "Lucía",
+        role: "Scouter",
+        photo: "/images/kraal/lucia.png",
+      },
+      {
+        name: "Mateo",
+        role: "Scouter",
+        photo: "/images/kraal/mateo.png",
       },
     ],
   },
@@ -116,16 +126,24 @@ const sections = [
     colorClass: "bg-red-600",
     members: [
       {
-        name: "Sara García",
-        role: "Coordinadora de Pioneros",
-        experience: "8 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Esther",
+        role: "Jefa de Sección",
+        photo: "/images/kraal/esther.png",
       },
       {
-        name: "Héctor Rivas",
-        role: "Scouter de Pioneros",
-        experience: "5 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Rodrigo",
+        role: "Tesorero",
+        photo: "/images/kraal/rodrigo.png",
+      },
+      {
+        name: "Elena",
+        role: "Scouter",
+        photo: "/images/kraal/elena.png",
+      },
+      {
+        name: "Miguel",
+        role: "Scouter",
+        photo: "/images/kraal/miguel.png",
       },
     ],
   },
@@ -134,16 +152,19 @@ const sections = [
     colorClass: "bg-green-700",
     members: [
       {
-        name: "Itziar Sánchez",
-        role: "Coordinadora de Rutas",
-        experience: "9 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Artur",
+        role: "Scouter",
+        photo: "/images/kraal/artur.png",
       },
       {
-        name: "Álvaro Santandreu",
-        role: "Scouter de Rutas",
-        experience: "6 años en el grupo",
-        photo: "/placeholder.svg?height=200&width=200",
+        name: "Dani",
+        role: "Scouter",
+        photo: "/images/kraal/dani.png",
+      },
+      {
+        name: "Alejandra",
+        role: "Scouter",
+        photo: "/images/kraal/alejandra.png",
       },
     ],
   },
@@ -202,12 +223,12 @@ export default function KraalPage() {
               as="h2"
               className="text-2xl font-bold text-center mb-8"
             >
-              Coordinación de Grupo
+              Jefatura de Grupo
             </StaticText>
             <div className="flex justify-center">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
+              <div className="flex flex-wrap justify-center gap-8 max-w-7xl">
                 {coordinationTeam.map((member, i) => (
-                  <Card key={i} className="overflow-hidden">
+                  <Card key={i} className="overflow-hidden w-80">
                     <div className="h-64 relative">
                       <StaticImage
                         contentId={223 + i * 4}
@@ -286,9 +307,9 @@ export default function KraalPage() {
                   {section.name}
                 </StaticText>
                 <div className="flex justify-center">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl">
+                  <div className="flex flex-wrap justify-center gap-6 max-w-7xl">
                     {section.members.map((member, j) => (
-                      <Card key={j} className="overflow-hidden h-full">
+                      <Card key={j} className="overflow-hidden w-56">
                         <div className="h-48 relative">
                           <StaticImage
                             contentId={237 + i * 20 + j * 4}
@@ -315,18 +336,9 @@ export default function KraalPage() {
                             identificador={`section-${i}-member-${j}-role`}
                             seccion="kraal"
                             as="p"
-                            className="text-sm text-muted-foreground mb-2"
+                            className="text-sm text-muted-foreground"
                           >
                             {member.role}
-                          </StaticText>
-                          <StaticText
-                            contentId={240 + i * 20 + j * 4}
-                            identificador={`section-${i}-member-${j}-experience`}
-                            seccion="kraal"
-                            as="p"
-                            className="text-xs text-muted-foreground"
-                          >
-                            {member.experience}
                           </StaticText>
                         </CardContent>
                       </Card>
@@ -339,7 +351,7 @@ export default function KraalPage() {
         </section>
 
         {/* Join Us Section */}
-        <section className="py-16 bg-primary text-primary-foreground">
+        <section className="py-16 bg-gray-200 dark:bg-slate-900">
           <div className="container mx-auto px-4 text-center">
             <StaticText
               contentId={336}
@@ -361,7 +373,7 @@ export default function KraalPage() {
               Si tienes experiencia scout, ganas de aprender y quieres contribuir a la educación de niños y jóvenes,
               ¡únete a nuestro equipo!
             </StaticText>
-            <Button asChild variant="secondary">
+            <Button asChild>
               <Link href="/contacto">Contacta con nosotros</Link>
             </Button>
           </div>

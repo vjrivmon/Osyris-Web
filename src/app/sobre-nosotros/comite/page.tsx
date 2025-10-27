@@ -6,45 +6,107 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StaticText, StaticImage } from "@/components/ui/static-content"
 import Link from "next/link"
-import { Mail } from "lucide-react"
 
 // Mock data - En fase futura se cargará dinámicamente de BD
 const committeeTeam = [
   {
-    name: "Isabel González",
-    role: "Presidenta",
-    description:
-      "Madre de dos scouts del grupo. Coordina las actividades generales y representa al grupo ante Scouts de España.",
+    name: "Soledad Hermenegildo Caudevilla",
+    role: "Presidencia Comité y Tesorería Comité",
     photo: "/placeholder.svg?height=300&width=300",
   },
   {
-    name: "Roberto Fernández",
-    role: "Vicepresidente",
-    description: "Padre scout con experiencia en gestión. Apoya a la presidenta y coordina proyectos especiales.",
+    name: "Laura Amparo Monferrer Freire",
+    role: "Secretaría comité",
     photo: "/placeholder.svg?height=300&width=300",
   },
   {
-    name: "Carmen López",
-    role: "Secretaria",
-    description: "Responsable de las actas, comunicaciones oficiales y gestión documental del grupo.",
+    name: "Javier Santagueda Galindo",
+    role: "Tesorería comité",
     photo: "/placeholder.svg?height=300&width=300",
   },
   {
-    name: "David Martínez",
-    role: "Tesorero",
-    description: "Encargado de la gestión económica, presupuestos y control financiero del grupo.",
+    name: "Mercedes Botija Yagüe",
+    role: "Comité",
     photo: "/placeholder.svg?height=300&width=300",
   },
   {
-    name: "Pilar Ruiz",
-    role: "Vocal de Actividades",
-    description: "Coordina la planificación de campamentos, excursiones y eventos especiales.",
+    name: "Jorge Marcu Cristea",
+    role: "Comité",
     photo: "/placeholder.svg?height=300&width=300",
   },
   {
-    name: "Miguel Serrano",
-    role: "Vocal de Familias",
-    description: "Enlace entre el Comité y las familias, promueve la participación parental.",
+    name: "Silvia Martínez Vidal",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Sonia Andreu Arias",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Alberto García Briz",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Carmen Pellicer Sifres",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Eugenio Martin Redon",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Marta Carbonell Zaragoza",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Aranzazu Tormos Bernabeu",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Maria Azara Ballester",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Javier Maiques Ribelles",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Catherine Andrés Langa",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Eladio García Carrión",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Emilio Iranzo García",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Maria Teresa Tomás García",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "Enrique Perez Lobo",
+    role: "Comité",
+    photo: "/placeholder.svg?height=300&width=300",
+  },
+  {
+    name: "María Gracia López Patiño",
+    role: "Comité",
     photo: "/placeholder.svg?height=300&width=300",
   },
 ]
@@ -177,7 +239,7 @@ export default function ComitePage() {
                       identificador={`member-${i}-name`}
                       seccion="comite"
                       as="h3"
-                      className="text-xl font-bold mb-1"
+                      className="text-xl font-bold mb-2"
                     >
                       {member.name}
                     </StaticText>
@@ -186,24 +248,10 @@ export default function ComitePage() {
                       identificador={`member-${i}-role`}
                       seccion="comite"
                       as="p"
-                      className="text-primary mb-2"
+                      className="text-primary"
                     >
                       {member.role}
                     </StaticText>
-                    <StaticText
-                      contentId={348 + i * 4}
-                      identificador={`member-${i}-description`}
-                      seccion="comite"
-                      as="p"
-                      multiline
-                      className="text-sm text-muted-foreground mb-4"
-                    >
-                      {member.description}
-                    </StaticText>
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Mail className="mr-2 h-4 w-4" />
-                      Contactar
-                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -255,7 +303,7 @@ export default function ComitePage() {
         </section>
 
         {/* Meetings Section */}
-        <section className="py-12 bg-muted">
+        <section className="py-12 bg-white dark:bg-slate-800">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <StaticText
@@ -340,7 +388,7 @@ export default function ComitePage() {
         </section>
 
         {/* Join Us Section */}
-        <section className="py-16 bg-primary text-primary-foreground">
+        <section className="py-16 bg-gray-200 dark:bg-slate-900">
           <div className="container mx-auto px-4 text-center">
             <StaticText
               contentId={389}
@@ -362,7 +410,7 @@ export default function ComitePage() {
               Si quieres contribuir activamente a la educación scout de tu hijo/a y tienes tiempo para dedicar
               al grupo, ¡te invitamos a participar en nuestro Comité!
             </StaticText>
-            <Button asChild variant="secondary">
+            <Button asChild>
               <Link href="/contacto">Contacta con nosotros</Link>
             </Button>
           </div>

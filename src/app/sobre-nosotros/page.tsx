@@ -553,7 +553,7 @@ export default function SobreNosotrosPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 bg-primary text-primary-foreground">
+        <section className="py-16 bg-gray-200 dark:bg-slate-900">
           <div className="container mx-auto px-4 text-center">
             <StaticText
               contentId={218}
@@ -576,14 +576,10 @@ export default function SobreNosotrosPage() {
               Comité de Grupo.
             </StaticText>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button asChild variant="secondary">
+              <Button asChild>
                 <Link href="/sobre-nosotros/kraal">Conoce a nuestro Kraal</Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10"
-              >
+              <Button asChild variant="outline">
                 <Link href="/sobre-nosotros/comite">Conoce a nuestro Comité</Link>
               </Button>
             </div>

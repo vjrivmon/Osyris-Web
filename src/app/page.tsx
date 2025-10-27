@@ -2,13 +2,15 @@
 import { unstable_noStore as noStore } from 'next/cache'
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { StaticText, StaticImage, StaticList } from "@/components/ui/static-content"
+import { StaticText } from "@/components/ui/static-content"
+import { SeamlessVideoLoop } from "@/components/ui/seamless-video-loop"
 import {
   CalendarDays,
   FileText,
@@ -37,8 +39,16 @@ export default function Home() {
       <MainNav />
       <main className="flex-1">
         {/* Hero Section - Improved with better visuals and call to action */}
-        <section className="relative bg-hero-pattern bg-cover bg-center py-20 sm:py-28 md:py-36 lg:py-48">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70"></div>
+        <section className="relative bg-black overflow-hidden py-20 sm:py-28 md:py-36 lg:py-48">
+          {/* Video Background with seamless loop */}
+          <SeamlessVideoLoop
+            src="/videos/hero-background.mp4"
+            opacity={0.6}
+          />
+
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/50 to-primary/30"></div>
+
           <div className="container relative z-10 mx-auto px-4 sm:px-6 text-center">
             <div className="mb-4 sm:mb-6 inline-block rounded-full bg-white px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
               Educando en valores desde 1981
@@ -161,10 +171,17 @@ export default function Home() {
               {sections.map((section, i) => (
                 <Link href={section.href} key={i} className="group" >
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg group-hover:translate-y-[-5px]">
-                    <div className="relative h-40 overflow-hidden">
-                      <div className={`absolute inset-0 ${section.gradientClass} opacity-90`}></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-4xl font-bold text-white">{section.icon}</span>
+                    <div className="relative h-40 overflow-hidden bg-white dark:bg-slate-900">
+                      <div className="absolute inset-0 flex items-center justify-center p-4">
+                        {section.logo && (
+                          <Image
+                            src={section.logo}
+                            alt={`Logo ${section.title}`}
+                            width={120}
+                            height={120}
+                            className="object-contain"
+                          />
+                        )}
                       </div>
                     </div>
                     <CardContent className="p-6 text-center">
@@ -226,10 +243,13 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center">
                 {/* Left side - Image */}
                 <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] rounded-xl overflow-hidden shadow-xl order-2 lg:order-1">
-                  <StaticImage
-                    src="/placeholder.svg?height=500&width=600"
-                    alt="Grupo Scout Osyris - Aventura"
+                  <Image
+                    src="/images/unete-a-nosotros.jpg"
+                    alt="Grupo Scout Osyris - Únete a nosotros"
+                    width={600}
+                    height={500}
                     className="w-full h-full object-cover"
+                    priority
                   />
                 </div>
 
@@ -311,12 +331,8 @@ export default function Home() {
                     <div className="mb-6 text-4xl">"</div>
                     <p className="italic">{testimonial.text}</p>
                     <div className="mt-auto flex items-center gap-4 pt-8">
-                      <div className="h-12 w-12 overflow-hidden rounded-full">
-                        <img
-                          src={testimonial.avatar || "/placeholder.svg?height=100&width=100"}
-                          alt={testimonial.name}
-                          className="h-full w-full object-cover"
-                        />
+                      <div className={`h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${testimonial.bgColor}`}>
+                        {testimonial.initials}
                       </div>
                       <div>
                         <h4 className="font-semibold">{testimonial.name}</h4>
@@ -343,6 +359,7 @@ const sections = [
     description: "Colonia La Veleta",
     gradientClass: "bg-gradient-to-br from-orange-400 to-orange-600",
     icon: "🦫",
+    logo: "/images/secciones/castores.png",
     href: "/secciones/castores",
   },
   {
@@ -351,6 +368,7 @@ const sections = [
     description: "Manada Waingunga",
     gradientClass: "bg-gradient-to-br from-yellow-400 to-yellow-600",
     icon: "🐺",
+    logo: "/images/secciones/manada.png",
     href: "/secciones/manada",
   },
   {
@@ -359,6 +377,7 @@ const sections = [
     description: "Tropa Brownsea",
     gradientClass: "bg-gradient-to-br from-blue-400 to-blue-600",
     icon: "🏕️",
+    logo: "/images/secciones/tropa.png",
     href: "/secciones/tropa",
   },
   {
@@ -367,6 +386,7 @@ const sections = [
     description: "Posta Kanhiwara",
     gradientClass: "bg-gradient-to-br from-red-400 to-red-600",
     icon: "🧭",
+    logo: "/images/secciones/pioneros.png",
     href: "/secciones/pioneros",
   },
   {
@@ -375,6 +395,7 @@ const sections = [
     description: "Ruta Walhalla",
     gradientClass: "bg-gradient-to-br from-green-500 to-green-700",
     icon: "🌍",
+    logo: "/images/secciones/rutas.png",
     href: "/secciones/rutas",
   },
 ]
@@ -448,19 +469,22 @@ const testimonials = [
   {
     name: "Antonio Almela",
     role: "Antiguo Scouter",
-    avatar: "/placeholder.svg?height=100&width=100",
+    initials: "AA",
+    bgColor: "bg-gradient-to-br from-blue-500 to-blue-700",
     text: "Un gran grupo scout con gente buena de verdad y valores que hacen que los niños y niñas crezcan y disfruten cada momento",
   },
   {
     name: "Juanjo",
     role: "Antiguo Scouter",
-    avatar: "/placeholder.svg?height=100&width=100",
+    initials: "J",
+    bgColor: "bg-gradient-to-br from-green-500 to-green-700",
     text: "Magnífico grupo con gente variada en cuanto a edad y procedencia, valores y principios Scouts, excelente Proyecto Educativo y un Kraal implicado al máximo. Grupo 100% recomendable.",
   },
   {
     name: "Eva Bujanda",
     role: "Antigua Scouter",
-    avatar: "/placeholder.svg?height=100&width=100",
+    initials: "EB",
+    bgColor: "bg-gradient-to-br from-purple-500 to-purple-700",
     text: "Un grupo con muchos años de experiencia educando en valores. Geniales sus monitores y sus niños!",
   },
 ]

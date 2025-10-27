@@ -409,7 +409,7 @@ function transformToSectionData(
     castores: { name: 'Castores', fullName: 'Colonia La Veleta', emoji: '🦫', motto: 'Compartir' },
     manada: { name: 'Manada', fullName: 'Manada Waingunga', emoji: '🐺', motto: 'Haremos lo mejor' },
     tropa: { name: 'Tropa', fullName: 'Tropa Brownsea', emoji: '⚜️', motto: 'Siempre listos' },
-    pioneros: { name: 'Pioneros', fullName: 'Posta Kanhiwara', emoji: '🏔️', motto: 'Unidos en el servicio' },
+    pioneros: { name: 'Pioneros', fullName: 'Posta Kanhiwara', emoji: '🏔️', motto: 'Descubrir' },
     rutas: { name: 'Rutas', fullName: 'Ruta Walhalla', emoji: '🎒', motto: 'Servir' }
   }
 

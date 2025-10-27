@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ interface SectionData {
   fullName: string
   slug: string
   emoji: string
+  logo?: string
   motto: string
   ageRange: string
   colors: {
@@ -127,15 +129,26 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
       </header>
       <main className="flex-1">
         {/* Hero Section */}
-        <section className={`relative bg-gradient-to-br ${sectionData.colors.from} ${sectionData.colors.to} py-12 sm:py-16 md:py-24 text-white`}>
+        <section className={`relative bg-white dark:bg-slate-900 py-12 sm:py-16 md:py-24`}>
           <div className="container mx-auto px-4 sm:px-6 text-center">
-            <div className="inline-block mb-3 sm:mb-4 text-4xl sm:text-5xl">{sectionData.emoji}</div>
+            {sectionData.logo && (
+              <div className="inline-block mb-3 sm:mb-4">
+                <Image
+                  src={sectionData.logo}
+                  alt={`Logo ${sectionData.name}`}
+                  width={200}
+                  height={200}
+                  className="mx-auto"
+                  priority
+                />
+              </div>
+            )}
             <StaticText
               contentId={baseId}
               identificador="hero-title"
               seccion={sectionData.slug}
               as="h1"
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 sm:mb-6 text-white px-2"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 sm:mb-6 text-slate-900 dark:text-white px-2"
             >
               {getContent('hero-title', `${sectionData.name} - ${sectionData.fullName}`)}
             </StaticText>
@@ -144,7 +157,7 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
               identificador="hero-subtitle"
               seccion={sectionData.slug}
               as="p"
-              className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl max-w-3xl mx-auto text-white px-4"
+              className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl max-w-3xl mx-auto text-slate-700 dark:text-slate-300 px-4"
             >
               {getContent('hero-subtitle', `"${sectionData.motto}" - ${sectionData.ageRange}`)}
             </StaticText>
@@ -305,9 +318,9 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
             >
               {getContent('team-title', 'Nuestro Equipo')}
             </StaticText>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 max-w-7xl mx-auto">
               {sectionData.team.map((member, i) => (
-                <div key={i} className={`${sectionClasses.teamCard} rounded-lg p-6 shadow-sm text-center`}>
+                <div key={i} className={`${sectionClasses.teamCard} rounded-lg p-6 shadow-sm text-center w-56`}>
                   <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 bg-muted">
                     <StaticImage
                       contentId={baseId + 31 + (i * 3)}

@@ -105,7 +105,7 @@ const getFallbackData = (slug: string) => {
       fullName: "Posta Kanhiwara",
       slug: "pioneros",
       emoji: "🏔️",
-      motto: "Unidos en el servicio",
+      motto: "Descubrir",
       ageRange: "Jóvenes de 13 a 16 años",
       colors: { from: "from-red-400", to: "to-red-600", accent: "red" },
       description: "Los Pioneros desarrollan proyectos de servicio y aventura.",

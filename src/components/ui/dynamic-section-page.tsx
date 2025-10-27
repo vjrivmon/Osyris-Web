@@ -63,6 +63,7 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
         fullName: "Colonia La Veleta",
         slug: "castores",
         emoji: "🦫",
+        logo: "/images/secciones/castores.png",
         motto: "Compartir",
         ageRange: "Niños y niñas de 5 a 7 años",
         colors: {
@@ -84,8 +85,10 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "El Pequeño Grupo", description: "Se organizan en pequeños grupos llamados 'madrigueras'." }
         ],
         team: [
-          { name: "Monitor Principal", role: "Coordinador de Castores", photo: "/placeholder.svg?height=100&width=100" },
-          { name: "Monitor Adjunto", role: "Scouter de Castores", photo: "/placeholder.svg?height=100&width=100" }
+          { name: "Lekes", role: "Jefa de Sección y Tesorera", photo: "/images/kraal/noelia.png" },
+          { name: "Rasti", role: "Scouter", photo: "/images/kraal/joan.png" },
+          { name: "Barú", role: "Scouter", photo: "/images/kraal/jaume.png" },
+          { name: "Kibu", role: "Scouter", photo: "/images/kraal/alvaros.png" }
         ],
         navigation: {
           prev: { href: "/secciones", title: "Volver a Secciones" },
@@ -97,6 +100,7 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
         fullName: "Manada Waingunga",
         slug: "manada",
         emoji: "🐺",
+        logo: "/images/secciones/manada.png",
         motto: "Haremos lo mejor",
         ageRange: "Niños y niñas de 7 a 10 años",
         colors: {
@@ -118,9 +122,11 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Las Especialidades", description: "Sistema de progresión personal basado en habilidades." }
         ],
         team: [
-          { name: "Akela", role: "Jefe de Manada", photo: "/placeholder.svg?height=100&width=100" },
-          { name: "Bagheera", role: "Subjefe de Manada", photo: "/placeholder.svg?height=100&width=100" },
-          { name: "Baloo", role: "Ayudante de Manada", photo: "/placeholder.svg?height=100&width=100" }
+          { name: "Germà Gris", role: "Jefe de Sección", photo: "/images/kraal/lopo.png" },
+          { name: "Akhela", role: "Tesorería y Botiquín", photo: "/images/kraal/itziar.png" },
+          { name: "Baloo", role: "Material", photo: "/images/kraal/hector.png" },
+          { name: "Brymby", role: "Scouter", photo: "/images/kraal/asier.png" },
+          { name: "Oonai", role: "Scouter", photo: "/images/kraal/maria.png" }
         ],
         navigation: {
           prev: { href: "/secciones/castores", title: "Anterior: Castores" },
@@ -132,6 +138,7 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
         fullName: "Tropa Brownsea",
         slug: "tropa",
         emoji: "⚜️",
+        logo: "/images/secciones/tropa.png",
         motto: "Siempre listos",
         ageRange: "Chicos y chicas de 10 a 13 años",
         colors: {
@@ -153,8 +160,11 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Servicio", description: "Compromiso con el servicio a los demás." }
         ],
         team: [
-          { name: "Jefe de Tropa", role: "Scouter Principal", photo: "/placeholder.svg?height=100&width=100" },
-          { name: "Subjefe de Tropa", role: "Scouter Adjunto", photo: "/placeholder.svg?height=100&width=100" }
+          { name: "Mireia", role: "Jefa de Sección", photo: "/images/kraal/mireia.png" },
+          { name: "Vicente", role: "Tesorero y Secretario", photo: "/images/kraal/vicente.png" },
+          { name: "Amelia", role: "Scouter", photo: "/images/kraal/amelia.png" },
+          { name: "Lucía", role: "Scouter", photo: "/images/kraal/lucia.png" },
+          { name: "Mateo", role: "Scouter", photo: "/images/kraal/mateo.png" }
         ],
         navigation: {
           prev: { href: "/secciones/manada", title: "Anterior: Manada" },
@@ -166,7 +176,8 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
         fullName: "Posta Kanhiwara",
         slug: "pioneros",
         emoji: "🏔️",
-        motto: "Unidos en el servicio",
+        logo: "/images/secciones/pioneros.png",
+        motto: "Descubrir",
         ageRange: "Jóvenes de 13 a 16 años",
         colors: {
           from: "from-red-400",
@@ -187,8 +198,10 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Compromiso Social", description: "Fuerte componente de servicio a la comunidad." }
         ],
         team: [
-          { name: "Jefe de Posta", role: "Scouter Principal", photo: "/placeholder.svg?height=100&width=100" },
-          { name: "Subjefe de Posta", role: "Scouter Adjunto", photo: "/placeholder.svg?height=100&width=100" }
+          { name: "Esther", role: "Jefa de Sección", photo: "/images/kraal/esther.png" },
+          { name: "Rodrigo", role: "Tesorero", photo: "/images/kraal/rodrigo.png" },
+          { name: "Elena", role: "Scouter", photo: "/images/kraal/elena.png" },
+          { name: "Miguel", role: "Scouter", photo: "/images/kraal/miguel.png" }
         ],
         navigation: {
           prev: { href: "/secciones/tropa", title: "Anterior: Tropa" },
@@ -200,6 +213,7 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
         fullName: "Ruta Walhalla",
         slug: "rutas",
         emoji: "🎒",
+        logo: "/images/secciones/rutas.png",
         motto: "Servir",
         ageRange: "Jóvenes de 16 a 19 años",
         colors: {
@@ -221,8 +235,9 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "La Responsabilidad", description: "Preparación para asumir responsabilidades adultas." }
         ],
         team: [
-          { name: "Jefe de Ruta", role: "Scouter Principal", photo: "/placeholder.svg?height=100&width=100" },
-          { name: "Subjefe de Ruta", role: "Scouter Adjunto", photo: "/placeholder.svg?height=100&width=100" }
+          { name: "Artur", role: "Scouter", photo: "/images/kraal/artur.png" },
+          { name: "Dani", role: "Scouter", photo: "/images/kraal/dani.png" },
+          { name: "Alejandra", role: "Scouter", photo: "/images/kraal/alejandra.png" }
         ],
         navigation: {
           prev: { href: "/secciones/pioneros", title: "Anterior: Pioneros" },

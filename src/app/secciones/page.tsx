@@ -96,7 +96,7 @@ export default function SeccionesPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-12 sm:py-16 bg-primary text-primary-foreground">
+        <section className="py-12 sm:py-16 bg-gray-200 dark:bg-slate-900">
           <div className="container mx-auto px-4 sm:px-6 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">¿Quieres formar parte de nuestra familia scout?</h2>
             <p className="max-w-2xl mx-auto mb-6 sm:mb-8 text-sm sm:text-base px-4">
@@ -104,14 +104,10 @@ export default function SeccionesPage() {
               dudes en contactar con nosotros.
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
-              <Button asChild variant="secondary">
+              <Button asChild>
                 <Link href="/contacto">Contacta con nosotros</Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10"
-              >
+              <Button asChild variant="outline">
                 <Link href="/sobre-nosotros">Conoce más sobre nosotros</Link>
               </Button>
             </div>
