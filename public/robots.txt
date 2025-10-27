@@ -1,0 +1,41 @@
+# robots.txt para Grupo Scout Osyris
+# https://gruposcoutosyris.es
+
+# Permitir rastreo general a todos los bots
+User-agent: *
+Allow: /
+
+# Bloquear acceso a áreas privadas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /familia/
+Disallow: /aula-virtual/
+Disallow: /api/
+Disallow: /login
+Disallow: /registro
+Disallow: /recuperar-contrasena
+
+# Bloquear archivos técnicos
+Disallow: /_next/
+Disallow: /static/
+
+# Sitemap
+Sitemap: https://gruposcoutosyris.es/sitemap.xml
+
+# Configuración específica para GoogleBot
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /familia/
+Disallow: /aula-virtual/
+Disallow: /api/
+
+# Configuración específica para Bingbot
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /familia/
+Disallow: /aula-virtual/
+Disallow: /api/
