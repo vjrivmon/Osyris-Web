@@ -22,7 +22,7 @@ const committeeTeam = [
   {
     name: "Javier Santagueda Galindo",
     role: "Tesorería comité",
-    photo: "/placeholder.svg?height=300&width=300",
+    photo: "/images/comite/javi.jpg",
   },
   {
     name: "Mercedes Botija Yagüe",
@@ -92,7 +92,7 @@ const committeeTeam = [
   {
     name: "Emilio Iranzo García",
     role: "Comité",
-    photo: "/placeholder.svg?height=300&width=300",
+    photo: "/images/comite/emilio.jpg",
   },
   {
     name: "Maria Teresa Tomás García",

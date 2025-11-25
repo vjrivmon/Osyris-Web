@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AulaVirtualSidebar } from "@/components/aula-virtual/sidebar"
 import { Button } from "@/components/ui/button"
-import { Menu, LogOut, Settings } from "lucide-react"
+import { Menu, LogOut, Bell, User } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useNotificacionesScouter } from "@/hooks/useNotificacionesScouter"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +19,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { formatDistanceToNow } from "date-fns"
+import { es } from "date-fns/locale"
 
 export default function AulaVirtualLayout({
   children,
@@ -26,7 +37,9 @@ export default function AulaVirtualLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
+  const [notificacionesOpen, setNotificacionesOpen] = useState(false)
   const router = useRouter()
+  const { notificaciones, contadorNoLeidas, marcarComoLeida, documentosPendientes } = useNotificacionesScouter()
 
   const handleLogout = () => {
     // Limpiar sesión del localStorage
@@ -78,6 +91,91 @@ export default function AulaVirtualLayout({
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
+
+            {/* Notificaciones */}
+            <Popover open={notificacionesOpen} onOpenChange={setNotificacionesOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {(contadorNoLeidas > 0 || documentosPendientes.length > 0) && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                      {contadorNoLeidas + documentosPendientes.length}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="p-3 border-b">
+                  <h4 className="font-semibold">Notificaciones</h4>
+                </div>
+                <ScrollArea className="h-[300px]">
+                  {documentosPendientes.length === 0 && notificaciones.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      No hay notificaciones
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {/* Documentos pendientes primero */}
+                      {documentosPendientes.length > 0 && (
+                        <Link
+                          href="/aula-virtual/documentos-pendientes"
+                          onClick={() => setNotificacionesOpen(false)}
+                          className="block p-3 hover:bg-accent transition-colors"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-full bg-amber-100">
+                              <Bell className="h-4 w-4 text-amber-600" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">
+                                {documentosPendientes.length} documento{documentosPendientes.length !== 1 ? 's' : ''} pendiente{documentosPendientes.length !== 1 ? 's' : ''}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Haz clic para revisar y aprobar
+                              </p>
+                            </div>
+                          </div>
+                        </Link>
+                      )}
+                      {/* Otras notificaciones */}
+                      {notificaciones.slice(0, 5).map((notif) => (
+                        <div
+                          key={notif.id}
+                          className={`p-3 hover:bg-accent cursor-pointer transition-colors ${!notif.leida ? 'bg-blue-50/50' : ''}`}
+                          onClick={() => {
+                            if (!notif.leida) marcarComoLeida(notif.id)
+                            if (notif.enlace_accion) {
+                              router.push(notif.enlace_accion)
+                              setNotificacionesOpen(false)
+                            }
+                          }}
+                        >
+                          <p className="font-medium text-sm">{notif.titulo}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{notif.mensaje}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatDistanceToNow(new Date(notif.fecha_creacion), { addSuffix: true, locale: es })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+                {documentosPendientes.length > 0 && (
+                  <div className="p-2 border-t">
+                    <Button asChild variant="ghost" className="w-full" size="sm">
+                      <Link href="/aula-virtual/documentos-pendientes">
+                        Ver todos los pendientes
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+
+            {/* User icon */}
+            <Button variant="ghost" size="icon">
+              <User className="h-5 w-5" />
+            </Button>
 
             {/* Logout button - Mobile (icon only) */}
             <Button

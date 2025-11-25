@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -13,68 +12,62 @@ import {
   Syringe,
   CreditCard,
   Upload,
+  Download,
   CheckCircle,
   AlertTriangle,
-  Info
+  Info,
+  Eye,
+  FileCheck,
+  Loader2,
+  Clock
 } from "lucide-react"
-import { ScoutHijo, Documento, TipoDocumento, DOCUMENTO_TIPO_CONFIG, DocumentoUtils } from "@/types/familia"
-import { DocumentoItemSimple, DocumentoItemPlaceholder } from "./documento-item-simple"
+import { ScoutHijo, TipoDocumento } from "@/types/familia"
+import { EstructuraEducando, Plantilla } from "@/hooks/useGoogleDrive"
+import { DocumentoViewerModal } from "./documento-viewer-modal"
 
 interface DocumentosListaCompactaProps {
   hijo?: ScoutHijo
+  estructuraEducando?: EstructuraEducando | null
+  plantillas?: Plantilla[]
+  loading?: boolean
   onUploadDocumento?: (tipo: TipoDocumento) => void
-  onViewDocumento?: (documento: Documento) => void
-  onDownloadDocumento?: (documento: Documento) => void
+  onDownloadPlantilla?: (fileId: string, fileName: string) => void
   compact?: boolean
   className?: string
 }
 
+// Iconos por tipo de documento
+const getIconForTipo = (tipo: string) => {
+  switch (tipo) {
+    case 'ficha_inscripcion':
+      return <FileText className="h-4 w-4 text-gray-400" />
+    case 'ficha_sanitaria':
+      return <Heart className="h-4 w-4 text-gray-400" />
+    case 'sip':
+      return <Shield className="h-4 w-4 text-gray-400" />
+    case 'cartilla_vacunacion':
+    case 'vacunas':
+      return <Syringe className="h-4 w-4 text-gray-400" />
+    case 'dni_padre_madre':
+      return <CreditCard className="h-4 w-4 text-gray-400" />
+    default:
+      return <FileText className="h-4 w-4 text-gray-400" />
+  }
+}
+
 export function DocumentosListaCompacta({
   hijo,
+  estructuraEducando,
+  plantillas = [],
+  loading = false,
   onUploadDocumento,
-  onViewDocumento,
-  onDownloadDocumento,
+  onDownloadPlantilla,
   compact = false,
   className
 }: DocumentosListaCompactaProps) {
   const [verDetalles, setVerDetalles] = useState(!compact)
-
-  // Tipos de documentos estándar
-  const tiposDocumentosEstandar: TipoDocumento[] = [
-    'ficha_inscripcion',
-    'ficha_sanitaria',
-    'sip',
-    'vacunas',
-    'dni_padre_madre'
-  ]
-
-  // Crear mapa de documentos del hijo
-  const documentosMap = new Map<TipoDocumento, Documento>()
-  hijo?.documentos?.forEach(doc => {
-    documentosMap.set(doc.tipo, doc)
-  })
-
-  // Crear lista completa de documentos (existentes + placeholders)
-  const listaDocumentos: (Documento | { tipo: TipoDocumento; placeholder: true })[] =
-    tiposDocumentosEstandar.map(tipo => {
-      const documento = documentosMap.get(tipo)
-      if (documento) {
-        return documento
-      }
-      return { tipo, placeholder: true }
-    })
-
-  // Calcular estadísticas
-  const totalDocumentos = tiposDocumentosEstandar.length
-  const documentosSubidos = hijo?.documentos?.length || 0
-  const documentosCompletos = hijo?.documentos?.filter(d =>
-    d.estado === 'actualizado' || d.estado === 'correcto'
-  ).length || 0
-  const documentosCriticos = hijo?.documentos?.filter(d =>
-    DocumentoUtils.esCritico(d.estado)
-  ).length || 0
-  const documentosFaltantes = totalDocumentos - documentosSubidos
-  const progreso = DocumentoUtils.calcularProgreso(hijo?.documentos || [])
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedDoc, setSelectedDoc] = useState<{ name: string; webViewLink?: string } | null>(null)
 
   // Si no hay hijo seleccionado
   if (!hijo) {
@@ -106,29 +99,55 @@ export function DocumentosListaCompacta({
     )
   }
 
+  // Usar datos de Drive si están disponibles
+  const status = estructuraEducando?.status
+  const resumen = estructuraEducando?.resumen
+
+  // Si está cargando
+  if (loading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <FileText className="h-5 w-5" />
+            <span>Documentos de {hijo.nombre}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-green-600 mb-4" />
+            <p className="text-sm text-muted-foreground">Cargando documentos...</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Calcular estadísticas desde datos reales
+  const totalDocumentos = resumen?.total || 0
+  const documentosCompletos = resumen?.completos || 0
+  const documentosFaltantes = resumen?.faltantes || 0
+  const progreso = totalDocumentos > 0 ? Math.round((documentosCompletos / totalDocumentos) * 100) : 0
+
+  // Obtener lista de documentos desde status
+  const documentosList = status ? Object.entries(status) : []
+
+  // Función para encontrar plantilla para un tipo
+  const getPlantillaForTipo = (tipo: string): Plantilla | undefined => {
+    return plantillas.find(p => p.tipoDocumento === tipo)
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center space-x-2">
-              <FileText className="h-5 w-5" />
-              <span>Documentos de {hijo.nombre}</span>
-            </CardTitle>
-            <CardDescription className="mt-1">
-              {documentosCompletos}/{totalDocumentos} documentos completos
-            </CardDescription>
-          </div>
-
-          {!compact && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setVerDetalles(!verDetalles)}
-            >
-              {verDetalles ? 'Ocultar detalles' : 'Ver detalles'}
-            </Button>
-          )}
+        <div>
+          <CardTitle className="flex items-center space-x-2">
+            <FileText className="h-5 w-5" />
+            <span>Documentos de {hijo.nombre}</span>
+          </CardTitle>
+          <CardDescription className="mt-1">
+            {documentosCompletos}/{totalDocumentos} documentos completos
+          </CardDescription>
         </div>
 
         {/* Barra de progreso */}
@@ -140,90 +159,156 @@ export function DocumentosListaCompacta({
           <Progress value={progreso} className="h-2" />
         </div>
 
-        {/* Estadísticas minimalistas */}
+        {/* Estadísticas */}
         <div className="flex items-center gap-6 mt-5 text-sm">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-gray-400" />
+            <CheckCircle className="h-4 w-4 text-green-500" />
             <span className="text-gray-600">{documentosCompletos} completos</span>
           </div>
-          {documentosCriticos > 0 && (
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              <span className="text-red-600 font-medium">{documentosCriticos} pendientes</span>
-            </div>
-          )}
           {documentosFaltantes > 0 && (
             <div className="flex items-center gap-2">
-              <Upload className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-600">{documentosFaltantes} faltan</span>
+              <Upload className="h-4 w-4 text-red-500" />
+              <span className="text-red-600">{documentosFaltantes} faltan</span>
             </div>
           )}
         </div>
       </CardHeader>
 
       <CardContent className="pt-6">
-        {/* Alerta minimalista si hay documentos críticos */}
-        {documentosCriticos > 0 && (
+        {/* Alerta si faltan documentos obligatorios */}
+        {documentosFaltantes > 0 && (
           <Alert variant="default" className="mb-6 border-red-200 bg-red-50/50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-sm text-red-700">
-              {documentosCriticos} documento{documentosCriticos > 1 ? 's' : ''} pendiente{documentosCriticos > 1 ? 's' : ''} de subir
+              {documentosFaltantes} documento{documentosFaltantes > 1 ? 's obligatorios' : ' obligatorio'} pendiente{documentosFaltantes > 1 ? 's' : ''} de subir
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Lista de documentos */}
+        {/* Lista de documentos desde Drive */}
         <div className="space-y-3">
-          {listaDocumentos.map((item, index) => {
-            if ('placeholder' in item) {
-              // Es un placeholder (documento faltante) - estilo minimalista
-              return (
-                <div
-                  key={item.tipo}
-                  className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-lg bg-gray-50">
-                      {item.tipo === 'ficha_inscripcion' && <FileText className="h-4 w-4 text-gray-400" />}
-                      {item.tipo === 'ficha_sanitaria' && <Heart className="h-4 w-4 text-gray-400" />}
-                      {item.tipo === 'sip' && <Shield className="h-4 w-4 text-gray-400" />}
-                      {item.tipo === 'vacunas' && <Syringe className="h-4 w-4 text-gray-400" />}
-                      {item.tipo === 'dni_padre_madre' && <CreditCard className="h-4 w-4 text-gray-400" />}
+          {documentosList.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No se pudieron cargar los documentos</p>
+              <p className="text-sm">Intenta recargar la página</p>
+            </div>
+          ) : (
+            documentosList
+              .filter(([_, doc]) => doc.obligatorio) // Solo mostrar obligatorios primero
+              .map(([tipo, doc]) => {
+                const plantilla = getPlantillaForTipo(tipo)
+                // Estados: 'subido' = aprobado/verde, 'pendiente_revision' = amarillo, otro = faltante/rojo
+                const estaSubido = doc.estado === 'subido'
+                const enRevision = doc.estado === 'pendiente_revision'
+                const tienDocumento = estaSubido || enRevision
+
+                // Determinar estilos según estado
+                const getEstadoStyles = () => {
+                  if (estaSubido) {
+                    return {
+                      border: 'border-green-200 bg-green-50/30',
+                      iconBg: 'bg-green-100',
+                      icon: <FileCheck className="h-4 w-4 text-green-600" />,
+                      text: 'text-green-600',
+                      label: 'Documento aprobado'
+                    }
+                  }
+                  if (enRevision) {
+                    return {
+                      border: 'border-amber-200 bg-amber-50/30',
+                      iconBg: 'bg-amber-100',
+                      icon: <Clock className="h-4 w-4 text-amber-600" />,
+                      text: 'text-amber-600',
+                      label: 'En revisión'
+                    }
+                  }
+                  return {
+                    border: 'border-gray-200 hover:border-gray-300',
+                    iconBg: 'bg-gray-50',
+                    icon: getIconForTipo(tipo),
+                    text: 'text-red-600',
+                    label: 'Documento faltante'
+                  }
+                }
+
+                const estilos = getEstadoStyles()
+
+                return (
+                  <div
+                    key={tipo}
+                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${estilos.border}`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-lg ${estilos.iconBg}`}>
+                        {estilos.icon}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-gray-700">{doc.nombre}</p>
+                        <p className={`text-xs font-medium flex items-center gap-1 ${estilos.text}`}>
+                          {estaSubido && <CheckCircle className="h-3 w-3" />}
+                          {enRevision && <Clock className="h-3 w-3" />}
+                          {!tienDocumento && <AlertTriangle className="h-3 w-3" />}
+                          {estilos.label}
+                        </p>
+                        {enRevision && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            El kraal de sección está revisando el documento
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm text-gray-700">{DOCUMENTO_TIPO_CONFIG[item.tipo].label}</p>
-                      <p className="text-xs text-red-600 font-medium">Documento faltante</p>
+
+                    <div className="flex items-center gap-2">
+                      {/* Botón ver documento si está subido o en revisión */}
+                      {tienDocumento && doc.archivo?.webViewLink && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setSelectedDoc({ name: doc.archivo?.name || doc.nombre, webViewLink: doc.archivo?.webViewLink })
+                            setModalOpen(true)
+                          }}
+                          className={estaSubido ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-amber-600 hover:text-amber-700 hover:bg-amber-50"}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Ver
+                        </Button>
+                      )}
+
+                      {/* Botón descargar plantilla si no tiene documento y tiene plantilla */}
+                      {!tienDocumento && doc.tienePlantilla && plantilla && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onDownloadPlantilla?.(plantilla.id, plantilla.name)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          Plantilla
+                        </Button>
+                      )}
+
+                      {/* Botón subir - solo si no tiene documento */}
+                      {!tienDocumento && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onUploadDocumento?.(tipo as TipoDocumento)}
+                          className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                        >
+                          <Upload className="h-3 w-3 mr-1" />
+                          Subir
+                        </Button>
+                      )}
                     </div>
                   </div>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onUploadDocumento?.(item.tipo)}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                  >
-                    <Upload className="h-3 w-3 mr-1" />
-                    Subir
-                  </Button>
-                </div>
-              )
-            }
-
-            // Es un documento real
-            return (
-              <DocumentoItemSimple
-                key={item.id || item.tipo}
-                documento={item}
-                compact={!verDetalles}
-                onUpload={() => onUploadDocumento?.(item.tipo)}
-                onView={() => onViewDocumento?.(item)}
-                onDownload={() => onDownloadDocumento?.(item)}
-              />
-            )
-          })}
+                )
+              })
+          )}
         </div>
 
-        {/* Información adicional minimalista */}
+        {/* Información adicional */}
         {!compact && (
           <div className="mt-6 pt-4 border-t border-gray-100">
             <div className="flex items-start gap-2">
@@ -235,6 +320,13 @@ export function DocumentosListaCompacta({
             </div>
           </div>
         )}
+
+        {/* Modal para ver documentos */}
+        <DocumentoViewerModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          documento={selectedDoc}
+        />
       </CardContent>
     </Card>
   )

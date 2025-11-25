@@ -13,20 +13,42 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useFamiliaData } from "@/hooks/useFamiliaData"
+import { useGoogleDrive } from "@/hooks/useGoogleDrive"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { QuickActionsGroup } from "@/components/familia/quick-action-icon"
 import { HijosListaCompacta } from "@/components/familia/hijo-card-compacto"
 import { DocumentosListaCompacta } from "@/components/familia/documentos-lista-compacta"
 import { CalendarioCompacto } from "@/components/familia/calendario-compacto"
+import { DocumentoUploadModal } from "@/components/familia/documento-upload-modal"
 import { ScoutHijo, Documento, TipoDocumento } from "@/types/familia"
 import Link from "next/link"
 import { getApiUrl } from "@/lib/api-utils"
 
+// Tipo para almacenar documentos de todos los hijos
+interface DocumentosCache {
+  [hijoId: number]: {
+    status: Record<string, any>
+    resumen: { total: number; completos: number; faltantes: number }
+  }
+}
+
 export default function FamiliaDashboardPage() {
   const { user } = useAuth()
   const { hijos, loading, error } = useFamiliaData()
+  const {
+    fetchEducandoDocumentos,
+    fetchPlantillas,
+    downloadPlantilla,
+    uploadDocumento,
+    estructuraEducando,
+    plantillas,
+    loading: driveLoading
+  } = useGoogleDrive()
   const [userData, setUserData] = useState<any>(null)
   const [hijoSeleccionado, setHijoSeleccionado] = useState<number | undefined>(undefined)
+  const [documentosCache, setDocumentosCache] = useState<DocumentosCache>({})
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [uploadTipoDocumento, setUploadTipoDocumento] = useState<TipoDocumento | null>(null)
 
   // Cargar datos del usuario
   useEffect(() => {
@@ -69,6 +91,11 @@ export default function FamiliaDashboardPage() {
     fetchUserData()
   }, [])
 
+  // Cargar plantillas al inicio
+  useEffect(() => {
+    fetchPlantillas()
+  }, [fetchPlantillas])
+
   // Seleccionar automáticamente el primer hijo
   useEffect(() => {
     if (hijos && hijos.length > 0 && !hijoSeleccionado) {
@@ -76,24 +103,134 @@ export default function FamiliaDashboardPage() {
     }
   }, [hijos, hijoSeleccionado])
 
+  // Cargar documentos de TODOS los hijos al inicio
+  useEffect(() => {
+    const fetchAllDocumentos = async () => {
+      if (!hijos || hijos.length === 0) return
+
+      console.log('📄 Cargando documentos de Drive para todos los hijos...')
+      for (const hijo of hijos) {
+        if (!documentosCache[hijo.id]) {
+          const data = await fetchEducandoDocumentos(hijo.id)
+          if (data) {
+            setDocumentosCache(prev => ({
+              ...prev,
+              [hijo.id]: {
+                status: data.status,
+                resumen: data.resumen
+              }
+            }))
+          }
+        }
+      }
+    }
+
+    fetchAllDocumentos()
+  }, [hijos])
+
+  // Actualizar cache cuando se carguen documentos del hijo seleccionado
+  // IMPORTANTE: Solo actualizar si el educando en estructuraEducando coincide con hijoSeleccionado
+  // para evitar que datos de un hijo se guarden bajo el ID de otro
+  useEffect(() => {
+    if (estructuraEducando && hijoSeleccionado && estructuraEducando.educando?.id === hijoSeleccionado) {
+      setDocumentosCache(prev => ({
+        ...prev,
+        [hijoSeleccionado]: {
+          status: estructuraEducando.status,
+          resumen: estructuraEducando.resumen
+        }
+      }))
+    }
+  }, [estructuraEducando, hijoSeleccionado])
+
+  // Cargar documentos del hijo seleccionado desde Google Drive
+  useEffect(() => {
+    if (hijoSeleccionado) {
+      console.log('📄 Cargando documentos de Drive para educando:', hijoSeleccionado)
+      fetchEducandoDocumentos(hijoSeleccionado)
+    }
+  }, [hijoSeleccionado, fetchEducandoDocumentos])
+
   // Obtener hijo seleccionado
   const hijoActual = useMemo(() => {
     if (!hijos || !hijoSeleccionado) return undefined
     return hijos.find(h => h.id === hijoSeleccionado)
   }, [hijos, hijoSeleccionado])
 
-  // Convertir hijos a formato ScoutHijo sin documentos mock
+  // Obtener estructura del educando DESDE EL CACHE (no desde estructuraEducando compartido)
+  // Esto evita que los datos de un hijo se muestren para otro
+  const estructuraEducandoActual = useMemo(() => {
+    if (!hijoSeleccionado) return null
+
+    const cachedData = documentosCache[hijoSeleccionado]
+    if (cachedData) {
+      return {
+        educando: hijoActual ? {
+          id: hijoActual.id,
+          nombre: hijoActual.nombre,
+          apellidos: hijoActual.apellidos,
+          seccion: hijoActual.seccion_nombre || ''
+        } : null,
+        folder: estructuraEducando?.folder || { id: '', name: '' },
+        documentos: estructuraEducando?.documentos || [],
+        status: cachedData.status,
+        resumen: cachedData.resumen
+      }
+    }
+
+    // Si no está en cache, usar estructuraEducando solo si coincide con el hijo seleccionado
+    if (estructuraEducando?.educando?.id === hijoSeleccionado) {
+      return estructuraEducando
+    }
+
+    return null
+  }, [hijoSeleccionado, documentosCache, estructuraEducando, hijoActual])
+
+  // Convertir datos de Drive a formato Documento (usando cache)
+  const documentosDelHijo: Documento[] = useMemo(() => {
+    if (!estructuraEducandoActual?.status) return []
+
+    return Object.entries(estructuraEducandoActual.status).map(([tipo, status]: [string, any]) => ({
+      id: status.archivo?.id ? parseInt(status.archivo.id) : undefined,
+      tipo: tipo as TipoDocumento,
+      label: status.nombre,
+      estado: status.estado === 'subido' ? 'actualizado' as const : 'falta' as const,
+      fecha_subida: status.archivo?.createdTime,
+      url_archivo: status.archivo?.webViewLink
+    }))
+  }, [estructuraEducandoActual])
+
+  // Convertir hijos a formato ScoutHijo con documentos de Drive (usando cache para todos)
   const hijosConDocumentos: ScoutHijo[] = useMemo(() => {
     if (!hijos) return []
 
-    return hijos.map(hijo => ({
-      ...hijo,
-      documentos: [], // Sin documentos iniciales - se cargarán desde el backend
-      documentos_estado: hijo.documentos_estado || 'pendiente' as const,
-      activo: hijo.activo !== undefined ? hijo.activo : true,
-      fecha_ingreso: hijo.fecha_ingreso || new Date().toISOString().split('T')[0]
-    }))
-  }, [hijos])
+    return hijos.map(hijo => {
+      // Usar datos del cache para TODOS los hijos (no solo el seleccionado)
+      const cachedData = documentosCache[hijo.id]
+      const docs: Documento[] = cachedData?.status
+        ? Object.entries(cachedData.status).map(([tipo, status]: [string, any]) => ({
+            id: status.archivo?.id ? parseInt(status.archivo.id) : undefined,
+            tipo: tipo as TipoDocumento,
+            label: status.nombre,
+            estado: status.estado === 'subido' ? 'actualizado' as const : 'falta' as const,
+            fecha_subida: status.archivo?.createdTime,
+            url_archivo: status.archivo?.webViewLink
+          }))
+        : []
+
+      const completos = docs.filter(d => d.estado === 'actualizado').length
+      const total = 5 // Documentos obligatorios
+
+      return {
+        ...hijo,
+        documentos: docs,
+        documentos_estado: completos === total ? 'completo' as const :
+          completos > 0 ? 'pendiente' as const : 'pendiente' as const,
+        activo: hijo.activo !== undefined ? hijo.activo : true,
+        fecha_ingreso: hijo.fecha_ingreso || new Date().toISOString().split('T')[0]
+      }
+    })
+  }, [hijos, documentosCache])
 
   // Acciones rápidas - solo galería
   const accionesRapidas = [
@@ -107,8 +244,15 @@ export default function FamiliaDashboardPage() {
 
   // Manejadores
   const handleUploadDocumento = (tipo: TipoDocumento) => {
-    console.log('Subir documento:', tipo)
-    // TODO: Implementar lógica de subida
+    setUploadTipoDocumento(tipo)
+    setUploadModalOpen(true)
+  }
+
+  const handleUploadSuccess = () => {
+    // Recargar documentos del hijo seleccionado
+    if (hijoSeleccionado) {
+      fetchEducandoDocumentos(hijoSeleccionado)
+    }
   }
 
   const handleViewDocumento = (documento: Documento) => {
@@ -199,9 +343,11 @@ export default function FamiliaDashboardPage() {
         {/* Documentos del hijo seleccionado */}
         <DocumentosListaCompacta
           hijo={hijoActual}
+          estructuraEducando={estructuraEducandoActual}
+          plantillas={plantillas}
+          loading={driveLoading}
           onUploadDocumento={handleUploadDocumento}
-          onViewDocumento={handleViewDocumento}
-          onDownloadDocumento={handleDownloadDocumento}
+          onDownloadPlantilla={downloadPlantilla}
         />
 
         {/* Calendario */}
@@ -209,6 +355,18 @@ export default function FamiliaDashboardPage() {
           seccionId={hijoActual?.seccion_id}
         />
       </div>
+
+      {/* Modal de subida de documentos */}
+      {uploadTipoDocumento && hijoActual && (
+        <DocumentoUploadModal
+          open={uploadModalOpen}
+          onOpenChange={setUploadModalOpen}
+          educandoId={hijoActual.id}
+          educandoNombre={`${hijoActual.nombre} ${hijoActual.apellidos}`}
+          tipoDocumento={uploadTipoDocumento}
+          onSuccess={handleUploadSuccess}
+        />
+      )}
     </div>
   )
 }

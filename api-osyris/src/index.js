@@ -40,7 +40,8 @@ const confirmacionesRoutes = require('./routes/confirmaciones.routes');
 // 👨‍👩‍👧‍👦 RUTAS DE EDUCANDOS Y PORTAL FAMILIAS
 const educandosRoutes = require('./routes/educandos.routes');
 const familiaRoutes = require('./routes/familia.routes');
-// const googleDriveRoutes = require('./routes/google-drive.routes'); // ⚠️ DESHABILITADO: falta dependencia googleapis
+const googleDriveRoutes = require('./routes/google-drive.routes');
+const notificacionesScouterRoutes = require('./routes/notificaciones-scouter.routes');
 // 🚀 FEATURE FLAGS
 // const featureFlagsRoutes = require('./routes/feature-flags.routes'); // ⚠️ DESHABILITADO: módulo incompleto
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
@@ -120,7 +121,8 @@ app.use('/api/confirmaciones', confirmacionesRoutes);
 // 👨‍👩‍👧‍👦 RUTAS DE EDUCANDOS Y PORTAL FAMILIAS
 app.use('/api/educandos', educandosRoutes);
 app.use('/api/familia', familiaRoutes);
-// app.use('/api/drive', googleDriveRoutes); // ⚠️ DESHABILITADO: falta dependencia googleapis
+app.use('/api/drive', googleDriveRoutes);
+app.use('/api/notificaciones-scouter', notificacionesScouterRoutes);
 // 🚀 FEATURE FLAGS
 // app.use('/api/feature-flags', featureFlagsRoutes); // ⚠️ DESHABILITADO: módulo incompleto
 // app.use('/api/preview', previewRoutes); // Temporarily disabled

@@ -2,8 +2,9 @@
 
 import { useGaleriaFamilia } from '@/hooks/useGaleriaFamilia'
 import { Card, CardContent } from '@/components/ui/card'
-import { Camera, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Camera, Image as ImageIcon, Loader2, ArrowLeft } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import Link from 'next/link'
 
 export default function GaleriaFamiliaPage() {
   const { fotos, loading, error } = useGaleriaFamilia()
@@ -29,6 +30,15 @@ export default function GaleriaFamiliaPage() {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb - Volver */}
+      <Link
+        href="/familia/dashboard"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        <span>Volver</span>
+      </Link>
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Galería Privada</h1>
         <p className="text-muted-foreground mt-2">

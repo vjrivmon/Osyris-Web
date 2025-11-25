@@ -85,10 +85,10 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "El Pequeño Grupo", description: "Se organizan en pequeños grupos llamados 'madrigueras'." }
         ],
         team: [
-          { name: "Lekes", role: "Jefa de Sección y Tesorera", photo: "/images/kraal/noelia.png" },
-          { name: "Rasti", role: "Scouter", photo: "/images/kraal/joan.png" },
-          { name: "Barú", role: "Scouter", photo: "/images/kraal/jaume.png" },
-          { name: "Kibu", role: "Scouter", photo: "/images/kraal/alvaros.png" }
+          { name: "Lekes", role: "Jefa de Sección y Tesorera", photo: "/images/kraal/_noelia.png" },
+          { name: "Rasti", role: "Scouter", photo: "/images/kraal/_joan.png" },
+          { name: "Barú", role: "Scouter", photo: "/images/kraal/_jaume.png" },
+          { name: "Kibu", role: "Scouter", photo: "/images/kraal/_alvaros.png" }
         ],
         navigation: {
           prev: { href: "/secciones", title: "Volver a Secciones" },
@@ -122,11 +122,11 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Las Especialidades", description: "Sistema de progresión personal basado en habilidades." }
         ],
         team: [
-          { name: "Germà Gris", role: "Jefe de Sección", photo: "/images/kraal/lopo.png" },
-          { name: "Akhela", role: "Tesorería y Botiquín", photo: "/images/kraal/itziar.png" },
-          { name: "Baloo", role: "Material", photo: "/images/kraal/hector.png" },
-          { name: "Brymby", role: "Scouter", photo: "/images/kraal/asier.png" },
-          { name: "Oonai", role: "Scouter", photo: "/images/kraal/maria.png" }
+          { name: "Germà Gris", role: "Jefe de Sección", photo: "/images/kraal/_lopo.png" },
+          { name: "Akhela", role: "Tesorería y Botiquín", photo: "/images/kraal/_itziar.png" },
+          { name: "Baloo", role: "Material", photo: "/images/kraal/_hector.png" },
+          { name: "Brymby", role: "Scouter", photo: "/images/kraal/_asier.png" },
+          { name: "Oonai", role: "Scouter", photo: "/images/kraal/_maria.png" }
         ],
         navigation: {
           prev: { href: "/secciones/castores", title: "Anterior: Castores" },
@@ -160,11 +160,11 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Servicio", description: "Compromiso con el servicio a los demás." }
         ],
         team: [
-          { name: "Mireia", role: "Jefa de Sección", photo: "/images/kraal/mireia.png" },
-          { name: "Vicente", role: "Tesorero y Secretario", photo: "/images/kraal/vicente.png" },
-          { name: "Amelia", role: "Scouter", photo: "/images/kraal/amelia.png" },
-          { name: "Lucía", role: "Scouter", photo: "/images/kraal/lucia.png" },
-          { name: "Mateo", role: "Scouter", photo: "/images/kraal/mateo.png" }
+          { name: "Mireia", role: "Jefa de Sección", photo: "/images/kraal/_mireia.png" },
+          { name: "Vicente", role: "Tesorero y Secretario", photo: "/images/kraal/_vicente.png" },
+          { name: "Amelia", role: "Scouter", photo: "/images/kraal/_amelia.png" },
+          { name: "Lucía", role: "Scouter", photo: "/images/kraal/_lucia.png" },
+          { name: "Mateo", role: "Scouter", photo: "/images/kraal/_mateo.png" }
         ],
         navigation: {
           prev: { href: "/secciones/manada", title: "Anterior: Manada" },
@@ -198,10 +198,10 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Compromiso Social", description: "Fuerte componente de servicio a la comunidad." }
         ],
         team: [
-          { name: "Esther", role: "Jefa de Sección", photo: "/images/kraal/esther.png" },
-          { name: "Rodrigo", role: "Tesorero", photo: "/images/kraal/rodrigo.png" },
-          { name: "Elena", role: "Scouter", photo: "/images/kraal/elena.png" },
-          { name: "Miguel", role: "Scouter", photo: "/images/kraal/miguel.png" }
+          { name: "Esther", role: "Jefa de Sección", photo: "/images/kraal/_esther.png" },
+          { name: "Rodrigo", role: "Tesorero", photo: "/images/kraal/_rodrigo.png" },
+          { name: "Elena", role: "Scouter", photo: "/images/kraal/_elena.png" },
+          { name: "Miguel", role: "Scouter", photo: "/images/kraal/_miguel.png" }
         ],
         navigation: {
           prev: { href: "/secciones/tropa", title: "Anterior: Tropa" },
@@ -235,9 +235,9 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "La Responsabilidad", description: "Preparación para asumir responsabilidades adultas." }
         ],
         team: [
-          { name: "Artur", role: "Scouter", photo: "/images/kraal/artur.png" },
-          { name: "Dani", role: "Scouter", photo: "/images/kraal/dani.png" },
-          { name: "Alejandra", role: "Scouter", photo: "/images/kraal/alejandra.png" }
+          { name: "Artur", role: "Scouter", photo: "/images/kraal/_artur.png" },
+          { name: "Dani", role: "Scouter", photo: "/images/kraal/_dani.png" },
+          { name: "Alejandra", role: "Scouter", photo: "/images/kraal/_alejandra.png" }
         ],
         navigation: {
           prev: { href: "/secciones/pioneros", title: "Anterior: Pioneros" },

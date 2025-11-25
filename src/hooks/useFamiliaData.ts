@@ -65,16 +65,23 @@ export function useFamiliaData({
   refetchInterval = 5 * 60 * 1000, // 5 minutos
   cacheKey = 'familia-data'
 }: UseFamiliaDataOptions = {}): UseFamiliaDataReturn {
-  const { user, token, isAuthenticated } = useAuth()
+  const { user, token, isAuthenticated, isLoading: authLoading } = useAuth()
   const [hijos, setHijos] = useState<ScoutHijo[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchHijos = useCallback(async () => {
     console.log('🚀 [useFamiliaData] Iniciando fetchHijos...')
+    console.log('🚀 [useFamiliaData] authLoading:', authLoading)
     console.log('🚀 [useFamiliaData] isAuthenticated:', isAuthenticated)
     console.log('🚀 [useFamiliaData] token:', token ? 'Existe (longitud: ' + token.length + ')' : 'NO existe')
     console.log('🚀 [useFamiliaData] user:', user)
+
+    // NO intentar cargar datos mientras la autenticación está cargando
+    if (authLoading) {
+      console.log('⏳ [useFamiliaData] Esperando a que AuthContext termine de cargar...')
+      return
+    }
 
     if (!isAuthenticated || !token || !user) {
       console.log('❌ [useFamiliaData] No autenticado o falta token/user')
@@ -206,7 +213,7 @@ export function useFamiliaData({
     } finally {
       setLoading(false)
     }
-  }, [isAuthenticated, token, user, cacheKey, refetchInterval])
+  }, [authLoading, isAuthenticated, token, user, cacheKey, refetchInterval])
 
   const refetch = useCallback(async () => {
     await fetchHijos()
@@ -321,13 +328,15 @@ export function useFamiliaData({
     return hijos?.filter(hijo => hijo.seccion_id === seccionId) || []
   }, [hijos])
 
-  // Efecto inicial
+  // Efecto inicial - solo cargar cuando AuthContext termine de cargar
   useEffect(() => {
-    if (isAuthenticated && token && user) {
+    // Esperar a que la autenticación termine de cargar
+    if (!authLoading && isAuthenticated && token && user) {
+      console.log('✅ [useFamiliaData] AuthContext cargado, iniciando carga de hijos')
       fetchHijos()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, token, user?.id])
+  }, [authLoading, isAuthenticated, token, user?.id])
 
   // Auto-refetch
   useEffect(() => {

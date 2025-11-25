@@ -264,8 +264,8 @@ export function CalendarioView({ className }: CalendarioViewProps) {
                   <div
                     key={index}
                     className={`
-                      min-h-[80px] p-2 border rounded-lg
-                      ${dia ? 'hover:bg-gray-50 cursor-pointer' : ''}
+                      min-h-[80px] p-2 border rounded-lg transition-all duration-200
+                      ${dia ? 'hover:bg-primary/10 hover:border-primary/40 hover:shadow-md hover:scale-105 cursor-pointer' : ''}
                       ${esHoy ? 'bg-blue-50 border-blue-200' : 'border-gray-200'}
                     `}
                     onClick={() => {

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { StaticText, StaticImage } from "@/components/ui/static-content"
 // import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import Link from "next/link"
-import { Mail, Loader2 } from "lucide-react"
 
 // Jefatura del Grupo Scout Osyris
 const coordinationTeam = [
@@ -16,19 +15,19 @@ const coordinationTeam = [
     role: "Jefatura de Grupo",
     description:
       "Miembro de la jefatura del Grupo Scout Osyris. Coordina y supervisa todas las actividades del grupo.",
-    photo: "/images/kraal/maria.png",
+    photo: "/images/kraal/_maria.png",
   },
   {
     name: "Lucía",
     role: "Jefatura de Grupo",
     description: "Miembro de la jefatura del Grupo Scout Osyris. Colabora en la gestión y coordinación del grupo.",
-    photo: "/images/kraal/lucia.png",
+    photo: "/images/kraal/_lucia.png",
   },
   {
     name: "Dani",
     role: "Jefatura de Grupo",
     description: "Miembro de la jefatura del Grupo Scout Osyris. Apoya en la organización y dirección del grupo.",
-    photo: "/images/kraal/dani.png",
+    photo: "/images/kraal/_dani.png",
   },
 ]
 
@@ -40,22 +39,22 @@ const sections = [
       {
         name: "Lekes",
         role: "Jefa de Sección y Tesorera",
-        photo: "/images/kraal/noelia.png",
+        photo: "/images/kraal/_noelia.png",
       },
       {
         name: "Rasti",
         role: "Scouter",
-        photo: "/images/kraal/joan.png",
+        photo: "/images/kraal/_joan.png",
       },
       {
         name: "Barú",
         role: "Scouter",
-        photo: "/images/kraal/jaume.png",
+        photo: "/images/kraal/_jaume.png",
       },
       {
         name: "Kibu",
         role: "Scouter",
-        photo: "/images/kraal/alvaros.png",
+        photo: "/images/kraal/_alvaros.png",
       },
     ],
   },
@@ -66,27 +65,27 @@ const sections = [
       {
         name: "Germà Gris",
         role: "Jefe de Sección",
-        photo: "/images/kraal/lopo.png",
+        photo: "/images/kraal/_lopo.png",
       },
       {
         name: "Akhela",
         role: "Tesorería y Botiquín",
-        photo: "/images/kraal/itziar.png",
+        photo: "/images/kraal/_itziar.png",
       },
       {
         name: "Baloo",
         role: "Material",
-        photo: "/images/kraal/hector.png",
+        photo: "/images/kraal/_hector.png",
       },
       {
         name: "Brymby",
         role: "Scouter",
-        photo: "/images/kraal/asier.png",
+        photo: "/images/kraal/_asier.png",
       },
       {
         name: "Oonai",
         role: "Scouter",
-        photo: "/images/kraal/maria.png",
+        photo: "/images/kraal/_maria.png",
       },
     ],
   },
@@ -97,27 +96,27 @@ const sections = [
       {
         name: "Mireia",
         role: "Jefa de Sección",
-        photo: "/images/kraal/mireia.png",
+        photo: "/images/kraal/_mireia.png",
       },
       {
         name: "Vicente",
         role: "Tesorero y Secretario",
-        photo: "/images/kraal/vicente.png",
+        photo: "/images/kraal/_vicente.png",
       },
       {
         name: "Amelia",
         role: "Scouter",
-        photo: "/images/kraal/amelia.png",
+        photo: "/images/kraal/_amelia.png",
       },
       {
         name: "Lucía",
         role: "Scouter",
-        photo: "/images/kraal/lucia.png",
+        photo: "/images/kraal/_lucia.png",
       },
       {
         name: "Mateo",
         role: "Scouter",
-        photo: "/images/kraal/mateo.png",
+        photo: "/images/kraal/_mateo.png",
       },
     ],
   },
@@ -128,22 +127,22 @@ const sections = [
       {
         name: "Esther",
         role: "Jefa de Sección",
-        photo: "/images/kraal/esther.png",
+        photo: "/images/kraal/_esther.png",
       },
       {
         name: "Rodrigo",
         role: "Tesorero",
-        photo: "/images/kraal/rodrigo.png",
+        photo: "/images/kraal/_rodrigo.png",
       },
       {
         name: "Elena",
         role: "Scouter",
-        photo: "/images/kraal/elena.png",
+        photo: "/images/kraal/_elena.png",
       },
       {
         name: "Miguel",
         role: "Scouter",
-        photo: "/images/kraal/miguel.png",
+        photo: "/images/kraal/_miguel.png",
       },
     ],
   },
@@ -154,17 +153,17 @@ const sections = [
       {
         name: "Artur",
         role: "Scouter",
-        photo: "/images/kraal/artur.png",
+        photo: "/images/kraal/_artur.png",
       },
       {
         name: "Dani",
         role: "Scouter",
-        photo: "/images/kraal/dani.png",
+        photo: "/images/kraal/_dani.png",
       },
       {
         name: "Alejandra",
         role: "Scouter",
-        photo: "/images/kraal/alejandra.png",
+        photo: "/images/kraal/_alejandra.png",
       },
     ],
   },
@@ -189,8 +188,18 @@ export default function KraalPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-primary py-16 md:py-24">
-          <div className="container mx-auto px-4 text-center text-primary-foreground">
+        <section className="relative py-16 md:py-24 overflow-hidden">
+          {/* Background Image */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src="/images/kraal/kraal.jpg"
+              alt="Kraal"
+              className="w-full h-full object-cover object-center"
+              style={{ objectPosition: 'center 30%' }}
+            />
+            <div className="absolute inset-0 bg-primary/80"></div>
+          </div>
+          <div className="container mx-auto px-4 text-center text-primary-foreground relative z-10">
             <StaticText
               contentId={220}
               identificador="hero-title"
@@ -235,7 +244,7 @@ export default function KraalPage() {
                         identificador={`coord-${i}-photo`}
                         seccion="kraal"
                         alt={member.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-top"
                       >
                         {getContent(`coord-${i}-photo`, member.photo)}
                       </StaticImage>
@@ -265,14 +274,10 @@ export default function KraalPage() {
                         seccion="kraal"
                         as="p"
                         multiline
-                        className="text-sm text-muted-foreground mb-4"
+                        className="text-sm text-muted-foreground"
                       >
                         {member.description}
                       </StaticText>
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Mail className="mr-2 h-4 w-4" />
-                        Contactar
-                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -316,7 +321,7 @@ export default function KraalPage() {
                             identificador={`section-${i}-member-${j}-photo`}
                             seccion="kraal"
                             alt={member.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover object-top"
                           >
                             {getContent(`section-${i}-member-${j}-photo`, member.photo)}
                           </StaticImage>

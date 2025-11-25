@@ -272,8 +272,8 @@ export function CalendarioCompacto({ seccionId, className }: CalendarioCompactoP
                   key={index}
                   onClick={() => setDiaSeleccionado(dia)}
                   className={cn(
-                    "aspect-square rounded-md text-sm flex flex-col items-center justify-center relative transition-colors",
-                    "hover:bg-accent",
+                    "aspect-square rounded-md text-sm flex flex-col items-center justify-center relative transition-all duration-200",
+                    "hover:bg-primary/10 hover:border hover:border-primary/30 hover:shadow-sm hover:scale-105",
                     esHoy && "bg-primary text-primary-foreground font-bold",
                     esSeleccionado && !esHoy && "ring-2 ring-primary",
                     !esHoy && !esSeleccionado && "text-foreground"

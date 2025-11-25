@@ -6,20 +6,26 @@
  * Estados posibles de un documento
  */
 export type EstadoDocumento =
-  | 'actualizado'  // ✅ Documento al día y correcto
-  | 'correcto'     // ✓ Documento válido pero puede necesitar actualización pronto
-  | 'pendiente'    // ⏰ Documento pendiente de subir o revisar
-  | 'falta'        // ❌ Documento faltante o rechazado
+  | 'actualizado'        // ✅ Documento al día y correcto
+  | 'correcto'           // ✓ Documento válido pero puede necesitar actualización pronto
+  | 'pendiente'          // ⏰ Documento pendiente de subir o revisar
+  | 'pendiente_revision' // 🔄 Subido, pendiente de revisión por scouter
+  | 'aprobado'           // ✅ Aprobado por scouter
+  | 'rechazado'          // ❌ Rechazado por scouter (necesita volver a subir)
+  | 'falta'              // ❌ Documento faltante o rechazado
 
 /**
- * Tipos de documentos del sistema
+ * Tipos de documentos del sistema (alineados con Google Drive)
  */
 export type TipoDocumento =
-  | 'ficha_inscripcion'
-  | 'ficha_sanitaria'
-  | 'sip'
-  | 'vacunas'
-  | 'dni_padre_madre'
+  | 'ficha_inscripcion'      // DOC01
+  | 'ficha_sanitaria'        // DOC02
+  | 'sip'                    // Anexo 2.1
+  | 'vacunas'                // Anexo 2.2 (cartilla_vacunacion)
+  | 'dni_padre_madre'        // Anexo 1.1
+  | 'regresar_solo'          // DOC08
+  | 'autorizacion_whatsapp'  // DOC09
+  | 'baja_asociado'          // DOC10
 
 /**
  * Información de un documento específico
@@ -111,6 +117,24 @@ export const DOCUMENTO_ESTADO_CONFIG = {
     label: 'Pendiente',
     emoji: '⏰'
   },
+  pendiente_revision: {
+    color: 'bg-amber-50 text-amber-700 border-amber-200',
+    icon: 'Clock',
+    label: 'Pendiente revisión',
+    emoji: '🔄'
+  },
+  aprobado: {
+    color: 'bg-green-50 text-green-700 border-green-200',
+    icon: 'CheckCircle',
+    label: 'Aprobado',
+    emoji: '✅'
+  },
+  rechazado: {
+    color: 'bg-red-50 text-red-700 border-red-200',
+    icon: 'XCircle',
+    label: 'Rechazado',
+    emoji: '❌'
+  },
   falta: {
     color: 'bg-red-50 text-red-700 border-red-200',
     icon: 'AlertTriangle',
@@ -120,38 +144,72 @@ export const DOCUMENTO_ESTADO_CONFIG = {
 } as const
 
 /**
- * Configuración de tipos de documentos
+ * Configuración de tipos de documentos (alineados con Google Drive)
  */
 export const DOCUMENTO_TIPO_CONFIG = {
   ficha_inscripcion: {
     label: 'Ficha de Inscripción',
     icon: 'FileText',
     descripcion: 'Documento de inscripción del scout',
-    requerido: true
+    requerido: true,
+    codigo: 'DOC01',
+    tienePlantilla: true
   },
   ficha_sanitaria: {
     label: 'Ficha Sanitaria',
     icon: 'Heart',
     descripcion: 'Información médica y sanitaria',
-    requerido: true
+    requerido: true,
+    codigo: 'DOC02',
+    tienePlantilla: true
   },
   sip: {
     label: 'SIP',
     icon: 'Shield',
-    descripcion: 'Sistema de Información Poblacional',
-    requerido: true
+    descripcion: 'Tarjeta sanitaria (escaneo)',
+    requerido: true,
+    codigo: 'Anexo 2.1',
+    tienePlantilla: false
   },
   vacunas: {
     label: 'Cartilla de Vacunación',
     icon: 'Syringe',
-    descripcion: 'Registro de vacunas actualizado',
-    requerido: true
+    descripcion: 'Registro de vacunas actualizado (escaneo)',
+    requerido: true,
+    codigo: 'Anexo 2.2',
+    tienePlantilla: false
   },
   dni_padre_madre: {
     label: 'DNI Padre/Madre',
     icon: 'CreditCard',
-    descripcion: 'Documento de identidad del tutor legal',
-    requerido: true
+    descripcion: 'Documento de identidad del tutor legal (escaneo)',
+    requerido: true,
+    codigo: 'Anexo 1.1',
+    tienePlantilla: false
+  },
+  regresar_solo: {
+    label: 'Autorización Regresar Solo',
+    icon: 'Home',
+    descripcion: 'Autorización para que el educando regrese solo a casa',
+    requerido: false,
+    codigo: 'DOC08',
+    tienePlantilla: true
+  },
+  autorizacion_whatsapp: {
+    label: 'Autorización WhatsApp',
+    icon: 'MessageCircle',
+    descripcion: 'Autorización para grupos de WhatsApp',
+    requerido: false,
+    codigo: 'DOC09',
+    tienePlantilla: true
+  },
+  baja_asociado: {
+    label: 'Baja Asociado',
+    icon: 'UserMinus',
+    descripcion: 'Documento para darse de baja del grupo',
+    requerido: false,
+    codigo: 'DOC10',
+    tienePlantilla: true
   }
 } as const
 

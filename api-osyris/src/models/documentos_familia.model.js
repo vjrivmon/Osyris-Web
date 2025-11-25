@@ -132,19 +132,19 @@ const findByEstado = async (estado, familiarId = null) => {
   try {
     let query_str = `
       SELECT df.*,
-             u.nombre as scout_nombre, u.apellidos as scout_apellidos,
+             e.nombre as scout_nombre, e.apellidos as scout_apellidos,
              uf.nombre as familiar_nombre, uf.apellidos as familiar_apellidos,
-             s.nombre as seccion_nombre
+             s.nombre as seccion_nombre, s.id as seccion_id
       FROM documentos_familia df
-      JOIN usuarios u ON df.scout_id = u.id
-      JOIN usuarios uf ON df.familiar_id = uf.id
-      LEFT JOIN secciones s ON u.seccion_id = s.id
-      WHERE df.estado = ?
+      LEFT JOIN educandos e ON df.educando_id = e.id
+      LEFT JOIN usuarios uf ON df.familiar_id = uf.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
+      WHERE df.estado = $1
     `;
     const queryParams = [estado];
 
     if (familiarId) {
-      query_str += ' AND df.familiar_id = ?';
+      query_str += ' AND df.familiar_id = $2';
       queryParams.push(familiarId);
     }
 
@@ -194,21 +194,21 @@ const findById = async (id, familiarId = null) => {
   try {
     let query_str = `
       SELECT df.*,
-             u.nombre as scout_nombre, u.apellidos as scout_apellidos,
+             e.nombre as scout_nombre, e.apellidos as scout_apellidos,
              uf.nombre as familiar_nombre, uf.apellidos as familiar_apellidos,
              s.nombre as seccion_nombre,
              ua.nombre as aprobador_nombre, ua.apellidos as aprobador_apellidos
       FROM documentos_familia df
-      JOIN usuarios u ON df.scout_id = u.id
-      JOIN usuarios uf ON df.familiar_id = uf.id
-      LEFT JOIN secciones s ON u.seccion_id = s.id
+      LEFT JOIN educandos e ON df.educando_id = e.id
+      LEFT JOIN usuarios uf ON df.familiar_id = uf.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
       LEFT JOIN usuarios ua ON df.aprobado_por = ua.id
-      WHERE df.id = ?
+      WHERE df.id = $1
     `;
     const queryParams = [id];
 
     if (familiarId) {
-      query_str += ' AND df.familiar_id = ?';
+      query_str += ' AND df.familiar_id = $2';
       queryParams.push(familiarId);
     }
 
@@ -224,12 +224,14 @@ const create = async (documentoData) => {
   try {
     const result = await query(`
       INSERT INTO documentos_familia (
-        scout_id, familiar_id, tipo_documento, titulo, descripcion,
+        educando_id, familiar_id, tipo_documento, titulo, descripcion,
         archivo_nombre, archivo_ruta, tipo_archivo, tamaño_archivo,
-        fecha_vencimiento, estado
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        fecha_vencimiento, estado, google_drive_file_id, google_drive_folder_id,
+        estado_revision
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      RETURNING id
     `, [
-      documentoData.scout_id,
+      documentoData.educando_id,  // ✅ Solo una nomenclatura consistente
       documentoData.familiar_id,
       documentoData.tipo_documento,
       documentoData.titulo,
@@ -239,10 +241,18 @@ const create = async (documentoData) => {
       documentoData.tipo_archivo || null,
       documentoData.tamaño_archivo || null,
       documentoData.fecha_vencimiento || null,
-      documentoData.estado || 'pendiente'
+      documentoData.estado || 'vigente',
+      documentoData.google_drive_file_id || null,
+      documentoData.google_drive_folder_id || null,
+      documentoData.estado_revision || 'pendiente'
     ]);
 
-    const newDocumento = await findById(result.insertId);
+    // result puede ser un objeto { insertId } o un array según db.config.js
+    const newId = result.insertId || (Array.isArray(result) ? result[0]?.id : null);
+    if (!newId) {
+      throw new Error('No se pudo obtener el ID del documento insertado');
+    }
+    const newDocumento = await findById(newId);
     return newDocumento;
   } catch (error) {
     throw error;
@@ -328,8 +338,8 @@ const aprobar = async (id, aprobadoPorId) => {
   try {
     await query(`
       UPDATE documentos_familia
-      SET aprobado = true, aprobado_por = ?, estado = 'vigente'
-      WHERE id = ?
+      SET aprobado = true, aprobado_por = $1, estado = 'vigente', estado_revision = 'aprobado'
+      WHERE id = $2
     `, [aprobadoPorId, id]);
 
     return await findById(id);
@@ -339,13 +349,14 @@ const aprobar = async (id, aprobadoPorId) => {
 };
 
 // Función para rechazar un documento
-const rechazar = async (id, aprobadoPorId) => {
+const rechazar = async (id, aprobadoPorId, motivo = null) => {
   try {
     await query(`
       UPDATE documentos_familia
-      SET aprobado = false, aprobado_por = ?, estado = 'rechazado'
-      WHERE id = ?
-    `, [aprobadoPorId, id]);
+      SET aprobado = false, aprobado_por = $1, estado = 'rechazado',
+          estado_revision = 'rechazado', motivo_rechazo = $2
+      WHERE id = $3
+    `, [aprobadoPorId, motivo, id]);
 
     return await findById(id);
   } catch (error) {
@@ -376,10 +387,32 @@ const actualizarEstadosVencidos = async () => {
   }
 };
 
+// Función para obtener documentos por estado de revisión
+const findByEstadoRevision = async (estadoRevision) => {
+  try {
+    const documentos = await query(`
+      SELECT df.*,
+             e.nombre as scout_nombre, e.apellidos as scout_apellidos,
+             uf.nombre as familiar_nombre, uf.apellidos as familiar_apellidos,
+             s.nombre as seccion_nombre, s.id as seccion_id
+      FROM documentos_familia df
+      LEFT JOIN educandos e ON df.educando_id = e.id
+      LEFT JOIN usuarios uf ON df.familiar_id = uf.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
+      WHERE df.estado_revision = $1
+      ORDER BY df.fecha_subida DESC
+    `, [estadoRevision]);
+    return documentos;
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   findByScoutId,
   findByFamiliarId,
   findByEstado,
+  findByEstadoRevision,
   getDocumentosPorVencer,
   findById,
   create,

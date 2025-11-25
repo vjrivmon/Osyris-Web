@@ -92,6 +92,11 @@ test-*.tsx
 .env.production.local
 
 # =====================================
+# OAuth Tokens (sensitive, per-environment)
+# =====================================
+api-osyris/credentials/oauth-tokens*.json
+
+# =====================================
 # IDE and Editor
 # =====================================
 .vscode/

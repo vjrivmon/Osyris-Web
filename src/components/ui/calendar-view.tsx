@@ -153,7 +153,8 @@ export function CalendarView({ events, className }: CalendarViewProps) {
                     <div
                       key={dayObj.key}
                       className={cn(
-                        "p-1 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 flex flex-col",
+                        "p-1 border rounded-lg cursor-pointer transition-all duration-200 flex flex-col",
+                        "hover:bg-primary/10 hover:border-primary/40 hover:shadow-md hover:scale-105",
                         isToday && "bg-primary/10 border-primary"
                       )}
                       onClick={() => dayEvents.length > 0 && setSelectedEvent(dayEvents[0])}
