@@ -39,6 +39,7 @@ export default function AdminFamiliaresPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [showInvitarModal, setShowInvitarModal] = useState(false)
   const [showVincularModal, setShowVincularModal] = useState(false)
+  const [vinculacionRefreshTrigger, setVinculacionRefreshTrigger] = useState(0)  // ✅ Para refrescar TablaRelaciones
 
   const {
     loading,
@@ -439,7 +440,7 @@ export default function AdminFamiliaresPage() {
               Nueva Vinculación
             </Button>
           </div>
-          <TablaRelaciones onRefresh={handleRefresh} />
+          <TablaRelaciones onRefresh={handleRefresh} refreshTrigger={vinculacionRefreshTrigger} />
         </TabsContent>
 
         <TabsContent value="documentos" className="space-y-6">
@@ -467,6 +468,9 @@ export default function AdminFamiliaresPage() {
         onOpenChange={setShowVincularModal}
         onSuccess={() => {
           handleRefresh()
+          // ✅ Incrementar trigger para que TablaRelaciones recargue sus datos
+          setVinculacionRefreshTrigger(prev => prev + 1)
+          console.log('🔄 [AdminFamiliares] Vinculación exitosa, incrementando refreshTrigger')
           toast({
             title: "Vinculación exitosa",
             description: "El educando ha sido vinculado correctamente",

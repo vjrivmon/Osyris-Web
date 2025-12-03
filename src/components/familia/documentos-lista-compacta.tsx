@@ -50,6 +50,10 @@ const getIconForTipo = (tipo: string) => {
       return <Syringe className="h-4 w-4 text-gray-400" />
     case 'dni_padre_madre':
       return <CreditCard className="h-4 w-4 text-gray-400" />
+    case 'regresar_solo':
+      return <FileText className="h-4 w-4 text-gray-400" />  // DOC08
+    case 'autorizacion_whatsapp':
+      return <FileText className="h-4 w-4 text-gray-400" />  // DOC09
     default:
       return <FileText className="h-4 w-4 text-gray-400" />
   }
@@ -194,8 +198,9 @@ export function DocumentosListaCompacta({
               <p className="text-sm">Intenta recargar la página</p>
             </div>
           ) : (
+            // ✅ Mostrar TODOS los documentos que aplican al educando (obligatorios y opcionales por edad)
+            // El backend ya filtra DOC08/DOC09 según la edad - si aparecen aquí es porque aplican
             documentosList
-              .filter(([_, doc]) => doc.obligatorio) // Solo mostrar obligatorios primero
               .map(([tipo, doc]) => {
                 const plantilla = getPlantillaForTipo(tipo)
                 // Estados: 'subido' = aprobado/verde, 'pendiente_revision' = amarillo, otro = faltante/rojo

@@ -77,13 +77,42 @@ export function useFamiliaData({
     console.log('🚀 [useFamiliaData] token:', token ? 'Existe (longitud: ' + token.length + ')' : 'NO existe')
     console.log('🚀 [useFamiliaData] user:', user)
 
+    // Obtener token - preferir AuthContext, pero usar localStorage como fallback
+    // Esto es necesario porque después del login, el AuthContext puede tardar en actualizarse
+    let effectiveToken = token
+    let effectiveUser = user
+
+    // SIEMPRE intentar obtener del localStorage como fallback
+    const storedToken = localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+
+    console.log('🔍 [useFamiliaData] localStorage check:', {
+      storedToken: storedToken ? `Existe (${storedToken.length} chars)` : 'NO existe',
+      storedUser: storedUser ? `Existe (${storedUser.length} chars)` : 'NO existe'
+    })
+
+    if (!effectiveToken || !effectiveUser) {
+      if (storedToken && storedUser) {
+        try {
+          effectiveToken = storedToken
+          effectiveUser = JSON.parse(storedUser)
+          console.log('🔄 [useFamiliaData] Usando datos de localStorage como fallback:', effectiveUser)
+        } catch (e) {
+          console.log('❌ [useFamiliaData] Error parseando usuario de localStorage:', e)
+        }
+      } else {
+        console.log('⚠️ [useFamiliaData] localStorage vacío, no hay fallback disponible')
+      }
+    }
+
     // NO intentar cargar datos mientras la autenticación está cargando
-    if (authLoading) {
+    // (a menos que tengamos datos del localStorage)
+    if (authLoading && !effectiveToken) {
       console.log('⏳ [useFamiliaData] Esperando a que AuthContext termine de cargar...')
       return
     }
 
-    if (!isAuthenticated || !token || !user) {
+    if (!effectiveToken || !effectiveUser) {
       console.log('❌ [useFamiliaData] No autenticado o falta token/user')
       return
     }
@@ -129,7 +158,7 @@ export function useFamiliaData({
 
       const response = await fetch(`${apiUrl}/api/familia/hijos`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${effectiveToken}`,
           'Content-Type': 'application/json'
         }
       })
@@ -338,6 +367,54 @@ export function useFamiliaData({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, token, user?.id])
 
+  // Efecto adicional: cargar datos cuando el usuario se autentique (después de login)
+  // Este efecto verifica directamente localStorage porque el AuthContext puede tardar en actualizarse
+  // Resuelve el bug donde los hijos no cargan hasta recargar la página después del login
+  useEffect(() => {
+    // Si ya tenemos hijos o estamos cargando, no hacer nada
+    if (hijos !== null || loading) return
+
+    // Verificar si hay datos en localStorage aunque AuthContext no los tenga aún
+    const checkAndLoad = () => {
+      const storedToken = localStorage.getItem('token')
+      const storedUser = localStorage.getItem('user')
+
+      if (storedToken && storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser)
+          if (parsedUser?.id) {
+            console.log('🔄 [useFamiliaData] Datos encontrados en localStorage, forzando carga...')
+            fetchHijos()
+          }
+        } catch (e) {
+          // Ignorar errores de parsing
+        }
+      }
+    }
+
+    // Ejecutar inmediatamente
+    checkAndLoad()
+
+    // También configurar un pequeño intervalo para verificar si los datos aparecen
+    // (útil cuando el login acaba de guardar los datos)
+    const intervalId = setInterval(() => {
+      if (hijos === null && !loading) {
+        checkAndLoad()
+      }
+    }, 500)
+
+    // Limpiar después de 3 segundos (suficiente tiempo para que el login complete)
+    const timeoutId = setTimeout(() => {
+      clearInterval(intervalId)
+    }, 3000)
+
+    return () => {
+      clearInterval(intervalId)
+      clearTimeout(timeoutId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hijos, loading])
+
   // Auto-refetch
   useEffect(() => {
     if (!autoRefetch || !isAuthenticated) return
@@ -349,9 +426,6 @@ export function useFamiliaData({
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefetch, refetchInterval, isAuthenticated])
-
-  // NO necesitamos un efecto separado para cuando el usuario se autentica
-  // porque ya está cubierto por el efecto inicial
 
   return {
     hijos,

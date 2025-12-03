@@ -387,6 +387,54 @@ const actualizarEstadosVencidos = async () => {
   }
 };
 
+// Función para buscar documento existente por educando y tipo
+const findByEducandoAndTipo = async (educandoId, tipoDocumento) => {
+  try {
+    const documentos = await query(`
+      SELECT df.*
+      FROM documentos_familia df
+      WHERE df.educando_id = $1 AND df.tipo_documento = $2
+      ORDER BY df.fecha_subida DESC
+      LIMIT 1
+    `, [educandoId, tipoDocumento]);
+    return documentos.length ? documentos[0] : null;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Función para actualizar documento existente (resubida)
+const updateForReupload = async (id, documentoData) => {
+  try {
+    await query(`
+      UPDATE documentos_familia
+      SET archivo_nombre = $1,
+          archivo_ruta = $2,
+          tipo_archivo = $3,
+          tamaño_archivo = $4,
+          google_drive_file_id = $5,
+          fecha_subida = NOW(),
+          estado = 'pendiente_revision',
+          estado_revision = 'pendiente',
+          aprobado = false,
+          aprobado_por = NULL,
+          motivo_rechazo = NULL
+      WHERE id = $6
+    `, [
+      documentoData.archivo_nombre,
+      documentoData.archivo_ruta,
+      documentoData.tipo_archivo,
+      documentoData.tamaño_archivo,
+      documentoData.google_drive_file_id,
+      id
+    ]);
+
+    return await findById(id);
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Función para obtener documentos por estado de revisión
 const findByEstadoRevision = async (estadoRevision) => {
   try {
@@ -413,10 +461,12 @@ module.exports = {
   findByFamiliarId,
   findByEstado,
   findByEstadoRevision,
+  findByEducandoAndTipo,
   getDocumentosPorVencer,
   findById,
   create,
   update,
+  updateForReupload,
   remove,
   aprobar,
   rechazar,

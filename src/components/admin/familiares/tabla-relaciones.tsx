@@ -58,9 +58,10 @@ interface Relacion {
 
 interface TablaRelacionesProps {
   onRefresh?: () => void
+  refreshTrigger?: number  // ✅ Nuevo: se incrementa para forzar recarga
 }
 
-export function TablaRelaciones({ onRefresh }: TablaRelacionesProps) {
+export function TablaRelaciones({ onRefresh, refreshTrigger = 0 }: TablaRelacionesProps) {
   const [relaciones, setRelaciones] = useState<Relacion[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -103,9 +104,18 @@ export function TablaRelaciones({ onRefresh }: TablaRelacionesProps) {
     }
   }
 
+  // Cargar datos iniciales
   useEffect(() => {
     cargarRelaciones()
   }, [])
+
+  // ✅ Recargar cuando refreshTrigger cambie (después del montaje inicial)
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      console.log('🔄 [TablaRelaciones] RefreshTrigger cambió, recargando relaciones...')
+      cargarRelaciones()
+    }
+  }, [refreshTrigger])
 
   const desvincular = async (familiarId: number, educandoId: number, nombreFamiliar: string, nombreEducando: string) => {
     try {

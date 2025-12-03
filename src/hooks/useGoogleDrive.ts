@@ -35,7 +35,7 @@ interface EstadoDocumento {
   codigo: string
   obligatorio: boolean
   tienePlantilla: boolean
-  estado: 'subido' | 'faltante'
+  estado: 'subido' | 'faltante' | 'pendiente_revision'
   archivo: DocumentoDrive | null
 }
 

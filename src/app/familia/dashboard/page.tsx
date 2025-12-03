@@ -169,12 +169,15 @@ export default function FamiliaDashboardPage() {
           id: hijoActual.id,
           nombre: hijoActual.nombre,
           apellidos: hijoActual.apellidos,
-          seccion: hijoActual.seccion_nombre || ''
+          seccion: hijoActual.seccion || ''
         } : null,
         folder: estructuraEducando?.folder || { id: '', name: '' },
         documentos: estructuraEducando?.documentos || [],
         status: cachedData.status,
-        resumen: cachedData.resumen
+        resumen: {
+          ...cachedData.resumen,
+          opcionalesFaltantes: (cachedData.resumen as any).opcionalesFaltantes || 0
+        }
       }
     }
 

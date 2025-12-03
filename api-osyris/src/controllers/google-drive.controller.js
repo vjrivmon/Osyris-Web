@@ -188,6 +188,22 @@ const uploadDocumento = async (req, res) => {
     // Generar nombre del archivo según formato
     const fileName = driveService.getDocumentFileName(tipoDocumento, nombreCompleto);
 
+    // Verificar si ya existe un documento del mismo tipo para este educando
+    const documentoExistente = await documentosFamiliaModel.findByEducandoAndTipo(educandoId, tipoDocumento);
+    let esActualizacion = false;
+
+    // Si existe documento anterior, eliminar el archivo viejo de Drive
+    if (documentoExistente && documentoExistente.google_drive_file_id) {
+      try {
+        console.log(`🗑️ Eliminando archivo anterior de Drive: ${documentoExistente.google_drive_file_id}`);
+        await driveService.deleteFile(documentoExistente.google_drive_file_id);
+        esActualizacion = true;
+      } catch (deleteError) {
+        console.error('Error eliminando archivo anterior de Drive:', deleteError);
+        // Continuar con la subida aunque falle la eliminación
+      }
+    }
+
     // Subir archivo a Google Drive
     const uploadedFile = await driveService.uploadDocument(
       folder.id,
@@ -196,38 +212,55 @@ const uploadDocumento = async (req, res) => {
       file.mimetype
     );
 
-    // Crear registro en base de datos con estado pendiente de revisión
-    const documentoData = {
-      educando_id: educandoId,  // ✅ Usar educando_id consistentemente
-      familiar_id: familiarId,
-      tipo_documento: tipoDocumento,
-      titulo: tipoConfig.nombre,
-      descripcion: `Documento subido por familiar`,
-      archivo_nombre: fileName,
-      archivo_ruta: uploadedFile.webViewLink,
-      tipo_archivo: file.mimetype,
-      tamaño_archivo: file.size,
-      estado: 'pendiente_revision',
-      google_drive_file_id: uploadedFile.id,
-      google_drive_folder_id: folder.id
-    };
+    let documento;
 
-    const documento = await documentosFamiliaModel.create(documentoData);
+    if (documentoExistente) {
+      // Actualizar documento existente - SIEMPRE requiere re-aprobación
+      console.log(`🔄 Actualizando documento existente (ID: ${documentoExistente.id})`);
+      documento = await documentosFamiliaModel.updateForReupload(documentoExistente.id, {
+        archivo_nombre: fileName,
+        archivo_ruta: uploadedFile.webViewLink,
+        tipo_archivo: file.mimetype,
+        tamaño_archivo: file.size,
+        google_drive_file_id: uploadedFile.id
+      });
+      esActualizacion = true;
+    } else {
+      // Crear nuevo registro en base de datos con estado pendiente de revisión
+      const documentoData = {
+        educando_id: educandoId,
+        familiar_id: familiarId,
+        tipo_documento: tipoDocumento,
+        titulo: tipoConfig.nombre,
+        descripcion: `Documento subido por familiar`,
+        archivo_nombre: fileName,
+        archivo_ruta: uploadedFile.webViewLink,
+        tipo_archivo: file.mimetype,
+        tamaño_archivo: file.size,
+        estado: 'pendiente_revision',
+        google_drive_file_id: uploadedFile.id,
+        google_drive_folder_id: folder.id
+      };
+
+      documento = await documentosFamiliaModel.create(documentoData);
+    }
 
     // Crear notificación para scouters de la sección
+    const accion = esActualizacion ? 'actualizado' : 'subido';
     try {
       await notificacionScouterModel.crearParaSeccion({
         educando_id: educandoId,
         educando_nombre: nombreCompleto,
         seccion_id: educando.seccion_id,
         tipo: 'documento_pendiente',
-        titulo: `Documento pendiente: ${tipoConfig.nombre}`,
-        mensaje: `${nombreCompleto} ha subido "${tipoConfig.nombre}". Revisa y aprueba el documento.`,
+        titulo: `Documento ${accion}: ${tipoConfig.nombre}`,
+        mensaje: `${nombreCompleto} ha ${accion} "${tipoConfig.nombre}". Requiere re-aprobación.`,
         enlace_accion: '/aula-virtual/documentos-pendientes',
         metadata: {
           documento_id: documento.id,
           tipo_documento: tipoDocumento,
-          familiar_id: familiarId
+          familiar_id: familiarId,
+          es_actualizacion: esActualizacion
         },
         prioridad: 'alta'
       });
@@ -236,12 +269,17 @@ const uploadDocumento = async (req, res) => {
       // No fallar la operación por error de notificación
     }
 
+    const mensajeRespuesta = esActualizacion
+      ? 'Documento actualizado correctamente. Requiere re-aprobación por el kraal de sección.'
+      : 'Documento subido correctamente. Pendiente de revisión por el kraal de sección.';
+
     res.json({
       success: true,
-      message: 'Documento subido correctamente. Pendiente de revisión por el kraal de sección.',
+      message: mensajeRespuesta,
       data: {
         documento,
-        driveFile: uploadedFile
+        driveFile: uploadedFile,
+        esActualizacion
       }
     });
   } catch (error) {
@@ -280,6 +318,14 @@ const aprobarDocumento = async (req, res) => {
 
     // Aprobar documento con userId validado
     const documentoActualizado = await documentosFamiliaModel.aprobar(documentoId, userId);
+
+    // Eliminar notificaciones de scouter asociadas a este documento
+    // (para que no sigan apareciendo como pendientes en "Actividad Reciente")
+    try {
+      await notificacionScouterModel.removeByDocumentoId(documentoId);
+    } catch (removeError) {
+      console.error('Error eliminando notificación scouter:', removeError);
+    }
 
     // Notificar a la familia
     try {
@@ -341,6 +387,14 @@ const rechazarDocumento = async (req, res) => {
 
     // Rechazar documento con userId validado (pasando motivo)
     const documentoActualizado = await documentosFamiliaModel.rechazar(documentoId, userId, motivo);
+
+    // Eliminar notificaciones de scouter asociadas a este documento
+    // (para que no sigan apareciendo como pendientes en "Actividad Reciente")
+    try {
+      await notificacionScouterModel.removeByDocumentoId(documentoId);
+    } catch (removeError) {
+      console.error('Error eliminando notificación scouter:', removeError);
+    }
 
     // Notificar a la familia
     try {
@@ -414,15 +468,27 @@ const syncEducandoDocumentos = async (req, res) => {
       });
     }
 
-    const anioNacimiento = new Date(educando.fecha_nacimiento).getFullYear();
+    const fechaNacimiento = new Date(educando.fecha_nacimiento);
+    const anioNacimiento = fechaNacimiento.getFullYear();
     const nombreCompleto = `${educando.nombre} ${educando.apellidos}`;
     const seccionSlug = educando.seccion_nombre?.toLowerCase().replace(/\s+/g, '') || '';
 
-    // Obtener estado actual en Drive
+    // Calcular edad para filtrar documentos opcionales (DOC08, DOC09)
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+    const mesActual = hoy.getMonth();
+    const mesCumple = fechaNacimiento.getMonth();
+    if (mesActual < mesCumple || (mesActual === mesCumple && hoy.getDate() < fechaNacimiento.getDate())) {
+      edad--;
+    }
+
+    // Obtener estado actual en Drive (pasando edad para filtrar documentos opcionales)
     const estructura = await driveService.getEducandoFolderStructure(
       seccionSlug,
       anioNacimiento,
-      nombreCompleto
+      nombreCompleto,
+      edad,
+      educandoId
     );
 
     res.json({

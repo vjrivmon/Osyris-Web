@@ -31,17 +31,26 @@ const DRIVE_CONFIG = {
   },
 
   // Tipos de documentos y sus prefijos (formato: PREFIJO_nombre)
+  // prefijosAlternativos: Nombres legacy que también deben reconocerse
+  // palabrasClave: Palabras que identifican el documento (orden de prioridad)
+  // exclusiones: Palabras que descartan este tipo (evita falsos positivos)
   TIPOS_DOCUMENTO: {
     dni_padre_madre: {
       prefijo: 'A01',
+      prefijosAlternativos: ['DNI', 'A01_DNI'],
+      palabrasClave: ['dni'],
+      exclusiones: [],
       nombre: 'DNI Padre/Madre',
-      nombreArchivo: 'DNI',  // Nombre corto para el archivo
+      nombreArchivo: 'DNI',
       plantilla: null,
       obligatorio: true,
       edadMinima: null
     },
     sip: {
       prefijo: 'A02',
+      prefijosAlternativos: ['SIP', 'A02_SIP'],
+      palabrasClave: ['sip', 'tarjetasanitaria'],
+      exclusiones: ['ficha', 'sanitaria'],  // Evitar confusión con ficha_sanitaria
       nombre: 'SIP (Tarjeta Sanitaria)',
       nombreArchivo: 'SIP',
       plantilla: null,
@@ -50,6 +59,9 @@ const DRIVE_CONFIG = {
     },
     cartilla_vacunacion: {
       prefijo: 'A02',
+      prefijosAlternativos: ['D02_Vacunas', 'A02_Vacunas', 'Vacunas'],
+      palabrasClave: ['vacunas', 'vacunacion', 'vacunación', 'cartilla', 'inmunizacion'],
+      exclusiones: [],
       nombre: 'Cartilla de Vacunación',
       nombreArchivo: 'Vacunas',
       plantilla: null,
@@ -58,6 +70,9 @@ const DRIVE_CONFIG = {
     },
     ficha_inscripcion: {
       prefijo: 'DOC01',
+      prefijosAlternativos: ['D01', 'D01_Inscripcion', 'DOC01_Inscripcion', 'DOC01_Ficha'],
+      palabrasClave: ['inscripcion', 'inscripción', 'fichainscripcion', 'fichainscripción'],
+      exclusiones: ['sanitaria'],  // Evitar confusión con ficha_sanitaria
       nombre: 'Ficha de Inscripción',
       nombreArchivo: 'Ficha_Inscripcion',
       plantilla: 'DOC01_Ficha de inscripción.pdf',
@@ -66,6 +81,9 @@ const DRIVE_CONFIG = {
     },
     ficha_sanitaria: {
       prefijo: 'DOC02',
+      prefijosAlternativos: ['D02', 'D02_Sanitaria', 'DOC02_Sanitaria', 'DOC02_Ficha'],
+      palabrasClave: ['sanitaria', 'fichasanitaria', 'medica', 'médica'],
+      exclusiones: ['inscripcion', 'inscripción', 'sip', 'tarjeta'],  // Evitar confusiones
       nombre: 'Ficha Sanitaria',
       nombreArchivo: 'Ficha_Sanitaria',
       plantilla: 'DOC02_Ficha sanitaria.pdf',
@@ -74,6 +92,9 @@ const DRIVE_CONFIG = {
     },
     regresar_solo: {
       prefijo: 'DOC08',
+      prefijosAlternativos: ['D08', 'DOC08_Regresar'],
+      palabrasClave: ['regresarsolo', 'regresar', 'solo', 'sólo', 'volver'],
+      exclusiones: ['whatsapp'],
       nombre: 'Autorización Regresar Solo',
       nombreArchivo: 'Regresar_Solo',
       plantilla: 'DOC08_Regresar Solo_Ronda 24 25.pdf',
@@ -82,6 +103,9 @@ const DRIVE_CONFIG = {
     },
     autorizacion_whatsapp: {
       prefijo: 'DOC09',
+      prefijosAlternativos: ['D09', 'DOC09_WhatsApp', 'DOC09_Autorizacion'],
+      palabrasClave: ['whatsapp', 'grupos', 'gruposwhatsapp'],
+      exclusiones: ['regresar', 'solo'],
       nombre: 'Autorización Grupos WhatsApp',
       nombreArchivo: 'Autorizacion_WhatsApp',
       plantilla: 'DOC09_Autorización grupos WhatsApp.pdf',
