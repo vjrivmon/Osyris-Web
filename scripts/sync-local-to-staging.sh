@@ -88,8 +88,14 @@ EOF
 
 echo ""
 echo "🔨 Construyendo aplicación con código actualizado..."
+echo "   📋 Cargando variables de .env.staging para el build"
 ssh "$SERVER" << 'EOF'
 cd /var/www/osyris-staging/current
+
+# Cargar variables de entorno para el build
+set -a
+source .env.staging 2>/dev/null || source .env.production 2>/dev/null || true
+set +a
 
 # Build limpio sin caché
 NODE_ENV=production npm run build 2>&1 | tee build-staging-clean.log

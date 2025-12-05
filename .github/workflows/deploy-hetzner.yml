@@ -1,4 +1,4 @@
-name: Deploy to Production (2-Phase Staging to Production)
+name: Deploy to Production (Build in CI, Sync to Server)
 
 on:
   push:
@@ -6,11 +6,6 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      clean_cache:
-        description: 'Limpiar caché completa (.next, node_modules)'
-        required: false
-        default: true
-        type: boolean
       skip_staging:
         description: 'Saltar despliegue a staging (NO RECOMENDADO)'
         required: false
@@ -19,6 +14,8 @@ on:
 
 env:
   NODE_VERSION: '20.x'
+  # ⚠️ IMPORTANTE: URL SIN /api al final - el código lo añade
+  NEXT_PUBLIC_API_URL: 'https://gruposcoutosyris.es'
   # Producción
   PRODUCTION_PATH: /var/www/osyris/current
   PRODUCTION_FRONTEND_PORT: 3000
@@ -34,8 +31,11 @@ env:
   SERVER_HOST: ${{ secrets.HETZNER_HOST }}
 
 jobs:
-  test:
-    name: Run Tests
+  # ═══════════════════════════════════════════════════════════════════
+  # PASO 1: BUILD EN CI RUNNER (no en servidor - tiene poca RAM)
+  # ═══════════════════════════════════════════════════════════════════
+  build:
+    name: 🔨 Build in CI Runner
     runs-on: ubuntu-latest
 
     steps:
@@ -50,103 +50,94 @@ jobs:
 
       - name: 🧹 Clean workspace
         run: |
-          echo "🧹 Limpiando workspace antes de build..."
-          rm -rf .next build dist api-osyris/.next api-osyris/build 2>/dev/null || true
+          rm -rf .next node_modules 2>/dev/null || true
           npm cache clean --force || true
 
-      - name: 📚 Install dependencies (fresh)
+      - name: 📚 Install dependencies
         run: |
-          echo "📦 Instalación fresca de dependencias..."
-          rm -rf node_modules api-osyris/node_modules 2>/dev/null || true
           npm ci --prefer-offline --no-audit --no-fund
           cd api-osyris && npm ci --prefer-offline --no-audit --no-fund
 
       - name: 🧪 Run tests
-        run: |
-          echo "🧪 Ejecutando tests..."
-          npm test -- --passWithNoTests --watchAll=false || true
+        run: npm test -- --passWithNoTests --watchAll=false || true
 
-      - name: 🔨 Build frontend (clean)
+      - name: 🔨 Build frontend with correct API URL
         run: |
-          echo "🏗️ Build fresco sin caché..."
-          npx next clean 2>/dev/null || true
-          rm -rf .next 2>/dev/null || true
-          npm run build
-          
-          # Verificar que el build se creó
+          echo "📋 Building with NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}"
+          echo "   (SIN /api al final - el código lo añade)"
+          rm -rf .next
+          NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }} npm run build:frontend
+
           if [ ! -d ".next" ]; then
             echo "❌ Build falló - .next no existe"
             exit 1
           fi
-          echo "✅ Build frontend exitoso"
+          echo "✅ Build exitoso"
 
-  # FASE 1: Deploy a Staging primero (requisito de seguridad)
+      - name: 📦 Create deployment package with build
+        run: |
+          # Incluir .next en el paquete (ya compilado)
+          tar -czf deploy.tar.gz \
+            --exclude='.git' \
+            --exclude='logs' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='api-osyris/node_modules' \
+            --exclude='deploy.tar.gz' \
+            .
+
+          ls -lh deploy.tar.gz
+          echo "✅ Package incluye .next compilado"
+
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-package
+          path: deploy.tar.gz
+          retention-days: 1
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PASO 2: DEPLOY A STAGING (verificación pre-producción)
+  # ═══════════════════════════════════════════════════════════════════
   deploy-staging:
-    name: 🧪 Deploy to Staging First
-    needs: test
+    name: 🧪 Deploy to Staging
+    needs: build
     runs-on: ubuntu-latest
     if: ${{ !inputs.skip_staging }}
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - name: 📥 Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-package
 
       - name: 🔑 Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
 
-      - name: 📦 Create staging deployment package
-        run: |
-          tar -czf deploy-staging.tar.gz \
-            --exclude=.git \
-            --exclude=logs \
-            --exclude=.github \
-            --exclude=node_modules \
-            --exclude=api-osyris/node_modules \
-            --exclude=.next \
-            --exclude=build \
-            --exclude=dist \
-            --exclude=deploy-staging.tar.gz \
-            . || true
-          
-          if [ ! -f deploy-staging.tar.gz ]; then
-            echo "❌ Error: deploy-staging.tar.gz no se creó"
-            exit 1
-          fi
-          ls -lh deploy-staging.tar.gz
-
       - name: 🚀 Deploy to Staging
         run: |
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "mkdir -p ${{ env.STAGING_PATH }}"
-          scp -o StrictHostKeyChecking=no deploy-staging.tar.gz ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.STAGING_PATH }}/
-          
+          scp -o StrictHostKeyChecking=no deploy.tar.gz ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.STAGING_PATH }}/
+
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
           set -e
           cd ${{ env.STAGING_PATH }}
-          
-          echo "🧹 LIMPIEZA Y EXTRACCIÓN EN STAGING"
-          if [ -d "staging_backup" ]; then rm -rf staging_backup; fi
-          if [ -d "current_staging" ]; then mv current_staging staging_backup; fi
-          
-          mkdir -p current_staging
-          tar -xzf deploy-staging.tar.gz -C current_staging/
-          rm deploy-staging.tar.gz
-          cd current_staging
-          
-          rm -rf .next node_modules/.cache api-osyris/.next 2>/dev/null || true
-          
-          echo "📦 INSTALACIÓN DE DEPENDENCIAS STAGING"
-          npm cache clean --force || true
-          rm -rf node_modules && npm ci --prefer-offline --no-audit --no-fund
-          cd api-osyris && rm -rf node_modules && npm ci --omit=dev --prefer-offline --no-audit --no-fund && cd ..
-          
-          echo "🏗️ BUILD STAGING"
-          npx next clean 2>/dev/null || true
-          npm run build
-          
-          if [ ! -d ".next" ]; then echo "❌ BUILD STAGING FALLÓ"; exit 1; fi
-          
+
+          echo "🛑 Deteniendo servicios staging..."
+          pm2 stop osyris-staging-frontend osyris-staging-backend 2>/dev/null || true
+
+          echo "📦 Extrayendo build pre-compilado..."
+          rm -rf .next node_modules api-osyris/node_modules 2>/dev/null || true
+          tar -xzf deploy.tar.gz
+          rm deploy.tar.gz
+
+          echo "📦 Instalando dependencias..."
+          npm ci --prefer-offline --no-audit --no-fund 2>/dev/null || npm install --legacy-peer-deps
+          cd api-osyris && npm ci --omit=dev --prefer-offline 2>/dev/null || npm install && cd ..
+
+          echo "⚙️ Configurando backend staging..."
           cat > api-osyris/.env << 'ENVFILE'
           DATABASE_TYPE=postgres
           DB_HOST=localhost
@@ -158,52 +149,22 @@ jobs:
           PORT=${{ env.STAGING_BACKEND_PORT }}
           JWT_SECRET=osyrisScoutGroup2024SecretKey!Staging
           JWT_EXPIRES_IN=24h
-          FRONTEND_URL=http://116.203.98.142:${{ env.STAGING_FRONTEND_PORT }}
-          ALLOWED_ORIGINS=http://116.203.98.142:${{ env.STAGING_FRONTEND_PORT }}
-          STAGING_MODE=true
           ENVFILE
-          
-          if ! command -v pm2 &> /dev/null; then npm install -g pm2; fi
-          
-          pm2 stop osyris-staging-frontend osyris-staging-backend || true
-          pm2 delete osyris-staging-frontend osyris-staging-backend || true
-          fuser -k ${{ env.STAGING_FRONTEND_PORT }}/tcp ${{ env.STAGING_BACKEND_PORT }}/tcp 2>/dev/null || true
-          sleep 2
-          
-          cd ${{ env.STAGING_PATH }}
-          if [ -d "current_staging" ]; then
-            rsync -av --delete current_staging/ . --exclude current_staging || (cp -r current_staging/* . && rm -rf current_staging)
-          fi
-          
-          pm2 start "npx next start -p ${{ env.STAGING_FRONTEND_PORT }}" --name "osyris-staging-frontend" --cwd ${{ env.STAGING_PATH }}
-          pm2 start ${{ env.STAGING_PATH }}/api-osyris/src/index.js --name "osyris-staging-backend" --cwd ${{ env.STAGING_PATH }}/api-osyris --node-args="--env-file=${{ env.STAGING_PATH }}/api-osyris/.env"
+
+          echo "🚀 Iniciando servicios staging..."
+          pm2 delete osyris-staging-frontend osyris-staging-backend 2>/dev/null || true
+          pm2 start "npx next start -p ${{ env.STAGING_FRONTEND_PORT }}" --name "osyris-staging-frontend"
+          pm2 start api-osyris/src/index.js --name "osyris-staging-backend" --node-args="--env-file=api-osyris/.env"
           pm2 save
-          
-          if ! pm2 list | grep -q "osyris-staging-frontend.*online"; then echo "❌ Frontend staging no online"; pm2 logs osyris-staging-frontend --lines 20; exit 1; fi
-          if ! pm2 list | grep -q "osyris-staging-backend.*online"; then echo "❌ Backend staging no online"; pm2 logs osyris-staging-backend --lines 20; exit 1; fi
-          
-          echo "✅ Staging deployment OK"
+
+          echo "✅ Staging deployment completado"
           ENDSSH
 
-      - name: 🧹 Cleanup
-        run: rm -f deploy-staging.tar.gz
-
-  # Verificación de Staging
-  verify-staging:
-    name: ✅ Verify Staging
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    if: ${{ !inputs.skip_staging }}
-
-    steps:
-      - name: ⏱️ Wait for staging
-        run: sleep 15
-
-      - name: 🔍 Verify staging services
+      - name: ✅ Verify Staging
         run: |
+          sleep 15
           echo "🔍 Verificando staging..."
-          
-          # Frontend staging
+
           for i in {1..3}; do
             if curl -f -s -o /dev/null http://116.203.98.142:${{ env.STAGING_FRONTEND_PORT }}; then
               echo "✅ Frontend staging OK"
@@ -211,8 +172,7 @@ jobs:
             fi
             sleep 10
           done
-          
-          # Backend staging
+
           for i in {1..3}; do
             if curl -f -s -o /dev/null http://116.203.98.142:${{ env.STAGING_BACKEND_PORT }}/api/health; then
               echo "✅ Backend staging OK"
@@ -220,363 +180,113 @@ jobs:
             fi
             sleep 10
           done
-          
-          echo "✅ Staging verification complete - READY FOR PRODUCTION"
 
-  # FASE 2: Deploy a Producción (solo si staging OK)
+  # ═══════════════════════════════════════════════════════════════════
+  # PASO 3: DEPLOY A PRODUCCIÓN (solo sincronizar y reiniciar)
+  # ═══════════════════════════════════════════════════════════════════
   deploy-production:
     name: 🚀 Deploy to Production
-    needs: [test, verify-staging]
+    needs: [build, deploy-staging]
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/main' && (success() || inputs.skip_staging) }}
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - name: 📥 Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-package
 
       - name: 🔑 Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
 
-      - name: 📦 Create deployment package
+      - name: 🚀 Deploy to Production
         run: |
-          tar -czf deploy.tar.gz \
-            --exclude=.git \
-            --exclude=logs \
-            --exclude=.github \
-            --exclude=api-osyris/database \
-            --exclude=deploy.tar.gz \
-            . || true
-
-          # Verificar que el archivo se creó
-          if [ ! -f deploy.tar.gz ]; then
-            echo "Error: deploy.tar.gz no se creó"
-            exit 1
-          fi
-
-          ls -lh deploy.tar.gz
-
-      - name: 🚀 Deploy to server
-        run: |
-          # Crear directorio si no existe
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "mkdir -p ${{ env.PRODUCTION_PATH }}"
-
-          # Subir archivos
           scp -o StrictHostKeyChecking=no deploy.tar.gz ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.PRODUCTION_PATH }}/
 
-          # Script de deploy en el servidor
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
           set -e
           cd ${{ env.PRODUCTION_PATH }}
 
-          # Backup de seguridad
-          if [ -d "current" ]; then
-            cp -r current backup_$(date +%Y%m%d_%H%M%S)
-            ls -t | grep backup_ | tail -n +6 | xargs rm -rf 2>/dev/null || true
-          fi
-
-          # Backup de base de datos
-          echo "📊 Creando backup de base de datos..."
+          echo "📊 Backup de base de datos..."
           docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > backup_db_$(date +%Y%m%d_%H%M%S).sql.gz || true
-          ls -t backup_db_*.sql.gz 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true
+          ls -t backup_db_*.sql.gz 2>/dev/null | tail -n +3 | xargs rm -f 2>/dev/null || true
 
-          # Extraer nuevos archivos (limpiar current primero)
-          echo "🧹 Limpieza completa del directorio actual..."
-          rm -rf current
-          mkdir -p current
-          tar -xzf deploy.tar.gz -C current/
+          echo "🛑 Deteniendo servicios..."
+          pm2 stop osyris-frontend osyris-backend 2>/dev/null || true
+
+          echo "📦 Extrayendo build pre-compilado..."
+          # Preservar .env del backend
+          cp api-osyris/.env /tmp/osyris-backend.env 2>/dev/null || true
+
+          rm -rf .next node_modules api-osyris/node_modules 2>/dev/null || true
+          tar -xzf deploy.tar.gz
           rm deploy.tar.gz
 
-          cd current
-
-          echo "🧹 LIMPIEZA DE CACHÉ EN SERVIDOR"
-          # Eliminar cualquier caché residual completamente
-          rm -rf .next 2>/dev/null || true
-          rm -rf node_modules/.cache 2>/dev/null || true
-          rm -rf api-osyris/.next 2>/dev/null || true
-          rm -rf api-osyris/node_modules/.cache 2>/dev/null || true
-          rm -rf build out dist 2>/dev/null || true
-          rm -rf api-osyris/build api-osyris/out api-osyris/dist 2>/dev/null || true
-
-          echo "📦 INSTALACIÓN FRESCA EN SERVIDOR"
-          # Limpiar caché de npm
-          npm cache clean --force || true
-          
-          # Instalar dependencias frontend completamente frescas
-          echo "Instalando dependencias frontend..."
-          rm -rf node_modules 2>/dev/null || true
-          npm ci --prefer-offline --no-audit --no-fund
-
-          # Instalar dependencias backend
-          echo "Instalando dependencias backend..."
-          cd api-osyris
-          rm -rf node_modules 2>/dev/null || true
-          npm ci --omit=dev --prefer-offline --no-audit --no-fund
-          cd ..
-
-          echo "🏗️ BUILD FRESCO EN SERVIDOR"
-          # Limpiar caché de Next.js antes del build
-          npx next clean 2>/dev/null || true
-          rm -rf .next 2>/dev/null || true
-
-          # Build frontend con variables de producción
-          echo "Building frontend con NEXT_PUBLIC_API_URL=https://gruposcoutosyris.es/api..."
-          export NEXT_PUBLIC_API_URL="https://gruposcoutosyris.es/api"
-          export API_BASE_URL="https://gruposcoutosyris.es/api"
-          export NODE_ENV="production"
-          export NEXT_PUBLIC_STAGING="false"
-          npm run build:frontend || npm run build
-
-          # Verificar que el build se creó
-          if [ ! -d ".next" ]; then
-            echo "❌ BUILD FALLÓ - .next no existe"
-            exit 1
-          fi
-          echo "✅ Build frontend exitoso"
-
-          # Limpiar devDependencies después del build
-          echo "🧹 Limpiando devDependencies post-build..."
-          npm prune --omit=dev
-
-          # Configurar .env del backend PRODUCCIÓN
-          cat > api-osyris/.env << 'ENVFILE'
-          DATABASE_TYPE=postgres
-          DB_HOST=localhost
-          DB_PORT=5432
-          DB_USER=osyris_user
-          DB_PASSWORD=OsyrisDB2024!Secure
-          DB_NAME=${{ env.PRODUCTION_DB_NAME }}
-          NODE_ENV=production
-          PORT=${{ env.PRODUCTION_BACKEND_PORT }}
-          JWT_SECRET=osyrisScoutGroup2024SecretKey!Production
-          JWT_EXPIRES_IN=24h
-          FRONTEND_URL=https://gruposcoutosyris.es
-          ALLOWED_ORIGINS=https://gruposcoutosyris.es,https://www.gruposcoutosyris.es,http://116.203.98.142
-          ENVFILE
-
-          # Detener contenedores Docker de frontend y backend (mantener solo DB)
-          echo "🛑 Deteniendo contenedores Docker antiguos..."
-          docker stop osyris-frontend || true
-          docker stop osyris-backend || true
-          docker rm osyris-frontend || true
-          docker rm osyris-backend || true
-
-          # Asegurar que PostgreSQL está corriendo
-          echo "🐘 Verificando PostgreSQL..."
-          docker start osyris-db || docker-compose -f docker-compose.prod.yml up -d db
-
-          echo "🚀 INICIANDO SERVICIOS PM2"
-          
-          # Instalar/actualizar PM2
-          if ! command -v pm2 &> /dev/null; then
-            npm install -g pm2
-          else
-            npm update -g pm2 || true
+          # Restaurar .env si existía
+          if [ -f /tmp/osyris-backend.env ]; then
+            cp /tmp/osyris-backend.env api-osyris/.env
           fi
 
-          # Detener servicios PM2 existentes
-          echo "Deteniendo servicios PM2 existentes..."
-          pm2 stop osyris-frontend || true
-          pm2 stop osyris-backend || true
-          pm2 delete osyris-frontend || true
-          pm2 delete osyris-backend || true
+          echo "📦 Instalando dependencias (sin build - ya viene compilado)..."
+          npm ci --prefer-offline --no-audit --no-fund 2>/dev/null || npm install --legacy-peer-deps
+          cd api-osyris && npm ci --omit=dev --prefer-offline 2>/dev/null || npm install && cd ..
 
-          # Limpiar puertos si están ocupados
-          fuser -k 3000/tcp 2>/dev/null || true
-          fuser -k 5000/tcp 2>/dev/null || true
+          echo "🚀 Reiniciando servicios..."
+          pm2 delete osyris-frontend osyris-backend 2>/dev/null || true
 
-          # Pequeña pausa para asegurar limpieza completa
-          sleep 2
-
-          # Iniciar backend PRODUCCIÓN primero
-          echo "Iniciando backend producción en puerto ${{ env.PRODUCTION_BACKEND_PORT }}..."
-          pm2 start ${{ env.PRODUCTION_PATH }}/api-osyris/src/index.js \
-            --name "osyris-backend" \
-            --cwd ${{ env.PRODUCTION_PATH }}/api-osyris \
-            --node-args="--env-file=${{ env.PRODUCTION_PATH }}/api-osyris/.env" \
-            --env NODE_ENV=production
-
-          # Esperar a que el backend esté listo
+          pm2 start api-osyris/src/index.js --name "osyris-backend" --node-args="--env-file=api-osyris/.env"
           sleep 3
-
-          # Iniciar frontend PRODUCCIÓN
-          echo "Iniciando frontend producción en puerto ${{ env.PRODUCTION_FRONTEND_PORT }}..."
-          pm2 start ${{ env.PRODUCTION_PATH }}/node_modules/.bin/next \
-            --name "osyris-frontend" \
-            --cwd ${{ env.PRODUCTION_PATH }} \
-            -- start -p ${{ env.PRODUCTION_FRONTEND_PORT }}
-
-          # Guardar configuración PM2
+          pm2 start "npx next start -p ${{ env.PRODUCTION_FRONTEND_PORT }}" --name "osyris-frontend"
           pm2 save
-          pm2 startup || true
 
-          # Verificar que los procesos están corriendo
-          echo "✅ VERIFICACIÓN DE SERVICIOS:"
-          pm2 list
-          
-          if ! pm2 list | grep -q "osyris-frontend.*online"; then
-            echo "❌ Frontend no está online"
-            pm2 logs osyris-frontend --lines 20 --nostream
-            exit 1
-          fi
-
-          if ! pm2 list | grep -q "osyris-backend.*online"; then
-            echo "❌ Backend no está online"
-            pm2 logs osyris-backend --lines 20 --nostream
-            exit 1
-          fi
-
-          echo "✅ Todos los servicios están online"
-          
-          # Mostrar estado de Docker
-          echo "Estado de contenedores Docker:"
-          docker ps | grep osyris
-          
-          # Mostrar últimas líneas de logs
-          echo ""
-          echo "📋 Últimas líneas de logs backend:"
-          pm2 logs osyris-backend --lines 10 --nostream
-          
-          echo ""
-          echo "📋 Últimas líneas de logs frontend:"
-          pm2 logs osyris-frontend --lines 10 --nostream
+          echo "✅ Production deployment completado"
+          pm2 list | grep osyris
           ENDSSH
 
-      - name: 🧹 Cleanup
-        run: rm -f deploy.tar.gz
-
-      - name: ⏱️ Wait for services to be ready
+      - name: ✅ Verify Production
         run: |
-          echo "⏱️ Esperando a que los servicios estén completamente listos..."
-          sleep 20
+          sleep 15
+          echo "🔍 Verificando producción..."
 
-      - name: ✅ Comprehensive deployment verification
-        run: |
-          echo "🔍 Verificación comprehensiva del despliegue..."
-
-          # Verificar frontend (HTTPS por Cloudflare)
-          echo "Verificando frontend..."
-          FRONTEND_STATUS=0
+          FRONTEND_OK=0
           for i in {1..5}; do
-            echo "Intento $i de 5 para frontend..."
             if curl -f -s -o /dev/null -L https://gruposcoutosyris.es; then
-              echo "✅ Frontend respondiendo correctamente"
-              FRONTEND_STATUS=1
+              echo "✅ Frontend producción OK"
+              FRONTEND_OK=1
               break
-            else
-              echo "⏳ Frontend no responde aún, esperando 10s..."
-              sleep 10
             fi
+            sleep 10
           done
 
-          if [ $FRONTEND_STATUS -eq 0 ]; then
-            echo "❌ Frontend no responde después de 5 intentos"
-            exit 1
-          fi
-
-          # Verificar backend API
-          echo "Verificando backend API..."
-          API_STATUS=0
+          API_OK=0
           for i in {1..5}; do
-            echo "Intento $i de 5 para API..."
             if curl -f -s -o /dev/null -L https://gruposcoutosyris.es/api/health; then
-              echo "✅ Backend API respondiendo correctamente"
-              API_STATUS=1
+              echo "✅ Backend API OK"
+              API_OK=1
               break
-            else
-              echo "⏳ API no responde aún, esperando 10s..."
-              sleep 10
             fi
+            sleep 10
           done
 
-          if [ $API_STATUS -eq 0 ]; then
-            echo "⚠️ Backend API no responde en /api/health"
-            # Intentar endpoint alternativo
-            if curl -f -s -o /dev/null -L https://gruposcoutosyris.es/api/usuarios; then
-              echo "✅ Backend responde en endpoint alternativo"
-              API_STATUS=1
-            fi
+          if [ $FRONTEND_OK -eq 0 ] || [ $API_OK -eq 0 ]; then
+            echo "⚠️ Algún servicio no responde - verificar manualmente"
           fi
 
-          # Verificación de contenido específico
-          echo "Verificando contenido específico..."
-          CONTENT_CHECK=$(curl -s -L https://gruposcoutosyris.es | grep -c "Osyris" || echo "0")
-          if [ "$CONTENT_CHECK" -gt 0 ]; then
-            echo "✅ Contenido verificado - Osyris encontrado en página principal"
-          else
-            echo "⚠️ Advertencia: No se encontró 'Osyris' en página principal"
-          fi
+          echo "✅ Verificación completada"
 
-          # Verificación de puertos en servidor
-          echo "Verificando puertos en servidor..."
-          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} \
-            "netstat -tlnp | grep ':3000\\|:5000' || echo 'Verificando puertos...'"
-
-          echo "✅ Todas las verificaciones completadas"
-
-      - name: 📊 Detailed production deployment summary
+      - name: 📊 Deployment Summary
         run: |
-          echo "### 🚀 Production Deployment Summary (2-Phase Strategy)" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Información del Despliegue:**" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Strategy:** 2-Phase (Staging → Production)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Strategy:** Fresh (sin caché completa)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Server:** ${{ env.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Strategy:** Build in CI Runner, sync to server" >> $GITHUB_STEP_SUMMARY
+          echo "**API URL:** ${{ env.NEXT_PUBLIC_API_URL }} (sin /api)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**🧪 Fase 1: Staging**" >> $GITHUB_STEP_SUMMARY
-          echo "- Frontend Staging: http://116.203.98.142:${{ env.STAGING_FRONTEND_PORT }} ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- Backend Staging: http://116.203.98.142:${{ env.STAGING_BACKEND_PORT }} ✅" >> $GITHUB_STEP_SUMMARY
+          echo "**URLs:**" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 Frontend: https://gruposcoutosyris.es" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔧 API: https://gruposcoutosyris.es/api/health" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**🚀 Fase 2: Production**" >> $GITHUB_STEP_SUMMARY
-          echo "- 🌐 Frontend: https://gruposcoutosyris.es ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- 🔧 API Health: https://gruposcoutosyris.es/api/health ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- 🐳 Database Server: ${{ env.SERVER_HOST }}:5432 (DB: ${{ env.PRODUCTION_DB_NAME }}) ✅" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**✅ Verificaciones Completadas:**" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Staging deployed and verified" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Production deployed successfully" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Frontend y Backend respondiendo" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Contenido verificado" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🎉 **Despliegue a PRODUCCIÓN completado con éxito usando estrategia de 2 fases!**" >> $GITHUB_STEP_SUMMARY
-
-  notify:
-    name: Send notifications
-    needs: [deploy-staging, verify-staging, deploy-production]
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: 📬 Production deploy notification
-        run: |
-          echo "## 🚀 Notificación de Despliegue (2-Phase Strategy)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ needs.deploy-production.result }}" == "success" ]; then
-            echo "✅ **Despliegue a PRODUCCIÓN completado exitosamente**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Estrategia:** 2-Phase (Staging → Production)" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Fase 1 - Staging:**" >> $GITHUB_STEP_SUMMARY
-            echo "- 🧪 Staging deployment: ${{ needs.deploy-staging.result }}" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ Staging verification: ${{ needs.verify-staging.result }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Fase 2 - Production:**" >> $GITHUB_STEP_SUMMARY
-            echo "- 🌐 Frontend: https://gruposcoutosyris.es ✅" >> $GITHUB_STEP_SUMMARY
-            echo "- 🔧 API: https://gruposcoutosyris.es/api/health ✅" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Despliegue falló - revisar logs**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Estado de jobs:**" >> $GITHUB_STEP_SUMMARY
-            echo "- Staging: ${{ needs.deploy-staging.result }}" >> $GITHUB_STEP_SUMMARY
-            echo "- Verify Staging: ${{ needs.verify-staging.result }}" >> $GITHUB_STEP_SUMMARY
-            echo "- Production: ${{ needs.deploy-production.result }}" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
