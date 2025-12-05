@@ -1,9 +1,9 @@
 name: Deploy to Production (2-Phase Staging to Production)
 
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       clean_cache:

@@ -1,9 +1,9 @@
 name: Deploy from Develop to Staging
 
 on:
-  # push:
-  #   branches:
-  #     - develop
+  push:
+    branches:
+      - develop
   workflow_dispatch:
     inputs:
       force_no_cache:
