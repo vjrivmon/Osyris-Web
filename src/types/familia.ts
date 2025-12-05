@@ -179,6 +179,14 @@ export const DOCUMENTO_TIPO_CONFIG = {
     codigo: 'Anexo 2.2',
     tienePlantilla: false
   },
+  cartilla_vacunacion: {
+    label: 'Cartilla de Vacunación',
+    icon: 'Syringe',
+    descripcion: 'Registro de vacunas actualizado (escaneo)',
+    requerido: true,
+    codigo: 'Anexo 2.2',
+    tienePlantilla: false
+  },
   dni_padre_madre: {
     label: 'DNI Padre/Madre',
     icon: 'CreditCard',

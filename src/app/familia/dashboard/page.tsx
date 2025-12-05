@@ -20,6 +20,7 @@ import { HijosListaCompacta } from "@/components/familia/hijo-card-compacto"
 import { DocumentosListaCompacta } from "@/components/familia/documentos-lista-compacta"
 import { CalendarioCompacto } from "@/components/familia/calendario-compacto"
 import { DocumentoUploadModal } from "@/components/familia/documento-upload-modal"
+import { DocumentoResubirModal } from "@/components/familia/documentos/documento-resubir-modal"
 import { ScoutHijo, Documento, TipoDocumento } from "@/types/familia"
 import Link from "next/link"
 import { getApiUrl } from "@/lib/api-utils"
@@ -49,6 +50,14 @@ export default function FamiliaDashboardPage() {
   const [documentosCache, setDocumentosCache] = useState<DocumentosCache>({})
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [uploadTipoDocumento, setUploadTipoDocumento] = useState<TipoDocumento | null>(null)
+  const [resubirModalOpen, setResubirModalOpen] = useState(false)
+  const [documentoParaResubir, setDocumentoParaResubir] = useState<{
+    id: number;
+    titulo: string;
+    tipo_documento: string;
+    educando_id: number;
+    educando_nombre?: string;
+  } | null>(null)
 
   // Cargar datos del usuario
   useEffect(() => {
@@ -251,6 +260,32 @@ export default function FamiliaDashboardPage() {
     setUploadModalOpen(true)
   }
 
+  // Handler para resubir documento (nueva versión)
+  const handleResubirDocumento = (tipo: TipoDocumento, documentoId?: number) => {
+    if (!hijoActual) return
+
+    // Obtener datos del documento desde el cache
+    const cachedData = documentosCache[hijoActual.id]
+    const docData = cachedData?.status?.[tipo]
+
+    // Crear objeto documento para el modal
+    setDocumentoParaResubir({
+      id: documentoId || (docData?.archivo?.id ? parseInt(docData.archivo.id) : 0),
+      titulo: docData?.nombre || tipo,
+      tipo_documento: tipo,
+      educando_id: hijoActual.id,
+      educando_nombre: `${hijoActual.nombre} ${hijoActual.apellidos}`
+    })
+    setResubirModalOpen(true)
+  }
+
+  const handleResubirSuccess = () => {
+    // Recargar documentos del hijo seleccionado
+    if (hijoSeleccionado) {
+      fetchEducandoDocumentos(hijoSeleccionado)
+    }
+  }
+
   const handleUploadSuccess = () => {
     // Recargar documentos del hijo seleccionado
     if (hijoSeleccionado) {
@@ -350,6 +385,7 @@ export default function FamiliaDashboardPage() {
           plantillas={plantillas}
           loading={driveLoading}
           onUploadDocumento={handleUploadDocumento}
+          onResubirDocumento={handleResubirDocumento}
           onDownloadPlantilla={downloadPlantilla}
         />
 
@@ -370,6 +406,17 @@ export default function FamiliaDashboardPage() {
           onSuccess={handleUploadSuccess}
         />
       )}
+
+      {/* Modal de resubida de documentos (nueva versión) */}
+      <DocumentoResubirModal
+        isOpen={resubirModalOpen}
+        onClose={() => {
+          setResubirModalOpen(false)
+          setDocumentoParaResubir(null)
+        }}
+        documento={documentoParaResubir}
+        onSuccess={handleResubirSuccess}
+      />
     </div>
   )
 }

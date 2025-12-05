@@ -300,6 +300,27 @@ const update = async (id, documentoData, userId = null) => {
       queryParams.push(userId);
     }
 
+    // Soporte para campos de Google Drive
+    if (documentoData.archivo_ruta) {
+      query_str += 'archivo_ruta = ?, ';
+      queryParams.push(documentoData.archivo_ruta);
+    }
+
+    if (documentoData.google_drive_file_id) {
+      query_str += 'google_drive_file_id = ?, ';
+      queryParams.push(documentoData.google_drive_file_id);
+    }
+
+    if (documentoData.google_drive_folder_id) {
+      query_str += 'google_drive_folder_id = ?, ';
+      queryParams.push(documentoData.google_drive_folder_id);
+    }
+
+    if (documentoData.estado_revision) {
+      query_str += 'estado_revision = ?, ';
+      queryParams.push(documentoData.estado_revision);
+    }
+
     if (queryParams.length === 0) {
       return await findById(id);
     }

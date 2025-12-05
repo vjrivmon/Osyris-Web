@@ -34,6 +34,7 @@ interface DocumentosDashboardProps {
   onEditarDocumento: (documento: DocumentoFamilia) => void
   onEliminarDocumento: (documento: DocumentoFamilia) => void
   onDescargarDocumento: (documento: DocumentoFamilia) => void
+  onResubirDocumento?: (documento: DocumentoFamilia) => void
   loading?: boolean
 }
 
@@ -44,6 +45,7 @@ export function DocumentosDashboard({
   onEditarDocumento,
   onEliminarDocumento,
   onDescargarDocumento,
+  onResubirDocumento,
   loading = false
 }: DocumentosDashboardProps) {
   const { hijos } = useFamiliaData()
@@ -346,6 +348,15 @@ export function DocumentosDashboard({
                           >
                             <Eye className="h-3 w-3" />
                           </Button>
+                          {onResubirDocumento && doc.estado !== 'pendiente' && (
+                            <Button
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white h-7 px-2"
+                              onClick={() => onResubirDocumento(doc)}
+                            >
+                              <Upload className="h-3 w-3" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -429,10 +440,16 @@ export function DocumentosDashboard({
                       <Eye className="h-3 w-3 mr-1" />
                       Ver
                     </Button>
-                    <Button size="sm" onClick={() => onUploadDocumento()}>
-                      <Upload className="h-3 w-3 mr-1" />
-                      Renovar
-                    </Button>
+                    {onResubirDocumento && (
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => onResubirDocumento(doc)}
+                      >
+                        <Upload className="h-3 w-3 mr-1" />
+                        Subir
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -465,16 +482,20 @@ export function DocumentosDashboard({
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    {doc.estado === 'pendiente' && (
-                      <Button size="sm" onClick={() => onUploadDocumento()}>
-                        <Upload className="h-3 w-3 mr-1" />
-                        Subir
-                      </Button>
-                    )}
                     <Button size="sm" variant="outline" onClick={() => onVerDetalles(doc)}>
                       <Eye className="h-3 w-3 mr-1" />
                       Ver
                     </Button>
+                    {onResubirDocumento && (
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => onResubirDocumento(doc)}
+                      >
+                        <Upload className="h-3 w-3 mr-1" />
+                        Subir
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -509,13 +530,22 @@ export function DocumentosDashboard({
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <Button size="sm" variant="outline" onClick={() => onDescargarDocumento(doc)}>
-                      <Download className="h-3 w-3 mr-1" />
-                      Descargar
-                    </Button>
                     <Button size="sm" variant="outline" onClick={() => onVerDetalles(doc)}>
                       <Eye className="h-3 w-3 mr-1" />
                       Ver
+                    </Button>
+                    {onResubirDocumento && (
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => onResubirDocumento(doc)}
+                      >
+                        <Upload className="h-3 w-3 mr-1" />
+                        Subir
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" onClick={() => onDescargarDocumento(doc)}>
+                      <Download className="h-3 w-3 mr-1" />
                     </Button>
                   </div>
                 </div>

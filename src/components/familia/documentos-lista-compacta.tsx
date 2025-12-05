@@ -21,7 +21,7 @@ import {
   Loader2,
   Clock
 } from "lucide-react"
-import { ScoutHijo, TipoDocumento } from "@/types/familia"
+import { ScoutHijo, TipoDocumento, DOCUMENTO_TIPO_CONFIG } from "@/types/familia"
 import { EstructuraEducando, Plantilla } from "@/hooks/useGoogleDrive"
 import { DocumentoViewerModal } from "./documento-viewer-modal"
 
@@ -31,6 +31,7 @@ interface DocumentosListaCompactaProps {
   plantillas?: Plantilla[]
   loading?: boolean
   onUploadDocumento?: (tipo: TipoDocumento) => void
+  onResubirDocumento?: (tipo: TipoDocumento, documentoId?: number) => void
   onDownloadPlantilla?: (fileId: string, fileName: string) => void
   compact?: boolean
   className?: string
@@ -65,6 +66,7 @@ export function DocumentosListaCompacta({
   plantillas = [],
   loading = false,
   onUploadDocumento,
+  onResubirDocumento,
   onDownloadPlantilla,
   compact = false,
   className
@@ -207,6 +209,8 @@ export function DocumentosListaCompacta({
                 const estaSubido = doc.estado === 'subido'
                 const enRevision = doc.estado === 'pendiente_revision'
                 const tienDocumento = estaSubido || enRevision
+                // Determinar si el documento es obligatorio
+                const esObligatorio = DOCUMENTO_TIPO_CONFIG[tipo as keyof typeof DOCUMENTO_TIPO_CONFIG]?.requerido ?? false
 
                 // Determinar estilos según estado
                 const getEstadoStyles = () => {
@@ -249,7 +253,7 @@ export function DocumentosListaCompacta({
                         {estilos.icon}
                       </div>
                       <div>
-                        <p className="font-medium text-sm text-gray-700">{doc.nombre}</p>
+                        <p className="font-medium text-sm text-gray-700">{doc.nombre}{esObligatorio && '*'}</p>
                         <p className={`text-xs font-medium flex items-center gap-1 ${estilos.text}`}>
                           {estaSubido && <CheckCircle className="h-3 w-3" />}
                           {enRevision && <Clock className="h-3 w-3" />}
@@ -269,15 +273,28 @@ export function DocumentosListaCompacta({
                       {tienDocumento && doc.archivo?.webViewLink && (
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => {
                             setSelectedDoc({ name: doc.archivo?.name || doc.nombre, webViewLink: doc.archivo?.webViewLink })
                             setModalOpen(true)
                           }}
-                          className={estaSubido ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-amber-600 hover:text-amber-700 hover:bg-amber-50"}
+                          className={estaSubido ? "border-green-600 text-green-600 hover:bg-green-50 hover:border-green-700" : "border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600"}
                         >
                           <Eye className="h-3 w-3 mr-1" />
                           Ver
+                        </Button>
+                      )}
+
+                      {/* Botón RESUBIR documento - para documentos ya subidos/aprobados */}
+                      {estaSubido && onResubirDocumento && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800"
+                          onClick={() => onResubirDocumento(tipo as TipoDocumento, doc.archivo?.id ? parseInt(doc.archivo.id) : undefined)}
+                        >
+                          <Upload className="h-3 w-3 mr-1" />
+                          Subir
                         </Button>
                       )}
 
@@ -285,9 +302,9 @@ export function DocumentosListaCompacta({
                       {!tienDocumento && doc.tienePlantilla && plantilla && (
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => onDownloadPlantilla?.(plantilla.id, plantilla.name)}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600"
                         >
                           <Download className="h-3 w-3 mr-1" />
                           Plantilla
@@ -300,7 +317,7 @@ export function DocumentosListaCompacta({
                           size="sm"
                           variant="outline"
                           onClick={() => onUploadDocumento?.(tipo as TipoDocumento)}
-                          className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                          className="border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800"
                         >
                           <Upload className="h-3 w-3 mr-1" />
                           Subir
@@ -313,14 +330,14 @@ export function DocumentosListaCompacta({
           )}
         </div>
 
-        {/* Información adicional */}
-        {!compact && (
+        {/* Información adicional - solo para educandos >= 14 años (Pioneros/Rutas) que ven documentos opcionales */}
+        {!compact && hijo && hijo.edad >= 14 && (
           <div className="mt-6 pt-4 border-t border-gray-100">
             <div className="flex items-start gap-2">
               <Info className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
               <div className="text-xs text-gray-600 space-y-1">
-                <p>Los documentos deben estar actualizados al inicio de cada curso</p>
-                <p>La ficha sanitaria es obligatoria para todas las actividades</p>
+                <p>Los documentos marcados con (*) son obligatorios</p>
+                <p>Los documentos sin asterisco son opcionales</p>
               </div>
             </div>
           </div>

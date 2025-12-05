@@ -177,7 +177,41 @@ export function useGoogleDrive() {
   }, [getAuthHeaders])
 
   /**
+   * Función helper para hacer fetch con reintentos automáticos
+   * Útil para manejar errores temporales como "Failed to fetch" por renovación de tokens
+   */
+  const fetchWithRetry = async (
+    url: string,
+    options: RequestInit,
+    maxRetries: number = 3,
+    delayMs: number = 1000
+  ): Promise<Response> => {
+    let lastError: Error | null = null
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, options)
+        return response
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error('Error desconocido')
+        console.warn(`⚠️ Intento ${attempt}/${maxRetries} falló: ${lastError.message}`)
+
+        // Si no es el último intento, esperar antes de reintentar
+        if (attempt < maxRetries) {
+          // Espera exponencial: 1s, 2s, 4s
+          const waitTime = delayMs * Math.pow(2, attempt - 1)
+          console.log(`🔄 Reintentando en ${waitTime}ms...`)
+          await new Promise(resolve => setTimeout(resolve, waitTime))
+        }
+      }
+    }
+
+    throw lastError || new Error('Error después de múltiples reintentos')
+  }
+
+  /**
    * Sube un documento a la carpeta del educando
+   * Incluye reintentos automáticos para manejar errores temporales de red/tokens
    */
   const uploadDocumento = useCallback(async (
     educandoId: number,
@@ -194,13 +228,19 @@ export function useGoogleDrive() {
       formData.append('educandoId', educandoId.toString())
       formData.append('tipoDocumento', tipoDocumento)
 
-      const response = await fetch(`${API_BASE_URL}/api/drive/documento/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // Usar fetchWithRetry para manejar errores temporales
+      const response = await fetchWithRetry(
+        `${API_BASE_URL}/api/drive/documento/upload`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
         },
-        body: formData
-      })
+        3, // máximo 3 reintentos
+        1000 // delay inicial de 1 segundo
+      )
 
       const data = await response.json()
 

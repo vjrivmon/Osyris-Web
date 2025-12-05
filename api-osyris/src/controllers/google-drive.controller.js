@@ -4,7 +4,9 @@
 
 const driveService = require('../services/google-drive.service');
 const educandoModel = require('../models/educando.model');
+const familiarEducandoModel = require('../models/familiar_educando.model');
 const documentosFamiliaModel = require('../models/documentos_familia.model');
+const documentosHistorialModel = require('../models/documentos_historial.model');
 const notificacionModel = require('../models/notificaciones_familia.model');
 const notificacionScouterModel = require('../models/notificaciones_scouter.model');
 
@@ -61,7 +63,7 @@ const downloadPlantilla = async (req, res) => {
 const getEducandoDocumentos = async (req, res) => {
   try {
     const { educandoId } = req.params;
-    const familiarId = req.user?.id;
+    const familiarId = req.usuario?.id;
 
     // Obtener datos del educando
     const educando = await educandoModel.findById(educandoId);
@@ -73,8 +75,8 @@ const getEducandoDocumentos = async (req, res) => {
     }
 
     // Verificar que el familiar tiene acceso a este educando
-    if (familiarId && req.user.rol !== 'admin' && req.user.rol !== 'scouter') {
-      const tieneAcceso = await educandoModel.verificarAccesoFamiliar(educandoId, familiarId);
+    if (familiarId && req.usuario?.rol !== 'admin' && req.usuario?.rol !== 'scouter') {
+      const tieneAcceso = await familiarEducandoModel.verificarAcceso(familiarId, educandoId);
       if (!tieneAcceso) {
         return res.status(403).json({
           success: false,
@@ -135,7 +137,7 @@ const getEducandoDocumentos = async (req, res) => {
 const uploadDocumento = async (req, res) => {
   try {
     const { educandoId, tipoDocumento } = req.body;
-    const familiarId = req.user?.id;
+    const familiarId = req.usuario?.id;
     const file = req.file;
 
     if (!file) {
@@ -155,8 +157,8 @@ const uploadDocumento = async (req, res) => {
     }
 
     // Verificar acceso del familiar
-    if (familiarId && req.user.rol !== 'admin' && req.user.rol !== 'scouter') {
-      const tieneAcceso = await educandoModel.verificarAccesoFamiliar(educandoId, familiarId);
+    if (familiarId && req.usuario?.rol !== 'admin' && req.usuario?.rol !== 'scouter') {
+      const tieneAcceso = await familiarEducandoModel.verificarAcceso(familiarId, educandoId);
       if (!tieneAcceso) {
         return res.status(403).json({
           success: false,
@@ -192,37 +194,100 @@ const uploadDocumento = async (req, res) => {
     const documentoExistente = await documentosFamiliaModel.findByEducandoAndTipo(educandoId, tipoDocumento);
     let esActualizacion = false;
 
-    // Si existe documento anterior, eliminar el archivo viejo de Drive
-    if (documentoExistente && documentoExistente.google_drive_file_id) {
-      try {
-        console.log(`🗑️ Eliminando archivo anterior de Drive: ${documentoExistente.google_drive_file_id}`);
-        await driveService.deleteFile(documentoExistente.google_drive_file_id);
-        esActualizacion = true;
-      } catch (deleteError) {
-        console.error('Error eliminando archivo anterior de Drive:', deleteError);
-        // Continuar con la subida aunque falle la eliminación
+    // Verificar límite de subidas (1 por día)
+    if (documentoExistente) {
+      const hoy = new Date().toISOString().split('T')[0];
+      let subidasHoy = documentoExistente.subidas_hoy || 0;
+
+      // Resetear contador si es nuevo día
+      if (documentoExistente.fecha_reset_subidas !== hoy) {
+        subidasHoy = 0;
+      }
+
+      // Verificar límite (permitir si es admin/scouter o si no ha llegado al límite)
+      const esAdminOScouter = req.usuario?.rol === 'admin' || req.usuario?.rol === 'scouter';
+      if (!esAdminOScouter && subidasHoy >= 1) {
+        return res.status(429).json({
+          success: false,
+          message: 'Has alcanzado el límite de subidas para este documento hoy. Podrás volver a subirlo mañana o solicitar un desbloqueo.',
+          data: {
+            subidasHoy,
+            limiteDiario: 1,
+            ultimaSubida: documentoExistente.ultima_subida
+          }
+        });
       }
     }
 
-    // Subir archivo a Google Drive
-    const uploadedFile = await driveService.uploadDocument(
-      folder.id,
+    // Si existe documento anterior, GUARDAR EN HISTORIAL antes de eliminar de Drive
+    if (documentoExistente && documentoExistente.google_drive_file_id) {
+      try {
+        // 1. Guardar versión anterior en historial
+        console.log(`📦 Guardando versión anterior en historial (ID: ${documentoExistente.id})`);
+        await documentosHistorialModel.guardarVersionAnterior(documentoExistente.id, {
+          google_drive_file_id: documentoExistente.google_drive_file_id,
+          archivo_nombre: documentoExistente.archivo_nombre,
+          archivo_ruta: documentoExistente.archivo_ruta,
+          tipo_archivo: documentoExistente.tipo_archivo,
+          tamaño_archivo: documentoExistente.tamaño_archivo,
+          version: documentoExistente.version_activa || 1,
+          subido_por: documentoExistente.familiar_id,
+          fecha_subida: documentoExistente.fecha_subida,
+          estado: 'reemplazado',
+          motivo: 'Nueva versión subida por familiar'
+        });
+
+        // 2. Eliminar archivo viejo de Drive
+        console.log(`🗑️ Eliminando archivo anterior de Drive: ${documentoExistente.google_drive_file_id}`);
+        await driveService.deleteFile(documentoExistente.google_drive_file_id);
+        esActualizacion = true;
+      } catch (historialError) {
+        console.error('Error guardando historial o eliminando archivo anterior:', historialError);
+        // Continuar con la subida aunque falle
+        esActualizacion = true;
+      }
+    }
+
+    // Subir archivo a carpeta de PENDIENTES (no a la carpeta definitiva)
+    // El documento se moverá a la carpeta del educando cuando el scouter lo apruebe
+    const uploadedFile = await driveService.uploadDocumentToPendientes(
       fileName,
       file.buffer,
-      file.mimetype
+      file.mimetype,
+      {
+        educandoId,
+        tipoDocumento,
+        familiarId,
+        destinationFolderId: folder.id  // Carpeta destino cuando se apruebe
+      }
     );
 
+    console.log(`📤 Documento subido a PENDIENTES: ${fileName} (File ID: ${uploadedFile.id})`);
+
     let documento;
+
+    const hoy = new Date().toISOString().split('T')[0];
 
     if (documentoExistente) {
       // Actualizar documento existente - SIEMPRE requiere re-aprobación
       console.log(`🔄 Actualizando documento existente (ID: ${documentoExistente.id})`);
+      const nuevaVersion = (documentoExistente.version_activa || 1) + 1;
+      const subidasHoyActualizadas = (documentoExistente.fecha_reset_subidas === hoy)
+        ? (documentoExistente.subidas_hoy || 0) + 1
+        : 1;
+
       documento = await documentosFamiliaModel.updateForReupload(documentoExistente.id, {
         archivo_nombre: fileName,
         archivo_ruta: uploadedFile.webViewLink,
         tipo_archivo: file.mimetype,
         tamaño_archivo: file.size,
-        google_drive_file_id: uploadedFile.id
+        google_drive_file_id: uploadedFile.id,
+        // Campos de control de subidas
+        ultima_subida: new Date(),
+        subidas_hoy: subidasHoyActualizadas,
+        fecha_reset_subidas: hoy,
+        version_activa: nuevaVersion,
+        tiene_version_anterior: true
       });
       esActualizacion = true;
     } else {
@@ -239,7 +304,13 @@ const uploadDocumento = async (req, res) => {
         tamaño_archivo: file.size,
         estado: 'pendiente_revision',
         google_drive_file_id: uploadedFile.id,
-        google_drive_folder_id: folder.id
+        google_drive_folder_id: folder.id,
+        // Campos de control de subidas (nuevos)
+        ultima_subida: new Date(),
+        subidas_hoy: 1,
+        fecha_reset_subidas: hoy,
+        version_activa: 1,
+        tiene_version_anterior: false
       };
 
       documento = await documentosFamiliaModel.create(documentoData);
@@ -294,6 +365,7 @@ const uploadDocumento = async (req, res) => {
 
 /**
  * Aprueba un documento (solo scouters/admin)
+ * FLUJO: Mueve el archivo de carpeta Pendientes → carpeta del educando
  */
 const aprobarDocumento = async (req, res) => {
   try {
@@ -314,6 +386,67 @@ const aprobarDocumento = async (req, res) => {
         success: false,
         message: 'Documento no encontrado'
       });
+    }
+
+    // ============================================================
+    // PASO CRÍTICO: Mover archivo de PENDIENTES a carpeta del educando
+    // ============================================================
+    if (documento.google_drive_file_id && documento.google_drive_folder_id) {
+      try {
+        console.log(`📦 Moviendo documento de Pendientes a carpeta del educando...`);
+        console.log(`   File ID: ${documento.google_drive_file_id}`);
+        console.log(`   Destino: ${documento.google_drive_folder_id}`);
+
+        const movedFile = await driveService.moveFileToFolder(
+          documento.google_drive_file_id,
+          documento.google_drive_folder_id
+        );
+
+        console.log(`✅ Documento movido exitosamente: ${movedFile.name}`);
+
+        // Actualizar el link y file_id del archivo en la BD
+        // Aunque el ID generalmente no cambia al mover, sincronizamos para consistencia
+        if (movedFile.id || movedFile.webViewLink) {
+          const updateData = {};
+          if (movedFile.webViewLink) {
+            updateData.archivo_ruta = movedFile.webViewLink;
+          }
+          if (movedFile.id) {
+            updateData.google_drive_file_id = movedFile.id;
+          }
+          await documentosFamiliaModel.update(documentoId, updateData);
+          console.log(`📝 BD actualizada con file_id: ${movedFile.id}`);
+        }
+      } catch (moveError) {
+        console.error('Error moviendo archivo en Drive:', moveError);
+
+        // Si falla el movimiento, buscar si ya existe un archivo del mismo tipo
+        // en la carpeta del educando y usar ese
+        try {
+          console.log('🔍 Buscando archivo existente del mismo tipo en carpeta destino...');
+          const existingFiles = await driveService.listEducandoDocuments(documento.google_drive_folder_id);
+          const tipoDoc = documento.tipo_documento;
+
+          // Buscar archivo que coincida con el tipo de documento
+          const matchingFile = existingFiles.find(f => {
+            const detectedType = driveService.detectarTipoDocumento(f.name);
+            return detectedType === tipoDoc;
+          });
+
+          if (matchingFile) {
+            console.log(`✅ Encontrado archivo existente: ${matchingFile.name} (ID: ${matchingFile.id})`);
+            await documentosFamiliaModel.update(documentoId, {
+              google_drive_file_id: matchingFile.id,
+              archivo_ruta: matchingFile.webViewLink
+            });
+            console.log('📝 BD actualizada con archivo existente');
+          } else {
+            console.log('⚠️ No se encontró archivo existente, el documento quedará pendiente de limpieza manual');
+          }
+        } catch (fallbackError) {
+          console.error('Error en fallback:', fallbackError.message);
+        }
+      }
     }
 
     // Aprobar documento con userId validado
@@ -340,7 +473,7 @@ const aprobarDocumento = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Documento aprobado correctamente',
+      message: 'Documento aprobado y movido a carpeta definitiva',
       data: documentoActualizado
     });
   } catch (error) {
@@ -385,33 +518,123 @@ const rechazarDocumento = async (req, res) => {
       });
     }
 
-    // Rechazar documento con userId validado (pasando motivo)
-    const documentoActualizado = await documentosFamiliaModel.rechazar(documentoId, userId, motivo);
+    // 1. Guardar versión rechazada en historial
+    if (documento.google_drive_file_id) {
+      try {
+        await documentosHistorialModel.guardarVersionAnterior(documentoId, {
+          google_drive_file_id: documento.google_drive_file_id,
+          archivo_nombre: documento.archivo_nombre,
+          archivo_ruta: documento.archivo_ruta,
+          tipo_archivo: documento.tipo_archivo,
+          tamaño_archivo: documento.tamaño_archivo,
+          version: documento.version_activa || 1,
+          subido_por: documento.familiar_id,
+          fecha_subida: documento.fecha_subida,
+          estado: 'rechazado',
+          motivo: motivo
+        });
+      } catch (historialError) {
+        console.error('Error guardando versión rechazada en historial:', historialError);
+      }
 
-    // Eliminar notificaciones de scouter asociadas a este documento
-    // (para que no sigan apareciendo como pendientes en "Actividad Reciente")
+      // ============================================================
+      // PASO CRÍTICO: Eliminar archivo de carpeta PENDIENTES
+      // (El archivo rechazado no debe quedarse en Drive)
+      // ============================================================
+      try {
+        console.log(`🗑️ Eliminando archivo rechazado de Pendientes: ${documento.google_drive_file_id}`);
+        await driveService.deleteFile(documento.google_drive_file_id);
+        console.log(`✅ Archivo eliminado de Drive`);
+      } catch (deleteError) {
+        console.error('Error eliminando archivo de Drive:', deleteError);
+        // Continuar aunque falle la eliminación
+      }
+    }
+
+    // 2. Verificar si hay versión anterior válida para restaurar
+    let documentoActualizado;
+    let versionRestaurada = false;
+
+    if (documento.tiene_version_anterior) {
+      const versionAnterior = await documentosHistorialModel.obtenerVersionAnteriorValida(documentoId);
+
+      if (versionAnterior && versionAnterior.google_drive_file_id) {
+        // Restaurar versión anterior + resetear límite 24h
+        documentoActualizado = await documentosFamiliaModel.update(documentoId, {
+          google_drive_file_id: versionAnterior.google_drive_file_id,
+          archivo_nombre: versionAnterior.archivo_nombre,
+          archivo_ruta: versionAnterior.archivo_ruta,
+          tipo_archivo: versionAnterior.tipo_archivo,
+          tamaño_archivo: versionAnterior.tamaño_archivo,
+          estado: 'vigente',
+          estado_revision: 'aprobado',
+          aprobado: true,
+          motivo_rechazo: null,
+          // Resetear límite 24h para permitir nuevo intento inmediato
+          subidas_hoy: 0,
+          fecha_reset_subidas: new Date().toISOString().split('T')[0]
+        });
+
+        // Marcar versión como restaurada
+        await documentosHistorialModel.marcarComoRestaurada(versionAnterior.id);
+        versionRestaurada = true;
+      } else {
+        // No hay versión válida, solo rechazar y resetear límite
+        documentoActualizado = await documentosFamiliaModel.rechazar(documentoId, userId, motivo);
+        await documentosFamiliaModel.update(documentoId, {
+          subidas_hoy: 0,
+          fecha_reset_subidas: new Date().toISOString().split('T')[0]
+        });
+      }
+    } else {
+      // Primera versión rechazada, resetear límite 24h
+      documentoActualizado = await documentosFamiliaModel.rechazar(documentoId, userId, motivo);
+      await documentosFamiliaModel.update(documentoId, {
+        subidas_hoy: 0,
+        fecha_reset_subidas: new Date().toISOString().split('T')[0]
+      });
+    }
+
+    // 3. Eliminar notificaciones de scouter asociadas a este documento
     try {
       await notificacionScouterModel.removeByDocumentoId(documentoId);
     } catch (removeError) {
       console.error('Error eliminando notificación scouter:', removeError);
     }
 
-    // Notificar a la familia
+    // 4. Notificar a la familia (mensaje diferente si se restauró versión)
     try {
-      await notificacionModel.crearNotificacionDocumentoRechazado({
-        documentoId,
-        familiarId: documento.familiar_id,
-        tipoDocumento: documento.titulo,
-        motivo
-      });
+      if (versionRestaurada) {
+        await notificacionModel.crearNotificacion({
+          usuario_id: documento.familiar_id,
+          tipo: 'documento_restaurado',
+          titulo: 'Documento rechazado - Versión anterior restaurada',
+          mensaje: `El documento "${documento.titulo}" ha sido rechazado. Motivo: ${motivo}. Se ha restaurado la versión anterior válida. Puedes subir una nueva versión inmediatamente.`,
+          enlace_accion: '/familia/documentos',
+          metadata: {
+            documento_id: documentoId,
+            motivo_rechazo: motivo
+          }
+        });
+      } else {
+        await notificacionModel.crearNotificacionDocumentoRechazado({
+          documentoId,
+          familiarId: documento.familiar_id,
+          tipoDocumento: documento.titulo,
+          motivo
+        });
+      }
     } catch (notifError) {
       console.error('Error creando notificación:', notifError);
     }
 
     res.json({
       success: true,
-      message: 'Documento rechazado',
-      data: documentoActualizado
+      message: versionRestaurada
+        ? 'Documento rechazado. Versión anterior restaurada. Límite de subida reseteado.'
+        : 'Documento rechazado. Límite de subida reseteado.',
+      data: documentoActualizado,
+      versionRestaurada
     });
   } catch (error) {
     console.error('Error rechazando documento:', error);

@@ -42,6 +42,9 @@ const educandosRoutes = require('./routes/educandos.routes');
 const familiaRoutes = require('./routes/familia.routes');
 const googleDriveRoutes = require('./routes/google-drive.routes');
 const notificacionesScouterRoutes = require('./routes/notificaciones-scouter.routes');
+// 📄 RUTAS DE VERSIONADO Y SOLICITUDES DE DESBLOQUEO
+const documentosResubidaRoutes = require('./routes/documentos-resubida.routes');
+const solicitudesDesbloqueoRoutes = require('./routes/solicitudes-desbloqueo.routes');
 // 🚀 FEATURE FLAGS
 // const featureFlagsRoutes = require('./routes/feature-flags.routes'); // ⚠️ DESHABILITADO: módulo incompleto
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
@@ -123,6 +126,9 @@ app.use('/api/educandos', educandosRoutes);
 app.use('/api/familia', familiaRoutes);
 app.use('/api/drive', googleDriveRoutes);
 app.use('/api/notificaciones-scouter', notificacionesScouterRoutes);
+// 📄 RUTAS DE VERSIONADO Y SOLICITUDES DE DESBLOQUEO
+app.use('/api/documentos-resubida', documentosResubidaRoutes);
+app.use('/api/solicitudes-desbloqueo', solicitudesDesbloqueoRoutes);
 // 🚀 FEATURE FLAGS
 // app.use('/api/feature-flags', featureFlagsRoutes); // ⚠️ DESHABILITADO: módulo incompleto
 // app.use('/api/preview', previewRoutes); // Temporarily disabled

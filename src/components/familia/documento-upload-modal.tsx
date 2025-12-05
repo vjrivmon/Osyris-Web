@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,11 @@ import {
   CheckCircle,
   AlertTriangle,
   Loader2,
-  Clock
+  Clock,
+  Eye,
+  ZoomIn,
+  ZoomOut,
+  RotateCw
 } from 'lucide-react'
 import { TipoDocumento, DOCUMENTO_TIPO_CONFIG } from '@/types/familia'
 import { useGoogleDrive } from '@/hooks/useGoogleDrive'
@@ -43,10 +47,29 @@ export function DocumentoUploadModal({
   onSuccess
 }: DocumentoUploadModalProps) {
   const [file, setFile] = useState<File | null>(null)
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null)
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewZoom, setPreviewZoom] = useState(100)
+  const [previewRotation, setPreviewRotation] = useState(0)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadResult, setUploadResult] = useState<{ success: boolean; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Limpiar URL del preview cuando cambia el archivo
+  useEffect(() => {
+    if (file) {
+      const url = URL.createObjectURL(file)
+      setFilePreviewUrl(url)
+      setShowPreview(true)
+      setPreviewZoom(100)
+      setPreviewRotation(0)
+      return () => URL.revokeObjectURL(url)
+    } else {
+      setFilePreviewUrl(null)
+      setShowPreview(false)
+    }
+  }, [file])
 
   const {
     uploadDocumento,
@@ -138,10 +161,25 @@ export function DocumentoUploadModal({
 
   const handleClose = () => {
     setFile(null)
+    setFilePreviewUrl(null)
+    setShowPreview(false)
+    setPreviewZoom(100)
+    setPreviewRotation(0)
     setUploadProgress(0)
     setUploadResult(null)
     onOpenChange(false)
   }
+
+  const handleRemoveFile = () => {
+    setFile(null)
+    setFilePreviewUrl(null)
+    setShowPreview(false)
+    setPreviewZoom(100)
+    setPreviewRotation(0)
+  }
+
+  const isImageFile = file?.type.startsWith('image/')
+  const isPdfFile = file?.type === 'application/pdf'
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
@@ -156,7 +194,7 @@ export function DocumentoUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={`${showPreview && file ? 'sm:max-w-3xl' : 'sm:max-w-md'} transition-all duration-300`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -169,7 +207,7 @@ export function DocumentoUploadModal({
 
         <div className="space-y-4 py-4">
           {/* Descargar plantilla si existe */}
-          {tipoConfig?.tienePlantilla && (
+          {tipoConfig?.tienePlantilla && !showPreview && (
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center gap-2">
                 <Download className="h-4 w-4 text-blue-600" />
@@ -194,32 +232,122 @@ export function DocumentoUploadModal({
             </div>
           )}
 
-          {/* Zona de drop */}
-          <div
-            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-              file ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'
-            }`}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-          >
-            {file ? (
-              <div className="space-y-2">
-                <CheckCircle className="h-8 w-8 mx-auto text-green-600" />
-                <p className="font-medium text-green-700">{file.name}</p>
-                <p className="text-sm text-green-600">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
+          {/* VISTA PREVIA del documento */}
+          {showPreview && file && filePreviewUrl && (
+            <div className="space-y-3">
+              {/* Cabecera del preview */}
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700">Vista previa del documento</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-blue-600 mr-2">{file.name}</span>
+                  <span className="text-xs text-blue-500">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                </div>
+              </div>
+
+              {/* Controles del preview (solo para imágenes) */}
+              {isImageFile && (
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPreviewZoom(z => Math.max(25, z - 25))}
+                    disabled={previewZoom <= 25}
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-gray-600 w-16 text-center">{previewZoom}%</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPreviewZoom(z => Math.min(200, z + 25))}
+                    disabled={previewZoom >= 200}
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                  <div className="w-px h-6 bg-gray-300 mx-2" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPreviewRotation(r => (r + 90) % 360)}
+                  >
+                    <RotateCw className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Área del preview */}
+              <div className="border rounded-lg overflow-hidden bg-gray-100 max-h-80 flex items-center justify-center">
+                {isImageFile ? (
+                  <div className="overflow-auto max-h-80 w-full flex items-center justify-center p-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={filePreviewUrl}
+                      alt="Vista previa del documento"
+                      style={{
+                        transform: `scale(${previewZoom / 100}) rotate(${previewRotation}deg)`,
+                        transition: 'transform 0.2s ease',
+                        maxWidth: '100%',
+                        maxHeight: '300px',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  </div>
+                ) : isPdfFile ? (
+                  <div className="w-full h-80">
+                    <iframe
+                      src={filePreviewUrl}
+                      className="w-full h-full"
+                      title="Vista previa del PDF"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-gray-500">
+                    <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                    <p>Vista previa no disponible</p>
+                    <p className="text-sm">{file.name}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Mensaje de confirmación */}
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  <strong>Revisa que el documento es correcto</strong>
+                  <p className="text-sm mt-1">
+                    Verifica que el archivo seleccionado corresponde al tipo de documento que vas a subir.
+                    Una vez subido, un monitor revisará y aprobará el documento.
+                  </p>
+                </AlertDescription>
+              </Alert>
+
+              {/* Botón para cambiar archivo */}
+              <div className="flex justify-center">
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => setFile(null)}
-                  className="text-red-600 hover:text-red-700"
+                  onClick={handleRemoveFile}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <X className="h-4 w-4 mr-1" />
-                  Quitar
+                  Seleccionar otro archivo
                 </Button>
               </div>
-            ) : (
+            </div>
+          )}
+
+          {/* Zona de drop (solo si no hay preview) */}
+          {!showPreview && (
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                file ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+            >
               <div className="space-y-2">
                 <Upload className="h-8 w-8 mx-auto text-gray-400" />
                 <p className="text-gray-600">
@@ -237,8 +365,8 @@ export function DocumentoUploadModal({
                   PDF, JPG, JPEG o PNG (máx. 10MB)
                 </p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <input
             ref={fileInputRef}
@@ -290,11 +418,17 @@ export function DocumentoUploadModal({
           <Button
             onClick={handleUpload}
             disabled={!file || uploading}
+            className={showPreview ? "bg-green-600 hover:bg-green-700" : ""}
           >
             {uploading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Subiendo...
+              </>
+            ) : showPreview ? (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Confirmar y subir
               </>
             ) : (
               <>

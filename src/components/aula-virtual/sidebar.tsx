@@ -11,10 +11,13 @@ import {
   ChevronLeft,
   Settings,
   User,
+  Unlock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useSolicitudesDesbloqueo } from "@/hooks/useSolicitudesDesbloqueo"
 
 interface AulaVirtualSidebarProps {
   collapsed: boolean
@@ -24,6 +27,7 @@ interface AulaVirtualSidebarProps {
 export function AulaVirtualSidebar({ collapsed, onToggle }: AulaVirtualSidebarProps) {
   const pathname = usePathname()
   const [userData, setUserData] = useState<any>(null)
+  const { pendientes } = useSolicitudesDesbloqueo()
 
   useEffect(() => {
     // Obtener datos del usuario desde localStorage
@@ -70,6 +74,13 @@ export function AulaVirtualSidebar({ collapsed, onToggle }: AulaVirtualSidebarPr
       icon: FileText,
       label: "DOCUMENTOS",
       id: "documentos"
+    },
+    {
+      href: "/aula-virtual/solicitudes-desbloqueo",
+      icon: Unlock,
+      label: "SOLICITUDES",
+      id: "solicitudes",
+      badge: pendientes > 0 ? pendientes : undefined
     },
     {
       href: "/aula-virtual/calendario",
@@ -137,8 +148,24 @@ export function AulaVirtualSidebar({ collapsed, onToggle }: AulaVirtualSidebarPr
               aria-current={isActive ? "page" : undefined}
               title={collapsed ? item.label : undefined}
               >
-              <item.icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-              {!collapsed && <span>{item.label}</span>}
+              <div className="relative">
+                <item.icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                {item.badge && collapsed && (
+                  <Badge variant="destructive" className="absolute -top-2 -right-2 h-4 w-4 p-0 text-xs flex items-center justify-center">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </Badge>
+                )}
+              </div>
+              {!collapsed && (
+                <span className="flex-1 flex items-center justify-between">
+                  {item.label}
+                  {item.badge && (
+                    <Badge variant="destructive" className="ml-2 h-5 min-w-[1.25rem] px-1 text-xs">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </Badge>
+                  )}
+                </span>
+              )}
             </Link>
           );
         })}

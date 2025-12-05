@@ -34,6 +34,7 @@ const crearParaSeccion = async (notificacionData) => {
 };
 
 // Obtener notificaciones para un scouter basado en su sección
+// IMPORTANTE: Filtra automáticamente notificaciones de documentos ya aprobados
 const findBySeccionId = async (seccionId, options = {}) => {
   try {
     let sql = `
@@ -44,7 +45,15 @@ const findBySeccionId = async (seccionId, options = {}) => {
       FROM notificaciones_scouter ns
       LEFT JOIN educandos e ON ns.educando_id = e.id
       LEFT JOIN secciones s ON ns.seccion_id = s.id
+      LEFT JOIN documentos_familia df ON (ns.metadata->>'documento_id')::int = df.id
       WHERE ns.seccion_id = $1
+        AND (
+          -- Incluir si no es notificación de documento
+          ns.tipo != 'documento_pendiente'
+          OR ns.metadata->>'documento_id' IS NULL
+          -- O si el documento todavía está pendiente
+          OR (df.estado = 'pendiente_revision' OR df.estado_revision = 'pendiente')
+        )
     `;
     const params = [seccionId];
     let paramIndex = 2;
@@ -108,6 +117,7 @@ const findByScouterId = async (scouterId, options = {}) => {
 };
 
 // Obtener todas las notificaciones (para admins)
+// IMPORTANTE: Filtra automáticamente notificaciones de documentos ya aprobados
 const findAll = async (options = {}) => {
   try {
     let sql = `
@@ -118,7 +128,14 @@ const findAll = async (options = {}) => {
       FROM notificaciones_scouter ns
       LEFT JOIN educandos e ON ns.educando_id = e.id
       LEFT JOIN secciones s ON ns.seccion_id = s.id
-      WHERE 1=1
+      LEFT JOIN documentos_familia df ON (ns.metadata->>'documento_id')::int = df.id
+      WHERE (
+        -- Incluir si no es notificación de documento
+        ns.tipo != 'documento_pendiente'
+        OR ns.metadata->>'documento_id' IS NULL
+        -- O si el documento todavía está pendiente
+        OR (df.estado = 'pendiente_revision' OR df.estado_revision = 'pendiente')
+      )
     `;
     const params = [];
     let paramIndex = 1;
@@ -186,12 +203,22 @@ const findById = async (id) => {
 };
 
 // Contar no leídas por sección
+// IMPORTANTE: Filtra automáticamente notificaciones de documentos ya aprobados
 const contarNoLeidasPorSeccion = async (seccionId) => {
   try {
     const result = await query(`
       SELECT COUNT(*) as count
-      FROM notificaciones_scouter
-      WHERE seccion_id = $1 AND leida = false
+      FROM notificaciones_scouter ns
+      LEFT JOIN documentos_familia df ON (ns.metadata->>'documento_id')::int = df.id
+      WHERE ns.seccion_id = $1
+        AND ns.leida = false
+        AND (
+          -- Incluir si no es notificación de documento
+          ns.tipo != 'documento_pendiente'
+          OR ns.metadata->>'documento_id' IS NULL
+          -- O si el documento todavía está pendiente
+          OR (df.estado = 'pendiente_revision' OR df.estado_revision = 'pendiente')
+        )
     `, [seccionId]);
 
     return parseInt(result[0].count);

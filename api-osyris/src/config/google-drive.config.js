@@ -19,6 +19,13 @@ const DRIVE_CONFIG = {
   // ID de la carpeta de plantillas "1. Documentos digitales"
   TEMPLATES_FOLDER_ID: process.env.GOOGLE_DRIVE_TEMPLATES_FOLDER_ID || '',
 
+  // ID de la carpeta para documentos pendientes de revisión
+  // Los documentos se suben aquí primero, y se mueven a la carpeta del educando cuando se aprueban
+  PENDIENTES_FOLDER_ID: process.env.GOOGLE_DRIVE_PENDIENTES_FOLDER_ID || '',
+
+  // Nombre de la carpeta de pendientes (se crea automáticamente si no existe)
+  PENDIENTES_FOLDER_NAME: 'PENDIENTES_REVISION',
+
   // Mapeo de secciones a IDs de carpetas en Drive
   // Nota: "lobatos" y "manada" apuntan a la misma carpeta
   SECCIONES_FOLDER_IDS: {
@@ -48,7 +55,7 @@ const DRIVE_CONFIG = {
     },
     sip: {
       prefijo: 'A02',
-      prefijosAlternativos: ['SIP', 'A02_SIP'],
+      prefijosAlternativos: ['SIP', 'A02_SIP', 'D02_SIP'],  // D02_SIP agregado para archivos legacy
       palabrasClave: ['sip', 'tarjetasanitaria'],
       exclusiones: ['ficha', 'sanitaria'],  // Evitar confusión con ficha_sanitaria
       nombre: 'SIP (Tarjeta Sanitaria)',

@@ -478,6 +478,123 @@ const deleteFile = async (fileId) => {
 };
 
 /**
+ * Obtiene o crea la carpeta de "Pendientes de Revisión"
+ * Esta carpeta almacena documentos temporalmente hasta que el scouter los apruebe
+ */
+const getOrCreatePendientesFolder = async () => {
+  const drive = await initializeDriveClient();
+
+  // Si ya tenemos el ID configurado, verificar que existe
+  if (DRIVE_CONFIG.PENDIENTES_FOLDER_ID) {
+    try {
+      const response = await drive.files.get({
+        fileId: DRIVE_CONFIG.PENDIENTES_FOLDER_ID,
+        fields: 'id, name'
+      });
+      console.log(`✅ Usando carpeta pendientes existente: ${response.data.name}`);
+      return response.data;
+    } catch (error) {
+      console.log(`⚠️ Carpeta pendientes configurada no existe, creando nueva...`);
+    }
+  }
+
+  // Buscar si ya existe la carpeta
+  const folderName = DRIVE_CONFIG.PENDIENTES_FOLDER_NAME;
+  const existingFolder = await findFolderByName(folderName, DRIVE_CONFIG.ROOT_FOLDER_ID);
+
+  if (existingFolder) {
+    console.log(`✅ Carpeta pendientes encontrada: ${existingFolder.id}`);
+    return existingFolder;
+  }
+
+  // Crear la carpeta si no existe
+  const newFolder = await createFolder(folderName, DRIVE_CONFIG.ROOT_FOLDER_ID);
+  console.log(`📁 Carpeta pendientes creada: ${newFolder.id}`);
+
+  // IMPORTANTE: Mostrar mensaje para que el admin guarde el ID
+  console.log(`\n⚠️ IMPORTANTE: Añade este ID a tu .env:`);
+  console.log(`   GOOGLE_DRIVE_PENDIENTES_FOLDER_ID=${newFolder.id}\n`);
+
+  return newFolder;
+};
+
+/**
+ * Mueve un archivo de una carpeta a otra en Google Drive
+ * Usa OAuth2 ya que el archivo fue subido con OAuth
+ */
+const moveFileToFolder = async (fileId, newFolderId) => {
+  const drive = await getOAuthDriveClient();
+
+  // Obtener el archivo para conocer sus padres actuales
+  const file = await drive.files.get({
+    fileId: fileId,
+    fields: 'id, name, parents'
+  });
+
+  const previousParents = file.data.parents ? file.data.parents.join(',') : '';
+
+  // Mover el archivo
+  const response = await drive.files.update({
+    fileId: fileId,
+    addParents: newFolderId,
+    removeParents: previousParents,
+    fields: 'id, name, parents, webViewLink'
+  });
+
+  console.log(`📦 Archivo movido: ${file.data.name} → carpeta ${newFolderId}`);
+  return response.data;
+};
+
+/**
+ * Sube un documento a la carpeta de PENDIENTES (no a la carpeta definitiva)
+ * El documento se moverá a la carpeta del educando cuando sea aprobado
+ */
+const uploadDocumentToPendientes = async (fileName, fileBuffer, mimeType, metadata = {}) => {
+  // Obtener carpeta de pendientes
+  const pendientesFolder = await getOrCreatePendientesFolder();
+
+  // Usar OAuth2 para uploads
+  const drive = await getOAuthDriveClient();
+
+  // Crear stream desde buffer
+  const bufferStream = new stream.PassThrough();
+  bufferStream.end(fileBuffer);
+
+  // Añadir metadata al nombre para identificación (educandoId_tipo_fecha)
+  const timestampedFileName = fileName;
+
+  const fileMetadata = {
+    name: timestampedFileName,
+    parents: [pendientesFolder.id],
+    // Añadir propiedades personalizadas para rastreo
+    appProperties: {
+      educandoId: metadata.educandoId?.toString() || '',
+      tipoDocumento: metadata.tipoDocumento || '',
+      familiarId: metadata.familiarId?.toString() || '',
+      uploadDate: new Date().toISOString()
+    }
+  };
+
+  const media = {
+    mimeType: mimeType,
+    body: bufferStream
+  };
+
+  const response = await drive.files.create({
+    resource: fileMetadata,
+    media: media,
+    fields: 'id, name, webViewLink, size, parents'
+  });
+
+  console.log(`📄 Archivo subido a PENDIENTES: ${fileName} (ID: ${response.data.id})`);
+  return {
+    ...response.data,
+    isPending: true,
+    pendientesFolderId: pendientesFolder.id
+  };
+};
+
+/**
  * Busca documentos de un educando por tipo (usando prefijo)
  */
 const findDocumentByType = async (educandoFolderId, tipoDocumento, nombreEducando) => {
@@ -498,7 +615,7 @@ const findDocumentByType = async (educandoFolderId, tipoDocumento, nombreEducand
 
 /**
  * Detecta el tipo de documento basándose en el nombre del archivo
- * NUEVO FLUJO: Primero prefijos, luego palabras clave
+ * NUEVO FLUJO: Primero prefijos (ordenados por longitud), luego palabras clave
  * @returns {string|null} - El tipo de documento o null si no se identifica
  */
 const detectarTipoDocumento = (nombreArchivo) => {
@@ -507,36 +624,51 @@ const detectarTipoDocumento = (nombreArchivo) => {
 
   console.log(`🔍 Analizando archivo: "${nombreArchivo}"`);
 
-  // FASE 1: Detección por PREFIJO (máxima prioridad)
+  // FASE 1: Recolectar TODOS los prefijos de todos los tipos
+  // y ordenarlos por longitud (más específicos primero)
+  const todosPrefijos = [];
+
   for (const [tipo, config] of Object.entries(DRIVE_CONFIG.TIPOS_DOCUMENTO)) {
     const prefijo = config.prefijo.toUpperCase();
     const prefijosAlternativos = config.prefijosAlternativos || [];
 
-    // Verificar prefijos alternativos primero
+    // Agregar prefijos alternativos
     for (const altPrefijo of prefijosAlternativos) {
-      const altPrefijoUpper = altPrefijo.toUpperCase();
-      if (nombrePartes.startsWith(`${altPrefijoUpper}_`) ||
-          nombrePartes.startsWith(`${altPrefijoUpper}-`) ||
-          nombrePartes.startsWith(`${altPrefijoUpper} `) ||
-          nombrePartes.startsWith(`${altPrefijoUpper}.`)) {
-        console.log(`   ✅ Detectado por prefijo alternativo "${altPrefijo}" → ${tipo}`);
-        return tipo;
-      }
+      todosPrefijos.push({
+        prefijo: altPrefijo.toUpperCase(),
+        tipo,
+        esAlternativo: true,
+        nombreArchivoConfig: config.nombreArchivo?.toUpperCase()
+      });
     }
 
-    // Verificar prefijo principal
+    // Agregar prefijo principal
+    todosPrefijos.push({
+      prefijo,
+      tipo,
+      esAlternativo: false,
+      nombreArchivoConfig: config.nombreArchivo?.toUpperCase()
+    });
+  }
+
+  // Ordenar por longitud del prefijo (más largos primero)
+  todosPrefijos.sort((a, b) => b.prefijo.length - a.prefijo.length);
+
+  // FASE 1: Detección por PREFIJO (ordenados por especificidad)
+  for (const { prefijo, tipo, esAlternativo, nombreArchivoConfig } of todosPrefijos) {
     if (nombrePartes.startsWith(`${prefijo}_`) ||
         nombrePartes.startsWith(`${prefijo}-`) ||
-        nombrePartes.startsWith(`${prefijo} `)) {
+        nombrePartes.startsWith(`${prefijo} `) ||
+        nombrePartes.startsWith(`${prefijo}.`)) {
       // Para prefijos compartidos (A02), necesitamos verificar nombreArchivo
-      if (prefijo === 'A02') {
-        const nombreArchivoConfig = config.nombreArchivo?.toUpperCase();
+      if (prefijo === 'A02' && !esAlternativo) {
         if (nombreArchivoConfig && nombrePartes.includes(nombreArchivoConfig)) {
           console.log(`   ✅ Detectado por prefijo compartido "${prefijo}" + "${nombreArchivoConfig}" → ${tipo}`);
           return tipo;
         }
       } else {
-        console.log(`   ✅ Detectado por prefijo principal "${prefijo}" → ${tipo}`);
+        const tipoPrefijo = esAlternativo ? 'alternativo' : 'principal';
+        console.log(`   ✅ Detectado por prefijo ${tipoPrefijo} "${prefijo}" → ${tipo}`);
         return tipo;
       }
     }
@@ -646,27 +778,49 @@ const checkDocumentStatus = async (educandoFolderId, nombreEducando, edadEducand
 
     // Determinar estado final considerando BD
     let estadoFinal = 'faltante';
-    if (encontrado) {
-      // Buscar en BD si este documento tiene estado pendiente_revision
-      const docBD = documentosBD.find(d =>
-        d.google_drive_file_id === encontrado.id ||
-        d.tipo_documento === tipo
-      );
 
-      if (docBD) {
-        if (docBD.estado_revision === 'pendiente' || docBD.estado === 'pendiente_revision') {
-          estadoFinal = 'pendiente_revision';
-        } else if (docBD.estado_revision === 'aprobado' || docBD.estado === 'vigente') {
-          estadoFinal = 'subido';
-        } else if (docBD.estado_revision === 'rechazado' || docBD.estado === 'rechazado') {
-          estadoFinal = 'rechazado';
-        } else {
-          estadoFinal = 'subido';
-        }
-      } else {
-        estadoFinal = 'subido';
+    // Buscar en BD el documento por tipo (independiente de si existe en Drive)
+    const docBD = documentosBD.find(d => d.tipo_documento === tipo);
+
+    if (docBD && docBD.google_drive_file_id) {
+      // CASO 1: Documento PENDIENTE DE REVISIÓN
+      // El archivo está en carpeta PENDIENTES, no en la del educando
+      // Confiamos en la BD sin verificar Drive (el archivo está en otra carpeta)
+      if (docBD.estado_revision === 'pendiente' || docBD.estado === 'pendiente_revision') {
+        estadoFinal = 'pendiente_revision';
+        console.log(`📋 Documento ${tipo}: En revisión (archivo en PENDIENTES)`);
       }
+      // CASO 2: Documento APROBADO/VIGENTE
+      // El archivo debería estar en la carpeta del educando - verificar que existe
+      else if (docBD.estado_revision === 'aprobado' || docBD.estado === 'vigente') {
+        const fileIdCoincide = encontrado && encontrado.id === docBD.google_drive_file_id;
+        if (fileIdCoincide) {
+          estadoFinal = 'subido';
+        } else if (encontrado) {
+          // NUEVO: El archivo existe en Drive con el tipo correcto, aunque el file_id difiera
+          // Esto ocurre cuando el archivo fue movido/reemplazado manualmente
+          // Aceptar el archivo existente como válido
+          console.log(`ℹ️ Documento ${tipo}: file_id difiere (BD: ${docBD.google_drive_file_id}, Drive: ${encontrado.id}) - aceptando archivo existente`);
+          estadoFinal = 'subido';
+        } else {
+          // El archivo aprobado fue eliminado de Drive y no hay reemplazo
+          console.log(`⚠️ Documento ${tipo}: BD dice aprobado con file_id=${docBD.google_drive_file_id} pero en Drive no existe`);
+          estadoFinal = 'faltante';
+        }
+      }
+      // CASO 3: Documento RECHAZADO
+      else if (docBD.estado_revision === 'rechazado' || docBD.estado === 'rechazado') {
+        estadoFinal = 'rechazado';
+      }
+      // CASO 4: Otro estado en BD
+      else {
+        estadoFinal = encontrado ? 'subido' : 'faltante';
+      }
+    } else if (encontrado) {
+      // Archivo existe en Drive pero NO tiene registro en BD (archivo antiguo/manual)
+      estadoFinal = 'subido';
     }
+    // Si no hay nada en BD ni en Drive, estadoFinal permanece como 'faltante'
 
     status[tipo] = {
       tipo,
@@ -722,10 +876,42 @@ const getEducandoFolderStructure = async (seccionSlug, anioNacimiento, nombreEdu
 };
 
 /**
- * Descarga el contenido de un archivo de Drive usando Service Account
- * Permite acceder sin requerir login del usuario final
+ * Descarga el contenido de un archivo para previsualización
+ * Intenta primero con OAuth (para archivos subidos por usuarios)
+ * Si falla, intenta con Service Account (para archivos legacy)
  */
 const downloadFileContent = async (fileId) => {
+  // Primero intentar con OAuth (la mayoría de archivos son subidos con OAuth)
+  try {
+    if (hasValidTokens()) {
+      const oauthDrive = await getOAuthDriveClient();
+
+      // Obtener metadata del archivo
+      const fileInfo = await oauthDrive.files.get({
+        fileId: fileId,
+        fields: 'id, name, mimeType, size'
+      });
+
+      // Descargar el contenido como buffer
+      const response = await oauthDrive.files.get({
+        fileId: fileId,
+        alt: 'media'
+      }, {
+        responseType: 'arraybuffer'
+      });
+
+      return {
+        data: Buffer.from(response.data),
+        mimeType: fileInfo.data.mimeType,
+        fileName: fileInfo.data.name,
+        size: parseInt(fileInfo.data.size || '0')
+      };
+    }
+  } catch (oauthError) {
+    console.log('OAuth download falló, intentando Service Account:', oauthError.message);
+  }
+
+  // Fallback: intentar con Service Account (archivos legacy o compartidos)
   const drive = await initializeDriveClient();
 
   // Obtener metadata del archivo
@@ -767,5 +953,10 @@ module.exports = {
   getDocumentFileName,
   getTipoDocumentoConfig,
   downloadFileContent,
+  detectarTipoDocumento,  // Exportado para uso en controladores
+  // Funciones para flujo de aprobación con carpeta Pendientes
+  getOrCreatePendientesFolder,
+  moveFileToFolder,
+  uploadDocumentToPendientes,
   DRIVE_CONFIG
 };
