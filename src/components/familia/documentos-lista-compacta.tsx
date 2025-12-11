@@ -1,10 +1,17 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import {
   FileText,
   Heart,
@@ -74,6 +81,64 @@ export function DocumentosListaCompacta({
   const [verDetalles, setVerDetalles] = useState(!compact)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedDoc, setSelectedDoc] = useState<{ name: string; webViewLink?: string } | null>(null)
+  const [plantillasModalOpen, setPlantillasModalOpen] = useState(false)
+  const [plantillasDescargadas, setPlantillasDescargadas] = useState<Set<string>>(new Set())
+
+  // Cargar plantillas descargadas desde localStorage al montar
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('plantillas_descargadas')
+      if (saved) {
+        try {
+          setPlantillasDescargadas(new Set(JSON.parse(saved)))
+        } catch {
+          // Si hay error al parsear, ignorar
+        }
+      }
+    }
+  }, [])
+
+  // Marcar plantilla como descargada
+  const marcarPlantillaDescargada = (tipoDocumento: string) => {
+    const nuevas = new Set(plantillasDescargadas)
+    nuevas.add(tipoDocumento)
+    setPlantillasDescargadas(nuevas)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('plantillas_descargadas', JSON.stringify([...nuevas]))
+    }
+  }
+
+  // Nombres amigables para las plantillas
+  const getNombrePlantilla = (tipo: string): string => {
+    switch (tipo) {
+      case 'ficha_inscripcion':
+        return 'Ficha de Inscripción'
+      case 'ficha_sanitaria':
+        return 'Ficha Sanitaria'
+      case 'regresar_solo':
+        return 'Autorización Regresar Solo'
+      case 'autorizacion_whatsapp':
+        return 'Autorización Grupos WhatsApp'
+      default:
+        return 'Documento'
+    }
+  }
+
+  // Descripciones de cada tipo de plantilla
+  const getDescripcionPlantilla = (tipo: string): string => {
+    switch (tipo) {
+      case 'ficha_inscripcion':
+        return 'Formulario de inscripción al grupo scout'
+      case 'ficha_sanitaria':
+        return 'Información médica y de salud del educando'
+      case 'regresar_solo':
+        return 'Autorización para que el educando regrese solo a casa'
+      case 'autorizacion_whatsapp':
+        return 'Consentimiento para grupos de WhatsApp'
+      default:
+        return 'Documento requerido'
+    }
+  }
 
   // Si no hay hijo seleccionado
   if (!hijo) {
@@ -138,22 +203,32 @@ export function DocumentosListaCompacta({
   // Obtener lista de documentos desde status
   const documentosList = status ? Object.entries(status) : []
 
-  // Función para encontrar plantilla para un tipo
-  const getPlantillaForTipo = (tipo: string): Plantilla | undefined => {
-    return plantillas.find(p => p.tipoDocumento === tipo)
-  }
-
   return (
     <Card className={className}>
       <CardHeader>
-        <div>
-          <CardTitle className="flex items-center space-x-2">
-            <FileText className="h-5 w-5" />
-            <span>Documentos de {hijo.nombre}</span>
-          </CardTitle>
-          <CardDescription className="mt-1">
-            {documentosCompletos}/{totalDocumentos} documentos completos
-          </CardDescription>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="flex items-center space-x-2">
+              <FileText className="h-5 w-5" />
+              <span>Documentos de {hijo.nombre}</span>
+            </CardTitle>
+            <CardDescription className="mt-1">
+              {documentosCompletos}/{totalDocumentos} documentos completos
+            </CardDescription>
+          </div>
+
+          {/* Botón Plantillas - abre modal */}
+          {plantillas && plantillas.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPlantillasModalOpen(true)}
+              className="border-amber-500 text-amber-600 hover:bg-amber-50"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Plantillas
+            </Button>
+          )}
         </div>
 
         {/* Barra de progreso */}
@@ -204,7 +279,6 @@ export function DocumentosListaCompacta({
             // El backend ya filtra DOC08/DOC09 según la edad - si aparecen aquí es porque aplican
             documentosList
               .map(([tipo, doc]) => {
-                const plantilla = getPlantillaForTipo(tipo)
                 // Estados: 'subido' = aprobado/verde, 'pendiente_revision' = amarillo, otro = faltante/rojo
                 const estaSubido = doc.estado === 'subido'
                 const enRevision = doc.estado === 'pendiente_revision'
@@ -298,19 +372,6 @@ export function DocumentosListaCompacta({
                         </Button>
                       )}
 
-                      {/* Botón descargar plantilla si no tiene documento y tiene plantilla */}
-                      {!tienDocumento && doc.tienePlantilla && plantilla && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onDownloadPlantilla?.(plantilla.id, plantilla.name)}
-                          className="border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600"
-                        >
-                          <Download className="h-3 w-3 mr-1" />
-                          Plantilla
-                        </Button>
-                      )}
-
                       {/* Botón subir - solo si no tiene documento */}
                       {!tienDocumento && (
                         <Button
@@ -349,6 +410,67 @@ export function DocumentosListaCompacta({
           onClose={() => setModalOpen(false)}
           documento={selectedDoc}
         />
+
+        {/* Modal de Plantillas */}
+        <Dialog open={plantillasModalOpen} onOpenChange={setPlantillasModalOpen}>
+          <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Download className="h-5 w-5 text-amber-600" />
+                Plantillas Disponibles
+              </DialogTitle>
+              <DialogDescription>
+                Descarga las plantillas, rellénalas y súbelas completadas
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-5 mt-6">
+              {plantillas?.filter(p => {
+                // Solo mostrar plantillas de documentos que aplican a este educando
+                // El backend ya filtra DOC08/DOC09 según la edad del educando
+                return documentosList.some(([tipo]) => tipo === p.tipoDocumento)
+              }).map((plantilla) => {
+                const yaDescargada = plantillasDescargadas.has(plantilla.tipoDocumento)
+                return (
+                  <div
+                    key={plantilla.id}
+                    className={`flex items-center justify-between p-5 rounded-xl border transition-colors ${
+                      yaDescargada
+                        ? 'bg-green-50/50 border-green-200'
+                        : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex-1 mr-6">
+                      <div className="flex items-center gap-3">
+                        <p className="font-semibold text-base">{getNombrePlantilla(plantilla.tipoDocumento)}</p>
+                        {yaDescargada && (
+                          <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-100 px-2.5 py-1 rounded-full">
+                            <CheckCircle className="h-3 w-3" />
+                            Descargada
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {getDescripcionPlantilla(plantilla.tipoDocumento)}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        onDownloadPlantilla?.(plantilla.id, plantilla.name)
+                        marcarPlantillaDescargada(plantilla.tipoDocumento)
+                      }}
+                      className="border-amber-500 text-amber-600 hover:bg-amber-50 flex-shrink-0 px-4 py-2"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      {yaDescargada ? 'Descargar de nuevo' : 'Descargar'}
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   )
