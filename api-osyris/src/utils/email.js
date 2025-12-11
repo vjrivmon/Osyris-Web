@@ -728,6 +728,188 @@ ${CONTACT.web}
   }
 }
 
+/**
+ * Email de notificación de nuevo mensaje de contacto (para admin)
+ */
+async function sendContactNotification(data) {
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.log(`📧 [MODO DEMO] Notificación de contacto de ${data.email}`);
+    return;
+  }
+
+  const { nombre, email, asunto, mensaje } = data;
+  const fecha = new Date().toLocaleString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const content = `
+    <div class="greeting">Nuevo mensaje de contacto</div>
+
+    <p class="text">
+      Has recibido un nuevo mensaje desde el formulario de contacto de la web:
+    </p>
+
+    <div class="info-card">
+      <div class="info-row">
+        <span class="info-label">Nombre:</span> ${nombre}
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email:</span> <a href="mailto:${email}">${email}</a>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Asunto:</span> ${asunto}
+      </div>
+      <div class="info-row">
+        <span class="info-label">Fecha:</span> ${fecha}
+      </div>
+    </div>
+
+    <div class="success-box" style="background: #f0f6ff; border-left-color: ${COLORS.primary}; color: ${COLORS.text};">
+      <strong>Mensaje:</strong><br><br>
+      ${mensaje.replace(/\n/g, '<br>')}
+    </div>
+
+    <div class="button-container">
+      <a href="mailto:${email}?subject=Re: ${asunto}" class="button">Responder</a>
+    </div>
+
+    <p class="note">
+      <a href="https://docs.google.com/spreadsheets/d/1RrbFtyUbkOVbuusTxZkC34zZ1EqqWnMwSuugTsA8tVM/edit">Ver todos los mensajes en Google Sheets</a>
+    </p>
+  `;
+
+  const mailOptions = {
+    from: { name: 'Web Grupo Scout Osyris', address: process.env.EMAIL_USER },
+    to: CONTACT.email,
+    replyTo: email,
+    subject: `[Nuevo Mensaje Web] ${asunto}`,
+    html: getEmailTemplate('Nuevo Mensaje', 'Formulario de Contacto', content),
+    text: `
+Nuevo mensaje de contacto
+
+Nombre: ${nombre}
+Email: ${email}
+Asunto: ${asunto}
+Fecha: ${fecha}
+
+Mensaje:
+${mensaje}
+
+---
+Responder a: ${email}
+Ver todos los mensajes: https://docs.google.com/spreadsheets/d/1RrbFtyUbkOVbuusTxZkC34zZ1EqqWnMwSuugTsA8tVM
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Notificación de contacto enviada a ${CONTACT.email}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error enviando notificación de contacto:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Email de confirmación al usuario que envía el mensaje
+ */
+async function sendContactConfirmation(data) {
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.log(`📧 [MODO DEMO] Confirmación de contacto para ${data.email}`);
+    return;
+  }
+
+  const { nombre, email, asunto, mensaje } = data;
+  const fecha = new Date().toLocaleString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const content = `
+    <div class="greeting">¡Hola ${nombre}!</div>
+
+    <div class="success-box">
+      Hemos recibido tu mensaje correctamente.
+    </div>
+
+    <p class="text">
+      Gracias por contactar con el <strong>Grupo Scout Osyris</strong>.
+      Te responderemos lo antes posible.
+    </p>
+
+    <div class="info-card">
+      <div class="info-row">
+        <span class="info-label">Asunto:</span> ${asunto}
+      </div>
+      <div class="info-row">
+        <span class="info-label">Fecha:</span> ${fecha}
+      </div>
+    </div>
+
+    <div class="success-box" style="background: #f0f6ff; border-left-color: ${COLORS.primary}; color: ${COLORS.text};">
+      <strong>Tu mensaje:</strong><br><br>
+      ${mensaje.replace(/\n/g, '<br>')}
+    </div>
+
+    <p class="text" style="font-size: 14px; color: ${COLORS.textLight};">
+      Si necesitas contactarnos con urgencia, puedes llamarnos al
+      <a href="tel:${CONTACT.phoneLink}">${CONTACT.phone}</a> o
+      escribirnos a <a href="mailto:${CONTACT.email}">${CONTACT.email}</a>.
+    </p>
+  `;
+
+  const mailOptions = {
+    from: { name: 'Grupo Scout Osyris', address: process.env.EMAIL_USER },
+    to: email,
+    subject: 'Hemos recibido tu mensaje - Grupo Scout Osyris',
+    html: getEmailTemplate('Grupo Scout Osyris', 'Mensaje recibido', content),
+    text: `
+¡Hola ${nombre}!
+
+Hemos recibido tu mensaje correctamente.
+
+Gracias por contactar con el Grupo Scout Osyris.
+Te responderemos lo antes posible.
+
+Resumen de tu consulta:
+- Asunto: ${asunto}
+- Fecha: ${fecha}
+
+Tu mensaje:
+${mensaje}
+
+Si necesitas contactarnos con urgencia:
+- Teléfono: ${CONTACT.phone}
+- Email: ${CONTACT.email}
+
+---
+Grupo Scout Osyris
+${CONTACT.web}
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Confirmación de contacto enviada a ${email}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error enviando confirmación de contacto a ${email}:`, error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendInvitationEmail,
   sendWelcomeEmail,
@@ -735,5 +917,7 @@ module.exports = {
   sendDesvinculacionEmail,
   sendPasswordResetEmail,
   sendPasswordChangedEmail,
+  sendContactNotification,
+  sendContactConfirmation,
   verifyEmailConfig
 };

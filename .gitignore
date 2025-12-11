@@ -145,3 +145,7 @@ yarn.lock
 !.gitkeep
 !.github/
 !.nojekyll
+
+# Archivos temporales
+*.xlsx
+.playwright-mcp/

@@ -8,9 +8,29 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { StaticText } from "@/components/ui/static-content"
-import { MapPin, Mail, Phone, Send } from "lucide-react"
+import { MapPin, Mail, Phone, Send, Loader2, CheckCircle, AlertCircle } from "lucide-react"
+import { useContactForm } from "@/hooks/useContactForm"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function ContactoPage() {
+  const {
+    formData,
+    errors,
+    isLoading,
+    isSuccess,
+    isError,
+    errorMessage,
+    successMessage,
+    handleChange,
+    handleSubmit,
+    resetForm
+  } = useContactForm();
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSubmit();
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -91,7 +111,7 @@ export default function ContactoPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="rounded-lg overflow-hidden border h-48 sm:h-56 md:h-64">
                         <iframe
                           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3079.6536087335247!2d-0.3661111!3d39.4812222!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd604f53c3913ebf%3A0x7fb0a7e3e5c2ae9a!2sCalle%20Poeta%20Ricard%20Sanmart%C3%AD%2C%203%2C%2046020%20Valencia!5e0!3m2!1ses!2ses!4v1653923456789!5m2!1ses!2ses"
@@ -168,30 +188,125 @@ export default function ContactoPage() {
                       <StaticText content="Rellena el formulario y te responderemos lo antes posible." tag="span" />
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nombre</Label>
-                      <Input id="name" placeholder="Tu nombre" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="tu@email.com" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="subject">Asunto</Label>
-                      <Input id="subject" placeholder="Asunto del mensaje" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="message">Mensaje</Label>
-                      <Textarea id="message" placeholder="Escribe tu mensaje aquí..." className="min-h-[150px]" />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full">
-                      <Send className="mr-2 h-4 w-4" />
-                      Enviar mensaje
-                    </Button>
-                  </CardFooter>
+
+                  <form onSubmit={onSubmit}>
+                    <CardContent className="space-y-4">
+                      {/* Mensaje de éxito */}
+                      {isSuccess && (
+                        <Alert className="bg-green-50 border-green-200">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <AlertDescription className="text-green-700">
+                            {successMessage}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {/* Mensaje de error */}
+                      {isError && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            {errorMessage}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label htmlFor="nombre">Nombre</Label>
+                        <Input
+                          id="nombre"
+                          placeholder="Tu nombre"
+                          value={formData.nombre}
+                          onChange={(e) => handleChange('nombre', e.target.value)}
+                          disabled={isLoading}
+                          className={errors.nombre ? 'border-red-500' : ''}
+                        />
+                        {errors.nombre && (
+                          <p className="text-sm text-red-500">{errors.nombre}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="tu@email.com"
+                          value={formData.email}
+                          onChange={(e) => handleChange('email', e.target.value)}
+                          disabled={isLoading}
+                          className={errors.email ? 'border-red-500' : ''}
+                        />
+                        {errors.email && (
+                          <p className="text-sm text-red-500">{errors.email}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="asunto">Asunto</Label>
+                        <Input
+                          id="asunto"
+                          placeholder="Asunto del mensaje"
+                          value={formData.asunto}
+                          onChange={(e) => handleChange('asunto', e.target.value)}
+                          disabled={isLoading}
+                          className={errors.asunto ? 'border-red-500' : ''}
+                        />
+                        {errors.asunto && (
+                          <p className="text-sm text-red-500">{errors.asunto}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="mensaje">Mensaje</Label>
+                        <Textarea
+                          id="mensaje"
+                          placeholder="Escribe tu mensaje aquí..."
+                          className={`min-h-[150px] ${errors.mensaje ? 'border-red-500' : ''}`}
+                          value={formData.mensaje}
+                          onChange={(e) => handleChange('mensaje', e.target.value)}
+                          disabled={isLoading}
+                        />
+                        {errors.mensaje && (
+                          <p className="text-sm text-red-500">{errors.mensaje}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground text-right">
+                          {formData.mensaje.length}/5000 caracteres
+                        </p>
+                      </div>
+                    </CardContent>
+
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-4 w-4" />
+                            Enviar mensaje
+                          </>
+                        )}
+                      </Button>
+
+                      {isSuccess && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={resetForm}
+                        >
+                          Enviar otro mensaje
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </form>
                 </Card>
               </div>
             </div>

@@ -26,6 +26,9 @@ DATE=$(date +%Y%m%d_%H%M%S)
 EMAIL_USER="web.osyris@gmail.com"
 EMAIL_APP_PASSWORD="enzniccveckagazn"
 
+# Google Sheets para formulario de contacto
+GOOGLE_SHEETS_CONTACTO_ID="1RrbFtyUbkOVbuusTxZkC34zZ1EqqWnMwSuugTsA8tVM"
+
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${CYAN}📧 Configuración Automática de Gmail en Producción${NC}"
 echo -e "${CYAN}Grupo Scout Osyris - Sistema de Gestión${NC}"
@@ -57,6 +60,17 @@ else
     echo "EMAIL_USER=$EMAIL_USER" >> "$ENV_PATH"
     echo "EMAIL_APP_PASSWORD=$EMAIL_APP_PASSWORD" >> "$ENV_PATH"
     echo "✅ Variables de email añadidas"
+fi
+
+# Añadir Google Sheets ID para formulario de contacto
+if grep -q "^GOOGLE_SHEETS_CONTACTO_ID=" "$ENV_PATH" 2>/dev/null; then
+    sed -i "s|^GOOGLE_SHEETS_CONTACTO_ID=.*|GOOGLE_SHEETS_CONTACTO_ID=$GOOGLE_SHEETS_CONTACTO_ID|" "$ENV_PATH"
+    echo "✅ Variable de Google Sheets actualizada"
+else
+    echo "" >> "$ENV_PATH"
+    echo "# Google Sheets - Formulario de Contacto" >> "$ENV_PATH"
+    echo "GOOGLE_SHEETS_CONTACTO_ID=$GOOGLE_SHEETS_CONTACTO_ID" >> "$ENV_PATH"
+    echo "✅ Variable de Google Sheets añadida"
 fi
 
 # Verificar que las variables están correctamente configuradas
