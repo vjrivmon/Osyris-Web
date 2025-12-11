@@ -20,8 +20,8 @@ El sistema de envío de correos mediante Gmail dejaba de funcionar después de c
    - Se requiere `pm2 delete` + `pm2 start` para forzar recarga
 
 4. **Contraseña de aplicación con espacios**
-   - La contraseña original `ukxq ohpt bomn bavm` causaba problemas
-   - Se eliminaron los espacios: `ukxqohptbomnbavm`
+   - Las contraseñas de Gmail App Password se muestran con espacios
+   - Se deben copiar SIN espacios: `enzniccveckagazn`
 
 ---
 
@@ -80,8 +80,8 @@ EMAIL_APP_PASSWORD=tu-contraseña-de-aplicacion
 
 #### **`api-osyris/.env`** (local y producción)
 ```env
-EMAIL_USER=vicenterivasmonferrer12@gmail.com
-EMAIL_APP_PASSWORD=ukxqohptbomnbavm
+EMAIL_USER=web.osyris@gmail.com
+EMAIL_APP_PASSWORD=enzniccveckagazn
 ```
 
 ---
@@ -115,8 +115,8 @@ FRONTEND_URL=https://gruposcoutosyris.es
 ALLOWED_ORIGINS=https://gruposcoutosyris.es,https://www.gruposcoutosyris.es,http://116.203.98.142
 STAGING_MODE=false
 # Gmail Configuration
-EMAIL_USER=vicenterivasmonferrer12@gmail.com
-EMAIL_APP_PASSWORD=ukxqohptbomnbavm
+EMAIL_USER=web.osyris@gmail.com
+EMAIL_APP_PASSWORD=enzniccveckagazn
 PRODENV
 ```
 
@@ -134,8 +134,8 @@ Script especializado para configurar/actualizar credenciales de Gmail en producc
 # Uso: ./scripts/set-gmail-credentials-production.sh
 
 # Credenciales hardcoded para persistencia
-EMAIL_USER="vicenterivasmonferrer12@gmail.com"
-EMAIL_APP_PASSWORD="ukxqohptbomnbavm"
+EMAIL_USER="web.osyris@gmail.com"
+EMAIL_APP_PASSWORD="enzniccveckagazn"
 
 # 1. Crear backup del .env actual
 # 2. Añadir/actualizar variables EMAIL_USER y EMAIL_APP_PASSWORD
@@ -228,8 +228,8 @@ ssh root@116.203.98.142 'grep EMAIL_ /var/www/osyris/current/api-osyris/.env'
 
 **Salida esperada:**
 ```
-EMAIL_USER=vicenterivasmonferrer12@gmail.com
-EMAIL_APP_PASSWORD=ukxqohptbomnbavm
+EMAIL_USER=web.osyris@gmail.com
+EMAIL_APP_PASSWORD=enzniccveckagazn
 ```
 
 ### **2. Verificar logs del backend**
@@ -312,7 +312,7 @@ pm2 save
 1. Verificar la contraseña en Gmail:
    - Ve a https://myaccount.google.com/apppasswords
    - Genera una nueva contraseña de aplicación
-   - Copia sin espacios: `ukxqohptbomnbavm` (no `ukxq ohpt bomn bavm`)
+   - Copia sin espacios: `enzniccveckagazn` (eliminar espacios que muestra Gmail)
 
 2. Actualizar en producción:
    ```bash
@@ -390,7 +390,7 @@ grep -r "DROP TABLE\|TRUNCATE" api-osyris/src/
    - No asumir que variables previas persistirán
 
 4. **Contraseñas de aplicación de Gmail no deben tener espacios**
-   - Copiar sin espacios: `ukxqohptbomnbavm`
+   - Copiar sin espacios: `enzniccveckagazn`
    - Los espacios son solo visuales en la interfaz de Google
 
 5. **Logging es crítico para debugging**
@@ -414,8 +414,8 @@ grep -r "DROP TABLE\|TRUNCATE" api-osyris/src/
 3. **Alternativa más segura (opcional):**
    ```bash
    # En lugar de hardcodear en scripts, usar variables de entorno
-   export OSYRIS_EMAIL_USER="vicenterivasmonferrer12@gmail.com"
-   export OSYRIS_EMAIL_PASSWORD="ukxqohptbomnbavm"
+   export OSYRIS_EMAIL_USER="web.osyris@gmail.com"
+   export OSYRIS_EMAIL_PASSWORD="enzniccveckagazn"
    ./scripts/deploy-production-complete.sh
    ```
 

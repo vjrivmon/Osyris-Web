@@ -1,6 +1,7 @@
 const db = require('../config/db.config');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { sendPasswordResetEmail, sendPasswordChangedEmail } = require('../utils/email');
 
 const registrationController = {
   // Verificar token de invitación
@@ -253,9 +254,9 @@ const registrationController = {
         WHERE id = $3
       `, [resetToken, expiresAt, user[0].id]);
 
-      // TODO: Enviar email con el enlace de restablecimiento
-      console.log(`📧 Enlace de restablecimiento para ${email}:`);
-      console.log(`🔗 ${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`);
+      // Enviar email con el enlace de restablecimiento
+      await sendPasswordResetEmail(email, user[0].nombre || 'Usuario', resetToken);
+      console.log(`📧 Email de restablecimiento enviado a ${email}`);
 
       res.json({
         success: true,
@@ -283,7 +284,7 @@ const registrationController = {
       }
 
       const user = await db.query(`
-        SELECT id, email
+        SELECT id, email, nombre
         FROM usuarios
         WHERE reset_password_token = $1
         AND reset_password_expires_at > NOW()
@@ -314,6 +315,10 @@ const registrationController = {
         INSERT INTO user_activity_logs (user_id, action, description)
         VALUES ($1, 'password_reset', 'Contraseña restablecida')
       `, [user[0].id]);
+
+      // Enviar email de confirmación
+      await sendPasswordChangedEmail(user[0].email, user[0].nombre || 'Usuario');
+      console.log(`📧 Email de confirmación de cambio enviado a ${user[0].email}`);
 
       res.json({
         success: true,

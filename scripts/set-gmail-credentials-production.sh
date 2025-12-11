@@ -23,8 +23,8 @@ ENV_PATH="/var/www/osyris/current/api-osyris/.env"
 DATE=$(date +%Y%m%d_%H%M%S)
 
 # Credenciales de Gmail (hardcoded para persistencia)
-EMAIL_USER="vicenterivasmonferrer12@gmail.com"
-EMAIL_APP_PASSWORD="ukxqohptbomnbavm"
+EMAIL_USER="web.osyris@gmail.com"
+EMAIL_APP_PASSWORD="enzniccveckagazn"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${CYAN}📧 Configuración Automática de Gmail en Producción${NC}"

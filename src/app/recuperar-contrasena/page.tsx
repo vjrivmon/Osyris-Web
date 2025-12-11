@@ -30,10 +30,19 @@ export default function RecuperarContrasenaPage() {
         throw new Error("Por favor, introduce un correo electrónico válido.")
       }
 
-      // Simular API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Llamar a la API real
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/auth/request-password-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
 
-      // Simulamos éxito
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al procesar la solicitud');
+      }
+
       setSuccess(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al procesar la solicitud.")

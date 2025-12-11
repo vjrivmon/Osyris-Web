@@ -2,12 +2,43 @@ const nodemailer = require('nodemailer');
 
 /**
  * Sistema de envío de correos electrónicos para Grupo Scout Osyris
- * Utiliza Nodemailer con Gmail como proveedor
+ * Rediseño 2025: Responsive, minimalista, consistente con la web
+ * Colores: Azul Oscuro (#1a0066) + Amarillo Dorado (#fcdc4f)
  */
 
-// Configurar transporter de correo
+// ============================================
+// CONFIGURACIÓN
+// ============================================
+
+const COLORS = {
+  primary: '#1a0066',      // Azul oscuro scout
+  accent: '#fcdc4f',       // Amarillo dorado
+  text: '#1f2937',         // Gris oscuro
+  textLight: '#6b7280',    // Gris
+  background: '#f3f4f6',   // Gris claro
+  white: '#ffffff',
+  success: '#059669',      // Verde
+  warning: '#f59e0b',      // Naranja
+  error: '#dc2626',        // Rojo
+  infoBg: '#f0f6ff',       // Azul muy claro
+};
+
+const CONTACT = {
+  email: 'web.osyris@gmail.com',
+  instagram: 'https://www.instagram.com/osyris.scouts/',
+  instagramHandle: '@osyris.scouts',
+  phone: '601 037 577',
+  phoneLink: '+34601037577',
+  web: 'https://gruposcoutosyris.es',
+};
+
+const LOGO_URL = 'https://gruposcoutosyris.es/images/logo-osyris.png';
+
+// ============================================
+// TRANSPORTER
+// ============================================
+
 const createTransporter = () => {
-  // Validar que existan las credenciales
   if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
     console.warn('⚠️ Credenciales de email no configuradas. Los correos no se enviarán.');
     return null;
@@ -16,312 +47,299 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // true para 465, false para otros puertos
+    secure: false,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_APP_PASSWORD
     },
-    tls: {
-      rejectUnauthorized: false
-    },
-    connectionTimeout: 10000, // 10 segundos
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 20000
   });
 };
 
+// ============================================
+// COMPONENTES REUTILIZABLES
+// ============================================
+
 /**
- * Enviar email de invitación a un nuevo usuario
- * @param {string} email - Email del destinatario
- * @param {string} nombre - Nombre del destinatario
- * @param {string} invitationToken - Token de invitación único
- * @param {string} rol - Rol del usuario (admin, scouter, familia, educando)
- * @returns {Promise<void>}
+ * Estilos CSS base para todos los emails
+ */
+function getEmailStyles() {
+  return `
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: Arial, 'Helvetica Neue', sans-serif;
+        line-height: 1.6;
+        color: ${COLORS.text};
+        background: ${COLORS.background};
+        padding: 20px;
+        -webkit-font-smoothing: antialiased;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: ${COLORS.white};
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      .header {
+        background: ${COLORS.primary};
+        color: ${COLORS.white};
+        padding: 30px 24px;
+        text-align: center;
+      }
+      .header-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 2px solid ${COLORS.accent};
+        margin-bottom: 12px;
+      }
+      .header-title {
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+      .header-subtitle {
+        font-size: 14px;
+        color: ${COLORS.accent};
+        font-weight: 500;
+      }
+      .content {
+        padding: 32px 24px;
+      }
+      .greeting {
+        font-size: 22px;
+        font-weight: 600;
+        color: ${COLORS.primary};
+        margin-bottom: 16px;
+      }
+      .text {
+        color: ${COLORS.text};
+        font-size: 16px;
+        margin-bottom: 16px;
+        line-height: 1.7;
+      }
+      .button-container {
+        text-align: center;
+        margin: 28px 0;
+      }
+      .button {
+        display: inline-block;
+        padding: 14px 36px;
+        background: ${COLORS.accent};
+        color: ${COLORS.primary} !important;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+      }
+      .note {
+        font-size: 14px;
+        color: ${COLORS.textLight};
+        text-align: center;
+        margin: 16px 0;
+      }
+      .info-card {
+        background: ${COLORS.infoBg};
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .info-row {
+        margin-bottom: 10px;
+        font-size: 15px;
+      }
+      .info-row:last-child {
+        margin-bottom: 0;
+      }
+      .info-label {
+        font-weight: 600;
+        color: ${COLORS.primary};
+      }
+      .alert-box {
+        background: #fef3c7;
+        border-left: 3px solid ${COLORS.warning};
+        padding: 14px 16px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+        font-size: 14px;
+      }
+      .success-box {
+        background: #d1fae5;
+        border-left: 3px solid ${COLORS.success};
+        padding: 14px 16px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+        font-size: 15px;
+        color: #047857;
+      }
+      .error-box {
+        background: #fee2e2;
+        border-left: 3px solid ${COLORS.error};
+        padding: 14px 16px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+        font-size: 15px;
+      }
+      .footer {
+        background: ${COLORS.background};
+        padding: 24px;
+        text-align: center;
+        border-top: 1px solid #e5e7eb;
+      }
+      .footer-contact {
+        font-size: 14px;
+        color: ${COLORS.textLight};
+        margin-bottom: 16px;
+      }
+      .footer-contact p {
+        margin: 6px 0;
+      }
+      .footer-contact a {
+        color: ${COLORS.primary};
+        text-decoration: none;
+      }
+      .footer-copyright {
+        font-size: 12px;
+        color: ${COLORS.textLight};
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 12px;
+      }
+      .footer-copyright a {
+        color: ${COLORS.primary};
+        text-decoration: none;
+      }
+
+      /* Responsive */
+      @media only screen and (max-width: 600px) {
+        body { padding: 10px; }
+        .container { border-radius: 8px; }
+        .header { padding: 24px 16px; }
+        .header-title { font-size: 20px; }
+        .content { padding: 24px 16px; }
+        .greeting { font-size: 20px; }
+        .text { font-size: 15px; }
+        .button {
+          display: block;
+          width: 100%;
+          padding: 16px 20px;
+          text-align: center;
+        }
+        .footer { padding: 20px 16px; }
+      }
+    </style>
+  `;
+}
+
+/**
+ * Header del email con logo
+ */
+function getEmailHeader(title = 'Grupo Scout Osyris', subtitle = 'Siempre listos') {
+  return `
+    <div class="header">
+      <img src="${LOGO_URL}" alt="Osyris" class="header-logo" width="60" height="60">
+      <div class="header-title">${title}</div>
+      <div class="header-subtitle">${subtitle}</div>
+    </div>
+  `;
+}
+
+/**
+ * Footer del email con contacto
+ */
+function getEmailFooter() {
+  return `
+    <div class="footer">
+      <div class="footer-contact">
+        <p style="margin-bottom: 10px; color: ${COLORS.text};">
+          Si tienes cualquier incidencia, contacta con el administrador:
+        </p>
+        <p><a href="mailto:${CONTACT.email}">${CONTACT.email}</a></p>
+        <p><a href="${CONTACT.instagram}">${CONTACT.instagramHandle}</a></p>
+        <p><a href="tel:${CONTACT.phoneLink}">${CONTACT.phone}</a></p>
+      </div>
+      <div class="footer-copyright">
+        &copy; ${new Date().getFullYear()} Grupo Scout Osyris &middot;
+        <a href="${CONTACT.web}">gruposcoutosyris.es</a>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Estructura base del email
+ */
+function getEmailTemplate(headerTitle, headerSubtitle, content) {
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>Grupo Scout Osyris</title>
+      ${getEmailStyles()}
+    </head>
+    <body>
+      <div class="container">
+        ${getEmailHeader(headerTitle, headerSubtitle)}
+        <div class="content">
+          ${content}
+        </div>
+        ${getEmailFooter()}
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// ============================================
+// FUNCIONES DE EMAIL
+// ============================================
+
+/**
+ * Email de invitación a nuevo usuario
  */
 async function sendInvitationEmail(email, nombre, invitationToken, rol = 'scouter') {
   const transporter = createTransporter();
 
   if (!transporter) {
     console.log(`📧 [MODO DEMO] Invitación para ${email} (${rol}):`);
-    console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/registro?token=${invitationToken}`);
+    console.log(`🔗 Enlace: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/registro?token=${invitationToken}`);
     return;
   }
 
   const registrationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/registro?token=${invitationToken}`;
 
-  // Configurar badge y texto según el rol
-  const rolConfig = {
-    admin: {
-      emoji: '👑',
-      nombre: 'Administrador',
-      color: '#dc2626', // rojo
-      descripcion: 'acceso completo al sistema de gestión'
-    },
-    scouter: {
-      emoji: '⚜️',
-      nombre: 'Scouter',
-      color: '#059669', // verde
-      descripcion: 'gestión de tu sección scout'
-    },
-    familia: {
-      emoji: '👨‍👩‍👧‍👦',
-      nombre: 'Familia',
-      color: '#2563eb', // azul
-      descripcion: 'seguimiento de tus hijos/as en el grupo'
-    },
-    educando: {
-      emoji: '🧒',
-      nombre: 'Educando',
-      color: '#f59e0b', // naranja
-      descripcion: 'tu progresión scout y actividades'
-    }
-  };
+  const content = `
+    <div class="greeting">¡Hola ${nombre}!</div>
 
-  const config = rolConfig[rol] || rolConfig.scouter;
-  
+    <p class="text">
+      Has sido invitado a unirte al sistema de gestión del <strong>Grupo Scout Osyris</strong>.
+    </p>
+
+    <p class="text">
+      Para completar tu registro, haz clic en el siguiente botón:
+    </p>
+
+    <div class="button-container">
+      <a href="${registrationLink}" class="button">Completar Registro</a>
+    </div>
+
+    <p class="note">Este enlace expira en 7 días</p>
+  `;
+
   const mailOptions = {
-    from: {
-      name: 'Grupo Scout Osyris',
-      address: process.env.EMAIL_USER
-    },
+    from: { name: 'Grupo Scout Osyris', address: process.env.EMAIL_USER },
     to: email,
-    subject: '✉️ Invitación al Grupo Scout Osyris',
-    html: `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #f3f4f6;
-            padding: 40px 20px;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          }
-          .header {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-          }
-          .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
-          }
-          .brand {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 8px;
-          }
-          .tagline {
-            font-size: 14px;
-            opacity: 0.9;
-          }
-          .content {
-            padding: 40px 30px;
-          }
-          .greeting {
-            font-size: 24px;
-            font-weight: 600;
-            color: #059669;
-            margin-bottom: 20px;
-          }
-          .text {
-            color: #4b5563;
-            margin-bottom: 16px;
-            font-size: 16px;
-          }
-          .button-container {
-            text-align: center;
-            margin: 30px 0;
-          }
-          .button {
-            display: inline-block;
-            padding: 16px 40px;
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: white !important;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-            transition: transform 0.2s;
-          }
-          .alert-box {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 16px;
-            margin: 24px 0;
-            border-radius: 8px;
-          }
-          .alert-box strong {
-            color: #d97706;
-          }
-          .features {
-            background: #f0fdf4;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 24px 0;
-          }
-          .features-title {
-            font-weight: 600;
-            color: #047857;
-            margin-bottom: 16px;
-            font-size: 18px;
-          }
-          .feature-item {
-            display: flex;
-            align-items: start;
-            margin-bottom: 12px;
-            color: #374151;
-          }
-          .feature-icon {
-            font-size: 20px;
-            margin-right: 12px;
-            min-width: 24px;
-          }
-          .signature {
-            margin-top: 40px;
-            padding-top: 24px;
-            border-top: 2px solid #e5e7eb;
-          }
-          .signature-name {
-            font-weight: 600;
-            color: #059669;
-            margin-bottom: 4px;
-          }
-          .signature-email {
-            color: #6b7280;
-            font-size: 14px;
-          }
-          .footer {
-            background: #f9fafb;
-            padding: 30px;
-            text-align: center;
-          }
-          .footer-text {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 8px;
-          }
-          .footer-link {
-            color: #059669;
-            text-decoration: none;
-            font-weight: 500;
-          }
-          .scout-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-top: 10px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">🏕️</div>
-            <div class="brand">Grupo Scout Osyris</div>
-            <div class="tagline">Educando en valores desde 1981</div>
-            <div class="scout-badge">✨ Siempre listos ✨</div>
-          </div>
-          
-          <div class="content">
-            <div class="greeting">¡Hola ${nombre}!</div>
-            
-            <p class="text">
-              Has sido invitado a unirte al sistema de gestión del <strong>Grupo Scout Osyris</strong>. 
-              Estamos emocionados de tenerte en nuestra familia scout.
-            </p>
-            
-            <p class="text">
-              Para completar tu registro y acceder a todas las funcionalidades de la plataforma, 
-              haz clic en el siguiente botón:
-            </p>
-            
-            <div class="button-container">
-              <a href="${registrationLink}" class="button">
-                🚀 Completar mi Registro
-              </a>
-            </div>
-            
-            <div class="alert-box">
-              <strong>⏰ Importante:</strong> Este enlace expira en 7 días. 
-              No compartas este correo con nadie.
-            </div>
-            
-            <div class="features">
-              <div class="features-title">Una vez completes tu registro, podrás:</div>
-              <div class="feature-item">
-                <span class="feature-icon">📅</span>
-                <span>Ver y apuntarte al calendario de actividades scout</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">💬</span>
-                <span>Recibir comunicaciones importantes del grupo</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">📄</span>
-                <span>Acceder a documentos, circulares y material educativo</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">👥</span>
-                <span>Conectar con otros miembros de tu sección</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">🎯</span>
-                <span>Seguir tu progresión scout y especialidades</span>
-              </div>
-            </div>
-            
-            <p class="text">
-              Si tienes alguna duda o necesitas ayuda, no dudes en contactarnos. 
-              Estaremos encantados de ayudarte.
-            </p>
-            
-            <p class="text">
-              <strong>¡Nos vemos en las actividades!</strong> 🏕️
-            </p>
-            
-            <div class="signature">
-              <div class="signature-name">Equipo del Grupo Scout Osyris</div>
-              <div class="signature-email">📧 info@grupoosyris.es</div>
-            </div>
-          </div>
-          
-          <div class="footer">
-            <p class="footer-text">
-              Si no solicitaste esta invitación, puedes ignorar este correo de forma segura.
-            </p>
-            <p class="footer-text">
-              © ${new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.
-            </p>
-            <p class="footer-text" style="margin-top: 16px;">
-              <a href="https://gruposcoutosyris.es" class="footer-link">gruposcoutosyris.es</a>
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-    // Versión texto plano como fallback
+    subject: 'Invitación al Grupo Scout Osyris',
+    html: getEmailTemplate('Grupo Scout Osyris', 'Siempre listos', content),
     text: `
 ¡Hola ${nombre}!
 
@@ -330,30 +348,17 @@ Has sido invitado a unirte al sistema de gestión del Grupo Scout Osyris.
 Para completar tu registro, accede al siguiente enlace:
 ${registrationLink}
 
-⏰ Este enlace expira en 7 días.
-
-Una vez completes tu registro, podrás:
-- Ver el calendario de actividades
-- Recibir comunicaciones del grupo
-- Acceder a documentos importantes
-- Conectar con otros miembros
-
-Si tienes alguna duda, no dudes en contactarnos en info@grupoosyris.es
-
-¡Nos vemos en las actividades!
-
-Equipo del Grupo Scout Osyris
-www.gruposcoutosyris.es
+Este enlace expira en 7 días.
 
 ---
-Si no solicitaste esta invitación, puedes ignorar este correo.
+Grupo Scout Osyris
+${CONTACT.web}
     `
   };
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email enviado exitosamente a ${email}`);
-    console.log(`📧 Message ID: ${info.messageId}`);
+    console.log(`✅ Email enviado a ${email}`);
     return info;
   } catch (error) {
     console.error(`❌ Error enviando email a ${email}:`, error);
@@ -362,65 +367,45 @@ Si no solicitaste esta invitación, puedes ignorar este correo.
 }
 
 /**
- * Enviar email de bienvenida tras completar el registro
- * @param {string} email - Email del destinatario
- * @param {string} nombre - Nombre del destinatario
- * @returns {Promise<void>}
+ * Email de bienvenida tras completar registro
  */
 async function sendWelcomeEmail(email, nombre) {
   const transporter = createTransporter();
-  
+
   if (!transporter) {
     console.log(`📧 [MODO DEMO] Bienvenida para ${email}`);
     return;
   }
 
+  const portalLink = process.env.FRONTEND_URL || 'https://gruposcoutosyris.es';
+
+  const content = `
+    <div class="greeting">¡Bienvenido, ${nombre}!</div>
+
+    <p class="text">
+      Tu registro se ha completado correctamente. Ya formas parte de nuestra familia scout.
+    </p>
+
+    <div class="button-container">
+      <a href="${portalLink}" class="button">Acceder al Portal</a>
+    </div>
+  `;
+
   const mailOptions = {
-    from: {
-      name: 'Grupo Scout Osyris',
-      address: process.env.EMAIL_USER
-    },
+    from: { name: 'Grupo Scout Osyris', address: process.env.EMAIL_USER },
     to: email,
-    subject: '🎉 ¡Bienvenido al Grupo Scout Osyris!',
-    html: `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            border-radius: 10px 10px 0 0;
-          }
-          .content {
-            background: #ffffff;
-            padding: 30px;
-            border: 1px solid #e0e0e0;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div style="font-size: 24px; font-weight: bold;">🏕️ Grupo Scout Osyris</div>
-        </div>
-        <div class="content">
-          <h2>¡Bienvenido ${nombre}!</h2>
-          <p>Tu registro se ha completado exitosamente. Ya formas parte de nuestra familia scout.</p>
-          <p>Puedes acceder a la plataforma en: <a href="${process.env.FRONTEND_URL || 'https://gruposcoutosyris.es'}">${process.env.FRONTEND_URL || 'gruposcoutosyris.es'}</a></p>
-        </div>
-      </body>
-      </html>
+    subject: '¡Bienvenido al Grupo Scout Osyris!',
+    html: getEmailTemplate('Grupo Scout Osyris', 'Siempre listos', content),
+    text: `
+¡Bienvenido, ${nombre}!
+
+Tu registro se ha completado correctamente. Ya formas parte de nuestra familia scout.
+
+Accede al portal: ${portalLink}
+
+---
+Grupo Scout Osyris
+${CONTACT.web}
     `
   };
 
@@ -436,18 +421,15 @@ async function sendWelcomeEmail(email, nombre) {
 
 /**
  * Verificar configuración de email
- * @returns {Promise<boolean>}
  */
 async function verifyEmailConfig() {
   const transporter = createTransporter();
-  
-  if (!transporter) {
-    return false;
-  }
+
+  if (!transporter) return false;
 
   try {
     await transporter.verify();
-    console.log('✅ Configuración de email verificada correctamente');
+    console.log('✅ Configuración de email verificada');
     return true;
   } catch (error) {
     console.error('❌ Error en configuración de email:', error);
@@ -456,20 +438,13 @@ async function verifyEmailConfig() {
 }
 
 /**
- * Enviar email de notificación de vinculación de educando
- * @param {string} email - Email del familiar
- * @param {string} nombreFamiliar - Nombre del familiar
- * @param {string} nombreEducando - Nombre completo del educando
- * @param {string} seccion - Sección del educando
- * @param {string} relacion - Tipo de relación
- * @returns {Promise<void>}
+ * Email de vinculación de educando
  */
 async function sendVinculacionEmail(email, nombreFamiliar, nombreEducando, seccion, relacion) {
   const transporter = createTransporter();
 
   if (!transporter) {
-    console.log(`📧 [MODO DEMO] Notificación de vinculación para ${email}`);
-    console.log(`   Educando: ${nombreEducando} (${seccion})`);
+    console.log(`📧 [MODO DEMO] Vinculación para ${email} - ${nombreEducando}`);
     return;
   }
 
@@ -481,265 +456,55 @@ async function sendVinculacionEmail(email, nombreFamiliar, nombreEducando, secci
     'otro': 'Familiar'
   }[relacion] || 'Familiar';
 
+  const portalLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/familia`;
+
+  const content = `
+    <div class="greeting">¡Hola ${nombreFamiliar}!</div>
+
+    <p class="text">
+      Se ha vinculado un nuevo educando a tu cuenta:
+    </p>
+
+    <div class="info-card">
+      <div class="info-row">
+        <span class="info-label">Educando:</span> ${nombreEducando}
+      </div>
+      <div class="info-row">
+        <span class="info-label">Sección:</span> ${seccion}
+      </div>
+      <div class="info-row">
+        <span class="info-label">Relación:</span> ${relacionTexto}
+      </div>
+    </div>
+
+    <p class="text">
+      Ya puedes acceder a su información desde el portal familiar.
+    </p>
+
+    <div class="button-container">
+      <a href="${portalLink}" class="button">Ver en el Portal</a>
+    </div>
+  `;
+
   const mailOptions = {
-    from: {
-      name: 'Grupo Scout Osyris',
-      address: process.env.EMAIL_USER
-    },
+    from: { name: 'Grupo Scout Osyris', address: process.env.EMAIL_USER },
     to: email,
-    subject: `🔗 Nuevo educando vinculado - ${nombreEducando}`,
-    html: `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #f3f4f6;
-            padding: 40px 20px;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          }
-          .header {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-          }
-          .logo { font-size: 48px; margin-bottom: 10px; }
-          .brand { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
-          .tagline { font-size: 14px; opacity: 0.9; }
-          .content { padding: 40px 30px; }
-          .greeting {
-            font-size: 24px;
-            font-weight: 600;
-            color: #2563eb;
-            margin-bottom: 20px;
-          }
-          .text {
-            color: #4b5563;
-            margin-bottom: 16px;
-            font-size: 16px;
-          }
-          .info-box {
-            background: #eff6ff;
-            border-left: 4px solid #2563eb;
-            padding: 20px;
-            margin: 24px 0;
-            border-radius: 8px;
-          }
-          .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #dbeafe;
-          }
-          .info-row:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-          }
-          .info-label {
-            font-weight: 600;
-            color: #1e40af;
-          }
-          .info-value {
-            color: #374151;
-          }
-          .button-container {
-            text-align: center;
-            margin: 30px 0;
-          }
-          .button {
-            display: inline-block;
-            padding: 16px 40px;
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            color: white !important;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-          }
-          .features {
-            background: #f0fdf4;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 24px 0;
-          }
-          .features-title {
-            font-weight: 600;
-            color: #047857;
-            margin-bottom: 16px;
-            font-size: 18px;
-          }
-          .feature-item {
-            display: flex;
-            align-items: start;
-            margin-bottom: 12px;
-            color: #374151;
-          }
-          .feature-icon {
-            font-size: 20px;
-            margin-right: 12px;
-            min-width: 24px;
-          }
-          .signature {
-            margin-top: 40px;
-            padding-top: 24px;
-            border-top: 2px solid #e5e7eb;
-          }
-          .signature-name {
-            font-weight: 600;
-            color: #2563eb;
-            margin-bottom: 4px;
-          }
-          .signature-email {
-            color: #6b7280;
-            font-size: 14px;
-          }
-          .footer {
-            background: #f9fafb;
-            padding: 30px;
-            text-align: center;
-          }
-          .footer-text {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 8px;
-          }
-          .footer-link {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 500;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">👨‍👩‍👧‍👦</div>
-            <div class="brand">Portal de Familias</div>
-            <div class="tagline">Grupo Scout Osyris</div>
-          </div>
-
-          <div class="content">
-            <div class="greeting">¡Hola ${nombreFamiliar}!</div>
-
-            <p class="text">
-              Te informamos que se ha realizado una <strong>nueva vinculación</strong> en tu cuenta del Portal de Familias.
-            </p>
-
-            <div class="info-box">
-              <div class="info-row">
-                <span class="info-label">👤 Educando:</span>
-                <span class="info-value">${nombreEducando}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">🏕️ Sección:</span>
-                <span class="info-value">${seccion}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">🔗 Relación:</span>
-                <span class="info-value">${relacionTexto}</span>
-              </div>
-            </div>
-
-            <p class="text">
-              A partir de ahora, podrás acceder a toda la información y actividades de <strong>${nombreEducando}</strong> desde tu portal familiar.
-            </p>
-
-            <div class="button-container">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/familia" class="button">
-                🏠 Acceder al Portal Familiar
-              </a>
-            </div>
-
-            <div class="features">
-              <div class="features-title">¿Qué puedes hacer ahora?</div>
-              <div class="feature-item">
-                <span class="feature-icon">📅</span>
-                <span>Ver el calendario de actividades de ${nombreEducando}</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">📊</span>
-                <span>Consultar su progresión y especialidades</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">📄</span>
-                <span>Acceder a documentos y autorizaciones</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">💬</span>
-                <span>Recibir notificaciones importantes</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">📸</span>
-                <span>Ver fotos de las actividades</span>
-              </div>
-            </div>
-
-            <p class="text">
-              Si no reconoces esta vinculación o crees que es un error, por favor contacta con el equipo de gestión inmediatamente.
-            </p>
-
-            <div class="signature">
-              <div class="signature-name">Equipo del Grupo Scout Osyris</div>
-              <div class="signature-email">📧 info@grupoosyris.es</div>
-            </div>
-          </div>
-
-          <div class="footer">
-            <p class="footer-text">
-              Este es un correo automático. Por favor, no respondas a este mensaje.
-            </p>
-            <p class="footer-text">
-              © ${new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.
-            </p>
-            <p class="footer-text" style="margin-top: 16px;">
-              <a href="https://gruposcoutosyris.es" class="footer-link">gruposcoutosyris.es</a>
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
+    subject: `Educando vinculado: ${nombreEducando}`,
+    html: getEmailTemplate('Portal de Familias', 'Grupo Scout Osyris', content),
     text: `
 ¡Hola ${nombreFamiliar}!
 
-Te informamos que se ha realizado una nueva vinculación en tu cuenta del Portal de Familias:
+Se ha vinculado un nuevo educando a tu cuenta:
 
 • Educando: ${nombreEducando}
 • Sección: ${seccion}
 • Relación: ${relacionTexto}
 
-A partir de ahora, podrás acceder a toda la información y actividades de ${nombreEducando} desde tu portal familiar.
+Accede al portal: ${portalLink}
 
-Accede al portal: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/familia
-
-¿Qué puedes hacer ahora?
-- Ver el calendario de actividades
-- Consultar su progresión y especialidades
-- Acceder a documentos y autorizaciones
-- Recibir notificaciones importantes
-- Ver fotos de las actividades
-
-Si no reconoces esta vinculación, contacta con info@grupoosyris.es
-
-Equipo del Grupo Scout Osyris
-www.gruposcoutosyris.es
+---
+Grupo Scout Osyris
+${CONTACT.web}
     `
   };
 
@@ -754,162 +519,62 @@ www.gruposcoutosyris.es
 }
 
 /**
- * Enviar email de notificación de desvinculación
- * @param {string} email - Email del familiar
- * @param {string} nombreFamiliar - Nombre del familiar
- * @param {string} nombreEducando - Nombre completo del educando
- * @param {string} seccion - Sección del educando
- * @returns {Promise<void>}
+ * Email de desvinculación de educando
  */
 async function sendDesvinculacionEmail(email, nombreFamiliar, nombreEducando, seccion) {
   const transporter = createTransporter();
 
   if (!transporter) {
-    console.log(`📧 [MODO DEMO] Notificación de desvinculación para ${email}`);
+    console.log(`📧 [MODO DEMO] Desvinculación para ${email}`);
     return;
   }
 
+  const content = `
+    <div class="greeting">Hola ${nombreFamiliar}</div>
+
+    <p class="text">
+      Se ha desvinculado el siguiente educando de tu cuenta:
+    </p>
+
+    <div class="error-box">
+      <strong>${nombreEducando}</strong> - ${seccion}
+    </div>
+
+    <p class="text">
+      Ya no tendrás acceso a su información en el portal familiar.
+    </p>
+
+    <p class="text">
+      Si esto es un error, contacta con el administrador del grupo.
+    </p>
+  `;
+
+  // Header rojo para alertas
+  const customHeader = `
+    <div class="header" style="background: ${COLORS.error};">
+      <img src="${LOGO_URL}" alt="Osyris" class="header-logo" width="60" height="60" style="border-color: white;">
+      <div class="header-title">Notificación</div>
+      <div class="header-subtitle" style="color: white;">Grupo Scout Osyris</div>
+    </div>
+  `;
+
   const mailOptions = {
-    from: {
-      name: 'Grupo Scout Osyris',
-      address: process.env.EMAIL_USER
-    },
+    from: { name: 'Grupo Scout Osyris', address: process.env.EMAIL_USER },
     to: email,
-    subject: `⛓️ Desvinculación realizada - ${nombreEducando}`,
+    subject: `Desvinculación: ${nombreEducando}`,
     html: `
       <!DOCTYPE html>
       <html lang="es">
       <head>
         <meta charset="UTF-8">
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #f3f4f6;
-            padding: 40px 20px;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          }
-          .header {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-          }
-          .logo { font-size: 48px; margin-bottom: 10px; }
-          .brand { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
-          .content { padding: 40px 30px; }
-          .greeting {
-            font-size: 24px;
-            font-weight: 600;
-            color: #dc2626;
-            margin-bottom: 20px;
-          }
-          .text {
-            color: #4b5563;
-            margin-bottom: 16px;
-            font-size: 16px;
-          }
-          .alert-box {
-            background: #fee2e2;
-            border-left: 4px solid #dc2626;
-            padding: 20px;
-            margin: 24px 0;
-            border-radius: 8px;
-          }
-          .info-row {
-            margin-bottom: 12px;
-          }
-          .info-label {
-            font-weight: 600;
-            color: #991b1b;
-          }
-          .signature {
-            margin-top: 40px;
-            padding-top: 24px;
-            border-top: 2px solid #e5e7eb;
-          }
-          .signature-name {
-            font-weight: 600;
-            color: #dc2626;
-            margin-bottom: 4px;
-          }
-          .signature-email {
-            color: #6b7280;
-            font-size: 14px;
-          }
-          .footer {
-            background: #f9fafb;
-            padding: 30px;
-            text-align: center;
-          }
-          .footer-text {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 8px;
-          }
-          .footer-link {
-            color: #dc2626;
-            text-decoration: none;
-            font-weight: 500;
-          }
-        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        ${getEmailStyles()}
       </head>
       <body>
         <div class="container">
-          <div class="header">
-            <div class="logo">⚠️</div>
-            <div class="brand">Notificación Importante</div>
-          </div>
-
-          <div class="content">
-            <div class="greeting">Hola ${nombreFamiliar}</div>
-
-            <p class="text">
-              Te informamos que se ha realizado una <strong>desvinculación</strong> en tu cuenta del Portal de Familias.
-            </p>
-
-            <div class="alert-box">
-              <div class="info-row">
-                <span class="info-label">👤 Educando desvinculado:</span>
-                <span> ${nombreEducando}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">🏕️ Sección:</span>
-                <span> ${seccion}</span>
-              </div>
-            </div>
-
-            <p class="text">
-              A partir de ahora, <strong>ya no tendrás acceso</strong> a la información y actividades de ${nombreEducando} en el portal familiar.
-            </p>
-
-            <p class="text">
-              Si crees que esta desvinculación es un error o no autorizada, por favor contacta inmediatamente con el equipo de gestión del grupo.
-            </p>
-
-            <div class="signature">
-              <div class="signature-name">Equipo del Grupo Scout Osyris</div>
-              <div class="signature-email">📧 info@grupoosyris.es • ☎️ +34 123 456 789</div>
-            </div>
-          </div>
-
-          <div class="footer">
-            <p class="footer-text">
-              Este es un correo automático. Para cualquier consulta, contacta con info@grupoosyris.es
-            </p>
-            <p class="footer-text">
-              © ${new Date().getFullYear()} Grupo Scout Osyris.
-            </p>
-          </div>
+          ${customHeader}
+          <div class="content">${content}</div>
+          ${getEmailFooter()}
         </div>
       </body>
       </html>
@@ -917,18 +582,16 @@ async function sendDesvinculacionEmail(email, nombreFamiliar, nombreEducando, se
     text: `
 Hola ${nombreFamiliar},
 
-Te informamos que se ha realizado una DESVINCULACIÓN en tu cuenta del Portal de Familias:
+Se ha desvinculado el siguiente educando de tu cuenta:
+${nombreEducando} - ${seccion}
 
-• Educando desvinculado: ${nombreEducando}
-• Sección: ${seccion}
+Ya no tendrás acceso a su información en el portal familiar.
 
-A partir de ahora, ya no tendrás acceso a la información de ${nombreEducando} en el portal familiar.
+Si esto es un error, contacta con el administrador.
 
-Si crees que esto es un error, contacta inmediatamente con:
-📧 info@grupoosyris.es
-☎️ +34 123 456 789
-
-Equipo del Grupo Scout Osyris
+---
+Grupo Scout Osyris
+${CONTACT.web}
     `
   };
 
@@ -943,174 +606,64 @@ Equipo del Grupo Scout Osyris
 }
 
 /**
- * Enviar email de reseteo de contraseña
- * @param {string} email - Email del usuario
- * @param {string} nombre - Nombre del usuario
- * @param {string} resetToken - Token de reseteo
- * @returns {Promise<void>}
+ * Email de reseteo de contraseña
  */
 async function sendPasswordResetEmail(email, nombre, resetToken) {
   const transporter = createTransporter();
 
   if (!transporter) {
-    console.log(`📧 [MODO DEMO] Reset de contraseña para ${email}`);
-    console.log(`🔗 Token: ${resetToken}`);
+    console.log(`📧 [MODO DEMO] Reset contraseña para ${email}`);
     return;
   }
 
   const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
+  const content = `
+    <div class="greeting">Hola ${nombre}</div>
+
+    <p class="text">
+      Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.
+    </p>
+
+    <div class="button-container">
+      <a href="${resetLink}" class="button">Restablecer Contraseña</a>
+    </div>
+
+    <div class="alert-box">
+      <strong>Importante:</strong> Este enlace expira en 1 hora.
+    </div>
+
+    <p class="text" style="font-size: 14px; color: ${COLORS.textLight};">
+      Si no solicitaste este cambio, ignora este correo.
+    </p>
+  `;
+
   const mailOptions = {
-    from: {
-      name: 'Grupo Scout Osyris',
-      address: process.env.EMAIL_USER
-    },
+    from: { name: 'Grupo Scout Osyris', address: process.env.EMAIL_USER },
     to: email,
-    subject: '🔐 Recuperación de contraseña - Grupo Scout Osyris',
-    html: `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #f3f4f6;
-            padding: 40px 20px;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          }
-          .header {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-          }
-          .logo { font-size: 48px; margin-bottom: 10px; }
-          .brand { font-size: 28px; font-weight: bold; }
-          .content { padding: 40px 30px; }
-          .greeting {
-            font-size: 24px;
-            font-weight: 600;
-            color: #f59e0b;
-            margin-bottom: 20px;
-          }
-          .text {
-            color: #4b5563;
-            margin-bottom: 16px;
-            font-size: 16px;
-          }
-          .button-container {
-            text-align: center;
-            margin: 30px 0;
-          }
-          .button {
-            display: inline-block;
-            padding: 16px 40px;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white !important;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-          }
-          .alert-box {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 16px;
-            margin: 24px 0;
-            border-radius: 8px;
-          }
-          .alert-box strong {
-            color: #d97706;
-          }
-          .footer {
-            background: #f9fafb;
-            padding: 30px;
-            text-align: center;
-          }
-          .footer-text {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 8px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">🔐</div>
-            <div class="brand">Recuperar Contraseña</div>
-          </div>
-
-          <div class="content">
-            <div class="greeting">Hola ${nombre}</div>
-
-            <p class="text">
-              Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en el Grupo Scout Osyris.
-            </p>
-
-            <p class="text">
-              Haz clic en el botón de abajo para crear una nueva contraseña:
-            </p>
-
-            <div class="button-container">
-              <a href="${resetLink}" class="button">
-                🔑 Restablecer mi Contraseña
-              </a>
-            </div>
-
-            <div class="alert-box">
-              <strong>⏰ Importante:</strong> Este enlace expira en 1 hora por seguridad.
-            </div>
-
-            <p class="text">
-              Si no solicitaste este cambio, puedes ignorar este correo de forma segura.
-              Tu contraseña actual permanecerá sin cambios.
-            </p>
-          </div>
-
-          <div class="footer">
-            <p class="footer-text">
-              Si no solicitaste este cambio, ignora este correo.
-            </p>
-            <p class="footer-text">
-              © ${new Date().getFullYear()} Grupo Scout Osyris.
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
+    subject: 'Recuperación de contraseña - Grupo Scout Osyris',
+    html: getEmailTemplate('Grupo Scout Osyris', 'Recuperar contraseña', content),
     text: `
 Hola ${nombre},
 
 Hemos recibido una solicitud para restablecer tu contraseña.
 
-Para crear una nueva contraseña, accede al siguiente enlace:
+Accede al siguiente enlace:
 ${resetLink}
 
-⏰ Este enlace expira en 1 hora.
+Este enlace expira en 1 hora.
 
 Si no solicitaste este cambio, ignora este correo.
 
-Equipo del Grupo Scout Osyris
+---
+Grupo Scout Osyris
+${CONTACT.web}
     `
   };
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email de reset de contraseña enviado a ${email}`);
+    console.log(`✅ Email de reset enviado a ${email}`);
     return info;
   } catch (error) {
     console.error(`❌ Error enviando email de reset a ${email}:`, error);
@@ -1119,10 +672,7 @@ Equipo del Grupo Scout Osyris
 }
 
 /**
- * Enviar email de confirmación de cambio de contraseña
- * @param {string} email - Email del usuario
- * @param {string} nombre - Nombre del usuario
- * @returns {Promise<void>}
+ * Email de confirmación de cambio de contraseña
  */
 async function sendPasswordChangedEmail(email, nombre) {
   const transporter = createTransporter();
@@ -1132,123 +682,45 @@ async function sendPasswordChangedEmail(email, nombre) {
     return;
   }
 
+  const content = `
+    <div class="greeting">Hola ${nombre}</div>
+
+    <div class="success-box">
+      Tu contraseña ha sido actualizada correctamente.
+    </div>
+
+    <p class="text">
+      Ya puedes iniciar sesión con tu nueva contraseña.
+    </p>
+
+    <p class="text" style="font-size: 14px; color: ${COLORS.textLight};">
+      Si no realizaste este cambio, contacta inmediatamente con el administrador.
+    </p>
+  `;
+
   const mailOptions = {
-    from: {
-      name: 'Grupo Scout Osyris',
-      address: process.env.EMAIL_USER
-    },
+    from: { name: 'Grupo Scout Osyris', address: process.env.EMAIL_USER },
     to: email,
-    subject: '✅ Tu contraseña ha sido actualizada',
-    html: `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #f3f4f6;
-            padding: 40px 20px;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          }
-          .header {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-          }
-          .logo { font-size: 48px; margin-bottom: 10px; }
-          .brand { font-size: 28px; font-weight: bold; }
-          .content { padding: 40px 30px; }
-          .greeting {
-            font-size: 24px;
-            font-weight: 600;
-            color: #059669;
-            margin-bottom: 20px;
-          }
-          .text {
-            color: #4b5563;
-            margin-bottom: 16px;
-            font-size: 16px;
-          }
-          .success-box {
-            background: #d1fae5;
-            border-left: 4px solid #059669;
-            padding: 16px;
-            margin: 24px 0;
-            border-radius: 8px;
-            color: #047857;
-          }
-          .footer {
-            background: #f9fafb;
-            padding: 30px;
-            text-align: center;
-          }
-          .footer-text {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 8px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">✅</div>
-            <div class="brand">Contraseña Actualizada</div>
-          </div>
-
-          <div class="content">
-            <div class="greeting">Hola ${nombre}</div>
-
-            <p class="text">
-              Tu contraseña ha sido <strong>actualizada exitosamente</strong>.
-            </p>
-
-            <div class="success-box">
-              ✅ Ya puedes iniciar sesión con tu nueva contraseña.
-            </div>
-
-            <p class="text">
-              Si no realizaste este cambio, contacta inmediatamente con el equipo de gestión en <strong>info@grupoosyris.es</strong>
-            </p>
-          </div>
-
-          <div class="footer">
-            <p class="footer-text">
-              © ${new Date().getFullYear()} Grupo Scout Osyris.
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
+    subject: 'Contraseña actualizada - Grupo Scout Osyris',
+    html: getEmailTemplate('Grupo Scout Osyris', 'Contraseña actualizada', content),
     text: `
 Hola ${nombre},
 
-Tu contraseña ha sido actualizada exitosamente.
+Tu contraseña ha sido actualizada correctamente.
 
 Ya puedes iniciar sesión con tu nueva contraseña.
 
-Si no realizaste este cambio, contacta con info@grupoosyris.es
+Si no realizaste este cambio, contacta con el administrador.
 
-Equipo del Grupo Scout Osyris
+---
+Grupo Scout Osyris
+${CONTACT.web}
     `
   };
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email de confirmación de cambio de contraseña enviado a ${email}`);
+    console.log(`✅ Email de confirmación enviado a ${email}`);
     return info;
   } catch (error) {
     console.error(`❌ Error enviando email de confirmación a ${email}:`, error);
@@ -1265,4 +737,3 @@ module.exports = {
   sendPasswordChangedEmail,
   verifyEmailConfig
 };
-
