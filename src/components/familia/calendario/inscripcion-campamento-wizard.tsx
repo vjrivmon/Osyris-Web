@@ -1,4 +1,5 @@
 'use client'
+import { getApiUrl } from '@/lib/api-utils'
 
 /**
  * Wizard de inscripcion a campamento (multi-paso)
@@ -65,7 +66,7 @@ import { useInscripcionCampamento } from '@/hooks/useInscripcionCampamento'
 import { DocumentoViewerModal } from '@/components/familia/documento-viewer-modal'
 import type { ActividadCampamento, ScoutHijo, DatosInscripcionCampamento } from '@/types/familia'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const API_URL = getApiUrl()
 
 // Tipo para circulares de campamento
 interface CircularCampamento {

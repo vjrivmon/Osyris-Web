@@ -17,8 +17,7 @@ import type {
   ActividadCampamento,
   RecordatorioPredefinido
 } from '@/types/familia'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+import { getApiUrl } from '@/lib/api-utils'
 
 interface UseInscripcionCampamentoProps {
   actividadId: number
@@ -87,7 +86,7 @@ export function useInscripcionCampamento({
    */
   const fetchActividad = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/actividades/${actividadId}`, {
+      const res = await fetch(`${getApiUrl()}/api/actividades/${actividadId}`, {
         headers: getAuthHeaders()
       })
 
@@ -113,7 +112,7 @@ export function useInscripcionCampamento({
 
     try {
       const res = await fetch(
-        `${API_URL}/api/inscripciones-campamento/verificar/${actividadId}/${educandoId}`,
+        `${getApiUrl()}/api/inscripciones-campamento/verificar/${actividadId}/${educandoId}`,
         { headers: getAuthHeaders() }
       )
 
@@ -144,7 +143,7 @@ export function useInscripcionCampamento({
   const fetchDocumentos = async (inscripcionId: number) => {
     try {
       const res = await fetch(
-        `${API_URL}/api/inscripciones-campamento/${inscripcionId}/documentos`,
+        `${getApiUrl()}/api/inscripciones-campamento/${inscripcionId}/documentos`,
         { headers: getAuthHeaders() }
       )
 
@@ -167,7 +166,7 @@ export function useInscripcionCampamento({
 
     try {
       const res = await fetch(
-        `${API_URL}/api/inscripciones-campamento/prellenar/${educandoId}`,
+        `${getApiUrl()}/api/inscripciones-campamento/prellenar/${educandoId}`,
         { headers: getAuthHeaders() }
       )
 
@@ -200,7 +199,7 @@ export function useInscripcionCampamento({
     setError(null)
 
     try {
-      const res = await fetch(`${API_URL}/api/inscripciones-campamento`, {
+      const res = await fetch(`${getApiUrl()}/api/inscripciones-campamento`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -239,7 +238,7 @@ export function useInscripcionCampamento({
       // Si ya existe inscripcion, actualizar
       if (inscripcion?.id) {
         const res = await fetch(
-          `${API_URL}/api/inscripciones-campamento/${inscripcion.id}/no-asiste`,
+          `${getApiUrl()}/api/inscripciones-campamento/${inscripcion.id}/no-asiste`,
           {
             method: 'POST',
             headers: getAuthHeaders(),
@@ -291,7 +290,7 @@ export function useInscripcionCampamento({
 
       const token = localStorage.getItem('familia_token') || localStorage.getItem('token')
       const res = await fetch(
-        `${API_URL}/api/inscripciones-campamento/${inscripcion.id}/circular-firmada`,
+        `${getApiUrl()}/api/inscripciones-campamento/${inscripcion.id}/circular-firmada`,
         {
           method: 'POST',
           headers: {
@@ -338,7 +337,7 @@ export function useInscripcionCampamento({
 
       const token = localStorage.getItem('familia_token') || localStorage.getItem('token')
       const res = await fetch(
-        `${API_URL}/api/inscripciones-campamento/${inscripcion.id}/justificante-pago`,
+        `${getApiUrl()}/api/inscripciones-campamento/${inscripcion.id}/justificante-pago`,
         {
           method: 'POST',
           headers: {
@@ -389,7 +388,7 @@ export function useInscripcionCampamento({
 
       // Si no, descargar via API
       const token = localStorage.getItem('familia_token') || localStorage.getItem('token')
-      const res = await fetch(`${API_URL}/api/actividades/${actividadId}/circular`, {
+      const res = await fetch(`${getApiUrl()}/api/actividades/${actividadId}/circular`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -479,7 +478,7 @@ export function useInscripcionCampamento({
 
     try {
       const res = await fetch(
-        `${API_URL}/api/inscripciones-campamento/${inscripcion.id}/cancelar`,
+        `${getApiUrl()}/api/inscripciones-campamento/${inscripcion.id}/cancelar`,
         {
           method: 'POST',
           headers: getAuthHeaders(),
@@ -549,7 +548,7 @@ export function useRecordatoriosPredefinidos() {
     const fetchRecordatorios = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`${API_URL}/api/actividades/campamento/recordatorios`)
+        const res = await fetch(`${getApiUrl()}/api/actividades/campamento/recordatorios`)
         if (res.ok) {
           const data = await res.json()
           if (data.success) {
@@ -583,7 +582,7 @@ export function useCuentaBancaria() {
     const fetchCuenta = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`${API_URL}/api/actividades/campamento/cuenta-bancaria`)
+        const res = await fetch(`${getApiUrl()}/api/actividades/campamento/cuenta-bancaria`)
         if (res.ok) {
           const data = await res.json()
           if (data.success) {

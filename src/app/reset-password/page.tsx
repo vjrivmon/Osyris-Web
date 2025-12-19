@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { getApiUrl } from '@/lib/api-utils'
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -61,7 +62,7 @@ function ResetPasswordContent() {
     setLoading(true)
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const API_URL = getApiUrl()
       const response = await fetch(`${API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

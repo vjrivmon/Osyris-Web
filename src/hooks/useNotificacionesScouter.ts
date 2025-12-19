@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { getApiUrl } from '@/lib/api-utils'
 
 export interface NotificacionScouter {
   id: number
@@ -49,8 +50,6 @@ export function useNotificacionesScouter() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token')
     return {
@@ -67,7 +66,7 @@ export function useNotificacionesScouter() {
       params.append('limit', '10')
 
       const response = await fetch(
-        `${API_URL}/api/notificaciones-scouter?${params.toString()}`,
+        `${getApiUrl()}/api/notificaciones-scouter?${params.toString()}`,
         { headers: getAuthHeaders() }
       )
 
@@ -81,13 +80,13 @@ export function useNotificacionesScouter() {
       console.error('Error fetching notificaciones:', err)
       setError(err instanceof Error ? err.message : 'Error desconocido')
     }
-  }, [API_URL])
+  }, [])
 
   // Cargar contador de no leídas
   const fetchContador = useCallback(async () => {
     try {
       const response = await fetch(
-        `${API_URL}/api/notificaciones-scouter/contador`,
+        `${getApiUrl()}/api/notificaciones-scouter/contador`,
         { headers: getAuthHeaders() }
       )
 
@@ -100,13 +99,13 @@ export function useNotificacionesScouter() {
     } catch (err) {
       console.error('Error fetching contador:', err)
     }
-  }, [API_URL])
+  }, [])
 
   // Cargar documentos pendientes
   const fetchDocumentosPendientes = useCallback(async () => {
     try {
       const response = await fetch(
-        `${API_URL}/api/notificaciones-scouter/documentos-pendientes`,
+        `${getApiUrl()}/api/notificaciones-scouter/documentos-pendientes`,
         { headers: getAuthHeaders() }
       )
 
@@ -120,13 +119,13 @@ export function useNotificacionesScouter() {
       console.error('Error fetching documentos pendientes:', err)
       setError(err instanceof Error ? err.message : 'Error desconocido')
     }
-  }, [API_URL])
+  }, [])
 
   // Marcar notificación como leída
   const marcarComoLeida = async (id: number) => {
     try {
       const response = await fetch(
-        `${API_URL}/api/notificaciones-scouter/${id}/leida`,
+        `${getApiUrl()}/api/notificaciones-scouter/${id}/leida`,
         {
           method: 'PUT',
           headers: getAuthHeaders()
@@ -149,7 +148,7 @@ export function useNotificacionesScouter() {
   const aprobarDocumento = async (documentoId: number) => {
     try {
       const response = await fetch(
-        `${API_URL}/api/drive/documento/${documentoId}/aprobar`,
+        `${getApiUrl()}/api/drive/documento/${documentoId}/aprobar`,
         {
           method: 'PUT',
           headers: getAuthHeaders()
@@ -175,7 +174,7 @@ export function useNotificacionesScouter() {
   const rechazarDocumento = async (documentoId: number, motivo: string) => {
     try {
       const response = await fetch(
-        `${API_URL}/api/drive/documento/${documentoId}/rechazar`,
+        `${getApiUrl()}/api/drive/documento/${documentoId}/rechazar`,
         {
           method: 'PUT',
           headers: getAuthHeaders(),

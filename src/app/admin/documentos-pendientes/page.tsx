@@ -1,4 +1,5 @@
 'use client'
+import { getApiUrl } from '@/lib/api-utils'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -58,7 +59,7 @@ interface DocumentoPendiente {
   estado: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const API_BASE_URL = getApiUrl()
 
 export default function DocumentosPendientesPage() {
   const { token } = useAuth()

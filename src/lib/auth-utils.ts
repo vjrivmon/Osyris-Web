@@ -32,10 +32,20 @@ export const isSessionExpired = (): boolean => {
   try {
     const user: UserData = JSON.parse(userStr)
 
-    // Si no hay expiresAt, la sesión es inválida (sesión antigua sin expiración)
+    // Si no hay expiresAt, añadir expiración por defecto (no invalidar sesión)
     if (!user.expiresAt) {
-      console.warn('⚠️ Session without expiration date, clearing...')
-      return true
+      console.warn('⚠️ Session without expiration date, adding default expiration...')
+      const now = new Date()
+      const newExpiresAt = new Date(now.getTime() + SESSION_DURATION_MS)
+      user.expiresAt = newExpiresAt.toISOString()
+      user.lastLogin = user.lastLogin || now.toISOString()
+
+      // Actualizar localStorage con la nueva expiración
+      localStorage.setItem('osyris_user', JSON.stringify(user))
+      localStorage.setItem('user', JSON.stringify(user))
+
+      console.log(`✅ Session updated, expires at: ${newExpiresAt.toLocaleString()}`)
+      return false // La sesión es válida después de añadir expiración
     }
 
     const now = new Date().getTime()

@@ -8,8 +8,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { getApiUrl } from '@/lib/api-utils';
 
 // Tipos
 export interface SolicitudDesbloqueo {
@@ -89,7 +88,7 @@ export function useSolicitudesDesbloqueo(seccionIdInicial?: number): UseSolicitu
     setSeccionActual(seccionId);
 
     try {
-      let url = `${API_URL}/api/solicitudes-desbloqueo/seccion/${seccionId}`;
+      let url = `${getApiUrl()}/api/solicitudes-desbloqueo/seccion/${seccionId}`;
       if (estado) {
         url += `?estado=${estado}`;
       }
@@ -121,7 +120,7 @@ export function useSolicitudesDesbloqueo(seccionIdInicial?: number): UseSolicitu
 
     try {
       const response = await fetch(
-        `${API_URL}/api/solicitudes-desbloqueo/pendientes`,
+        `${getApiUrl()}/api/solicitudes-desbloqueo/pendientes`,
         { headers: getHeaders() }
       );
       const data = await response.json();
@@ -150,7 +149,7 @@ export function useSolicitudesDesbloqueo(seccionIdInicial?: number): UseSolicitu
 
     try {
       const response = await fetch(
-        `${API_URL}/api/solicitudes-desbloqueo/${id}/aprobar`,
+        `${getApiUrl()}/api/solicitudes-desbloqueo/${id}/aprobar`,
         {
           method: 'PUT',
           headers: getHeaders(),
@@ -197,7 +196,7 @@ export function useSolicitudesDesbloqueo(seccionIdInicial?: number): UseSolicitu
 
     try {
       const response = await fetch(
-        `${API_URL}/api/solicitudes-desbloqueo/${id}/rechazar`,
+        `${getApiUrl()}/api/solicitudes-desbloqueo/${id}/rechazar`,
         {
           method: 'PUT',
           headers: getHeaders(),
@@ -236,7 +235,7 @@ export function useSolicitudesDesbloqueo(seccionIdInicial?: number): UseSolicitu
   const obtenerContador = useCallback(async (): Promise<number> => {
     try {
       const response = await fetch(
-        `${API_URL}/api/solicitudes-desbloqueo/contador`,
+        `${getApiUrl()}/api/solicitudes-desbloqueo/contador`,
         { headers: getHeaders() }
       );
 

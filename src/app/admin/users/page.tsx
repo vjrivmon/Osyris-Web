@@ -77,11 +77,19 @@ export default function AdminUsersPage() {
         return
       }
 
+      // Mapear 'query' a 'search' para el backend
+      const apiFilters = {
+        search: filters.query || '',
+        rol: filters.rol || '',
+        estado: filters.estado || '',
+        seccion: filters.seccion || ''
+      }
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
         ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== "")
+          Object.entries(apiFilters).filter(([_, value]) => value !== "")
         )
       })
 

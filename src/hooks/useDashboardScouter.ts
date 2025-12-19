@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { getApiUrl } from '@/lib/api-utils'
 
 // Types para el dashboard
 export interface Actividad {
@@ -138,7 +139,7 @@ export function useDashboardScouter() {
   const [campamentoExpanded, setCampamentoExpanded] = useState(false)
   const previousUserId = useRef<number | null>(null)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  // Using getApiUrl() instead of hardcoded URL
 
   // IMPORTANTE: Resetear todo el estado cuando cambia el usuario
   useEffect(() => {
@@ -177,7 +178,7 @@ export function useDashboardScouter() {
       if (options?.expandCampamento) params.append('expandCampamento', 'true')
 
       const response = await fetch(
-        `${API_URL}/api/dashboard-scouter/summary?${params.toString()}`,
+        `${getApiUrl()}/api/dashboard-scouter/summary?${params.toString()}`,
         { headers: getAuthHeaders() }
       )
 
@@ -199,13 +200,13 @@ export function useDashboardScouter() {
     } finally {
       setLoading(false)
     }
-  }, [API_URL])
+  }, [])
 
   // Obtener detalle del proximo sabado
   const fetchSabadoDetalle = useCallback(async (actividadId: number) => {
     try {
       const response = await fetch(
-        `${API_URL}/api/dashboard-scouter/sabado/${actividadId}/detalle`,
+        `${getApiUrl()}/api/dashboard-scouter/sabado/${actividadId}/detalle`,
         { headers: getAuthHeaders() }
       )
 
@@ -231,13 +232,13 @@ export function useDashboardScouter() {
       console.error('Error fetching sabado detalle:', err)
       throw err
     }
-  }, [API_URL, data])
+  }, [data])
 
   // Obtener detalle del proximo campamento
   const fetchCampamentoDetalle = useCallback(async (actividadId: number) => {
     try {
       const response = await fetch(
-        `${API_URL}/api/dashboard-scouter/campamento/${actividadId}/detalle`,
+        `${getApiUrl()}/api/dashboard-scouter/campamento/${actividadId}/detalle`,
         { headers: getAuthHeaders() }
       )
 
@@ -263,7 +264,7 @@ export function useDashboardScouter() {
       console.error('Error fetching campamento detalle:', err)
       throw err
     }
-  }, [API_URL, data])
+  }, [data])
 
   // Expandir/contraer sabado
   const toggleSabadoExpanded = useCallback(async () => {
@@ -300,7 +301,7 @@ export function useDashboardScouter() {
   const limpiarNotificaciones = useCallback(async () => {
     try {
       const response = await fetch(
-        `${API_URL}/api/dashboard-scouter/notificaciones`,
+        `${getApiUrl()}/api/dashboard-scouter/notificaciones`,
         {
           method: 'DELETE',
           headers: getAuthHeaders()
@@ -326,7 +327,7 @@ export function useDashboardScouter() {
       console.error('Error limpiando notificaciones:', err)
       throw err
     }
-  }, [API_URL])
+  }, [])
 
   return {
     // Datos

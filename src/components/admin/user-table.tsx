@@ -44,6 +44,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { getApiUrl } from "@/lib/api-utils"
+import { EditUserModal } from "./edit-user-modal"
 
 interface User {
   id: number
@@ -91,6 +92,8 @@ export function UserTable({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [actionLoading, setActionLoading] = useState<number | null>(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [userToEdit, setUserToEdit] = useState<User | null>(null)
   const { toast } = useToast()
 
   const getRoleBadge = (rol: string) => {
@@ -232,12 +235,14 @@ export function UserTable({
   }
 
   const handleEditUser = (user: User) => {
-    // Aquí podrías abrir un modal de edición
-    // Por ahora solo mostramos un toast
-    toast({
-      title: "Editar usuario",
-      description: `Función de edición para ${user.nombre} ${user.apellidos} - En desarrollo`,
-    })
+    setUserToEdit(user)
+    setEditModalOpen(true)
+  }
+
+  const handleUserUpdated = (userId: number, updates: Partial<User>) => {
+    onUserUpdate?.(userId, updates)
+    setEditModalOpen(false)
+    setUserToEdit(null)
   }
 
   const formatDate = (dateString: string) => {
@@ -463,6 +468,14 @@ export function UserTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        user={userToEdit}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onUserUpdated={handleUserUpdated}
+      />
     </>
   )
 }

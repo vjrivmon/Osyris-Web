@@ -9,8 +9,7 @@
  */
 
 import { useState, useCallback } from 'react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { getApiUrl } from '@/lib/api-utils';
 
 // Tipos
 export interface LimiteSubidaResult {
@@ -124,7 +123,7 @@ export function useDocumentoResubida(): UseDocumentoResubidaReturn {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/documentos-resubida/${documentoId}/puede-subir`,
+        `${getApiUrl()}/api/documentos-resubida/${documentoId}/puede-subir`,
         { headers: getHeaders() }
       );
 
@@ -158,7 +157,7 @@ export function useDocumentoResubida(): UseDocumentoResubidaReturn {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/documentos-resubida/educando/${educandoId}/tipo/${tipoDocumento}/puede-subir`,
+        `${getApiUrl()}/api/documentos-resubida/educando/${educandoId}/tipo/${tipoDocumento}/puede-subir`,
         { headers: getHeaders() }
       );
 
@@ -203,7 +202,7 @@ export function useDocumentoResubida(): UseDocumentoResubidaReturn {
 
       const token = getToken();
       const response = await fetch(
-        `${API_URL}/api/drive/documentos/${documentoId}/reemplazar`,
+        `${getApiUrl()}/api/drive/documentos/${documentoId}/reemplazar`,
         {
           method: 'POST',
           headers: {
@@ -260,7 +259,7 @@ export function useDocumentoResubida(): UseDocumentoResubidaReturn {
 
       const token = getToken();
       const response = await fetch(
-        `${API_URL}/api/drive/documento/upload`,
+        `${getApiUrl()}/api/drive/documento/upload`,
         {
           method: 'POST',
           headers: {
@@ -302,7 +301,7 @@ export function useDocumentoResubida(): UseDocumentoResubidaReturn {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/solicitudes-desbloqueo`,
+        `${getApiUrl()}/api/solicitudes-desbloqueo`,
         {
           method: 'POST',
           headers: getHeaders(),
@@ -338,7 +337,7 @@ export function useDocumentoResubida(): UseDocumentoResubidaReturn {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/documentos-resubida/${documentoId}/historial`,
+        `${getApiUrl()}/api/documentos-resubida/${documentoId}/historial`,
         { headers: getHeaders() }
       );
 
@@ -368,7 +367,7 @@ export function useDocumentoResubida(): UseDocumentoResubidaReturn {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/documentos-resubida/tipo/${tipoDocumento}/config`,
+        `${getApiUrl()}/api/documentos-resubida/tipo/${tipoDocumento}/config`,
         { headers: getHeaders() }
       );
 

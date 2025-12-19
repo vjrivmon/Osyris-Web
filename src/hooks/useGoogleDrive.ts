@@ -2,8 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { TipoDocumento } from '@/types/familia'
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+import { getApiUrl } from '@/lib/api-utils'
 
 interface Plantilla {
   id: string
@@ -90,7 +89,7 @@ export function useGoogleDrive() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/drive/plantillas`, {
+      const response = await fetch(`${getApiUrl()}/api/drive/plantillas`, {
         headers: getAuthHeaders()
       })
 
@@ -118,7 +117,7 @@ export function useGoogleDrive() {
     setError(null)
     try {
       const token = localStorage.getItem('familiaToken') || localStorage.getItem('token')
-      const response = await fetch(`${API_BASE_URL}/api/drive/plantilla/${fileId}/download`, {
+      const response = await fetch(`${getApiUrl()}/api/drive/plantilla/${fileId}/download`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -156,7 +155,7 @@ export function useGoogleDrive() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/drive/educando/${educandoId}/documentos`, {
+      const response = await fetch(`${getApiUrl()}/api/drive/educando/${educandoId}/documentos`, {
         headers: getAuthHeaders()
       })
 
@@ -230,7 +229,7 @@ export function useGoogleDrive() {
 
       // Usar fetchWithRetry para manejar errores temporales
       const response = await fetchWithRetry(
-        `${API_BASE_URL}/api/drive/documento/upload`,
+        `${getApiUrl()}/api/drive/documento/upload`,
         {
           method: 'POST',
           headers: {

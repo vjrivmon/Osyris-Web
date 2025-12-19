@@ -1,4 +1,5 @@
 'use client'
+import { getApiUrl } from '@/lib/api-utils'
 
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -61,7 +62,7 @@ export default function DocumentosPendientesPage() {
   const [motivoRechazo, setMotivoRechazo] = useState('')
   const [procesando, setProcesando] = useState(false)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  const API_URL = getApiUrl()
 
   // Filtrar documentos por búsqueda
   const filteredDocs = documentosPendientes.filter(doc => {

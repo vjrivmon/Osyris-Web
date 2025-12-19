@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { getApiUrl } from '@/lib/api-utils'
 import {
   EducandoConDocs,
   EducandoFilters,
@@ -12,8 +13,6 @@ import {
   DocumentoEducando,
   ResumenDocumentacion
 } from '@/types/educando-scouter'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 interface UseEducandosScouterReturn {
   // Estado
@@ -109,7 +108,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
 
     try {
       fetchingSeccion.current = true
-      const response = await fetch(`${API_URL}/api/dashboard-scouter/summary`, {
+      const response = await fetch(`${getApiUrl()}/api/dashboard-scouter/summary`, {
         headers: getHeaders()
       })
 
@@ -167,7 +166,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
       if (currentFilters.estadoDocs) queryParams.append('estadoDocs', currentFilters.estadoDocs)
 
       const response = await fetch(
-        `${API_URL}/api/educandos/seccion/${seccionId}/completo?${queryParams.toString()}`,
+        `${getApiUrl()}/api/educandos/seccion/${seccionId}/completo?${queryParams.toString()}`,
         { headers: getHeaders() }
       )
 
@@ -229,7 +228,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
         seccion_id: seccionId
       }
 
-      const response = await fetch(`${API_URL}/api/educandos`, {
+      const response = await fetch(`${getApiUrl()}/api/educandos`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(educandoData)
@@ -265,7 +264,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${API_URL}/api/educandos/${id}`, {
+      const response = await fetch(`${getApiUrl()}/api/educandos/${id}`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(data)
@@ -300,7 +299,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${API_URL}/api/educandos/${id}/deactivate`, {
+      const response = await fetch(`${getApiUrl()}/api/educandos/${id}/deactivate`, {
         method: 'PATCH',
         headers: getHeaders()
       })
@@ -334,7 +333,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${API_URL}/api/educandos/${id}/reactivate`, {
+      const response = await fetch(`${getApiUrl()}/api/educandos/${id}/reactivate`, {
         method: 'PATCH',
         headers: getHeaders()
       })
@@ -368,7 +367,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
     resumen: ResumenDocumentacion
   } | null> => {
     try {
-      const response = await fetch(`${API_URL}/api/educandos/${educandoId}/documentacion`, {
+      const response = await fetch(`${getApiUrl()}/api/educandos/${educandoId}/documentacion`, {
         headers: getHeaders()
       })
 
@@ -398,7 +397,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
     setError(null)
 
     try {
-      const response = await fetch(`${API_URL}/api/educandos/${educandoId}/notificar-documentacion`, {
+      const response = await fetch(`${getApiUrl()}/api/educandos/${educandoId}/notificar-documentacion`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(data)

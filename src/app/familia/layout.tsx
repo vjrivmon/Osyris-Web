@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getApiUrl } from '@/lib/api-utils';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Bell, CheckCircle, XCircle, FileText, Trash2, CheckCheck } from "lucide-react";
@@ -51,7 +52,7 @@ export default function FamiliaLayout({
   const [contadorNoLeidas, setContadorNoLeidas] = useState(0);
   const router = useRouter();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const API_URL = getApiUrl();
 
   const handleLogout = () => {
     localStorage.removeItem("osyris_user");

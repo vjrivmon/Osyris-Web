@@ -93,16 +93,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           console.log(`✅ [AuthContext] Sesión válida hasta: ${new Date(user.expiresAt).toLocaleString()}`)
         } else {
-          // Sesión antigua sin expiración - limpiar por seguridad
-          console.log('⚠️ [AuthContext] Sesión sin fecha de expiración, limpiando...')
-          clearAuthData()
-          setAuthState({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false
-          })
-          return
+          // Sesión antigua sin expiración - añadir expiración por defecto en lugar de limpiar
+          console.log('⚠️ [AuthContext] Sesión sin fecha de expiración, añadiendo expiración por defecto...')
+          const now = new Date()
+          const newExpiresAt = new Date(now.getTime() + SESSION_DURATION_MS)
+          user.expiresAt = newExpiresAt.toISOString()
+          user.lastLogin = user.lastLogin || now.toISOString()
+
+          // Actualizar localStorage con la nueva expiración
+          localStorage.setItem('user', JSON.stringify(user))
+          localStorage.setItem('osyris_user', JSON.stringify(user))
+
+          console.log(`✅ [AuthContext] Sesión actualizada, expira: ${newExpiresAt.toLocaleString()}`)
         }
 
         console.log('✅ [AuthContext] Usuario cargado:', { id: user.id, email: user.email, rol: user.rol })
