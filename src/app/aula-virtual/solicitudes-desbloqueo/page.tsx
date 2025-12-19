@@ -66,7 +66,7 @@ export default function SolicitudesDesbloqueoPage() {
     if (user?.seccion_id) {
       cargarSolicitudes(user.seccion_id);
     }
-  }, [user?.seccion_id]);
+  }, [user?.seccion_id, cargarSolicitudes]);
 
   // Filtrar solicitudes por estado según tab
   const solicitudesFiltradas = solicitudes.filter(s => {

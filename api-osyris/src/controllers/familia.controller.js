@@ -1,5 +1,6 @@
 const FamiliarEducando = require('../models/familiar_educando.model');
 const Educando = require('../models/educando.model');
+const Actividad = require('../models/actividad.model');
 const Joi = require('joi');
 
 // Esquema de validación para vincular educando
@@ -30,13 +31,22 @@ const getEducandosVinculados = async (req, res) => {
   try {
     const familiarId = req.usuario.id;
 
+    console.log('🔍 [getEducandosVinculados] Usuario:', {
+      id: req.usuario.id,
+      email: req.usuario.email,
+      rol: req.usuario.rol
+    });
+
     const educandos = await FamiliarEducando.findEducandosByFamiliar(familiarId);
+
+    console.log('📋 [getEducandosVinculados] Educandos encontrados:', educandos?.length || 0);
 
     res.status(200).json({
       success: true,
       data: educandos
     });
   } catch (error) {
+    console.error('❌ [getEducandosVinculados] Error:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener los educandos vinculados',
@@ -468,6 +478,79 @@ const getActividadesFamilia = async (req, res) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/familia/actividades/proximas:
+ *   get:
+ *     summary: Obtener próximas actividades para el familiar autenticado (desde HOY)
+ *     tags: [Familia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *         description: Número máximo de actividades a devolver
+ *     responses:
+ *       200:
+ *         description: Lista de próximas actividades
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
+ */
+const getProximasActividades = async (req, res) => {
+  try {
+    const familiarId = req.usuario.id;
+    const limit = parseInt(req.query.limit) || 5;
+
+    // Obtener educandos vinculados al familiar
+    const educandos = await FamiliarEducando.findEducandosByFamiliar(familiarId);
+
+    if (!educandos || educandos.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: []
+      });
+    }
+
+    // Obtener secciones de los educandos (únicas)
+    const seccionesIds = [...new Set(educandos.map(e => e.seccion_id).filter(Boolean))];
+
+    // Obtener próximas actividades desde HOY
+    const actividades = await Actividad.findProximas({
+      dias: 365, // Próximo año
+      limit: limit,
+      visibilidad: 'familias'
+    });
+
+    // Filtrar actividades relevantes para las secciones del familiar
+    // Las reuniones de sábado son para todos, otras se filtran por sección
+    const actividadesFiltradas = actividades.filter(a => {
+      // Reuniones de sábado son para todos
+      if (a.tipo === 'reunion_sabado') return true;
+      // Sin sección específica = para todos
+      if (!a.seccion_id) return true;
+      // Actividad de una de las secciones del familiar
+      return seccionesIds.includes(a.seccion_id);
+    });
+
+    res.status(200).json({
+      success: true,
+      data: actividadesFiltradas.slice(0, limit)
+    });
+  } catch (error) {
+    console.error('Error al obtener próximas actividades:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener próximas actividades',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getEducandosVinculados,
   getEducandoById,
@@ -476,5 +559,6 @@ module.exports = {
   desvincularEducando,
   verificarAcceso,
   getFamiliaresByEducando,
-  getActividadesFamilia
+  getActividadesFamilia,
+  getProximasActividades
 };

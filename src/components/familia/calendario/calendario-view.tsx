@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -12,21 +12,28 @@ import {
   Clock,
   MapPin,
   Users,
-  Filter,
   Grid3X3,
   List,
   AlertCircle
 } from 'lucide-react'
 import { useCalendarioFamilia, ActividadCalendario } from '@/hooks/useCalendarioFamilia'
+import { useFamiliaData } from '@/hooks/useFamiliaData'
+import { useAuth } from '@/contexts/AuthContext'
 import { ConfirmationBadge } from './confirmation-badge'
 import { EventoDetailModal } from './evento-detail-modal'
+import { InscripcionCampamentoWizard } from './inscripcion-campamento-wizard'
 import { ActivityFilter } from './activity-filter'
+import { TipoEventoBadge, TipoEventoDot } from './tipo-evento-badge'
+import { getTipoEventoConfig } from './tipos-evento'
+import { AsistenciaCounter } from './asistencia-counter'
+import type { ActividadCampamento } from '@/types/familia'
 
 interface CalendarioViewProps {
   className?: string
+  hijoSeleccionado?: number
 }
 
-export function CalendarioView({ className }: CalendarioViewProps) {
+export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewProps) {
   const {
     actividades,
     loading,
@@ -36,14 +43,63 @@ export function CalendarioView({ className }: CalendarioViewProps) {
     refetch
   } = useCalendarioFamilia()
 
+  const { hijos } = useFamiliaData()
+  const { user } = useAuth()
+
   const [fechaActual, setFechaActual] = useState(new Date())
   const [selectedActividad, setSelectedActividad] = useState<ActividadCalendario | null>(null)
   const [vistaMode, setVistaMode] = useState<'mes' | 'lista'>('mes')
   const [filtros, setFiltros] = useState({
-    seccion: 'todas',
     tipo: 'todos',
     confirmacion: 'todos'
   })
+
+  // Estados para wizard de campamento
+  const [campamentoWizardOpen, setCampamentoWizardOpen] = useState(false)
+  const [selectedCampamento, setSelectedCampamento] = useState<ActividadCampamento | null>(null)
+
+  // Educandos participantes en el campamento seleccionado
+  // Ordenados por seccion_id para mostrar primero las secciones menores (Castores < Manada < Tropa < Pioneros < Rutas)
+  const educandosParticipantes = useMemo(() => {
+    if (!selectedCampamento || !hijos) return []
+    return hijos
+      .filter(hijo =>
+        selectedCampamento.scoutIds.includes(hijo.id.toString())
+      )
+      .sort((a, b) => (a.seccion_id || 99) - (b.seccion_id || 99))
+  }, [selectedCampamento, hijos])
+
+  // Calcular el índice del educando seleccionado basándose en hijoSeleccionado o sessionStorage
+  const selectedEducandoIndex = useMemo(() => {
+    if (!educandosParticipantes.length) return 0
+
+    // Primero intentar con el prop hijoSeleccionado
+    if (hijoSeleccionado) {
+      const index = educandosParticipantes.findIndex(e => e.id === hijoSeleccionado)
+      if (index >= 0) return index
+    }
+
+    // Fallback: intentar leer de sessionStorage
+    if (typeof window !== 'undefined') {
+      const savedId = sessionStorage.getItem('hijoSeleccionado')
+      if (savedId) {
+        const index = educandosParticipantes.findIndex(e => e.id === parseInt(savedId, 10))
+        if (index >= 0) return index
+      }
+    }
+
+    return 0
+  }, [hijoSeleccionado, educandosParticipantes])
+
+  // Educando actualmente seleccionado para el wizard
+  const educandoActual = educandosParticipantes[selectedEducandoIndex] || null
+
+  // Datos del familiar para prellenar
+  const familiarData = useMemo(() => ({
+    nombre: user ? `${user.nombre} ${user.apellidos || ''}`.trim() : '',
+    email: user?.email || '',
+    telefono: (user as any)?.telefono || ''
+  }), [user])
 
   // Colores por sección
   const coloresSeccion = {
@@ -60,12 +116,16 @@ export function CalendarioView({ className }: CalendarioViewProps) {
       ? actividadesPorMes(fechaActual.getFullYear(), fechaActual.getMonth() + 1)
       : proximasActividades(90) // Próximos 90 días en vista lista
 
-    if (filtros.seccion !== 'todas') {
-      actividadesFiltradas = actividadesFiltradas.filter(a => a.seccion === filtros.seccion)
-    }
-
     if (filtros.tipo !== 'todos') {
-      actividadesFiltradas = actividadesFiltradas.filter(a => a.tipo === filtros.tipo)
+      // Mapear los tipos del filtro a los tipos de la base de datos
+      const tipoMap: Record<string, string[]> = {
+        'reunion_sabado': ['reunion', 'reunion_sabado'],
+        'salida': ['evento', 'salida', 'excursion'],
+        'campamento': ['campamento'],
+        'evento_especial': ['evento', 'evento_especial', 'actividad_especial']
+      }
+      const tiposABuscar = tipoMap[filtros.tipo] || [filtros.tipo]
+      actividadesFiltradas = actividadesFiltradas.filter(a => tiposABuscar.includes(a.tipo))
     }
 
     if (filtros.confirmacion !== 'todos') {
@@ -140,6 +200,37 @@ export function CalendarioView({ className }: CalendarioViewProps) {
   // Navegación a mes actual
   const irMesActual = () => {
     setFechaActual(new Date())
+  }
+
+  // Manejar clic en actividad
+  const handleActividadClick = (actividad: ActividadCalendario) => {
+    if (actividad.tipo === 'campamento') {
+      // Convertir a ActividadCampamento para el wizard
+      const actividadCampamento: ActividadCampamento = {
+        id: actividad.id,
+        titulo: actividad.titulo,
+        descripcion: actividad.descripcion || '',
+        fecha: actividad.fechaInicio.toISOString().split('T')[0],
+        fechaFin: actividad.fechaFin?.toISOString().split('T')[0],
+        lugar: actividad.lugar,
+        costo: actividad.precio,
+        scoutIds: actividad.scoutIds,
+        confirmaciones: actividad.confirmaciones,
+        campamento: actividad.campamento // Los datos adicionales del campamento
+      }
+      setSelectedCampamento(actividadCampamento)
+      setCampamentoWizardOpen(true)
+    } else {
+      // Para otros tipos de actividad, usar el modal generico
+      setSelectedActividad(actividad)
+    }
+  }
+
+  // Cerrar wizard de campamento (sin auto-ciclo para evitar abrir otro popup automáticamente)
+  const handleCloseCampamentoWizard = () => {
+    setCampamentoWizardOpen(false)
+    setSelectedCampamento(null)
+    refetch() // Actualizar datos
   }
 
   const nombresMeses = [
@@ -284,41 +375,47 @@ export function CalendarioView({ className }: CalendarioViewProps) {
                         </div>
 
                         <div className="space-y-1">
-                          {actividadesDia.slice(0, 2).map(actividad => (
-                            <div
-                              key={actividad.id}
-                              className="text-xs p-1 rounded cursor-pointer hover:opacity-80"
-                              style={{
-                                backgroundColor: coloresSeccion[actividad.seccion as keyof typeof coloresSeccion] + '20',
-                                borderLeft: `3px solid ${coloresSeccion[actividad.seccion as keyof typeof coloresSeccion]}`
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedActividad(actividad)
-                              }}
-                            >
-                              <div className="font-medium truncate">
-                                {actividad.titulo}
+                          {actividadesDia.slice(0, 2).map(actividad => {
+                            const tipoConfig = getTipoEventoConfig(actividad.tipo || 'reunion_sabado')
+                            const TipoIcon = tipoConfig.icon
+                            const confirmados = actividad.scoutIds.filter(scoutId =>
+                              actividad.confirmaciones[scoutId] === 'confirmado'
+                            ).length
+                            const total = actividad.scoutIds.length
+
+                            return (
+                              <div
+                                key={actividad.id}
+                                className={`text-xs p-1.5 rounded-md cursor-pointer transition-all hover:shadow-sm hover:scale-[1.02] ${tipoConfig.bgColor} border-l-4`}
+                                style={{ borderLeftColor: tipoConfig.hexColor }}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleActividadClick(actividad)
+                                }}
+                              >
+                                <div className="flex items-center gap-1">
+                                  <TipoIcon className="h-3 w-3 shrink-0" />
+                                  <span className="font-medium truncate">{actividad.titulo}</span>
+                                </div>
+                                <div className="flex items-center justify-between mt-0.5">
+                                  {actividad.tipo === 'campamento' && (
+                                    <Badge variant="outline" className="text-[10px] px-1 py-0 bg-white/50">
+                                      Inscribete
+                                    </Badge>
+                                  )}
+                                  {actividad.tipo !== 'campamento' && total > 0 && (
+                                    <span className="text-[10px] text-gray-600">
+                                      {confirmados}/{total}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex items-center space-x-1">
-                                <ConfirmationBadge
-                                  estado={actividad.scoutIds.length > 0 ?
-                                    actividad.scoutIds.some(scoutId =>
-                                      actividad.confirmaciones[scoutId] === 'confirmado'
-                                    ) ? 'confirmado' : 'pendiente' : 'pendiente'
-                                  }
-                                  size="sm"
-                                />
-                                <span className="text-gray-600">
-                                  {actividad.scoutIds.length}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
+                            )
+                          })}
 
                           {actividadesDia.length > 2 && (
                             <div className="text-xs text-gray-500">
-                              +{actividadesDia.length - 2} más
+                              +{actividadesDia.length - 2} mas
                             </div>
                           )}
                         </div>
@@ -350,7 +447,7 @@ export function CalendarioView({ className }: CalendarioViewProps) {
               <Card
                 key={actividad.id}
                 className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedActividad(actividad)}
+                onClick={() => handleActividadClick(actividad)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -366,9 +463,7 @@ export function CalendarioView({ className }: CalendarioViewProps) {
                         >
                           {actividad.seccion}
                         </Badge>
-                        <Badge variant="secondary">
-                          {actividad.tipo}
-                        </Badge>
+                        <TipoEventoBadge tipo={actividad.tipo || 'reunion_sabado'} size="sm" />
                       </div>
 
                       <p className="text-gray-600 mb-4 line-clamp-2">
@@ -442,12 +537,25 @@ export function CalendarioView({ className }: CalendarioViewProps) {
         </div>
       )}
 
-      {/* Modal de detalles */}
+      {/* Modal de detalles para actividades normales */}
       {selectedActividad && (
         <EventoDetailModal
           actividad={selectedActividad}
           isOpen={!!selectedActividad}
           onClose={() => setSelectedActividad(null)}
+          hijoSeleccionado={hijoSeleccionado}
+        />
+      )}
+
+      {/* Wizard de inscripcion a campamento */}
+      {selectedCampamento && educandoActual && (
+        <InscripcionCampamentoWizard
+          key={`wizard-${selectedCampamento.id}-${educandoActual.id}`}
+          isOpen={campamentoWizardOpen}
+          onClose={handleCloseCampamentoWizard}
+          actividad={selectedCampamento}
+          educando={educandoActual}
+          familiarData={familiarData}
         />
       )}
     </div>

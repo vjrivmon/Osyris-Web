@@ -32,9 +32,10 @@ async function initializeDatabase() {
 async function query(sql, params = []) {
   try {
     const result = await pool.query(sql, params);
-    
-    // Para compatibilidad con SQLite
-    if (sql.trim().toUpperCase().startsWith('SELECT')) {
+    const sqlUpper = sql.trim().toUpperCase();
+
+    // Para compatibilidad con SQLite, pero respetando RETURNING de PostgreSQL
+    if (sqlUpper.startsWith('SELECT') || sqlUpper.includes('RETURNING')) {
       return result.rows;
     } else {
       return {
@@ -56,7 +57,8 @@ async function getConnection() {
     query: async (sql, params) => {
       try {
         const result = await client.query(sql, params);
-        if (sql.trim().toUpperCase().startsWith('SELECT')) {
+        const sqlUpper = sql.trim().toUpperCase();
+        if (sqlUpper.startsWith('SELECT') || sqlUpper.includes('RETURNING')) {
           return result.rows;
         } else {
           return {

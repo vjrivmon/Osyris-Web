@@ -6,8 +6,8 @@ async function createSimpleAdmin() {
   console.log('🚀 Creando usuario admin con credenciales simples...\n');
 
   // Datos del admin
-  const email = 'admin@grupoosyris.es';
-  const password = 'admin123'; // Contraseña simple para pruebas
+  const email = 'web.osyris@gmail.com';
+  const password = 'Admin123#';
   const nombre = 'Admin';
   const apellidos = 'Osyris';
 

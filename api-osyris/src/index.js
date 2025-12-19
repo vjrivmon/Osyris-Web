@@ -47,6 +47,11 @@ const documentosResubidaRoutes = require('./routes/documentos-resubida.routes');
 const solicitudesDesbloqueoRoutes = require('./routes/solicitudes-desbloqueo.routes');
 // 📧 RUTA DE CONTACTO PÚBLICO
 const contactoRoutes = require('./routes/contacto.routes');
+// 📅 RUTAS DEL SISTEMA DE CALENDARIO
+const rondaRoutes = require('./routes/ronda.routes');
+const inscripcionesCampamentoRoutes = require('./routes/inscripciones-campamento.routes');
+// 📊 RUTAS DEL DASHBOARD SCOUTER
+const dashboardScouterRoutes = require('./routes/dashboard-scouter.routes');
 // 🚀 FEATURE FLAGS
 // const featureFlagsRoutes = require('./routes/feature-flags.routes'); // ⚠️ DESHABILITADO: módulo incompleto
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
@@ -133,6 +138,11 @@ app.use('/api/documentos-resubida', documentosResubidaRoutes);
 app.use('/api/solicitudes-desbloqueo', solicitudesDesbloqueoRoutes);
 // 📧 RUTA DE CONTACTO PÚBLICO (sin autenticación)
 app.use('/api/contacto', contactoRoutes);
+// 📅 RUTAS DEL SISTEMA DE CALENDARIO
+app.use('/api/ronda', rondaRoutes);
+app.use('/api/inscripciones-campamento', inscripcionesCampamentoRoutes);
+// 📊 DASHBOARD SCOUTER
+app.use('/api/dashboard-scouter', dashboardScouterRoutes);
 // 🚀 FEATURE FLAGS
 // app.use('/api/feature-flags', featureFlagsRoutes); // ⚠️ DESHABILITADO: módulo incompleto
 // app.use('/api/preview', previewRoutes); // Temporarily disabled

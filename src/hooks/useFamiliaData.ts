@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { getApiUrl } from '@/lib/api-utils'
 
@@ -52,6 +52,7 @@ interface UseFamiliaDataReturn {
   hijos: ScoutHijo[] | null
   loading: boolean
   error: string | null
+  seccionesHijos: number[] // IDs de secciones únicas de los hijos
   refetch: () => Promise<void>
   updateHijo: (hijoId: number, data: Partial<ScoutHijo>) => Promise<boolean>
   addHijo: (data: Omit<ScoutHijo, 'id'>) => Promise<boolean>
@@ -63,12 +64,15 @@ interface UseFamiliaDataReturn {
 export function useFamiliaData({
   autoRefetch = true,
   refetchInterval = 5 * 60 * 1000, // 5 minutos
-  cacheKey = 'familia-data'
+  cacheKey: baseCacheKey = 'familia-data'
 }: UseFamiliaDataOptions = {}): UseFamiliaDataReturn {
   const { user, token, isAuthenticated, isLoading: authLoading } = useAuth()
   const [hijos, setHijos] = useState<ScoutHijo[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // IMPORTANTE: Cache key incluye el ID del usuario para evitar mezcla de datos entre cuentas
+  const cacheKey = user?.id ? `${baseCacheKey}-user-${user.id}` : baseCacheKey
 
   const fetchHijos = useCallback(async () => {
     console.log('🚀 [useFamiliaData] Iniciando fetchHijos...')
@@ -357,61 +361,93 @@ export function useFamiliaData({
     return hijos?.filter(hijo => hijo.seccion_id === seccionId) || []
   }, [hijos])
 
-  // Efecto inicial - solo cargar cuando AuthContext termine de cargar
+  // Secciones únicas de los hijos (para filtrar calendario)
+  // Usamos serialización para evitar que la referencia cambie innecesariamente
+  // cuando el contenido es el mismo - esto previene re-renders en useEffect
+  const seccionesHijosKey = useMemo(() => {
+    if (!hijos || hijos.length === 0) return ''
+    return [...new Set(hijos.map(h => h.seccion_id).filter(Boolean))].sort((a, b) => a - b).join(',')
+  }, [hijos])
+
+  const seccionesHijos = useMemo(() => {
+    if (!seccionesHijosKey) return []
+    return seccionesHijosKey.split(',').map(Number)
+  }, [seccionesHijosKey])
+
+  // Referencia para trackear el usuario anterior y evitar cargas duplicadas
+  const prevUserIdRef = useRef<number | null>(null)
+  const loadingRef = useRef(false)
+
+  // Efecto principal: manejar cambios de usuario y carga de datos
   useEffect(() => {
-    // Esperar a que la autenticación termine de cargar
-    if (!authLoading && isAuthenticated && token && user) {
-      console.log('✅ [useFamiliaData] AuthContext cargado, iniciando carga de hijos')
-      fetchHijos()
+    const currentUserId = user?.id || null
+
+    // Si el usuario cambió (de uno a otro diferente), limpiar datos anteriores
+    if (prevUserIdRef.current !== null && prevUserIdRef.current !== currentUserId) {
+      console.log('🔄 [useFamiliaData] Usuario cambió de', prevUserIdRef.current, 'a', currentUserId, '- limpiando datos')
+      setHijos(null)
+      setError(null)
+    }
+
+    prevUserIdRef.current = currentUserId
+
+    // Si hay usuario autenticado y no estamos cargando, cargar datos
+    if (!authLoading && isAuthenticated && token && user && !loadingRef.current) {
+      console.log('✅ [useFamiliaData] Usuario autenticado, cargando hijos para:', user.id)
+      loadingRef.current = true
+      fetchHijos().finally(() => {
+        loadingRef.current = false
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, token, user?.id])
 
-  // Efecto adicional: cargar datos cuando el usuario se autentique (después de login)
-  // Este efecto verifica directamente localStorage porque el AuthContext puede tardar en actualizarse
-  // Resuelve el bug donde los hijos no cargan hasta recargar la página después del login
+  // Efecto para detectar login desde localStorage (cuando AuthContext tarda en actualizarse)
   useEffect(() => {
-    // Si ya tenemos hijos o estamos cargando, no hacer nada
-    if (hijos !== null || loading) return
+    // Solo ejecutar si no tenemos datos y no estamos cargando
+    if (hijos !== null || loading || loadingRef.current) return
 
-    // Verificar si hay datos en localStorage aunque AuthContext no los tenga aún
-    const checkAndLoad = () => {
+    const checkLocalStorage = () => {
       const storedToken = localStorage.getItem('token')
       const storedUser = localStorage.getItem('user')
 
       if (storedToken && storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser)
-          if (parsedUser?.id) {
-            console.log('🔄 [useFamiliaData] Datos encontrados en localStorage, forzando carga...')
-            fetchHijos()
+          if (parsedUser?.id && parsedUser?.expiresAt) {
+            // Verificar que la sesión no ha expirado
+            const now = new Date().getTime()
+            const expiresAt = new Date(parsedUser.expiresAt).getTime()
+            if (now < expiresAt) {
+              console.log('🔄 [useFamiliaData] Detectado login en localStorage, forzando carga para usuario:', parsedUser.id)
+              loadingRef.current = true
+              fetchHijos().finally(() => {
+                loadingRef.current = false
+              })
+              return true
+            }
           }
-        } catch (e) {
-          // Ignorar errores de parsing
+        } catch {
+          // Ignorar errores
         }
       }
+      return false
     }
 
-    // Ejecutar inmediatamente
-    checkAndLoad()
+    // Verificar inmediatamente
+    if (checkLocalStorage()) return
 
-    // También configurar un pequeño intervalo para verificar si los datos aparecen
-    // (útil cuando el login acaba de guardar los datos)
+    // Reintentar cada 300ms durante 2 segundos (útil justo después del login)
+    let attempts = 0
+    const maxAttempts = 7
     const intervalId = setInterval(() => {
-      if (hijos === null && !loading) {
-        checkAndLoad()
+      attempts++
+      if (checkLocalStorage() || attempts >= maxAttempts) {
+        clearInterval(intervalId)
       }
-    }, 500)
+    }, 300)
 
-    // Limpiar después de 3 segundos (suficiente tiempo para que el login complete)
-    const timeoutId = setTimeout(() => {
-      clearInterval(intervalId)
-    }, 3000)
-
-    return () => {
-      clearInterval(intervalId)
-      clearTimeout(timeoutId)
-    }
+    return () => clearInterval(intervalId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hijos, loading])
 
@@ -431,6 +467,7 @@ export function useFamiliaData({
     hijos,
     loading,
     error,
+    seccionesHijos,
     refetch,
     updateHijo,
     addHijo,

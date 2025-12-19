@@ -214,6 +214,31 @@ router.delete('/desvincular/:relacionId', verifyToken, checkRole(['admin']), fam
 
 /**
  * @swagger
+ * /api/familia/actividades/proximas:
+ *   get:
+ *     summary: Obtener próximas actividades para el familiar autenticado (desde HOY)
+ *     tags: [Familia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *         description: Número máximo de actividades a devolver
+ *     responses:
+ *       200:
+ *         description: Lista de próximas actividades
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
+ */
+router.get('/actividades/proximas', verifyToken, checkRole(['familia', 'admin']), familiaController.getProximasActividades);
+
+/**
+ * @swagger
  * /api/familia/actividades/{familiaId}:
  *   get:
  *     summary: Obtener actividades para los hijos del familiar

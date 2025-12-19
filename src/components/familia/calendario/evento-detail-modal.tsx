@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -13,54 +13,330 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Calendar,
   Clock,
   MapPin,
   Users,
   DollarSign,
-  User,
-  Phone,
-  Mail,
-  ExternalLink,
-  Download,
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Info
+  Info,
+  FileText,
+  Eye
 } from 'lucide-react'
 import { useCalendarioFamilia, ActividadCalendario } from '@/hooks/useCalendarioFamilia'
-import { ConfirmationBadge, ScoutConfirmationBadge } from './confirmation-badge'
+import { ConfirmationBadge } from './confirmation-badge'
 import { useFamiliaData } from '@/hooks/useFamiliaData'
+import { useInscripcionCampamento } from '@/hooks/useInscripcionCampamento'
 
 interface EventoDetailModalProps {
   actividad: ActividadCalendario
   isOpen: boolean
   onClose: () => void
+  hijoSeleccionado?: number
 }
 
-export function EventoDetailModal({ actividad, isOpen, onClose }: EventoDetailModalProps) {
+// Componente para mostrar documentos enviados de un campamento
+function DocumentosEnviadosSection({
+  educandoId,
+  actividadId
+}: {
+  educandoId: number
+  actividadId: string | number
+}) {
+  const { inscripcion, loading } = useInscripcionCampamento({
+    actividadId: typeof actividadId === 'string' ? parseInt(actividadId) : actividadId,
+    educandoId,
+    autoFetch: true
+  })
+
+  const handleVerDocumento = async (tipo: 'circular' | 'justificante') => {
+    const driveId = tipo === 'circular'
+      ? inscripcion?.circular_firmada_drive_id
+      : inscripcion?.justificante_pago_drive_id
+
+    if (driveId) {
+      window.open(`https://drive.google.com/file/d/${driveId}/view`, '_blank')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="mt-6 pt-4 border-t animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-16 bg-gray-100 rounded-lg"></div>
+          <div className="h-16 bg-gray-100 rounded-lg"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!inscripcion) {
+    return null
+  }
+
+  const tieneCircular = !!inscripcion.circular_firmada_drive_id
+  const tieneJustificante = !!inscripcion.justificante_pago_drive_id
+
+  if (!tieneCircular && !tieneJustificante) {
+    return null
+  }
+
+  return (
+    <div className="mt-6 pt-4 border-t">
+      <h4 className="font-medium mb-3 flex items-center text-sm">
+        <FileText className="h-4 w-4 mr-2 text-blue-500" />
+        Documentos Enviados
+      </h4>
+
+      <div className="space-y-2">
+        {/* Circular Firmada */}
+        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-full ${tieneCircular ? 'bg-green-100' : 'bg-gray-100'}`}>
+              <FileText className={`h-4 w-4 ${tieneCircular ? 'text-green-600' : 'text-gray-400'}`} />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Circular Firmada</p>
+              <p className={`text-xs ${tieneCircular ? 'text-green-600' : 'text-yellow-600'}`}>
+                {tieneCircular ? 'Subido' : 'Pendiente'}
+              </p>
+            </div>
+          </div>
+          {tieneCircular && (
+            <Button variant="ghost" size="sm" onClick={() => handleVerDocumento('circular')}>
+              <Eye className="h-4 w-4 mr-1" /> Ver
+            </Button>
+          )}
+        </div>
+
+        {/* Justificante de Pago */}
+        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-full ${tieneJustificante ? 'bg-green-100' : 'bg-gray-100'}`}>
+              <DollarSign className={`h-4 w-4 ${tieneJustificante ? 'text-green-600' : 'text-gray-400'}`} />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Justificante de Pago</p>
+              <p className={`text-xs ${tieneJustificante ? 'text-green-600' : 'text-yellow-600'}`}>
+                {tieneJustificante ? 'Subido' : 'Pendiente'}
+              </p>
+            </div>
+          </div>
+          {tieneJustificante && (
+            <Button variant="ghost" size="sm" onClick={() => handleVerDocumento('justificante')}>
+              <Eye className="h-4 w-4 mr-1" /> Ver
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Componente para el contenido de confirmación de un hijo
+function HijoConfirmacionContent({
+  hijo,
+  actividad,
+  confirmaciones,
+  comentarios,
+  isSubmitting,
+  onConfirmacion,
+  onComentarioChange
+}: {
+  hijo: any
+  actividad: ActividadCalendario
+  confirmaciones: Record<string, 'confirmado' | 'no_asiste'>
+  comentarios: Record<string, string>
+  isSubmitting: boolean
+  onConfirmacion: (scoutId: string, estado: 'confirmado' | 'no_asiste') => void
+  onComentarioChange: (scoutId: string, value: string) => void
+}) {
+  const confirmacionActual = confirmaciones[hijo.id.toString()] ||
+                             actividad.confirmaciones[hijo.id.toString()]
+  const isConfirmed = confirmacionActual === 'confirmado'
+  const isRejected = confirmacionActual === 'no_asiste'
+
+  return (
+    <div className="space-y-4">
+      {/* Header del hijo */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={hijo.foto} />
+            <AvatarFallback className="text-lg">
+              {hijo.nombre.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="font-semibold">{hijo.nombre} {hijo.apellidos}</p>
+            <p className="text-sm text-gray-600">{hijo.seccion}</p>
+          </div>
+        </div>
+        <ConfirmationBadge
+          estado={isConfirmed ? 'confirmado' : isRejected ? 'no_asiste' : 'pendiente'}
+        />
+      </div>
+
+      {/* Formulario de confirmación */}
+      {!isConfirmed && !isRejected && (
+        <div className="space-y-4 p-4 border rounded-lg">
+          <div>
+            <Label htmlFor={`comentarios-${hijo.id}`}>Comentarios (opcional)</Label>
+            <Textarea
+              id={`comentarios-${hijo.id}`}
+              placeholder="Algún comentario o información adicional..."
+              value={comentarios[hijo.id.toString()] || ''}
+              onChange={(e) => onComentarioChange(hijo.id.toString(), e.target.value)}
+              className="mt-1"
+              rows={2}
+            />
+          </div>
+
+          <div className="flex space-x-3">
+            <Button
+              onClick={() => onConfirmacion(hijo.id.toString(), 'no_asiste')}
+              disabled={isSubmitting}
+              variant="outline"
+              className="flex-1"
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              No podré asistir
+            </Button>
+            <Button
+              onClick={() => onConfirmacion(hijo.id.toString(), 'confirmado')}
+              disabled={isSubmitting}
+              className="flex-1 bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Sí, asistiré
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Estado confirmado/rechazado */}
+      {(isConfirmed || isRejected) && (
+        <div className="space-y-4">
+          <Alert className={isConfirmed ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+            <AlertDescription className={isConfirmed ? 'text-green-800' : 'text-red-800'}>
+              {isConfirmed ? '✅' : '❌'} Has {isConfirmed ? 'confirmado' : 'cancelado'} la asistencia para esta actividad.
+            </AlertDescription>
+          </Alert>
+
+          {/* Opción para modificar respuesta */}
+          <div className="p-4 border rounded-lg space-y-3">
+            <p className="text-sm text-gray-500">¿Necesitas cambiar tu respuesta?</p>
+            <div>
+              <Label htmlFor={`comentarios-edit-${hijo.id}`}>
+                {isConfirmed ? "Motivo de cancelación" : "Comentario (opcional)"}
+              </Label>
+              <Textarea
+                id={`comentarios-edit-${hijo.id}`}
+                placeholder={isConfirmed ? "Indica el motivo por el que no podrás asistir..." : "Añade un comentario opcional..."}
+                value={comentarios[hijo.id.toString()] || ''}
+                onChange={(e) => onComentarioChange(hijo.id.toString(), e.target.value)}
+                className="mt-1"
+                rows={2}
+              />
+            </div>
+            <div className="flex space-x-3">
+              {isConfirmed ? (
+                <Button
+                  onClick={() => onConfirmacion(hijo.id.toString(), 'no_asiste')}
+                  disabled={isSubmitting}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Cancelar asistencia
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => onConfirmacion(hijo.id.toString(), 'confirmado')}
+                  disabled={isSubmitting}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Ahora sí asistiré
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Documentos enviados (solo para campamentos) */}
+      {actividad.tipo === 'campamento' && (
+        <DocumentosEnviadosSection
+          educandoId={hijo.id}
+          actividadId={actividad.id}
+        />
+      )}
+    </div>
+  )
+}
+
+export function EventoDetailModal({ actividad, isOpen, onClose, hijoSeleccionado }: EventoDetailModalProps) {
   const { hijos } = useFamiliaData()
-  const { confirmarAsistencia, generarICS } = useCalendarioFamilia()
+  const { confirmarAsistencia } = useCalendarioFamilia()
 
   const [confirmaciones, setConfirmaciones] = useState<Record<string, 'confirmado' | 'no_asiste'>>({})
   const [comentarios, setComentarios] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+  // Hijos que participan en esta actividad
+  const hijosParticipantes = useMemo(() =>
+    hijos?.filter(hijo => actividad.scoutIds.includes(hijo.id.toString())) || [],
+    [hijos, actividad.scoutIds]
+  )
+
+  // Tab activa - inicializada con el hijo seleccionado o el primero
+  const [tabActiva, setTabActiva] = useState<string>('')
+
+  // Inicializar tab activa cuando cambie el hijo seleccionado o los participantes
+  useEffect(() => {
+    if (hijosParticipantes.length > 0) {
+      // Intentar usar el hijo seleccionado
+      if (hijoSeleccionado) {
+        const hijoEncontrado = hijosParticipantes.find(h => h.id === hijoSeleccionado)
+        if (hijoEncontrado) {
+          setTabActiva(hijoEncontrado.id.toString())
+          return
+        }
+      }
+
+      // Intentar leer de sessionStorage
+      if (typeof window !== 'undefined') {
+        const saved = sessionStorage.getItem('hijoSeleccionado')
+        if (saved) {
+          const hijoEncontrado = hijosParticipantes.find(h => h.id === parseInt(saved, 10))
+          if (hijoEncontrado) {
+            setTabActiva(hijoEncontrado.id.toString())
+            return
+          }
+        }
+      }
+
+      // Fallback al primero
+      setTabActiva(hijosParticipantes[0].id.toString())
+    }
+  }, [hijoSeleccionado, hijosParticipantes])
+
   // Colores por sección
-  const coloresSeccion = {
+  const coloresSeccion: Record<string, string> = {
     'Colonia La Veleta': '#FF6B35',
     'Manada Waingunga': '#FFD93D',
     'Tropa Brownsea': '#6BCF7F',
     'Posta Kanhiwara': '#E74C3C',
     'Ruta Walhalla': '#2E7D32'
   }
-
-  // Hijos que participan en esta actividad
-  const hijosParticipantes = hijos?.filter(hijo => actividad.scoutIds.includes(hijo.id.toString())) || []
 
   const handleConfirmacion = async (scoutId: string, estado: 'confirmado' | 'no_asiste') => {
     setIsSubmitting(true)
@@ -92,33 +368,13 @@ export function EventoDetailModal({ actividad, isOpen, onClose }: EventoDetailMo
     }
   }
 
-  const descargarICS = () => {
-    const icsContent = generarICS(actividad)
-    const blob = new Blob([icsContent], { type: 'text/calendar' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${actividad.titulo.replace(/[^a-z0-9]/gi, '_')}.ics`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+  const handleComentarioChange = (scoutId: string, value: string) => {
+    setComentarios(prev => ({ ...prev, [scoutId]: value }))
   }
 
   const abrirGoogleMaps = () => {
     const query = encodeURIComponent(actividad.lugar)
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank')
-  }
-
-  const abrirGoogleCalendar = () => {
-    const fechaInicio = actividad.fechaInicio.toISOString().replace(/-|:|\.\d\d\d/g, '')
-    const fechaFin = actividad.fechaFin.toISOString().replace(/-|:|\.\d\d\d/g, '')
-    const titulo = encodeURIComponent(actividad.titulo)
-    const descripcion = encodeURIComponent(actividad.descripcion)
-    const lugar = encodeURIComponent(actividad.lugar)
-
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${fechaInicio}/${fechaFin}&details=${descripcion}&location=${lugar}`
-    window.open(url, '_blank')
   }
 
   const calcularDiasRestantes = () => {
@@ -144,12 +400,12 @@ export function EventoDetailModal({ actividad, isOpen, onClose }: EventoDetailMo
               <DialogTitle className="text-2xl font-bold mb-2">
                 {actividad.titulo}
               </DialogTitle>
-              <div className="flex items-center space-x-3 mb-4">
+              <div className="flex items-center flex-wrap gap-2 mb-4">
                 <Badge
                   variant="outline"
                   style={{
-                    borderColor: coloresSeccion[actividad.seccion as keyof typeof coloresSeccion],
-                    color: coloresSeccion[actividad.seccion as keyof typeof coloresSeccion]
+                    borderColor: coloresSeccion[actividad.seccion] || '#666',
+                    color: coloresSeccion[actividad.seccion] || '#666'
                   }}
                 >
                   {actividad.seccion}
@@ -162,27 +418,6 @@ export function EventoDetailModal({ actividad, isOpen, onClose }: EventoDetailMo
                   <span>{diasRestantes.text}</span>
                 </div>
               </div>
-            </div>
-
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={abrirGoogleCalendar}
-                className="whitespace-nowrap"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Google Calendar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={descargarICS}
-                className="whitespace-nowrap"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                .ics
-              </Button>
             </div>
           </div>
 
@@ -278,126 +513,80 @@ export function EventoDetailModal({ actividad, isOpen, onClose }: EventoDetailMo
               </div>
             )}
 
-            {/* Monitor responsable */}
-            <div>
-              <h4 className="font-medium mb-3">Monitor Responsable</h4>
-              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={actividad.monitorResponsable.foto} />
-                  <AvatarFallback>
-                    {actividad.monitorResponsable.nombre.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-medium">{actividad.monitorResponsable.nombre}</p>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center space-x-1">
-                      <Mail className="h-3 w-3" />
-                      <span>{actividad.monitorResponsable.contacto}</span>
-                    </div>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Contactar
-                </Button>
-              </div>
-            </div>
-
-            {/* Confirmaciones por scout */}
+            {/* Confirmaciones por scout con Tabs */}
             <div>
               <h4 className="font-medium mb-3 flex items-center">
                 <Users className="h-5 w-5 mr-2" />
                 Confirmación de Asistencia
               </h4>
 
-              <div className="space-y-4">
-                {hijosParticipantes.map(hijo => {
-                  const confirmacionActual = confirmaciones[hijo.id.toString()] ||
-                                           actividad.confirmaciones[hijo.id.toString()]
-                  const isConfirmed = confirmacionActual === 'confirmado'
-                  const isRejected = confirmacionActual === 'no_asiste'
+              {hijosParticipantes.length > 0 ? (
+                hijosParticipantes.length === 1 ? (
+                  // Solo un hijo - no usar tabs
+                  <HijoConfirmacionContent
+                    hijo={hijosParticipantes[0]}
+                    actividad={actividad}
+                    confirmaciones={confirmaciones}
+                    comentarios={comentarios}
+                    isSubmitting={isSubmitting}
+                    onConfirmacion={handleConfirmacion}
+                    onComentarioChange={handleComentarioChange}
+                  />
+                ) : (
+                  // Múltiples hijos - usar tabs
+                  <Tabs value={tabActiva} onValueChange={setTabActiva} className="w-full">
+                    <TabsList className="w-full grid mb-4" style={{ gridTemplateColumns: `repeat(${hijosParticipantes.length}, 1fr)` }}>
+                      {hijosParticipantes.map(hijo => {
+                        const estado = confirmaciones[hijo.id.toString()] ||
+                                       actividad.confirmaciones[hijo.id.toString()] ||
+                                       'pendiente'
+                        return (
+                          <TabsTrigger
+                            key={hijo.id}
+                            value={hijo.id.toString()}
+                            className="flex items-center gap-2 relative"
+                          >
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={hijo.foto} />
+                              <AvatarFallback className="text-xs">
+                                {hijo.nombre.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="hidden sm:inline truncate max-w-[80px]">{hijo.nombre}</span>
+                            {/* Indicador de estado */}
+                            <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                              estado === 'confirmado' ? 'bg-green-500' :
+                              estado === 'no_asiste' ? 'bg-red-500' :
+                              'bg-yellow-500'
+                            }`} />
+                          </TabsTrigger>
+                        )
+                      })}
+                    </TabsList>
 
-                  return (
-                    <div key={hijo.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={hijo.foto} />
-                            <AvatarFallback>
-                              {hijo.nombre.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{hijo.nombre} {hijo.apellidos}</p>
-                            <p className="text-sm text-gray-600">{hijo.seccion}</p>
-                          </div>
-                        </div>
-
-                        <ConfirmationBadge
-                          estado={isConfirmed ? 'confirmado' : isRejected ? 'no_asiste' : 'pendiente'}
+                    {hijosParticipantes.map(hijo => (
+                      <TabsContent key={hijo.id} value={hijo.id.toString()} className="mt-0">
+                        <HijoConfirmacionContent
+                          hijo={hijo}
+                          actividad={actividad}
+                          confirmaciones={confirmaciones}
+                          comentarios={comentarios}
+                          isSubmitting={isSubmitting}
+                          onConfirmacion={handleConfirmacion}
+                          onComentarioChange={handleComentarioChange}
                         />
-                      </div>
-
-                      {!isConfirmed && !isRejected && (
-                        <div className="space-y-3">
-                          <div>
-                            <Label htmlFor={`comentarios-${hijo.id}`}>Comentarios (opcional)</Label>
-                            <Textarea
-                              id={`comentarios-${hijo.id}`}
-                              placeholder="Algún comentario o información adicional..."
-                              value={comentarios[hijo.id.toString()] || ''}
-                              onChange={(e) => setComentarios(prev => ({
-                                ...prev,
-                                [hijo.id.toString()]: e.target.value
-                              }))}
-                              className="mt-1"
-                              rows={2}
-                            />
-                          </div>
-
-                          <div className="flex space-x-3">
-                            <Button
-                              onClick={() => handleConfirmacion(hijo.id.toString(), 'confirmado')}
-                              disabled={isSubmitting}
-                              className="flex-1 bg-green-600 hover:bg-green-700"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Sí, asistiré
-                            </Button>
-                            <Button
-                              onClick={() => handleConfirmacion(hijo.id.toString(), 'no_asiste')}
-                              disabled={isSubmitting}
-                              variant="outline"
-                              className="flex-1"
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              No podré asistir
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      {(isConfirmed || isRejected) && (
-                        <Alert>
-                          <AlertDescription>
-                            {isConfirmed ? '✅' : '❌'} Has {isConfirmed ? 'confirmado' : 'cancelado'} la asistencia para esta actividad.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-                  )
-                })}
-
-                {hijosParticipantes.length === 0 && (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg">
-                    <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600">
-                      Ninguno de tus hijos participa en esta actividad
-                    </p>
-                  </div>
-                )}
-              </div>
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+                )
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600">
+                    Ninguno de tus hijos participa en esta actividad
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -451,9 +640,9 @@ export function EventoDetailModal({ actividad, isOpen, onClose }: EventoDetailMo
               </div>
             </div>
 
-            {/* Información importante */}
-            {diasRestantes.text === 'Hoy' || diasRestantes.text === 'Mañana' ||
-             (diasRestantes.text.includes('días') && parseInt(diasRestantes.text) <= 3) && (
+            {/* Información importante para actividades próximas */}
+            {(diasRestantes.text === 'Hoy' || diasRestantes.text === 'Mañana' ||
+             (diasRestantes.text.includes('días') && parseInt(diasRestantes.text) <= 3)) && (
               <Alert className="border-orange-200 bg-orange-50">
                 <AlertTriangle className="h-4 w-4 text-orange-600" />
                 <AlertDescription className="text-orange-800">

@@ -4,60 +4,17 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MetricsCard } from "@/components/admin/metrics-card"
-import { ActivityChart } from "@/components/admin/activity-chart"
 import { SearchBar } from "@/components/admin/search-bar"
 import { UserTable } from "@/components/admin/user-table"
-import { QuickAddModal } from "@/components/admin/quick-add-modal"
-import { BulkInviteModal } from "@/components/admin/bulk-invite-modal"
+import { InvitacionesPanel } from "@/components/admin/invitaciones-panel"
+import { FamiliasResumenCard } from "@/components/admin/familias-resumen-card"
 import {
   Users,
-  Activity,
-  MessageSquare,
-  TrendingUp,
-  Eye,
-  AlertCircle,
-  Bell,
-  Plus,
   RefreshCw,
-  BarChart3,
-  Clock,
-  Mail,
-  UserPlus
+  Shield,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getAuthToken, makeAuthenticatedRequest } from "@/lib/auth-utils"
-
-interface MetricsData {
-  totalUsuarios: number
-  usuariosActivosHoy: number
-  totalActividades: number
-  totalMensajes: number
-  engagementRate: number
-}
-
-interface ActivityData {
-  date: string
-  usuarios: number
-  actividades: number
-  mensajes: number
-}
-
-interface PopularPage {
-  page: string
-  title: string
-  visits: number
-  uniqueVisitors: number
-}
-
-interface Alert {
-  id: string
-  type: "error" | "warning" | "info" | "success"
-  title: string
-  message: string
-  timestamp: string
-  read: boolean
-}
 
 interface User {
   id: number
@@ -81,58 +38,32 @@ interface ApiUser {
   seccion_id?: number
   ultimo_acceso?: string
   fecha_registro: string
-  telefono?: string
-  direccion?: string
 }
 
-interface PendingUser {
-  id: number
-  email: string
-  nombre: string
-  apellidos: string
-  rol: string
-  seccion_id?: number
-  invitation_expires_at: string
-  fecha_registro: string
+// Mapeo de IDs de sección a nombres
+const SECCIONES_MAP: Record<number, string> = {
+  1: 'Castores',
+  2: 'Lobatos',
+  3: 'Tropa',
+  4: 'Pioneros',
+  5: 'Rutas',
 }
 
-export default function AdminCRMDashboard() {
+export default function AdminDashboard() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
-
-  // Estados para métricas
-  const [metrics, setMetrics] = useState<MetricsData>({
-    totalUsuarios: 0,
-    usuariosActivosHoy: 0,
-    totalActividades: 0,
-    totalMensajes: 0,
-    engagementRate: 0
-  })
-
-  // Estado para actividad
-  const [activityData, setActivityData] = useState<ActivityData[]>([])
-
-  // Estado para páginas populares
-  const [popularPages, setPopularPages] = useState<PopularPage[]>([])
-
-  // Estado para alertas
-  const [alerts, setAlerts] = useState<Alert[]>([])
 
   // Estado para usuarios
   const [users, setUsers] = useState<User[]>([])
   const [usersLoading, setUsersLoading] = useState(false)
   const [usersPagination, setUsersPagination] = useState({
     page: 1,
-    limit: 5,
+    limit: 10,
     total: 0,
     totalPages: 0
   })
 
-  // Estado para usuarios pendientes
-  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([])
-  const [pendingUsersLoading, setPendingUsersLoading] = useState(false)
-
-  // Filtros de búsqueda
+  // Filtros de busqueda
   const [searchFilters, setSearchFilters] = useState({
     query: "",
     rol: "",
@@ -140,94 +71,10 @@ export default function AdminCRMDashboard() {
   })
 
   useEffect(() => {
-    loadDashboardData()
+    loadUsers()
   }, [])
 
-  // Cargar todos los datos del dashboard
-  const loadDashboardData = async () => {
-    setIsLoading(true)
-    try {
-      await Promise.all([
-        loadMetrics(),
-        loadActivityData(),
-        loadPopularPages(),
-        loadAlerts(),
-        loadUsers(),
-        loadPendingUsers()
-      ])
-    } catch (error) {
-      console.error("Error loading dashboard data:", error)
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los datos del dashboard",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Cargar métricas principales
-  const loadMetrics = async () => {
-    try {
-      const token = getAuthToken()
-      if (!token) return
-
-      const response = await makeAuthenticatedRequest('/api/admin/metrics/summary')
-      if (response) {
-        setMetrics(response.data)
-      }
-    } catch (error) {
-      console.error("Error loading metrics:", error)
-    }
-  }
-
-  // Cargar datos de actividad
-  const loadActivityData = async () => {
-    try {
-      const token = getAuthToken()
-      if (!token) return
-
-      const response = await makeAuthenticatedRequest('/api/admin/metrics/activity')
-      if (response) {
-        setActivityData(response.data)
-      }
-    } catch (error) {
-      console.error("Error loading activity data:", error)
-    }
-  }
-
-  // Cargar páginas populares
-  const loadPopularPages = async () => {
-    try {
-      const token = getAuthToken()
-      if (!token) return
-
-      const response = await makeAuthenticatedRequest('/api/admin/pages/popular')
-      if (response) {
-        setPopularPages(response.data)
-      }
-    } catch (error) {
-      console.error("Error loading popular pages:", error)
-    }
-  }
-
-  // Cargar alertas
-  const loadAlerts = async () => {
-    try {
-      const token = getAuthToken()
-      if (!token) return
-
-      const response = await makeAuthenticatedRequest('/api/admin/alerts')
-      if (response) {
-        setAlerts(response.data)
-      }
-    } catch (error) {
-      console.error("Error loading alerts:", error)
-    }
-  }
-
-  // Cargar usuarios con filtros y paginación
+  // Cargar usuarios con filtros y paginacion
   const loadUsers = async (filters = searchFilters, page = usersPagination.page) => {
     setUsersLoading(true)
     try {
@@ -244,15 +91,14 @@ export default function AdminCRMDashboard() {
 
       const response = await makeAuthenticatedRequest(`/api/admin/users?${params}`)
       if (response) {
-        // Mapear datos de la API a la interfaz del UserTable
         const mappedUsers: User[] = response.data.users.map((apiUser: ApiUser) => ({
           id: apiUser.id,
           email: apiUser.email,
           nombre: apiUser.nombre,
           apellidos: apiUser.apellidos,
           rol: apiUser.rol,
-          estado: apiUser.activo ? "activo" : "inactivo", // Usar el estado real del usuario
-          seccion: apiUser.seccion_id ? `Sección ${apiUser.seccion_id}` : undefined,
+          estado: apiUser.activo ? "activo" : "inactivo",
+          seccion: apiUser.seccion_id ? SECCIONES_MAP[apiUser.seccion_id] || `Seccion ${apiUser.seccion_id}` : undefined,
           ultimoAcceso: apiUser.ultimo_acceso,
           fechaCreacion: apiUser.fecha_registro
         }))
@@ -262,37 +108,25 @@ export default function AdminCRMDashboard() {
       }
     } catch (error) {
       console.error("Error loading users:", error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los usuarios",
+        variant: "destructive",
+      })
     } finally {
       setUsersLoading(false)
+      setIsLoading(false)
     }
   }
 
-  // Cargar usuarios pendientes
-  const loadPendingUsers = async () => {
-    setPendingUsersLoading(true)
-    try {
-      const token = getAuthToken()
-      if (!token) return
-
-      const response = await makeAuthenticatedRequest('/api/admin/users/pending')
-      if (response) {
-        setPendingUsers(response.data)
-      }
-    } catch (error) {
-      console.error("Error loading pending users:", error)
-    } finally {
-      setPendingUsersLoading(false)
-    }
-  }
-
-  // Manejar búsqueda
+  // Manejar busqueda
   const handleSearch = (filters: any) => {
     setSearchFilters(filters)
     setUsersPagination(prev => ({ ...prev, page: 1 }))
     loadUsers(filters)
   }
 
-  // Limpiar búsqueda
+  // Limpiar busqueda
   const handleClearSearch = () => {
     const clearedFilters = {
       query: "",
@@ -304,345 +138,99 @@ export default function AdminCRMDashboard() {
     loadUsers(clearedFilters)
   }
 
-  // Manejar adición de usuario
-  const handleUserAdded = (newUser: any) => {
-    toast({
-      title: "Usuario agregado",
-      description: "El usuario ha sido agregado a la lista",
-    })
-    loadUsers(searchFilters)
-    loadMetrics()
-  }
-
-  // Manejar actualización de usuario
+  // Manejar actualizacion de usuario
   const handleUserUpdate = (userId: number, updates: Partial<User>) => {
     setUsers(prev => prev.map(user =>
       user.id === userId ? { ...user, ...updates } : user
     ))
-    loadMetrics()
   }
 
-  // Manejar eliminación de usuario
+  // Manejar eliminacion de usuario
   const handleUserDelete = (userId: number) => {
     setUsers(prev => prev.filter(user => user.id !== userId))
-    loadMetrics()
   }
 
-  // Manejar cambio de página
+  // Manejar cambio de pagina
   const handlePageChange = (page: number) => {
     setUsersPagination(prev => ({ ...prev, page }))
     loadUsers(searchFilters, page)
   }
 
-  // Reenviar invitación
-  const handleResendInvitation = async (userId: number) => {
-    try {
-      const token = getAuthToken()
-      if (!token) return
-
-      const response = await makeAuthenticatedRequest(`/api/admin/invitations/${userId}/resend`, {
-        method: 'POST'
-      })
-
-      if (response) {
-        toast({
-          title: "Invitación reenviada",
-          description: "Se ha enviado un nuevo correo de invitación",
-        })
-        loadPendingUsers()
-      }
-    } catch (error) {
-      console.error("Error resending invitation:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo reenviar la invitación",
-        variant: "destructive",
-      })
-    }
-  }
-
-  // Obtener icono para tipo de alerta
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case "error":
-        return <AlertCircle className="h-4 w-4 text-red-500" />
-      case "warning":
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />
-      case "success":
-        return <TrendingUp className="h-4 w-4 text-green-500" />
-      default:
-        return <Bell className="h-4 w-4 text-blue-500" />
-    }
-  }
-
-  // Obtener color para tipo de alerta
-  const getAlertColor = (type: string) => {
-    switch (type) {
-      case "error":
-        return "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20"
-      case "warning":
-        return "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/20"
-      case "success":
-        return "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20"
-      default:
-        return "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20"
-    }
+  // Refrescar todo
+  const handleRefreshAll = () => {
+    loadUsers()
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando dashboard...</p>
+          <p className="text-muted-foreground">Cargando panel...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard CRM</h1>
-          <p className="text-muted-foreground">
-            Panel de administración y gestión de usuarios
+          <div className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl sm:text-3xl font-bold">Panel de Administracion</h1>
+          </div>
+          <p className="text-muted-foreground mt-1">
+            Gestiona usuarios, invitaciones y familias del sistema
           </p>
         </div>
-        <div className="flex gap-2">
-          <QuickAddModal onUserAdded={handleUserAdded} />
-          <BulkInviteModal onInvitesSent={() => {
-            loadUsers(searchFilters)
-            loadPendingUsers()
-            loadMetrics()
-          }} />
-          <Button variant="outline" onClick={loadDashboardData}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualizar
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleRefreshAll}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Actualizar
+        </Button>
       </div>
 
-      {/* Métricas principales */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <MetricsCard
-          title="Total Usuarios"
-          value={metrics.totalUsuarios}
-          description="Usuarios registrados"
-          icon={Users}
-        />
-        <MetricsCard
-          title="Usuarios Activos Hoy"
-          value={metrics.usuariosActivosHoy}
-          description="Últimas 24 horas"
-          icon={Activity}
-        />
-        <MetricsCard
-          title="Actividades Totales"
-          value={metrics.totalActividades}
-          description="En el sistema"
-          icon={BarChart3}
-        />
-        <MetricsCard
-          title="Engagement"
-          value={`${metrics.engagementRate}%`}
-          description="Usuarios activos semana"
-          icon={TrendingUp}
-        />
-        <MetricsCard
-          title="Invitaciones Pendientes"
-          value={pendingUsers.length}
-          description="Por completar registro"
-          icon={Mail}
-        />
+      {/* Grid principal: Invitaciones + Familias */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <InvitacionesPanel onRefresh={handleRefreshAll} />
+        <FamiliasResumenCard />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Gráfico de actividad - 2 columnas */}
-        <div className="lg:col-span-2 space-y-6">
-          <ActivityChart data={activityData} />
-
-          {/* Gestión de usuarios */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Gestión de Usuarios
-                </span>
-                <Badge variant="outline">
-                  {usersPagination.total} usuarios
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                Administra los usuarios del sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <SearchBar
-                onSearch={handleSearch}
-                onClear={handleClearSearch}
-                placeholder="Buscar usuarios..."
-              />
-              <UserTable
-                users={users}
-                onUserUpdate={handleUserUpdate}
-                onUserDelete={handleUserDelete}
-                loading={usersLoading}
-                pagination={usersPagination}
-                onPageChange={handlePageChange}
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar derecha - 1 columna */}
-        <div className="space-y-6">
-          {/* Usuarios pendientes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Invitaciones Pendientes
-                </span>
-                <Badge variant={pendingUsers.length > 0 ? "secondary" : "outline"}>
-                  {pendingUsers.length}
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                Usuarios que deben completar su registro
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pendingUsersLoading ? (
-                <div className="flex items-center justify-center py-4">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                </div>
-              ) : pendingUsers.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No hay usuarios pendientes
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {pendingUsers.slice(0, 5).map((user) => (
-                    <div key={user.id} className="p-3 border rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {user.nombre} {user.apellidos}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {user.email}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {user.rol}
-                            </Badge>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {new Date(user.invitation_expires_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleResendInvitation(user.id)}
-                          className="ml-2"
-                        >
-                          <Mail className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {pendingUsers.length > 5 && (
-                    <p className="text-xs text-muted-foreground text-center pt-2">
-                      Y {pendingUsers.length - 5} más...
-                    </p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Páginas más visitadas */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Páginas Populares
-              </CardTitle>
-              <CardDescription>
-                Páginas más visitadas esta semana
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {popularPages.map((page, index) => (
-                  <div key={page.page} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{page.title}</p>
-                        <p className="text-xs text-muted-foreground">{page.page}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{page.visits}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {page.uniqueVisitors} únicos
-                      </p>
-                    </div>
-                  </div>
-                ))}
+      {/* Gestion de Usuarios - Tabla completa */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              <div>
+                <CardTitle>Gestion de Usuarios</CardTitle>
+                <CardDescription>
+                  Administra todos los usuarios del sistema
+                </CardDescription>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Alertas del sistema */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Alertas del Sistema
-              </CardTitle>
-              <CardDescription>
-                Notificaciones y alertas importantes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {alerts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No hay alertas activas
-                  </p>
-                ) : (
-                  alerts.slice(0, 5).map((alert) => (
-                    <div
-                      key={alert.id}
-                      className={`p-3 rounded-lg border ${getAlertColor(alert.type)}`}
-                    >
-                      <div className="flex items-start gap-2">
-                        {getAlertIcon(alert.type)}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{alert.title}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {alert.message}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+            <Badge variant="outline" className="w-fit">
+              {usersPagination.total} usuarios
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <SearchBar
+            onSearch={handleSearch}
+            onClear={handleClearSearch}
+            placeholder="Buscar usuarios por nombre o email..."
+          />
+          <UserTable
+            users={users}
+            onUserUpdate={handleUserUpdate}
+            onUserDelete={handleUserDelete}
+            loading={usersLoading}
+            pagination={usersPagination}
+            onPageChange={handlePageChange}
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -229,11 +229,14 @@ export interface ActividadCalendario {
   titulo: string
   descripcion?: string
   fecha: string
+  fechaFin?: string  // Para campamentos multi-día
   hora: string
+  horaFin?: string
   lugar?: string
   seccion: string
   seccion_id: number
   tipo: 'reunion' | 'campamento' | 'excursion' | 'actividad_especial' | 'formacion'
+  tipoOriginal?: string  // Tipo original de la API (para distinguir tipos específicos)
   confirmacion?: 'confirmado' | 'pendiente' | 'rechazado'
   costo?: number
   requiere_confirmacion: boolean
@@ -306,6 +309,322 @@ export const DocumentoUtils = {
    */
   getDocumentosCriticos: (documentos: Documento[]): Documento[] => {
     return documentos.filter(d => DocumentoUtils.esCritico(d.estado))
+  }
+}
+
+// ========================================
+// TIPOS PARA SISTEMA DE CAMPAMENTOS v2.0
+// ========================================
+
+/**
+ * Estados de inscripcion a campamento
+ */
+export type EstadoInscripcionCampamento =
+  | 'pendiente'      // Inscrito pero faltan datos/documentos
+  | 'inscrito'       // Inscripcion completa
+  | 'no_asiste'      // Confirmado que no asiste
+  | 'lista_espera'   // En lista de espera
+  | 'cancelado'      // Cancelado
+
+/**
+ * Recordatorio predefinido para campamentos
+ */
+export interface RecordatorioPredefinido {
+  id: string
+  texto: string
+  activo: boolean
+}
+
+/**
+ * Detalles de logistica de un campamento
+ */
+export interface CampamentoDetalles {
+  // Logistica
+  lugar_salida?: string
+  hora_salida?: string
+  mapa_salida_url?: string
+  lugar_regreso?: string
+  hora_regreso?: string
+
+  // Pago
+  precio?: number
+  numero_cuenta?: string
+  concepto_pago?: string
+
+  // Recordatorios
+  recordatorios_predefinidos?: RecordatorioPredefinido[]
+  recordatorios_personalizados?: string[]
+
+  // Circular/Autorizacion
+  circular_drive_id?: string
+  circular_drive_url?: string
+  circular_nombre?: string
+
+  // Google Sheets de inscripciones
+  sheets_inscripciones_id?: string
+}
+
+/**
+ * Actividad con detalles de campamento extendidos
+ */
+export interface ActividadCampamento {
+  id: number | string
+  titulo: string
+  descripcion: string
+  fecha: string
+  fechaFin?: string
+  lugar?: string
+  costo?: number
+  scoutIds: string[]
+  confirmaciones: { [scoutId: string]: 'confirmado' | 'pendiente' | 'no_asiste' }
+  // Detalles del campamento
+  campamento?: CampamentoDetalles
+}
+
+/**
+ * Datos de inscripcion a campamento
+ */
+export interface InscripcionCampamento {
+  id: number
+  actividad_id: number
+  educando_id: number
+  familiar_id: number
+  estado: EstadoInscripcionCampamento
+
+  // Datos del educando
+  educando_nombre: string
+  educando_apellidos: string
+  educando_fecha_nacimiento?: string
+  seccion_nombre: string
+  seccion_color?: string
+
+  // Datos del familiar
+  familiar_nombre: string
+  familiar_apellidos: string
+  familiar_email: string
+  familiar_telefono?: string
+
+  // Datos de salud
+  alergias?: string
+  intolerancias?: string
+  dieta_especial?: string
+  medicacion?: string
+  observaciones_medicas?: string
+
+  // Contacto de emergencia
+  telefono_emergencia?: string
+  persona_emergencia?: string
+
+  // Confirmaciones
+  datos_confirmados: boolean
+  fecha_confirmacion_datos?: string
+
+  // Pago
+  pagado: boolean
+  fecha_pago?: string
+  metodo_pago?: string
+  referencia_pago?: string
+
+  // Observaciones
+  observaciones?: string
+
+  // Timestamps
+  created_at?: string
+  updated_at?: string
+}
+
+/**
+ * Inscripcion completa con documentos subidos
+ */
+export interface InscripcionCampamentoCompleta extends InscripcionCampamento {
+  // Datos del familiar para el formulario
+  email_familiar?: string
+  telefono_familiar?: string
+  nombre_familiar?: string
+
+  // Documentos subidos
+  circular_firmada_drive_id?: string
+  circular_firmada_url?: string
+  fecha_subida_circular?: string
+  justificante_pago_drive_id?: string
+  justificante_pago_url?: string
+  fecha_subida_justificante?: string
+
+  // Estados de envio por email
+  circular_enviada_seccion?: boolean
+  justificante_enviado_tesoreria?: boolean
+
+  // Datos de la actividad (joinados)
+  actividad_titulo?: string
+  actividad_fecha_inicio?: string
+  actividad_fecha_fin?: string
+  actividad_lugar?: string
+  actividad_precio?: number
+}
+
+/**
+ * Estado de documentos de una inscripcion
+ */
+export interface DocumentosInscripcion {
+  circular_firmada: {
+    subida: boolean
+    drive_id?: string
+    url?: string
+    fecha_subida?: string
+    enviada_seccion: boolean
+  }
+  justificante_pago: {
+    subido: boolean
+    drive_id?: string
+    url?: string
+    fecha_subida?: string
+    enviado_tesoreria: boolean
+  }
+}
+
+/**
+ * Datos para crear/actualizar inscripcion
+ */
+export interface DatosInscripcionCampamento {
+  actividad_id: number
+  educando_id: number
+  asistira: boolean
+
+  // Datos del familiar
+  email_familiar?: string
+  telefono_familiar?: string
+  nombre_familiar?: string
+
+  // Datos de salud
+  alergias?: string
+  intolerancias?: string
+  dieta_especial?: string
+  medicacion?: string
+  observaciones_medicas?: string
+
+  // Contacto de emergencia
+  telefono_emergencia?: string
+  persona_emergencia?: string
+
+  // Observaciones
+  observaciones?: string
+
+  // Estado de confirmacion
+  datos_confirmados?: boolean
+}
+
+/**
+ * Estadisticas de un campamento
+ */
+export interface EstadisticasCampamento {
+  total: number
+  inscritos: number
+  pendientes: number
+  no_asisten: number
+  lista_espera: number
+  cancelados: number
+  pagados: number
+  sin_pagar: number
+  dietas?: {
+    con_alergias: number
+    con_intolerancias: number
+    con_dieta_especial: number
+    con_medicacion: number
+    total_con_restricciones: number
+  }
+}
+
+/**
+ * Configuracion de colores para estados de inscripcion
+ */
+export const INSCRIPCION_ESTADO_CONFIG = {
+  pendiente: {
+    color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    label: 'Pendiente',
+    icon: 'Clock',
+    emoji: '⏰'
+  },
+  inscrito: {
+    color: 'bg-green-50 text-green-700 border-green-200',
+    label: 'Inscrito',
+    icon: 'CheckCircle',
+    emoji: '✅'
+  },
+  no_asiste: {
+    color: 'bg-gray-50 text-gray-700 border-gray-200',
+    label: 'No asiste',
+    icon: 'XCircle',
+    emoji: '❌'
+  },
+  lista_espera: {
+    color: 'bg-blue-50 text-blue-700 border-blue-200',
+    label: 'Lista de espera',
+    icon: 'Clock',
+    emoji: '⏳'
+  },
+  cancelado: {
+    color: 'bg-red-50 text-red-700 border-red-200',
+    label: 'Cancelado',
+    icon: 'Ban',
+    emoji: '🚫'
+  }
+} as const
+
+/**
+ * Utilidades para trabajar con inscripciones de campamento
+ */
+export const InscripcionCampamentoUtils = {
+  /**
+   * Obtiene la configuracion de un estado de inscripcion
+   */
+  getEstadoConfig: (estado: EstadoInscripcionCampamento) => {
+    return INSCRIPCION_ESTADO_CONFIG[estado] || INSCRIPCION_ESTADO_CONFIG.pendiente
+  },
+
+  /**
+   * Verifica si la inscripcion esta completa
+   */
+  estaCompleta: (inscripcion: InscripcionCampamentoCompleta): boolean => {
+    return (
+      inscripcion.estado === 'inscrito' &&
+      inscripcion.datos_confirmados &&
+      !!inscripcion.circular_firmada_drive_id &&
+      inscripcion.pagado
+    )
+  },
+
+  /**
+   * Obtiene los pasos pendientes de una inscripcion
+   */
+  getPasosPendientes: (inscripcion: InscripcionCampamentoCompleta): string[] => {
+    const pasos: string[] = []
+
+    if (!inscripcion.datos_confirmados) {
+      pasos.push('Confirmar datos')
+    }
+    if (!inscripcion.circular_firmada_drive_id) {
+      pasos.push('Subir circular firmada')
+    }
+    if (!inscripcion.pagado && !inscripcion.justificante_pago_drive_id) {
+      pasos.push('Subir justificante de pago')
+    }
+
+    return pasos
+  },
+
+  /**
+   * Calcula el progreso de la inscripcion (0-100)
+   */
+  calcularProgreso: (inscripcion: InscripcionCampamentoCompleta): number => {
+    let completados = 0
+    const total = 4 // 4 pasos: datos, circular, pago, confirmacion final
+
+    if (inscripcion.datos_confirmados) completados++
+    if (inscripcion.circular_firmada_drive_id) completados++
+    if (inscripcion.justificante_pago_drive_id || inscripcion.pagado) completados++
+    if (inscripcion.estado === 'inscrito') completados++
+
+    return Math.round((completados / total) * 100)
   }
 }
 

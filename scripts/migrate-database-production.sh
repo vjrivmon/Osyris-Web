@@ -21,7 +21,8 @@ NC='\033[0m' # No Color
 SERVER="root@116.203.98.142"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-MIGRATIONS_DIR="$SCRIPT_DIR/migrations"
+# CORREGIDO: Las migraciones están en api-osyris/database/migrations
+MIGRATIONS_DIR="$PROJECT_ROOT/api-osyris/database/migrations"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${MAGENTA}🗄️  Migración de Base de Datos a Producción${NC}"

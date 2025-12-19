@@ -910,6 +910,44 @@ ${CONTACT.web}
   }
 }
 
+/**
+ * Función genérica para enviar emails
+ * Usada por el sistema de campamentos y otras funcionalidades
+ *
+ * @param {Object} options - Opciones del email
+ * @param {string} options.to - Destinatario
+ * @param {string} options.subject - Asunto
+ * @param {string} options.html - Contenido HTML del email
+ * @param {string} [options.text] - Contenido texto plano (opcional)
+ * @param {string} [options.replyTo] - Email para respuestas (opcional)
+ */
+async function sendEmail({ to, subject, html, text, replyTo }) {
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.log(`📧 [MODO DEMO] Email genérico para ${to} - ${subject}`);
+    return;
+  }
+
+  const mailOptions = {
+    from: { name: 'Grupo Scout Osyris', address: process.env.EMAIL_USER },
+    to,
+    subject,
+    html: getEmailTemplate('Grupo Scout Osyris', subject, html),
+    text: text || '',
+    ...(replyTo && { replyTo })
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email enviado a ${to}: ${subject}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ Error enviando email a ${to}:`, error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendInvitationEmail,
   sendWelcomeEmail,
@@ -919,5 +957,6 @@ module.exports = {
   sendPasswordChangedEmail,
   sendContactNotification,
   sendContactConfirmation,
-  verifyEmailConfig
+  verifyEmailConfig,
+  sendEmail
 };

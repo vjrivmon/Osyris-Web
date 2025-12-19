@@ -18,18 +18,18 @@ async function createAdminUser() {
     // Verificar si el usuario admin ya existe
     const existingAdmin = await query(
       'SELECT * FROM usuarios WHERE email = ?',
-      ['admin@grupoosyris.es']
+      ['web.osyris@gmail.com']
     );
 
     if (existingAdmin.length > 0) {
       console.log('ℹ️  El usuario admin ya existe.');
-      console.log('   Email: admin@grupoosyris.es');
-      console.log('   Password: OsyrisAdmin2024!');
+      console.log('   Email: web.osyris@gmail.com');
+      console.log('   Password: Admin123#');
       return;
     }
 
     // Crear contraseña hasheada
-    const password = 'OsyrisAdmin2024!';
+    const password = 'Admin123#';
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Crear usuario administrador
@@ -40,7 +40,7 @@ async function createAdminUser() {
     `, [
       'Administrador',
       'Grupo Osyris',
-      'admin@grupoosyris.es',
+      'web.osyris@gmail.com',
       hashedPassword,
       'admin',
       1
@@ -48,8 +48,8 @@ async function createAdminUser() {
 
     console.log('✅ Usuario administrador creado exitosamente!');
     console.log(`   ID: ${result.insertId}`);
-    console.log('   Email: admin@grupoosyris.es');
-    console.log('   Password: OsyrisAdmin2024!');
+    console.log('   Email: web.osyris@gmail.com');
+    console.log('   Password: Admin123#');
     console.log('   Rol: admin');
     console.log('');
     console.log('🎯 Ahora puedes usar estas credenciales para:');

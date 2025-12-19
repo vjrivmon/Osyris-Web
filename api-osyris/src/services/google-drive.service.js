@@ -357,6 +357,8 @@ const listPlantillas = async () => {
   });
 
   // Mapear plantillas con información adicional
+  console.log(`📋 [listPlantillas] Encontrados ${response.data.files.length} archivos en carpeta de plantillas`);
+
   const plantillas = response.data.files.map(file => {
     // Buscar qué tipo de documento corresponde usando PREFIJO
     let tipoDocumento = null;
@@ -370,9 +372,14 @@ const listPlantillas = async () => {
             fileNameUpper.startsWith(prefijo + ' ') ||
             fileNameUpper.startsWith(prefijo + '-')) {
           tipoDocumento = tipo;
+          console.log(`   ✅ "${file.name}" → tipo: ${tipo} (prefijo: ${prefijo})`);
           break;
         }
       }
+    }
+
+    if (!tipoDocumento) {
+      console.log(`   ⚠️ "${file.name}" → No coincide con ningún tipo de documento`);
     }
 
     return {
@@ -381,6 +388,10 @@ const listPlantillas = async () => {
       config: tipoDocumento ? DRIVE_CONFIG.TIPOS_DOCUMENTO[tipoDocumento] : null
     };
   });
+
+  // Log resumen
+  const plantillasConTipo = plantillas.filter(p => p.tipoDocumento !== null);
+  console.log(`📋 [listPlantillas] ${plantillasConTipo.length} de ${plantillas.length} plantillas tienen tipo asignado`);
 
   return plantillas;
 };
@@ -936,6 +947,107 @@ const downloadFileContent = async (fileId) => {
   };
 };
 
+/**
+ * Lista las circulares disponibles de un tipo de campamento
+ * @param {string} tipoCampamento - Tipo: INICIO, NAVIDAD, ANIVERSARIO, PASCUA, VERANO
+ * @returns Lista de archivos (circulares) en la subcarpeta
+ */
+const listCircularesCampamento = async (tipoCampamento) => {
+  if (!DRIVE_CONFIG.CAMPAMENTOS_FOLDER_ID) {
+    throw new Error('CAMPAMENTOS_FOLDER_ID no configurado');
+  }
+
+  const drive = await initializeDriveClient();
+  const tipo = tipoCampamento?.toUpperCase() || 'NAVIDAD';
+
+  // Primero buscar la subcarpeta del tipo de campamento
+  const subfolderResponse = await drive.files.list({
+    q: `'${DRIVE_CONFIG.CAMPAMENTOS_FOLDER_ID}' in parents and name='${tipo}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id, name)'
+  });
+
+  let folderId = DRIVE_CONFIG.CAMPAMENTOS_FOLDER_ID;
+
+  // Si existe la subcarpeta, usar esa
+  if (subfolderResponse.data.files && subfolderResponse.data.files.length > 0) {
+    folderId = subfolderResponse.data.files[0].id;
+  }
+
+  // Listar archivos PDF en la carpeta (circulares)
+  const response = await drive.files.list({
+    q: `'${folderId}' in parents and (mimeType='application/pdf' or name contains 'Circular') and trashed=false`,
+    fields: 'files(id, name, mimeType, size, webViewLink, modifiedTime)',
+    orderBy: 'modifiedTime desc'
+  });
+
+  // Mapear archivos con información adicional
+  const circulares = response.data.files.map(file => ({
+    id: file.id,
+    name: file.name,
+    mimeType: file.mimeType,
+    size: file.size,
+    webViewLink: file.webViewLink,
+    modifiedTime: file.modifiedTime,
+    tipoCampamento: tipo
+  }));
+
+  return circulares;
+};
+
+/**
+ * Mueve la carpeta de un educando de una sección a otra
+ * Estructura: Sección > Año > Nombre Educando
+ *
+ * @param {string} educandoFolderId - ID de la carpeta del educando en Drive
+ * @param {string} newSeccionSlug - Slug de la nueva sección (ej: 'pioneros', 'tropa')
+ * @param {number} anioNacimiento - Año de nacimiento del educando (para la subcarpeta)
+ * @returns {Object} - { success: boolean, newParentId: string }
+ */
+const moveEducandoFolderToSection = async (educandoFolderId, newSeccionSlug, anioNacimiento) => {
+  console.log(`📦 Moviendo carpeta ${educandoFolderId} a sección ${newSeccionSlug}/${anioNacimiento}`);
+
+  // 1. Obtener ID de la carpeta de la nueva sección
+  const newSeccionFolderId = getSeccionFolderId(newSeccionSlug);
+  if (!newSeccionFolderId) {
+    throw new Error(`No se encontró configuración para la sección: ${newSeccionSlug}`);
+  }
+
+  const drive = await getOAuthDriveClient();
+
+  // 2. Buscar o crear la carpeta del año dentro de la nueva sección
+  let anioFolder = await findFolderByName(anioNacimiento.toString(), newSeccionFolderId);
+  if (!anioFolder) {
+    console.log(`📁 Creando carpeta de año ${anioNacimiento} en ${newSeccionSlug}...`);
+    anioFolder = await createFolder(anioNacimiento.toString(), newSeccionFolderId);
+  }
+
+  // 3. Obtener los padres actuales de la carpeta del educando
+  const file = await drive.files.get({
+    fileId: educandoFolderId,
+    fields: 'id, name, parents'
+  });
+
+  const previousParents = file.data.parents ? file.data.parents.join(',') : '';
+  console.log(`📂 Carpeta actual: "${file.data.name}", padre(s): ${previousParents}`);
+
+  // 4. Mover la carpeta del educando a la nueva ubicación
+  const response = await drive.files.update({
+    fileId: educandoFolderId,
+    addParents: anioFolder.id,
+    removeParents: previousParents,
+    fields: 'id, name, parents'
+  });
+
+  console.log(`✅ Carpeta movida exitosamente a ${newSeccionSlug}/${anioNacimiento}`);
+
+  return {
+    success: true,
+    newParentId: anioFolder.id,
+    folderName: response.data.name,
+    newParents: response.data.parents
+  };
+};
+
 module.exports = {
   initializeDriveClient,
   findFolderByName,
@@ -958,5 +1070,8 @@ module.exports = {
   getOrCreatePendientesFolder,
   moveFileToFolder,
   uploadDocumentToPendientes,
+  listCircularesCampamento,
+  // Función para cambio de sección
+  moveEducandoFolderToSection,
   DRIVE_CONFIG
 };

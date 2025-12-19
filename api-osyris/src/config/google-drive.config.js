@@ -26,6 +26,87 @@ const DRIVE_CONFIG = {
   // Nombre de la carpeta de pendientes (se crea automáticamente si no existe)
   PENDIENTES_FOLDER_NAME: 'PENDIENTES_REVISION',
 
+  // ========== CONFIGURACIÓN DE ASISTENCIA SÁBADOS ==========
+  // ID de la carpeta raíz "ASISTENCIA SABADOS"
+  ASISTENCIA_FOLDER_ID: process.env.GOOGLE_DRIVE_ASISTENCIA_FOLDER_ID || '1sdSVmYQQ-YTzTApLyQ12qWoP6Uu5Htis',
+
+  // ID de la plantilla de asistencia (Google Sheets con 5 hojas: Castores, Manada, Tropa, Pioneros, Rutas)
+  // Columnas: Nº, Educando, Asiste, Comentarios
+  ASISTENCIA_PLANTILLA_ID: process.env.GOOGLE_DRIVE_ASISTENCIA_PLANTILLA_ID || '131Zo2pXmnRu6I8ciGv2_oSsNdAKuYzQ1YDnxTO__3aE',
+
+  // Nombres de meses en español (mayúsculas) para carpetas
+  MESES_ES: ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+             'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'],
+
+  // Abreviaturas de meses para nombres de carpetas de fecha
+  MESES_ABREV: ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN',
+                'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'],
+
+  // Nombres de secciones para hojas del Excel de asistencia
+  // Orden: Castores (1), Manada/Lobatos (2), Tropa (3), Pioneros (4), Rutas (5)
+  SECCIONES_ASISTENCIA: [
+    { id: 1, nombre: 'Castores', slug: 'castores' },
+    { id: 2, nombre: 'Manada', slug: 'manada' },
+    { id: 3, nombre: 'Tropa', slug: 'tropa' },
+    { id: 4, nombre: 'Pioneros', slug: 'pioneros' },
+    { id: 5, nombre: 'Rutas', slug: 'rutas' }
+  ],
+
+  // Estados de asistencia
+  ESTADOS_ASISTENCIA: {
+    PENDIENTE: 'Pendiente',
+    ASISTIRA: 'Asistirá',
+    NO_ASISTIRA: 'No Asistirá'
+  },
+
+  // ========== CONFIGURACION DE CAMPAMENTOS ==========
+  // ID de la carpeta raiz "CAMPAMENTOS" (compartida con service account)
+  CAMPAMENTOS_FOLDER_ID: process.env.GOOGLE_DRIVE_CAMPAMENTOS_FOLDER_ID || '1rbQIw-ysIi5hjcGCX8e59q0sxtm1au46',
+
+  // ID de la plantilla de asistencia para campamentos (Google Sheets con hojas por sección)
+  // Similar a la plantilla de asistencia de sábados pero para campamentos
+  // Usa la misma plantilla que la asistencia de sábados si no hay una específica configurada
+  CAMPAMENTOS_ASISTENCIA_PLANTILLA_ID: process.env.GOOGLE_DRIVE_CAMPAMENTOS_ASISTENCIA_PLANTILLA_ID || '131Zo2pXmnRu6I8ciGv2_oSsNdAKuYzQ1YDnxTO__3aE',
+
+  // Subcarpetas por tipo de campamento
+  CAMPAMENTOS_SUBCARPETAS: {
+    INICIO: { nombre: 'INICIO', id: null },
+    NAVIDAD: { nombre: 'NAVIDAD', id: null },
+    ANIVERSARIO: { nombre: 'ANIVERSARIO', id: null },
+    PASCUA: { nombre: 'PASCUA', id: null },
+    VERANO: { nombre: 'VERANO', id: null }
+  },
+
+  // Emails por seccion para enviar circulares firmadas
+  EMAILS_SECCIONES: {
+    castores: 'castoresosyris@gmail.com',
+    manada: 'manadaosyris@gmail.com',
+    lobatos: 'manadaosyris@gmail.com',
+    tropa: 'tropa.gsosyris@gmail.com',
+    pioneros: 'posta.osyris@gmail.com',
+    rutas: 'wallhallaruta@gmail.com'
+  },
+
+  // Email de tesoreria para justificantes de pago
+  EMAIL_TESORERIA: 'tesoreriaosyris@gmail.com',
+
+  // Numero de cuenta por defecto para campamentos
+  NUMERO_CUENTA_DEFAULT: 'ES76 3159 0063 5125 0527 9113',
+
+  // Recordatorios predefinidos para campamentos
+  RECORDATORIOS_PREDEFINIDOS: [
+    { id: 'almuerzo', texto: 'Traer almuerzo, comida y merienda del primer dia', activo: true },
+    { id: 'saco', texto: 'Llevar saco de dormir', activo: true },
+    { id: 'esterilla', texto: 'Llevar esterilla', activo: true },
+    { id: 'ropa_abrigo', texto: 'Llevar ropa de abrigo', activo: true },
+    { id: 'sip', texto: 'Traer SIP original', activo: true },
+    { id: 'camisa', texto: 'Traer camisa de la seccion', activo: true },
+    { id: 'panyoleta', texto: 'Traer panyoleta', activo: true }
+  ],
+
+  // Tipos de campamento para categorizar
+  TIPOS_CAMPAMENTO: ['INICIO', 'NAVIDAD', 'ANIVERSARIO', 'PASCUA', 'VERANO'],
+
   // Mapeo de secciones a IDs de carpetas en Drive
   // Nota: "lobatos" y "manada" apuntan a la misma carpeta
   SECCIONES_FOLDER_IDS: {
@@ -127,8 +208,9 @@ const DRIVE_CONFIG = {
 
   // Scopes necesarios para la API
   SCOPES: [
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/drive.readonly'
+    'https://www.googleapis.com/auth/drive',           // Acceso completo a Drive
+    'https://www.googleapis.com/auth/drive.file',      // Crear/editar archivos
+    'https://www.googleapis.com/auth/spreadsheets'     // Crear/editar Google Sheets
   ]
 };
 
@@ -160,9 +242,38 @@ const getSeccionFolderId = (seccionSlug) => {
   return DRIVE_CONFIG.SECCIONES_FOLDER_IDS[slug] || null;
 };
 
+// Funcion para obtener el email de una seccion (para circulares firmadas)
+const getEmailSeccion = (seccionSlug) => {
+  if (!seccionSlug) return null;
+  const slug = seccionSlug.toLowerCase().replace(/\s+/g, '');
+  return DRIVE_CONFIG.EMAILS_SECCIONES[slug] || null;
+};
+
+// Funcion para obtener los recordatorios predefinidos
+const getRecordatoriosPredefinidos = () => {
+  return DRIVE_CONFIG.RECORDATORIOS_PREDEFINIDOS.map(r => ({ ...r }));
+};
+
+// Funcion para obtener la configuracion de un tipo de campamento
+const getTipoCampamentoConfig = (tipoCampamento) => {
+  if (!tipoCampamento) return null;
+  const tipo = tipoCampamento.toUpperCase();
+  return DRIVE_CONFIG.CAMPAMENTOS_SUBCARPETAS[tipo] || null;
+};
+
+// Funcion para validar si es un tipo de campamento valido
+const esTipoCampamentoValido = (tipoCampamento) => {
+  if (!tipoCampamento) return false;
+  return DRIVE_CONFIG.TIPOS_CAMPAMENTO.includes(tipoCampamento.toUpperCase());
+};
+
 module.exports = {
   DRIVE_CONFIG,
   getDocumentFileName,
   getTipoDocumentoConfig,
-  getSeccionFolderId
+  getSeccionFolderId,
+  getEmailSeccion,
+  getRecordatoriosPredefinidos,
+  getTipoCampamentoConfig,
+  esTipoCampamentoValido
 };

@@ -1,0 +1,5 @@
+export { EducandoFilters } from './educando-filters'
+export { EducandosList } from './educandos-list'
+export { EducandoFormModal } from './educando-form-modal'
+export { EducandoDetailModal } from './educando-detail-modal'
+export { SendNotificationModal } from './send-notification-modal'

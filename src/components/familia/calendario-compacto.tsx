@@ -1,86 +1,323 @@
 'use client'
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Clock,
   MapPin,
-  Users,
   CheckCircle,
+  XCircle,
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  Loader2,
+  Tent
 } from "lucide-react"
-import { ActividadCalendario } from "@/types/familia"
+import { ActividadCalendario, ActividadCampamento, ScoutHijo } from "@/types/familia"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { getApiUrl } from "@/lib/api-utils"
+import { useFamiliaData } from "@/hooks/useFamiliaData"
+import { useAuth } from "@/contexts/AuthContext"
+import { InscripcionCampamentoWizard } from "./calendario/inscripcion-campamento-wizard"
 
 interface CalendarioCompactoProps {
   seccionId?: number
   className?: string
+  hijoSeleccionado?: number  // ID del hijo seleccionado en el dashboard
 }
 
-export function CalendarioCompacto({ seccionId, className }: CalendarioCompactoProps) {
+export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: CalendarioCompactoProps) {
   const [mesActual, setMesActual] = useState(new Date())
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null)
+  const [actividades, setActividades] = useState<ActividadCalendario[]>([])
+  const [loading, setLoading] = useState(true)
+  const [confirmandoId, setConfirmandoId] = useState<number | null>(null)
 
-  // TODO: Reemplazar con datos reales de la API
-  const actividadesMock: ActividadCalendario[] = [
-    {
-      id: 1,
-      titulo: "Reunión Semanal",
-      descripcion: "Reunión de sección con juegos y actividades",
-      fecha: "2025-10-25",
-      hora: "17:00",
-      lugar: "Local Scout",
-      seccion: "Manada Waingunga",
-      seccion_id: 2,
-      tipo: "reunion",
-      confirmacion: "confirmado",
-      requiere_confirmacion: true
-    },
-    {
-      id: 2,
-      titulo: "Campamento de Otoño",
-      descripcion: "Campamento de fin de semana en la Sierra",
-      fecha: "2025-10-27",
-      hora: "09:00",
-      lugar: "Sierra de Guadarrama",
-      seccion: "Manada Waingunga",
-      seccion_id: 2,
-      tipo: "campamento",
-      confirmacion: "pendiente",
-      costo: 35,
-      requiere_confirmacion: true,
-      fecha_limite_confirmacion: "2025-10-23"
-    },
-    {
-      id: 3,
-      titulo: "Excursión al Zoo",
-      descripcion: "Visita educativa al zoológico",
-      fecha: "2025-11-03",
-      hora: "10:00",
-      lugar: "Zoo Aquarium Madrid",
-      seccion: "Colonia La Veleta",
-      seccion_id: 1,
-      tipo: "excursion",
-      confirmacion: "pendiente",
-      costo: 15,
-      requiere_confirmacion: true
-    }
-  ]
+  // Estado para comentarios de rechazo
+  const [comentarioRechazo, setComentarioRechazo] = useState<string>('')
+  const [mostrandoComentario, setMostrandoComentario] = useState<number | null>(null)
 
-  // Filtrar actividades por sección si se proporciona
-  const actividades = useMemo(() => {
-    if (seccionId) {
-      return actividadesMock.filter(a => a.seccion_id === seccionId)
+  // Modal campamento
+  const [campamentoModalOpen, setCampamentoModalOpen] = useState(false)
+  const [actividadCampamento, setActividadCampamento] = useState<ActividadCalendario | null>(null)
+
+  // Obtener hijos del usuario y sus secciones
+  const { hijos, seccionesHijos } = useFamiliaData()
+
+  // Obtener datos del usuario para prellenar el formulario
+  const { user } = useAuth()
+
+  // Datos del familiar para prellenar en el wizard
+  const familiarData = useMemo(() => ({
+    nombre: user ? `${user.nombre} ${user.apellidos || ''}`.trim() : '',
+    email: user?.email || '',
+    telefono: (user as any)?.telefono || ''
+  }), [user])
+
+  // Obtener el hijo correcto (seleccionado o primero como fallback)
+  const hijoActual = useMemo(() => {
+    if (!hijos || hijos.length === 0) return undefined
+    if (hijoSeleccionado) {
+      return hijos.find(h => h.id === hijoSeleccionado)
     }
-    return actividadesMock
-  }, [seccionId])
+    return hijos[0]
+  }, [hijos, hijoSeleccionado])
+
+  // Ref para evitar fetches duplicados
+  const fetchingRef = useRef(false)
+  const lastFetchKey = useRef('')
+  const pendingFetchKey = useRef<string | null>(null)
+
+  // Ref para acceder a hijoActual desde closures (siempre actualizado)
+  const hijoActualRef = useRef(hijoActual)
+  hijoActualRef.current = hijoActual
+
+  // Función para obtener confirmaciones existentes de la API
+  const fetchConfirmaciones = async (): Promise<Map<string, { estado: string, comentario?: string }>> => {
+    const confirmacionesMap = new Map<string, { estado: string, comentario?: string }>()
+
+    try {
+      const apiUrl = getApiUrl()
+      const token = localStorage.getItem('token')
+
+      console.log('🔍 [fetchConfirmaciones] Iniciando fetch de confirmaciones...')
+      console.log('🔍 [fetchConfirmaciones] Token existe:', !!token)
+
+      if (!token) {
+        console.log('❌ [fetchConfirmaciones] No hay token, retornando mapa vacío')
+        return confirmacionesMap
+      }
+
+      const response = await fetch(`${apiUrl}/api/confirmaciones/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      console.log('🔍 [fetchConfirmaciones] Response status:', response.status)
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('🔍 [fetchConfirmaciones] Respuesta completa:', data)
+
+        const confirmaciones = data.data || []
+        console.log('🔍 [fetchConfirmaciones] Número de confirmaciones:', confirmaciones.length)
+
+        // Crear mapa: clave = "actividadId-educandoId", valor = estado
+        confirmaciones.forEach((conf: any) => {
+          const key = `${conf.actividad_id}-${conf.educando_id}`
+          const estado = conf.estado || (conf.asistira ? 'confirmado' : 'rechazado')
+          console.log(`🔍 [fetchConfirmaciones] Añadiendo al mapa: key=${key}, estado=${estado}, asistira=${conf.asistira}`)
+          confirmacionesMap.set(key, {
+            estado,
+            comentario: conf.comentarios
+          })
+        })
+
+        console.log('🔍 [fetchConfirmaciones] Mapa final size:', confirmacionesMap.size)
+      } else {
+        const errorText = await response.text()
+        console.error('❌ [fetchConfirmaciones] Error en respuesta:', response.status, errorText)
+      }
+
+      // También obtener inscripciones de campamento
+      const inscripcionesResponse = await fetch(`${apiUrl}/api/inscripciones-campamento/familia?proximos=true`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (inscripcionesResponse.ok) {
+        const inscripcionesData = await inscripcionesResponse.json()
+        const inscripciones = inscripcionesData.data || []
+        console.log('🔍 [fetchConfirmaciones] Inscripciones de campamento:', inscripciones.length)
+
+        inscripciones.forEach((insc: any) => {
+          const key = `${insc.actividad_id}-${insc.educando_id}`
+          // Mapear estado de inscripción a estado de confirmación
+          let estado = 'pendiente'
+          if (insc.estado === 'inscrito') estado = 'confirmado'
+          else if (insc.estado === 'no_asiste') estado = 'rechazado'
+          else if (insc.estado === 'pendiente') estado = 'confirmado' // pendiente en inscripción = ya inscrito, pendiente de documentos
+
+          console.log(`🔍 [fetchConfirmaciones] Añadiendo inscripción campamento: key=${key}, estado=${estado}, original=${insc.estado}`)
+          confirmacionesMap.set(key, {
+            estado,
+            comentario: insc.observaciones
+          })
+        })
+
+        console.log('🔍 [fetchConfirmaciones] Mapa final (con inscripciones):', confirmacionesMap.size)
+      }
+    } catch (error) {
+      console.error('❌ [fetchConfirmaciones] Error obteniendo confirmaciones:', error)
+    }
+
+    return confirmacionesMap
+  }
+
+  // Cargar actividades desde la API - carga TODOS los meses necesarios (-3 a +6)
+  // Se ejecuta cuando hijoActual está disponible
+  useEffect(() => {
+    const fetchActividades = async (key: string) => {
+      console.log('🔍 [useEffect] Starting fetch with key:', key, 'hijoActual:', hijoActual?.id)
+
+      fetchingRef.current = true
+      lastFetchKey.current = key
+      setLoading(true)
+
+      try {
+        const apiUrl = getApiUrl()
+        const token = localStorage.getItem('token')
+        const now = new Date()
+        const allActividades: ActividadCalendario[] = []
+
+        // Cargar 10 meses: -3 hasta +6 desde el mes actual
+        // Sin filtro de sección - cargar todas las actividades visibles para familias
+        for (let i = -3; i < 7; i++) {
+          const fecha = new Date(now.getFullYear(), now.getMonth() + i, 1)
+          const anio = fecha.getFullYear()
+          const mes = fecha.getMonth() + 1
+
+          const url = seccionId
+            ? `${apiUrl}/api/actividades/mes/${anio}/${mes}?visibilidad=familias&seccion_id=${seccionId}`
+            : `${apiUrl}/api/actividades/mes/${anio}/${mes}?visibilidad=familias`
+
+          try {
+            const response = await fetch(url, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (response.ok) {
+              const data = await response.json()
+              const actividadesTransformadas: ActividadCalendario[] = (data.data || []).map((act: any) => ({
+                id: act.id,
+                titulo: act.titulo,
+                descripcion: act.descripcion || '',
+                fecha: act.fecha_inicio?.split('T')[0] || act.fecha_inicio,
+                fechaFin: act.fecha_fin?.split('T')[0] || act.fecha_fin,
+                hora: act.hora_inicio || new Date(act.fecha_inicio).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+                horaFin: act.hora_fin,
+                lugar: act.lugar || 'Colegio Patronato Juventud Obrera',
+                seccion: act.seccion_nombre || '',
+                seccion_id: act.seccion_id,
+                tipo: act.tipo === 'reunion_sabado' ? 'reunion' :
+                      act.tipo === 'campamento' ? 'campamento' :
+                      act.tipo === 'salida' ? 'excursion' : act.tipo,
+                tipoOriginal: act.tipo,
+                confirmacion: 'pendiente', // Se actualizará después con las confirmaciones reales
+                requiere_confirmacion: act.inscripcion_abierta !== false,
+                costo: act.precio,
+                // Campos específicos de campamento (se incluyen para todos pero solo se usan en campamentos)
+                lugar_salida: act.lugar_salida,
+                hora_salida: act.hora_salida,
+                mapa_salida_url: act.mapa_salida_url,
+                lugar_regreso: act.lugar_regreso,
+                hora_regreso: act.hora_regreso,
+                numero_cuenta: act.numero_cuenta,
+                concepto_pago: act.concepto_pago,
+                recordatorios_predefinidos: act.recordatorios_predefinidos,
+                recordatorios_personalizados: act.recordatorios_personalizados,
+                circular_drive_id: act.circular_drive_id,
+                circular_drive_url: act.circular_drive_url,
+                circular_nombre: act.circular_nombre
+              }))
+              allActividades.push(...actividadesTransformadas)
+            }
+          } catch (err) {
+            console.error(`Error cargando mes ${anio}/${mes}:`, err)
+          }
+        }
+
+        // Eliminar duplicados por ID
+        const actividadesUnicas = allActividades.filter((act, index, self) =>
+          index === self.findIndex(a => a.id === act.id)
+        )
+
+        // OBTENER CONFIRMACIONES EXISTENTES DE LA API
+        // Usar hijoActualRef para obtener el valor más reciente (no el del closure)
+        const currentHijoActual = hijoActualRef.current
+        console.log('🔍 [useEffect] Llamando fetchConfirmaciones...')
+        console.log('🔍 [useEffect] hijoActual (from ref):', currentHijoActual)
+        const confirmacionesMap = await fetchConfirmaciones()
+        console.log('🔍 [useEffect] confirmacionesMap size:', confirmacionesMap.size)
+
+        // Mapear confirmaciones a actividades usando el hijo actual
+        const actividadesConConfirmaciones = actividadesUnicas.map(actividad => {
+          if (currentHijoActual) {
+            const key = `${actividad.id}-${currentHijoActual.id}`
+            const confirmacionData = confirmacionesMap.get(key)
+            console.log(`🔍 [mapping] Actividad ${actividad.id} (${actividad.titulo}): key=${key}, encontrado=${!!confirmacionData}`)
+            if (confirmacionData) {
+              console.log(`✅ [mapping] Aplicando estado '${confirmacionData.estado}' a actividad ${actividad.id}`)
+              return {
+                ...actividad,
+                confirmacion: confirmacionData.estado as 'pendiente' | 'confirmado' | 'rechazado'
+              }
+            }
+          } else {
+            console.log(`⚠️ [mapping] hijoActual es undefined, no se puede mapear actividad ${actividad.id}`)
+          }
+          return actividad
+        })
+
+        console.log('🔍 [useEffect] actividadesConConfirmaciones:', actividadesConConfirmaciones.map(a => ({ id: a.id, titulo: a.titulo, confirmacion: a.confirmacion })))
+
+        // Actualizar lastFetchKey con el hijoActual que realmente usamos para el mapeo
+        // Esto evita re-fetch innecesario si hijoActual cambió durante el fetch
+        const actualKey = `${seccionId || 'all'}-${currentHijoActual?.id || 'none'}`
+        if (actualKey !== lastFetchKey.current) {
+          console.log('🔍 [useEffect] Actualizando lastFetchKey:', lastFetchKey.current, '→', actualKey)
+          lastFetchKey.current = actualKey
+        }
+
+        setActividades(actividadesConConfirmaciones)
+      } catch (error) {
+        console.error('Error cargando actividades:', error)
+      } finally {
+        setLoading(false)
+        fetchingRef.current = false
+
+        // Si hay un fetch pendiente (la clave cambió durante este fetch), ejecutarlo ahora
+        // Usar hijoActualRef para obtener el valor más reciente
+        const currentHijo = hijoActualRef.current
+        const currentKey = `${seccionId || 'all'}-${currentHijo?.id || 'none'}`
+
+        if (currentKey !== lastFetchKey.current) {
+          console.log('🔄 [useEffect] hijoActual cambió durante el fetch. Key actual:', currentKey, 'Key del fetch:', lastFetchKey.current)
+          pendingFetchKey.current = null // Limpiar cualquier pendiente
+          console.log('🔄 [useEffect] Re-ejecutando fetch con nuevo hijoActual:', currentHijo?.id)
+          fetchActividades(currentKey)
+        } else if (pendingFetchKey.current && pendingFetchKey.current !== lastFetchKey.current) {
+          const nextKey = pendingFetchKey.current
+          pendingFetchKey.current = null
+          console.log('🔄 [useEffect] Ejecutando fetch pendiente con key:', nextKey)
+          fetchActividades(nextKey)
+        }
+      }
+    }
+
+    // Crear una clave única para este fetch basada en seccionId y hijoActual
+    const fetchKey = `${seccionId || 'all'}-${hijoActual?.id || 'none'}`
+
+    // Si la clave es la misma que la última, no hacer nada
+    if (lastFetchKey.current === fetchKey) {
+      console.log('🔍 [useEffect] Skipping - already fetched with same key:', fetchKey)
+      return
+    }
+
+    // Si hay un fetch en progreso, guardar la nueva clave como pendiente
+    if (fetchingRef.current) {
+      console.log('🔍 [useEffect] Fetch in progress, queuing key:', fetchKey)
+      pendingFetchKey.current = fetchKey
+      return
+    }
+
+    // Ejecutar el fetch
+    fetchActividades(fetchKey)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seccionId, hijoActual?.id]) // Re-ejecutar si cambia seccionId o el hijo actual
 
   // Obtener actividades del mes actual
   const actividadesMes = useMemo(() => {
@@ -93,19 +330,20 @@ export function CalendarioCompacto({ seccionId, className }: CalendarioCompactoP
     })
   }, [actividades, mesActual])
 
-  // Obtener próximas actividades (próximos 30 días)
-  const proximasActividades = useMemo(() => {
+  // Obtener próxima actividad (solo 1)
+  const proximaActividad = useMemo(() => {
     const hoy = new Date()
     const dentro30Dias = new Date()
     dentro30Dias.setDate(hoy.getDate() + 30)
 
-    return actividades
+    const proximas = actividades
       .filter(actividad => {
         const fechaActividad = new Date(actividad.fecha)
         return fechaActividad >= hoy && fechaActividad <= dentro30Dias
       })
       .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-      .slice(0, 3)
+
+    return proximas[0] || null
   }, [actividades])
 
   // Actividades del día seleccionado
@@ -121,11 +359,12 @@ export function CalendarioCompacto({ seccionId, className }: CalendarioCompactoP
     })
   }, [actividades, diaSeleccionado])
 
-  // Generar días del calendario
+  // Generar días del calendario (Lunes a Domingo)
   const diasCalendario = useMemo(() => {
     const primerDia = new Date(mesActual.getFullYear(), mesActual.getMonth(), 1)
     const ultimoDia = new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 0)
-    const primerDiaSemana = primerDia.getDay()
+    // Convertir para que Lunes = 0, Domingo = 6
+    const primerDiaSemana = (primerDia.getDay() + 6) % 7
     const diasMes = ultimoDia.getDate()
 
     const dias: (Date | null)[] = []
@@ -143,15 +382,24 @@ export function CalendarioCompacto({ seccionId, className }: CalendarioCompactoP
     return dias
   }, [mesActual])
 
-  // Verificar si un día tiene actividades
+  // Verificar si un día tiene actividades (incluyendo rangos de campamentos)
   const tieneActividades = (dia: Date) => {
     return actividades.some(actividad => {
-      const fechaActividad = new Date(actividad.fecha)
-      return (
-        fechaActividad.getDate() === dia.getDate() &&
-        fechaActividad.getMonth() === dia.getMonth() &&
-        fechaActividad.getFullYear() === dia.getFullYear()
-      )
+      const fechaInicio = new Date(actividad.fecha)
+      const fechaFin = actividad.fechaFin ? new Date(actividad.fechaFin) : fechaInicio
+
+      // Normalizar fechas a medianoche para comparación
+      const diaComparar = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate())
+      const inicioComparar = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), fechaInicio.getDate())
+      const finComparar = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), fechaFin.getDate())
+
+      // Para campamentos, verificar si el día está dentro del rango
+      if (actividad.tipo === 'campamento' || actividad.tipoOriginal === 'campamento') {
+        return diaComparar >= inicioComparar && diaComparar <= finComparar
+      }
+
+      // Para otros eventos, verificar solo el día de inicio
+      return diaComparar.getTime() === inicioComparar.getTime()
     })
   }
 
@@ -207,165 +455,489 @@ export function CalendarioCompacto({ seccionId, className }: CalendarioCompactoP
     }
   }
 
+  // Función para confirmar asistencia a reunión
+  const handleConfirmacion = async (actividadId: number, asistira: boolean, comentario?: string) => {
+    if (!hijoActual) {
+      console.error('No hay hijo seleccionado')
+      return
+    }
+
+    setConfirmandoId(actividadId)
+
+    try {
+      const apiUrl = getApiUrl()
+      const token = localStorage.getItem('token')
+
+      const body: any = {
+        actividad_id: actividadId,
+        scout_id: hijoActual.id,
+        asistira
+      }
+
+      // Añadir comentario si existe (obligatorio para rechazos)
+      if (comentario && comentario.trim()) {
+        body.comentarios = comentario.trim()
+      }
+
+      const response = await fetch(`${apiUrl}/api/confirmaciones`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+
+      if (response.ok) {
+        // Actualizar estado local
+        setActividades(prev => prev.map(act =>
+          act.id === actividadId
+            ? { ...act, confirmacion: asistira ? 'confirmado' : 'rechazado' }
+            : act
+        ))
+        // Limpiar estado de comentario
+        setComentarioRechazo('')
+        setMostrandoComentario(null)
+      } else {
+        console.error('Error al confirmar:', await response.text())
+      }
+    } catch (error) {
+      console.error('Error al confirmar asistencia:', error)
+    } finally {
+      setConfirmandoId(null)
+    }
+  }
+
+  // Función para iniciar el proceso de rechazo (mostrar campo de comentario)
+  const handleIniciarRechazo = (actividadId: number) => {
+    setMostrandoComentario(actividadId)
+    setComentarioRechazo('')
+  }
+
+  // Función para cancelar el rechazo
+  const handleCancelarRechazo = () => {
+    setMostrandoComentario(null)
+    setComentarioRechazo('')
+  }
+
+  // Función para confirmar el rechazo con comentario
+  const handleConfirmarRechazo = (actividadId: number) => {
+    if (!comentarioRechazo.trim()) {
+      return // No permitir rechazar sin comentario
+    }
+    handleConfirmacion(actividadId, false, comentarioRechazo)
+  }
+
+  // Función para abrir wizard de campamento
+  const handleAbrirCampamento = (actividad: ActividadCalendario) => {
+    if (!hijoActual) return
+    setActividadCampamento(actividad)
+    setCampamentoModalOpen(true)
+  }
+
   const hoy = new Date()
 
-  return (
-    <Card className={className}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center space-x-2">
-              <CalendarIcon className="h-5 w-5" />
-              <span>Calendario</span>
-            </CardTitle>
-            <CardDescription className="mt-1">
-              {actividadesMes.length} actividad{actividadesMes.length !== 1 ? 'es' : ''} este mes
-            </CardDescription>
+  // Renderizar tarjeta de actividad
+  const renderActividadCard = (actividad: ActividadCalendario) => {
+    const esCampamento = actividad.tipo === 'campamento' || actividad.tipoOriginal === 'campamento'
+    const estaConfirmando = confirmandoId === actividad.id
+
+    return (
+      <div
+        key={actividad.id}
+        className="p-3 rounded-lg border hover:shadow-sm transition-shadow relative"
+      >
+        {/* Badge de confirmación en esquina superior derecha */}
+        {actividad.confirmacion && (
+          <div className="absolute top-2 right-2">
+            {getConfirmacionBadge(actividad.confirmacion)}
           </div>
+        )}
 
-          {/* Navegación de meses */}
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="icon" onClick={mesAnterior}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[120px] text-center">
-              {mesActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-            </span>
-            <Button variant="outline" size="icon" onClick={mesSiguiente}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        {/* Mini calendario */}
-        <div className="mb-4">
-          {/* Días de la semana */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['D', 'L', 'M', 'X', 'J', 'V', 'S'].map(dia => (
-              <div key={dia} className="text-center text-xs font-medium text-muted-foreground py-1">
-                {dia}
-              </div>
-            ))}
-          </div>
-
-          {/* Días del mes */}
-          <div className="grid grid-cols-7 gap-1">
-            {diasCalendario.map((dia, index) => {
-              if (!dia) {
-                return <div key={index} className="aspect-square" />
-              }
-
-              const esHoy =
-                dia.getDate() === hoy.getDate() &&
-                dia.getMonth() === hoy.getMonth() &&
-                dia.getFullYear() === hoy.getFullYear()
-
-              const tieneEvento = tieneActividades(dia)
-              const esSeleccionado = diaSeleccionado &&
-                dia.getDate() === diaSeleccionado.getDate() &&
-                dia.getMonth() === diaSeleccionado.getMonth()
-
-              return (
-                <button
-                  key={index}
-                  onClick={() => setDiaSeleccionado(dia)}
-                  className={cn(
-                    "aspect-square rounded-md text-sm flex flex-col items-center justify-center relative transition-all duration-200",
-                    "hover:bg-primary/10 hover:border hover:border-primary/30 hover:shadow-sm hover:scale-105",
-                    esHoy && "bg-primary text-primary-foreground font-bold",
-                    esSeleccionado && !esHoy && "ring-2 ring-primary",
-                    !esHoy && !esSeleccionado && "text-foreground"
-                  )}
-                >
-                  <span>{dia.getDate()}</span>
-                  {tieneEvento && (
-                    <div className={cn(
-                      "w-1 h-1 rounded-full mt-0.5",
-                      esHoy ? "bg-primary-foreground" : "bg-primary"
-                    )} />
-                  )}
-                </button>
-              )
-            })}
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1 min-w-0 pr-20">
+            <h5 className="font-medium text-sm truncate">{actividad.titulo}</h5>
           </div>
         </div>
 
-        {/* Próximas actividades */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="font-semibold text-sm">Próximas Actividades</h4>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/familia/calendario">
-                Ver todas
-                <ArrowRight className="h-3 w-3 ml-1" />
-              </Link>
-            </Button>
+        <div className="space-y-1 text-xs text-muted-foreground">
+          <div className="flex items-center space-x-1">
+            <CalendarIcon className="h-3 w-3" />
+            <span>{new Date(actividad.fecha).toLocaleDateString('es-ES', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short'
+            })}</span>
+            <Clock className="h-3 w-3 ml-2" />
+            <span>{actividad.hora}{actividad.horaFin ? ` - ${actividad.horaFin}` : ''}</span>
           </div>
 
-          {proximasActividades.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No hay actividades programadas</p>
+          {actividad.lugar && (
+            <div className="flex items-center space-x-1">
+              <MapPin className="h-3 w-3" />
+              <span className="truncate">{actividad.lugar}</span>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {proximasActividades.map(actividad => (
-                <div
-                  key={actividad.id}
-                  className="p-3 rounded-lg border hover:shadow-sm transition-shadow"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <h5 className="font-medium text-sm truncate">{actividad.titulo}</h5>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant="outline" className={getTipoColor(actividad.tipo)}>
-                          {actividad.tipo}
-                        </Badge>
-                        {actividad.confirmacion && getConfirmacionBadge(actividad.confirmacion)}
-                      </div>
-                    </div>
-                  </div>
+          )}
 
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <div className="flex items-center space-x-1">
-                      <CalendarIcon className="h-3 w-3" />
-                      <span>{new Date(actividad.fecha).toLocaleDateString('es-ES', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short'
-                      })}</span>
-                      <Clock className="h-3 w-3 ml-2" />
-                      <span>{actividad.hora}</span>
-                    </div>
-
-                    {actividad.lugar && (
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="h-3 w-3" />
-                        <span className="truncate">{actividad.lugar}</span>
-                      </div>
-                    )}
-
-                    {actividad.costo && (
-                      <div className="flex items-center space-x-1 font-medium text-foreground">
-                        <span>Coste: €{actividad.costo}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {actividad.confirmacion === 'pendiente' && (
-                    <div className="mt-2 flex space-x-2">
-                      <Button size="sm" className="flex-1 text-xs">Confirmar</Button>
-                      <Button size="sm" variant="outline" className="flex-1 text-xs">Rechazar</Button>
-                    </div>
-                  )}
-                </div>
-              ))}
+          {actividad.costo && (
+            <div className="flex items-center space-x-1 font-medium text-foreground">
+              <span>Coste: €{actividad.costo}</span>
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+
+        {actividad.confirmacion === 'pendiente' && hijoActual && (
+          <div className="mt-3">
+            {esCampamento ? (
+              // Botón especial para campamentos
+              <Button
+                size="sm"
+                className="w-full text-xs bg-green-600 hover:bg-green-700"
+                onClick={() => handleAbrirCampamento(actividad)}
+              >
+                <Tent className="h-3 w-3 mr-1" />
+                Inscribirse al Campamento
+              </Button>
+            ) : mostrandoComentario === actividad.id ? (
+              // Mostrar campo de comentario para rechazo
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Indica el motivo por el que no podrás asistir..."
+                  value={comentarioRechazo}
+                  onChange={(e) => setComentarioRechazo(e.target.value)}
+                  className="text-xs min-h-[60px]"
+                />
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs"
+                    onClick={handleCancelarRechazo}
+                    disabled={estaConfirmando}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="flex-1 text-xs"
+                    onClick={() => handleConfirmarRechazo(actividad.id)}
+                    disabled={estaConfirmando || !comentarioRechazo.trim()}
+                  >
+                    {estaConfirmando ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      'Confirmar'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // Botones normales para reuniones (No Asistirá izquierda, Asistirá derecha)
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 text-xs"
+                  onClick={() => handleIniciarRechazo(actividad.id)}
+                  disabled={estaConfirmando}
+                >
+                  <XCircle className="h-3 w-3 mr-1" />
+                  No Asistirá
+                </Button>
+                <Button
+                  size="sm"
+                  className="flex-1 text-xs"
+                  onClick={() => handleConfirmacion(actividad.id, true)}
+                  disabled={estaConfirmando}
+                >
+                  {estaConfirmando ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Asistirá
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Botón para cambiar asistencia ya confirmada/rechazada (NO campamentos) */}
+        {actividad.confirmacion && actividad.confirmacion !== 'pendiente' && hijoActual && !esCampamento && (
+          <div className="mt-3">
+            {actividad.confirmacion === 'confirmado' ? (
+              mostrandoComentario === actividad.id ? (
+                // Mostrar campo de comentario para cancelar asistencia
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Indica el motivo por el que ya no podrás asistir..."
+                    value={comentarioRechazo}
+                    onChange={(e) => setComentarioRechazo(e.target.value)}
+                    className="text-xs min-h-[60px]"
+                  />
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-xs"
+                      onClick={handleCancelarRechazo}
+                      disabled={estaConfirmando}
+                    >
+                      Volver
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="flex-1 text-xs"
+                      onClick={() => handleConfirmarRechazo(actividad.id)}
+                      disabled={estaConfirmando || !comentarioRechazo.trim()}
+                    >
+                      {estaConfirmando ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        'Confirmar cancelación'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => handleIniciarRechazo(actividad.id)}
+                  disabled={estaConfirmando}
+                >
+                  <XCircle className="h-3 w-3 mr-1" />
+                  Cancelar asistencia
+                </Button>
+              )
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full text-xs text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                onClick={() => handleConfirmacion(actividad.id, true)}
+                disabled={estaConfirmando}
+              >
+                {estaConfirmando ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Ahora sí asistiré
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Botón para cambiar de opinión en CAMPAMENTOS rechazados */}
+        {esCampamento && actividad.confirmacion === 'rechazado' && hijoActual && (
+          <div className="mt-3">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full text-xs text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+              onClick={() => handleAbrirCampamento(actividad)}
+            >
+              <Tent className="h-3 w-3 mr-1" />
+              He cambiado de opinión, quiero inscribirme
+            </Button>
+          </div>
+        )}
+
+        {/* Botón para ver/gestionar inscripción en CAMPAMENTOS confirmados */}
+        {esCampamento && actividad.confirmacion === 'confirmado' && hijoActual && (
+          <div className="mt-3">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full text-xs"
+              onClick={() => handleAbrirCampamento(actividad)}
+            >
+              <Tent className="h-3 w-3 mr-1" />
+              Ver inscripción
+            </Button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <Card className={className}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center space-x-2">
+                <CalendarIcon className="h-5 w-5" />
+                <span>Calendario</span>
+              </CardTitle>
+              <CardDescription className="mt-1">
+                {actividadesMes.length} actividad{actividadesMes.length !== 1 ? 'es' : ''} este mes
+              </CardDescription>
+            </div>
+
+            {/* Navegación de meses */}
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="icon" onClick={mesAnterior}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium min-w-[120px] text-center">
+                {mesActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+              </span>
+              <Button variant="outline" size="icon" onClick={mesSiguiente}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          {/* Mini calendario */}
+          <div className="mb-4">
+            {/* Días de la semana (Lunes a Domingo) */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(dia => (
+                <div key={dia} className="text-center text-xs font-medium text-muted-foreground py-1">
+                  {dia}
+                </div>
+              ))}
+            </div>
+
+            {/* Días del mes */}
+            <div className="grid grid-cols-7 gap-1">
+              {diasCalendario.map((dia, index) => {
+                if (!dia) {
+                  return <div key={index} className="aspect-square" />
+                }
+
+                const esHoy =
+                  dia.getDate() === hoy.getDate() &&
+                  dia.getMonth() === hoy.getMonth() &&
+                  dia.getFullYear() === hoy.getFullYear()
+
+                const tieneEvento = tieneActividades(dia)
+                const esSeleccionado = diaSeleccionado &&
+                  dia.getDate() === diaSeleccionado.getDate() &&
+                  dia.getMonth() === diaSeleccionado.getMonth()
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setDiaSeleccionado(dia)}
+                    className={cn(
+                      "aspect-square rounded-md text-sm flex flex-col items-center justify-center relative transition-all duration-200",
+                      "hover:bg-primary/30 hover:border hover:border-primary/50 hover:shadow-sm hover:scale-105",
+                      esHoy && "bg-primary text-primary-foreground font-bold",
+                      esSeleccionado && !esHoy && "ring-2 ring-primary bg-primary/10",
+                      !esHoy && !esSeleccionado && "text-gray-900"
+                    )}
+                  >
+                    <span className={cn(
+                      "font-medium",
+                      esHoy ? "text-primary-foreground" : "text-gray-900"
+                    )}>{dia.getDate()}</span>
+                    {tieneEvento && (
+                      <div className={cn(
+                        "w-1.5 h-1.5 rounded-full mt-0.5",
+                        esHoy ? "bg-primary-foreground" : "bg-primary"
+                      )} />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Actividades del día seleccionado */}
+          {diaSeleccionado && actividadesDia.length > 0 && (
+            <div className="space-y-3 mb-4 p-3 bg-muted/50 rounded-lg">
+              <h4 className="font-semibold text-sm">
+                Actividades del {diaSeleccionado.toLocaleDateString('es-ES', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long'
+                })}
+              </h4>
+              <div className="space-y-2">
+                {actividadesDia.map(actividad => renderActividadCard(actividad))}
+              </div>
+            </div>
+          )}
+
+          {/* Próxima actividad (solo 1) */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-sm">Próxima Actividad</h4>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/familia/calendario">
+                  Ver todas
+                  <ArrowRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : !proximaActividad ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No hay actividades programadas</p>
+              </div>
+            ) : (
+              renderActividadCard(proximaActividad)
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Wizard de inscripción a campamento (mismo que calendario-view) */}
+      {actividadCampamento && hijoActual && (
+        <InscripcionCampamentoWizard
+          key={`wizard-${actividadCampamento.id}-${hijoActual.id}`}
+          isOpen={campamentoModalOpen}
+          onClose={() => {
+            setCampamentoModalOpen(false)
+            setActividadCampamento(null)
+          }}
+          actividad={{
+            id: actividadCampamento.id,
+            titulo: actividadCampamento.titulo,
+            descripcion: actividadCampamento.descripcion || '',
+            fecha: actividadCampamento.fecha,
+            fechaFin: actividadCampamento.fechaFin,
+            lugar: actividadCampamento.lugar,
+            costo: actividadCampamento.costo,
+            scoutIds: [hijoActual.id.toString()],
+            confirmaciones: {},
+            campamento: {
+              lugar_salida: (actividadCampamento as any).lugar_salida,
+              hora_salida: (actividadCampamento as any).hora_salida,
+              mapa_salida_url: (actividadCampamento as any).mapa_salida_url,
+              lugar_regreso: (actividadCampamento as any).lugar_regreso,
+              hora_regreso: (actividadCampamento as any).hora_regreso,
+              numero_cuenta: (actividadCampamento as any).numero_cuenta,
+              concepto_pago: (actividadCampamento as any).concepto_pago,
+              recordatorios_predefinidos: (actividadCampamento as any).recordatorios_predefinidos,
+              recordatorios_personalizados: (actividadCampamento as any).recordatorios_personalizados,
+              circular_drive_id: (actividadCampamento as any).circular_drive_id,
+              circular_drive_url: (actividadCampamento as any).circular_drive_url,
+              circular_nombre: (actividadCampamento as any).circular_nombre
+            }
+          }}
+          educando={hijoActual as ScoutHijo}
+          familiarData={familiarData}
+        />
+      )}
+    </>
   )
 }

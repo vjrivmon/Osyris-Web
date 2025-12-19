@@ -11,16 +11,16 @@ const pool = new Pool({
 
 async function createAdmin() {
   try {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    
+    const hashedPassword = await bcrypt.hash('Admin123#', 10);
+
     const result = await pool.query(
       'UPDATE usuarios SET contraseña = $1 WHERE email = $2 RETURNING id, nombre, email, rol',
-      [hashedPassword, 'admin@grupoosyris.es']
+      [hashedPassword, 'web.osyris@gmail.com']
     );
-    
+
     console.log('✅ Contraseña actualizada');
-    console.log('📧 Email: admin@grupoosyris.es');
-    console.log('🔑 Password: admin123');
+    console.log('📧 Email: web.osyris@gmail.com');
+    console.log('🔑 Password: Admin123#');
     console.log('👤 Usuario:', result.rows[0]);
     
     await pool.end();

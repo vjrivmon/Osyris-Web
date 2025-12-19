@@ -253,6 +253,35 @@ const removeByDocumentoId = async (documentoId) => {
   }
 };
 
+// Eliminar todas las notificaciones de una sección
+const removeAllBySeccionId = async (seccionId) => {
+  try {
+    const result = await query(`
+      DELETE FROM notificaciones_scouter
+      WHERE seccion_id = $1
+      RETURNING id
+    `, [seccionId]);
+    return result.length;
+  } catch (error) {
+    console.error('Error eliminando todas las notificaciones:', error);
+    throw error;
+  }
+};
+
+// Eliminar todas las notificaciones (para admins)
+const removeAll = async () => {
+  try {
+    const result = await query(`
+      DELETE FROM notificaciones_scouter
+      RETURNING id
+    `);
+    return result.length;
+  } catch (error) {
+    console.error('Error eliminando todas las notificaciones:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   crearParaSeccion,
   findBySeccionId,
@@ -262,5 +291,7 @@ module.exports = {
   marcarComoLeida,
   contarNoLeidasPorSeccion,
   remove,
-  removeByDocumentoId
+  removeByDocumentoId,
+  removeAllBySeccionId,
+  removeAll
 };

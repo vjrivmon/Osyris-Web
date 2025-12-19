@@ -1,36 +1,48 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent } from "@/components/ui/card"
-import { AlertTriangle } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { CalendarioView } from '@/components/familia/calendario/calendario-view'
+import { ChevronLeft } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default function FamiliaCalendarioPage() {
-  const router = useRouter()
+  // Leer hijo seleccionado de sessionStorage
+  const [hijoSeleccionado, setHijoSeleccionado] = useState<number | undefined>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('hijoSeleccionado')
+      return saved ? parseInt(saved, 10) : undefined
+    }
+    return undefined
+  })
 
+  // Sincronizar con sessionStorage por si cambia en otra pestaña/componente
   useEffect(() => {
-    // Redirigir automáticamente al dashboard después de 2 segundos
-    const timeout = setTimeout(() => {
-      router.push('/familia/dashboard')
-    }, 2000)
+    const handleStorageChange = () => {
+      const saved = sessionStorage.getItem('hijoSeleccionado')
+      if (saved) {
+        setHijoSeleccionado(parseInt(saved, 10))
+      }
+    }
 
-    return () => clearTimeout(timeout)
-  }, [router])
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="max-w-md">
-        <CardContent className="p-8 text-center">
-          <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Página no disponible</h2>
-          <p className="text-muted-foreground mb-4">
-            Esta funcionalidad no está activa actualmente.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Redirigiendo al inicio...
-          </p>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      {/* Breadcrumb / Volver */}
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/familia/dashboard">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Volver al Dashboard
+          </Link>
+        </Button>
+      </div>
+
+      {/* Calendario completo con todos los eventos de la ronda */}
+      <CalendarioView hijoSeleccionado={hijoSeleccionado} />
     </div>
   )
 }

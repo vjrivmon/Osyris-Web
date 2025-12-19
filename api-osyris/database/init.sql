@@ -157,14 +157,14 @@ ON CONFLICT DO NOTHING;
 -- ========================================
 -- USUARIO ADMINISTRADOR POR DEFECTO
 -- ========================================
--- Email: admin@grupoosyris.es
--- Contraseña: admin123
+-- Email: web.osyris@gmail.com
+-- Contraseña: Admin123#
 INSERT INTO usuarios (nombre, apellidos, email, contraseña, rol, activo)
 VALUES (
   'Admin',
   'Sistema',
-  'admin@grupoosyris.es',
-  '$2b$10$Q7HqR7NfUbC7FZU7aYPdH.WqFm5dP3vMHXfBxKG5x/JmGxO7w5/h.',
+  'web.osyris@gmail.com',
+  '$2a$10$txlIjy4ud5uhxksWdAEYfepFStQaxmImQ/tSukaYXN4yh9A2o/fJ6',
   'admin',
   true
 ) ON CONFLICT (email) DO NOTHING;

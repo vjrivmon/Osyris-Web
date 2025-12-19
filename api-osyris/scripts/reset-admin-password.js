@@ -16,7 +16,7 @@ const { hashPassword } = require('./password-utils');
 /**
  * Función para restablecer la contraseña del administrador
  */
-async function resetAdminPassword(newPassword = 'admin123') {
+async function resetAdminPassword(newPassword = 'Admin123#') {
   try {
     console.log('🔐 Restableciendo contraseña del administrador...');
 
@@ -26,7 +26,7 @@ async function resetAdminPassword(newPassword = 'admin123') {
     // Verificar que el usuario admin existe
     const adminUser = await query(
       'SELECT id, email, nombre, apellidos FROM usuarios WHERE email = ?',
-      ['admin@osyris.com']
+      ['web.osyris@gmail.com']
     );
 
     if (adminUser.length === 0) {
@@ -41,7 +41,7 @@ async function resetAdminPassword(newPassword = 'admin123') {
     // Actualizar la contraseña
     const result = await query(
       'UPDATE usuarios SET password = ? WHERE email = ?',
-      [hashedPassword, 'admin@osyris.com']
+      [hashedPassword, 'web.osyris@gmail.com']
     );
 
     if (result.changes > 0) {

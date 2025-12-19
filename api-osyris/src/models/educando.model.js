@@ -246,8 +246,8 @@ const create = async (educandoData) => {
       educandoData.apellidos,
       educandoData.genero || 'prefiero_no_decir',
       educandoData.fecha_nacimiento,
-      educandoData.dni || null,
-      educandoData.pasaporte || null,
+      educandoData.dni?.trim() || null,
+      educandoData.pasaporte?.trim() || null,
       educandoData.direccion || null,
       educandoData.codigo_postal || null,
       educandoData.municipio || null,
@@ -263,7 +263,8 @@ const create = async (educandoData) => {
       educandoData.id_externo || null
     ]);
 
-    const newEducando = await findById(result.insertId);
+    // result es un array cuando hay RETURNING, acceder a result[0].id
+    const newEducando = await findById(result[0].id);
     return newEducando;
   } catch (error) {
     throw error;
@@ -302,12 +303,14 @@ const update = async (id, educandoData) => {
     }
     if (educandoData.dni !== undefined) {
       fields.push(`dni = $${paramIndex}`);
-      values.push(educandoData.dni);
+      // Convertir string vacío a NULL para evitar violación de constraint UNIQUE
+      values.push(educandoData.dni?.trim() || null);
       paramIndex++;
     }
     if (educandoData.pasaporte !== undefined) {
       fields.push(`pasaporte = $${paramIndex}`);
-      values.push(educandoData.pasaporte);
+      // Convertir string vacío a NULL para evitar violación de constraint UNIQUE
+      values.push(educandoData.pasaporte?.trim() || null);
       paramIndex++;
     }
     if (educandoData.direccion !== undefined) {
@@ -491,26 +494,37 @@ const getEstadisticas = async () => {
 
 /**
  * Buscar educandos por múltiples criterios
+ * @param {string} searchTerm - Término de búsqueda
+ * @param {number|null} seccionId - ID de sección para filtrar (opcional, para scouters)
  */
-const search = async (searchTerm) => {
+const search = async (searchTerm, seccionId = null) => {
   try {
-    const educandos = await query(`
+    let sql = `
       SELECT e.*,
              s.nombre as seccion_nombre,
              s.color_principal as seccion_color,
              EXTRACT(YEAR FROM AGE(e.fecha_nacimiento)) as edad
       FROM educandos e
       LEFT JOIN secciones s ON e.seccion_id = s.id
-      WHERE
+      WHERE (
         LOWER(e.nombre) LIKE LOWER($1) OR
         LOWER(e.apellidos) LIKE LOWER($1) OR
         LOWER(CONCAT(e.nombre, ' ', e.apellidos)) LIKE LOWER($1) OR
         e.dni LIKE $1 OR
         e.email LIKE LOWER($1)
-      ORDER BY e.apellidos ASC, e.nombre ASC
-      LIMIT 50
-    `, [`%${searchTerm}%`]);
+      )`;
 
+    const params = [`%${searchTerm}%`];
+
+    // Si se especifica sección, filtrar solo esa sección
+    if (seccionId) {
+      sql += ` AND e.seccion_id = $2`;
+      params.push(seccionId);
+    }
+
+    sql += ` ORDER BY e.apellidos ASC, e.nombre ASC LIMIT 50`;
+
+    const educandos = await query(sql, params);
     return educandos;
   } catch (error) {
     throw error;

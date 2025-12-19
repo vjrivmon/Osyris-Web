@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+
 // POST /api/confirmaciones/confirmar - Confirmar asistencia a actividad
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Implementar autenticación con token JWT
-    // const token = request.headers.get('Authorization')
-    // if (!token) {
-    //   return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    // }
+    // Obtener token de autorización
+    const token = request.headers.get('Authorization')
+    if (!token) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
 
     const body = await request.json()
-    const { actividadId, scoutId, estado, comentario, familiarId } = body
+    const { actividadId, scoutId, estado, comentario } = body
 
     // Validar datos
     if (!actividadId || !scoutId || !estado) {
@@ -27,25 +29,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generar ID de confirmación (en producción esto vendría de la BD)
-    const confirmacionId = `conf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    // Convertir estructura de datos para el backend
+    // Frontend usa: estado = 'confirmado' | 'no_asiste'
+    // Backend espera: asistira = true | false
+    const backendPayload = {
+      actividad_id: actividadId,
+      scout_id: scoutId,
+      asistira: estado === 'confirmado',
+      comentarios: comentario || ''
+    }
 
-    // Aquí guardaríamos en la base de datos
-    // Por ahora, simulamos una confirmación exitosa
-    const confirmacion = {
-      id: confirmacionId,
+    // Llamar al backend real
+    const response = await fetch(`${API_URL}/api/confirmaciones/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token
+      },
+      body: JSON.stringify(backendPayload)
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error('Error del backend:', data)
+      return NextResponse.json(
+        { error: data.message || 'Error al guardar confirmación' },
+        { status: response.status }
+      )
+    }
+
+    // Devolver respuesta en formato que espera el frontend
+    return NextResponse.json({
+      id: data.data?.id,
       actividadId,
       scoutId,
       estado,
       comentario: comentario || null,
-      fechaConfirmacion: new Date().toISOString(),
-      familiarId: familiarId || 'mock_familiar_id'
-    }
-
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    return NextResponse.json(confirmacion)
+      fechaConfirmacion: new Date().toISOString()
+    })
 
   } catch (error) {
     console.error('Error en POST /api/confirmaciones/confirmar:', error)

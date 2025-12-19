@@ -116,8 +116,11 @@ const login = async (req, res) => {
           email: usuario.email,
           nombre: usuario.nombre,
           apellidos: usuario.apellidos,
+          telefono: usuario.telefono || '',
           rol: usuario.rol,
-          foto_perfil: usuario.foto_perfil
+          foto_perfil: usuario.foto_perfil,
+          seccion_id: usuario.seccion_id || null,
+          activo: usuario.activo
         }
       }
     });

@@ -1,19 +1,22 @@
 const Confirmacion = require('../models/confirmaciones.model');
 const Familiar = require('../models/familiar.model');
 const Joi = require('joi');
+const AsistenciaService = require('../services/asistencia-sheets.service');
+const NotificacionScouterModel = require('../models/notificaciones_scouter.model');
+const { query } = require('../config/db.config');
 
 // Esquema de validación para la creación/actualización de confirmaciones
 const confirmacionSchema = Joi.object({
   actividad_id: Joi.number().integer().required(),
   scout_id: Joi.number().integer().required(),
   asistira: Joi.boolean().required(),
-  comentarios: Joi.string().optional()
+  comentarios: Joi.string().allow('').optional() // Permitir string vacío
 });
 
 // Esquema de validación para actualización de confirmaciones
 const confirmacionUpdateSchema = Joi.object({
   asistira: Joi.boolean().optional(),
-  comentarios: Joi.string().optional()
+  comentarios: Joi.string().allow('').optional() // Permitir string vacío
 }).min(1);
 
 // Obtener todas las confirmaciones de un familiar
@@ -74,19 +77,46 @@ const getConfirmacionesByActividad = async (req, res) => {
       });
     }
 
+    // Determinar sección a filtrar:
+    // - Si es scouter, usar su sección automáticamente
+    // - Si es admin, puede ver todas o filtrar por seccion_id específica
+    let seccionFiltro = seccion_id ? parseInt(seccion_id) : null;
+    if (req.usuario.rol === 'scouter' && req.usuario.seccion_id) {
+      seccionFiltro = req.usuario.seccion_id;
+    }
+
     const options = {
       solo_asistiran: solo_asistiran === 'true',
       solo_no_asistiran: solo_no_asistiran === 'true',
-      seccion_id: seccion_id ? parseInt(seccion_id) : null
+      seccion_id: seccionFiltro
     };
 
+    // Obtener confirmaciones existentes
     const confirmaciones = await Confirmacion.findByActividadId(actividadId, options);
+
+    // Obtener educandos que aún no han confirmado (pendientes)
+    const scoutsSinConfirmar = await Confirmacion.getEducandosSinConfirmar(actividadId, seccionFiltro);
+
+    // Calcular estadísticas
+    const asisten = confirmaciones.filter(c => c.estado === 'confirmado').length;
+    const noAsisten = confirmaciones.filter(c => c.estado === 'no_asiste').length;
+    const pendientes = scoutsSinConfirmar.length;
 
     res.status(200).json({
       success: true,
-      data: confirmaciones
+      data: {
+        confirmaciones: confirmaciones,
+        scouts_sin_confirmar: scoutsSinConfirmar,
+        estadisticas: {
+          asisten,
+          noAsisten,
+          pendientes,
+          total: asisten + noAsisten + pendientes
+        }
+      }
     });
   } catch (error) {
+    console.error('Error al obtener confirmaciones de actividad:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener las confirmaciones de la actividad',
@@ -208,23 +238,78 @@ const createOrUpdateConfirmacion = async (req, res) => {
     }
 
     // Agregar el familiar_id y el usuario que confirma
+    // IMPORTANTE: El frontend envía 'scout_id' pero la BD usa 'educando_id'
     const confirmacionData = {
-      ...value,
+      actividad_id: value.actividad_id,
+      educando_id: value.scout_id,  // Mapear scout_id a educando_id
+      asistira: value.asistira,
+      comentarios: value.comentarios,
       familiar_id: familiarId,
       confirmado_por: familiarId
     };
 
     const confirmacion = await Confirmacion.createOrUpdate(confirmacionData);
 
+    // Actualizar spreadsheet de asistencia en Google Drive
+    try {
+      await AsistenciaService.updateAsistenciaEducando(
+        value.actividad_id,
+        value.scout_id,
+        value.asistira ? 'confirmado' : 'no_asiste',
+        value.comentarios || ''
+      );
+      console.log(`📊 Asistencia actualizada en Google Sheets para educando ${value.scout_id}`);
+    } catch (sheetsError) {
+      // Log pero no fallar la operación principal
+      console.error('⚠️ Error actualizando Google Sheets (no bloquea):', sheetsError.message);
+    }
+
+    // Crear notificacion para scouters de la seccion
+    try {
+      const educandoResult = await query(`
+        SELECT e.nombre, e.apellidos, e.seccion_id, s.nombre as seccion_nombre,
+               a.titulo as actividad_titulo, a.tipo as actividad_tipo
+        FROM educandos e
+        LEFT JOIN secciones s ON e.seccion_id = s.id
+        LEFT JOIN actividades a ON a.id = $2
+        WHERE e.id = $1
+      `, [value.scout_id, value.actividad_id]);
+
+      if (educandoResult.length > 0) {
+        const { nombre, apellidos, seccion_id, seccion_nombre, actividad_titulo, actividad_tipo } = educandoResult[0];
+        const accion = value.asistira ? 'ha confirmado asistencia' : 'ha indicado que no asistira';
+        const tipoNotif = value.asistira ? 'confirmacion_sabado' : 'cancelacion_sabado';
+
+        await NotificacionScouterModel.crearParaSeccion({
+          educando_id: value.scout_id,
+          educando_nombre: `${nombre} ${apellidos}`,
+          seccion_id: seccion_id,
+          tipo: tipoNotif,
+          titulo: `${nombre} ${apellidos} ${accion}`,
+          mensaje: `La familia ${accion} a "${actividad_titulo || 'la reunion'}".${value.comentarios ? ` Comentario: ${value.comentarios}` : ''}`,
+          enlace_accion: '/aula-virtual',
+          prioridad: 'normal',
+          metadata: {
+            actividad_id: value.actividad_id,
+            asistira: value.asistira,
+            actividad_tipo: actividad_tipo
+          }
+        });
+        console.log(`🔔 Notificacion creada para scouters de seccion ${seccion_nombre}`);
+      }
+    } catch (notifError) {
+      console.error('⚠️ Error creando notificacion (no bloquea):', notifError.message);
+    }
+
     res.status(201).json({
       success: true,
-      message: 'Confirmación guardada correctamente',
+      message: 'Confirmacion guardada correctamente',
       data: confirmacion
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error al guardar la confirmación',
+      message: 'Error al guardar la confirmacion',
       error: error.message
     });
   }
@@ -271,15 +356,33 @@ const updateConfirmacion = async (req, res) => {
     }
 
     // Preparar datos para actualización
+    // IMPORTANTE: La BD usa 'educando_id', no 'scout_id'
     const updateData = {
       actividad_id: confirmacion.actividad_id,
-      scout_id: confirmacion.scout_id,
+      educando_id: confirmacion.educando_id,  // Usar educando_id del modelo
       familiar_id: confirmacion.familiar_id,
       confirmado_por: req.usuario.id,
       ...value
     };
 
     const updatedConfirmacion = await Confirmacion.createOrUpdate(updateData);
+
+    // Actualizar spreadsheet de asistencia en Google Drive
+    try {
+      const estadoSheets = value.asistira !== undefined
+        ? (value.asistira ? 'confirmado' : 'no_asiste')
+        : (confirmacion.asistira ? 'confirmado' : 'no_asiste');
+
+      await AsistenciaService.updateAsistenciaEducando(
+        confirmacion.actividad_id,
+        confirmacion.educando_id,
+        estadoSheets,
+        value.comentarios || confirmacion.comentarios || ''
+      );
+      console.log(`📊 Asistencia modificada en Google Sheets para educando ${confirmacion.educando_id}`);
+    } catch (sheetsError) {
+      console.error('⚠️ Error actualizando Google Sheets (no bloquea):', sheetsError.message);
+    }
 
     res.status(200).json({
       success: true,
@@ -325,6 +428,10 @@ const deleteConfirmacion = async (req, res) => {
       });
     }
 
+    // Guardar datos antes de eliminar para actualizar el spreadsheet
+    const actividadId = confirmacion.actividad_id;
+    const educandoId = confirmacion.educando_id;
+
     const deleted = await Confirmacion.remove(id, familiarId);
 
     if (!deleted) {
@@ -332,6 +439,19 @@ const deleteConfirmacion = async (req, res) => {
         success: false,
         message: 'No se pudo eliminar la confirmación'
       });
+    }
+
+    // Actualizar spreadsheet: volver a estado "Pendiente"
+    try {
+      await AsistenciaService.updateAsistenciaEducando(
+        actividadId,
+        educandoId,
+        'pendiente', // Volver a pendiente
+        '' // Limpiar comentario
+      );
+      console.log(`📊 Asistencia revertida a Pendiente en Google Sheets para educando ${educandoId}`);
+    } catch (sheetsError) {
+      console.error('⚠️ Error actualizando Google Sheets (no bloquea):', sheetsError.message);
     }
 
     res.status(200).json({

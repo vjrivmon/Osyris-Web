@@ -10,6 +10,12 @@ const customJestConfig = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  // Excluir tests E2E de Playwright (se ejecutan con npx playwright test)
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/tests/e2e/',
+    '<rootDir>/.next/',
+  ],
 }
 
 module.exports = createJestConfig(customJestConfig)

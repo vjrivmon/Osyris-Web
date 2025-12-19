@@ -68,6 +68,28 @@ router.get('/plantilla/:fileId/download', verifyToken, driveController.downloadP
 
 /**
  * @swagger
+ * /api/drive/campamento/{tipo}/circulares:
+ *   get:
+ *     summary: Lista las circulares disponibles de un campamento
+ *     tags: [Google Drive]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tipo
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [INICIO, NAVIDAD, ANIVERSARIO, PASCUA, VERANO]
+ *         description: Tipo de campamento
+ *     responses:
+ *       200:
+ *         description: Lista de circulares
+ */
+router.get('/campamento/:tipo/circulares', verifyToken, driveController.getCircularesCampamento);
+
+/**
+ * @swagger
  * /api/drive/educando/{educandoId}/documentos:
  *   get:
  *     summary: Obtiene los documentos de un educando

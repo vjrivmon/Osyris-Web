@@ -84,27 +84,47 @@ export function DocumentosListaCompacta({
   const [plantillasModalOpen, setPlantillasModalOpen] = useState(false)
   const [plantillasDescargadas, setPlantillasDescargadas] = useState<Set<string>>(new Set())
 
-  // Cargar plantillas descargadas desde localStorage al montar
+  // Obtener clave de localStorage específica para el usuario actual
+  const getPlantillasKey = () => {
+    if (typeof window === 'undefined') return 'plantillas_descargadas'
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        if (user?.id) return `plantillas_descargadas_user_${user.id}`
+      } catch {
+        // Ignorar error
+      }
+    }
+    return 'plantillas_descargadas'
+  }
+
+  // Cargar plantillas descargadas desde localStorage al montar (específicas del usuario)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('plantillas_descargadas')
+      const key = getPlantillasKey()
+      const saved = localStorage.getItem(key)
       if (saved) {
         try {
           setPlantillasDescargadas(new Set(JSON.parse(saved)))
         } catch {
           // Si hay error al parsear, ignorar
         }
+      } else {
+        // Si no hay datos para este usuario, limpiar el estado
+        setPlantillasDescargadas(new Set())
       }
     }
-  }, [])
+  }, [hijo?.id]) // Re-ejecutar cuando cambie el hijo seleccionado
 
-  // Marcar plantilla como descargada
+  // Marcar plantilla como descargada (específico por usuario)
   const marcarPlantillaDescargada = (tipoDocumento: string) => {
     const nuevas = new Set(plantillasDescargadas)
     nuevas.add(tipoDocumento)
     setPlantillasDescargadas(nuevas)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('plantillas_descargadas', JSON.stringify([...nuevas]))
+      const key = getPlantillasKey()
+      localStorage.setItem(key, JSON.stringify([...nuevas]))
     }
   }
 
@@ -391,14 +411,14 @@ export function DocumentosListaCompacta({
           )}
         </div>
 
-        {/* Información adicional - solo para educandos >= 14 años (Pioneros/Rutas) que ven documentos opcionales */}
-        {!compact && hijo && hijo.edad >= 14 && (
+        {/* Información adicional - siempre mostrar leyenda de documentos obligatorios/opcionales */}
+        {!compact && documentosList.length > 0 && (
           <div className="mt-6 pt-4 border-t border-gray-100">
             <div className="flex items-start gap-2">
               <Info className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
               <div className="text-xs text-gray-600 space-y-1">
                 <p>Los documentos marcados con (*) son obligatorios</p>
-                <p>Los documentos sin asterisco son opcionales</p>
+                <p className="text-gray-500">Los documentos sin asterisco son opcionales</p>
               </div>
             </div>
           </div>

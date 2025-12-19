@@ -106,7 +106,8 @@ export default function LoginPage() {
           apellidos: data.data.usuario.apellidos,
           email: data.data.usuario.email,
           rol: data.data.usuario.rol,
-          activo: data.data.usuario.activo
+          activo: data.data.usuario.activo,
+          seccion_id: data.data.usuario.seccion_id || null
         });
 
         // Actualizar el estado del contexto de autenticación

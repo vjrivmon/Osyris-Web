@@ -122,12 +122,12 @@ async function listarTodasLasCarpetas() {
 
     try {
       // Listar subcarpetas (años)
-      const aniosResp = await drive.files.list({
+      const añosResp = await drive.files.list({
         q: `'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
         fields: 'files(id, name)'
       });
 
-      for (const anioFolder of aniosResp.data.files) {
+      for (const anioFolder of añosResp.data.files) {
         // Listar carpetas de educandos en cada año
         const educandosResp = await drive.files.list({
           q: `'${anioFolder.id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,

@@ -46,7 +46,14 @@ export default function FamiliaDashboardPage() {
     loading: driveLoading
   } = useGoogleDrive()
   const [userData, setUserData] = useState<any>(null)
-  const [hijoSeleccionado, setHijoSeleccionado] = useState<number | undefined>(undefined)
+  // Inicializar con valor de sessionStorage si existe
+  const [hijoSeleccionado, setHijoSeleccionado] = useState<number | undefined>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('hijoSeleccionado')
+      return saved ? parseInt(saved, 10) : undefined
+    }
+    return undefined
+  })
   const [documentosCache, setDocumentosCache] = useState<DocumentosCache>({})
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [uploadTipoDocumento, setUploadTipoDocumento] = useState<TipoDocumento | null>(null)
@@ -105,12 +112,36 @@ export default function FamiliaDashboardPage() {
     fetchPlantillas()
   }, [fetchPlantillas])
 
-  // Seleccionar automáticamente el primer hijo
+  // Guardar hijo seleccionado en sessionStorage cuando cambie
   useEffect(() => {
-    if (hijos && hijos.length > 0 && !hijoSeleccionado) {
+    if (hijoSeleccionado !== undefined) {
+      sessionStorage.setItem('hijoSeleccionado', hijoSeleccionado.toString())
+    }
+  }, [hijoSeleccionado])
+
+  // Seleccionar hijo: validar el guardado en sessionStorage o usar el primero
+  useEffect(() => {
+    if (hijos && hijos.length > 0) {
+      // Si ya tenemos un hijo seleccionado, validar que existe en la lista
+      if (hijoSeleccionado) {
+        const exists = hijos.find(h => h.id === hijoSeleccionado)
+        if (exists) return // El hijo seleccionado existe, no hacer nada
+      }
+
+      // Si no hay hijo seleccionado o no existe en la lista, intentar cargar de sessionStorage
+      const savedId = sessionStorage.getItem('hijoSeleccionado')
+      if (savedId) {
+        const savedHijo = hijos.find(h => h.id === parseInt(savedId, 10))
+        if (savedHijo) {
+          setHijoSeleccionado(savedHijo.id)
+          return
+        }
+      }
+
+      // Fallback: seleccionar el primer hijo
       setHijoSeleccionado(hijos[0].id)
     }
-  }, [hijos, hijoSeleccionado])
+  }, [hijos])
 
   // Cargar documentos de TODOS los hijos al inicio
   useEffect(() => {
@@ -392,6 +423,7 @@ export default function FamiliaDashboardPage() {
         {/* Calendario */}
         <CalendarioCompacto
           seccionId={hijoActual?.seccion_id}
+          hijoSeleccionado={hijoSeleccionado}
         />
       </div>
 
@@ -404,6 +436,7 @@ export default function FamiliaDashboardPage() {
           educandoNombre={`${hijoActual.nombre} ${hijoActual.apellidos}`}
           tipoDocumento={uploadTipoDocumento}
           onSuccess={handleUploadSuccess}
+          plantillas={plantillas}
         />
       )}
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Bell, CheckCircle, XCircle, FileText } from "lucide-react";
+import { LogOut, User, Bell, CheckCircle, XCircle, FileText, Trash2, CheckCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   AlertDialog,
@@ -112,6 +112,76 @@ export default function FamiliaLayout({
     }
   };
 
+  const eliminarNotificacion = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar que se marque como leída al hacer clic
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await fetch(`${API_URL}/api/notificaciones-familia/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Actualizar el contador si la notificación no estaba leída
+      const notif = notificaciones.find(n => n.id === id);
+      if (notif && !notif.leida) {
+        setContadorNoLeidas(prev => Math.max(0, prev - 1));
+      }
+
+      setNotificaciones(prev => prev.filter(n => n.id !== id));
+    } catch (err) {
+      console.error('Error eliminando notificación:', err);
+    }
+  };
+
+  const marcarTodasComoLeidas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await fetch(`${API_URL}/api/notificaciones-familia/marcar-todas-leidas`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
+      setContadorNoLeidas(0);
+    } catch (err) {
+      console.error('Error marcando todas como leídas:', err);
+    }
+  };
+
+  const limpiarNotificacionesLeidas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // Eliminar todas las notificaciones leídas del servidor
+      const notificacionesLeidas = notificaciones.filter(n => n.leida);
+      for (const notif of notificacionesLeidas) {
+        await fetch(`${API_URL}/api/notificaciones-familia/${notif.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+
+      // Mantener solo las no leídas
+      setNotificaciones(prev => prev.filter(n => !n.leida));
+    } catch (err) {
+      console.error('Error limpiando notificaciones leídas:', err);
+    }
+  };
+
   const getNotificacionIcon = (notif: NotificacionFamilia) => {
     if (notif.metadata?.tipo === 'documento_aprobado') {
       return <CheckCircle className="h-4 w-4 text-green-600" />;
@@ -159,13 +229,42 @@ export default function FamiliaLayout({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
+              <PopoverContent className="w-96 p-0" align="end">
                 <div className="p-3 border-b flex items-center justify-between">
                   <h4 className="font-semibold">Notificaciones</h4>
-                  {contadorNoLeidas > 0 && (
-                    <Badge variant="secondary">{contadorNoLeidas} nuevas</Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {contadorNoLeidas > 0 && (
+                      <Badge variant="secondary">{contadorNoLeidas} nuevas</Badge>
+                    )}
+                  </div>
                 </div>
+                {/* Acciones masivas */}
+                {notificaciones.length > 0 && (
+                  <div className="p-2 border-b flex items-center justify-between gap-2 bg-muted/50">
+                    {contadorNoLeidas > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-7"
+                        onClick={marcarTodasComoLeidas}
+                      >
+                        <CheckCheck className="h-3 w-3 mr-1" />
+                        Marcar todas leídas
+                      </Button>
+                    )}
+                    {notificaciones.some(n => n.leida) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-7 text-destructive hover:text-destructive"
+                        onClick={limpiarNotificacionesLeidas}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Limpiar leídas
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <ScrollArea className="h-[350px]">
                   {notificaciones.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">
@@ -177,7 +276,7 @@ export default function FamiliaLayout({
                       {notificaciones.map((notif) => (
                         <div
                           key={notif.id}
-                          className={`p-3 hover:bg-accent cursor-pointer transition-colors ${!notif.leida ? 'bg-blue-50/50' : ''}`}
+                          className={`p-3 hover:bg-accent cursor-pointer transition-colors group ${!notif.leida ? 'bg-blue-50/50' : ''}`}
                           onClick={() => {
                             if (!notif.leida) marcarComoLeida(notif.id);
                           }}
@@ -188,10 +287,17 @@ export default function FamiliaLayout({
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm truncate">{notif.titulo}</p>
+                                <p className="font-medium text-sm truncate flex-1">{notif.titulo}</p>
                                 {!notif.leida && (
                                   <span className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
                                 )}
+                                <button
+                                  onClick={(e) => eliminarNotificacion(notif.id, e)}
+                                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity"
+                                  title="Eliminar notificación"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                </button>
                               </div>
                               <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                                 {notif.mensaje}

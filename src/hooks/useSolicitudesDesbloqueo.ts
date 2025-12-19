@@ -170,6 +170,9 @@ export function useSolicitudesDesbloqueo(seccionIdInicial?: number): UseSolicitu
       );
       setPendientes(prev => Math.max(0, prev - 1));
 
+      // Emitir evento para sincronizar otras instancias del hook
+      window.dispatchEvent(new CustomEvent('solicitudes-update'));
+
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
@@ -213,6 +216,9 @@ export function useSolicitudesDesbloqueo(seccionIdInicial?: number): UseSolicitu
         prev.map(s => s.id === id ? { ...s, estado: 'rechazada' as const } : s)
       );
       setPendientes(prev => Math.max(0, prev - 1));
+
+      // Emitir evento para sincronizar otras instancias del hook
+      window.dispatchEvent(new CustomEvent('solicitudes-update'));
 
       return true;
     } catch (err) {
@@ -264,17 +270,42 @@ export function useSolicitudesDesbloqueo(seccionIdInicial?: number): UseSolicitu
     }
   }, [seccionActual, cargarSolicitudes]);
 
-  // Cargar contador al montar
+  // Cargar contador al montar y refrescar periódicamente
   useEffect(() => {
     obtenerContador();
-  }, []);
+
+    // Refrescar contador cada 30 segundos
+    const interval = setInterval(() => {
+      obtenerContador();
+    }, 30000);
+
+    // También refrescar cuando el usuario vuelve a la pestaña
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        obtenerContador();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Escuchar evento de sincronización de otras instancias
+    const handleSolicitudesUpdate = () => {
+      obtenerContador();
+    };
+    window.addEventListener('solicitudes-update', handleSolicitudesUpdate);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('solicitudes-update', handleSolicitudesUpdate);
+    };
+  }, [obtenerContador]);
 
   // Cargar solicitudes si se proporciona sección inicial
   useEffect(() => {
     if (seccionIdInicial) {
       cargarSolicitudes(seccionIdInicial);
     }
-  }, [seccionIdInicial]);
+  }, [seccionIdInicial, cargarSolicitudes]);
 
   return {
     // Estado

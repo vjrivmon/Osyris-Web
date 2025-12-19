@@ -22,7 +22,6 @@ import { Filter, Search, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ActivityFilters {
-  seccion: string
   tipo: string
   confirmacion: string
   busqueda: string
@@ -38,22 +37,12 @@ export function ActivityFilter({ filtros, onFiltrosChange, className }: Activity
   const [busqueda, setBusqueda] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  const secciones = [
-    { value: 'todas', label: 'Todas las secciones' },
-    { value: 'Colonia La Veleta', label: 'Colonia La Veleta (Castores)' },
-    { value: 'Manada Waingunga', label: 'Manada Waingunga (Lobatos)' },
-    { value: 'Tropa Brownsea', label: 'Tropa Brownsea (Scouts)' },
-    { value: 'Posta Kanhiwara', label: 'Posta Kanhiwara (Pioneros)' },
-    { value: 'Ruta Walhalla', label: 'Ruta Walhalla (Rovers)' }
-  ]
-
   const tiposActividad = [
     { value: 'todos', label: 'Todos los tipos' },
-    { value: 'actividad', label: 'Actividad regular' },
-    { value: 'campamento', label: 'Campamento' },
-    { value: 'jornada', label: 'Jornada' },
-    { value: 'reunion', label: 'Reunión' },
-    { value: 'evento', label: 'Evento especial' }
+    { value: 'reunion_sabado', label: 'Reuniones de Sábado' },
+    { value: 'salida', label: 'Salidas' },
+    { value: 'campamento', label: 'Campamentos' },
+    { value: 'evento_especial', label: 'Eventos' }
   ]
 
   const estadosConfirmacion = [
@@ -71,20 +60,17 @@ export function ActivityFilter({ filtros, onFiltrosChange, className }: Activity
 
   const clearFilters = () => {
     onFiltrosChange({
-      seccion: 'todas',
       tipo: 'todos',
       confirmacion: 'todos'
     })
     setBusqueda('')
   }
 
-  const hasActiveFilters = filtros.seccion !== 'todas' ||
-                          filtros.tipo !== 'todos' ||
+  const hasActiveFilters = filtros.tipo !== 'todos' ||
                           filtros.confirmacion !== 'todos' ||
                           busqueda.trim() !== ''
 
   const activeFiltersCount = [
-    filtros.seccion !== 'todas',
     filtros.tipo !== 'todos',
     filtros.confirmacion !== 'todos',
     busqueda.trim() !== ''
@@ -147,23 +133,6 @@ export function ActivityFilter({ filtros, onFiltrosChange, className }: Activity
             </div>
           </div>
 
-          {/* Filtro de sección */}
-          <Select
-            value={filtros.seccion}
-            onValueChange={(value) => handleFilterChange('seccion', value)}
-          >
-            <SelectTrigger className="w-full sm:w-64">
-              <SelectValue placeholder="Seleccionar sección" />
-            </SelectTrigger>
-            <SelectContent>
-              {secciones.map(seccion => (
-                <SelectItem key={seccion.value} value={seccion.value}>
-                  {seccion.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           {/* Filtro rápido de confirmación */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -210,10 +179,6 @@ export function ActivityFilter({ filtros, onFiltrosChange, className }: Activity
                 </SelectContent>
               </Select>
 
-              {/* Espacio para futuros filtros */}
-              <div className="text-sm text-gray-500 flex items-center">
-                Más filtros próximamente...
-              </div>
             </div>
           </div>
         )}
@@ -222,18 +187,6 @@ export function ActivityFilter({ filtros, onFiltrosChange, className }: Activity
         {hasActiveFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex flex-wrap gap-2">
-              {filtros.seccion !== 'todas' && (
-                <Badge variant="secondary" className="flex items-center space-x-1">
-                  <span>Sección: {secciones.find(s => s.value === filtros.seccion)?.label}</span>
-                  <button
-                    onClick={() => handleFilterChange('seccion', 'todas')}
-                    className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
-
               {filtros.tipo !== 'todos' && (
                 <Badge variant="secondary" className="flex items-center space-x-1">
                   <span>Tipo: {tiposActividad.find(t => t.value === filtros.tipo)?.label}</span>

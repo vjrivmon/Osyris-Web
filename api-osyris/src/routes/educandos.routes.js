@@ -142,6 +142,33 @@ router.get('/seccion/:seccionId', verifyToken, checkRole(['admin', 'scouter']), 
 
 /**
  * @swagger
+ * /api/educandos/seccion/{seccionId}/completo:
+ *   get:
+ *     summary: Obtener educandos de sección con info completa (docs y familia)
+ *     tags: [Educandos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: seccionId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la sección
+ *     responses:
+ *       200:
+ *         description: Lista de educandos con información completa
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Sin permisos
+ *       500:
+ *         description: Error del servidor
+ */
+router.get('/seccion/:seccionId/completo', verifyToken, checkRole(['admin', 'scouter']), educandoController.getEducandosBySeccionCompleto);
+
+/**
+ * @swagger
  * /api/educandos/{id}:
  *   get:
  *     summary: Obtener un educando por ID
@@ -173,6 +200,64 @@ router.get('/:id', verifyToken, educandoController.getEducandoById);
 
 /**
  * @swagger
+ * /api/educandos/{id}/documentacion:
+ *   get:
+ *     summary: Obtener estado de documentación de un educando
+ *     tags: [Educandos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del educando
+ *     responses:
+ *       200:
+ *         description: Estado de documentación obtenido
+ *       404:
+ *         description: Educando no encontrado
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Sin permisos
+ *       500:
+ *         description: Error del servidor
+ */
+router.get('/:id/documentacion', verifyToken, checkRole(['admin', 'scouter']), educandoController.getEducandoDocumentacion);
+
+/**
+ * @swagger
+ * /api/educandos/{id}/notificar-documentacion:
+ *   post:
+ *     summary: Enviar notificación a familias sobre documentación faltante
+ *     tags: [Educandos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del educando
+ *     responses:
+ *       200:
+ *         description: Notificación enviada exitosamente
+ *       404:
+ *         description: Educando no encontrado
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Sin permisos
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/:id/notificar-documentacion', verifyToken, checkRole(['admin', 'scouter']), educandoController.notificarDocumentacionFaltante);
+
+/**
+ * @swagger
  * /api/educandos:
  *   post:
  *     summary: Crear un nuevo educando
@@ -199,7 +284,7 @@ router.get('/:id', verifyToken, educandoController.getEducandoById);
  *       500:
  *         description: Error del servidor
  */
-router.post('/', verifyToken, checkRole(['admin']), educandoController.createEducando);
+router.post('/', verifyToken, checkRole(['admin', 'scouter']), educandoController.createEducando);
 
 /**
  * @swagger
@@ -236,7 +321,7 @@ router.post('/', verifyToken, checkRole(['admin']), educandoController.createEdu
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id', verifyToken, checkRole(['admin']), educandoController.updateEducando);
+router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), educandoController.updateEducando);
 
 /**
  * @swagger
@@ -267,7 +352,7 @@ router.put('/:id', verifyToken, checkRole(['admin']), educandoController.updateE
  *       500:
  *         description: Error del servidor
  */
-router.patch('/:id/deactivate', verifyToken, checkRole(['admin']), educandoController.deactivateEducando);
+router.patch('/:id/deactivate', verifyToken, checkRole(['admin', 'scouter']), educandoController.deactivateEducando);
 
 /**
  * @swagger
@@ -298,7 +383,7 @@ router.patch('/:id/deactivate', verifyToken, checkRole(['admin']), educandoContr
  *       500:
  *         description: Error del servidor
  */
-router.patch('/:id/reactivate', verifyToken, checkRole(['admin']), educandoController.reactivateEducando);
+router.patch('/:id/reactivate', verifyToken, checkRole(['admin', 'scouter']), educandoController.reactivateEducando);
 
 /**
  * @swagger

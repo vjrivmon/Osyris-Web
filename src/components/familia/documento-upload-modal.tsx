@@ -27,7 +27,7 @@ import {
   RotateCw
 } from 'lucide-react'
 import { TipoDocumento, DOCUMENTO_TIPO_CONFIG } from '@/types/familia'
-import { useGoogleDrive } from '@/hooks/useGoogleDrive'
+import { useGoogleDrive, Plantilla } from '@/hooks/useGoogleDrive'
 
 interface DocumentoUploadModalProps {
   open: boolean
@@ -36,6 +36,7 @@ interface DocumentoUploadModalProps {
   educandoNombre: string
   tipoDocumento: TipoDocumento
   onSuccess?: () => void
+  plantillas?: Plantilla[]  // Plantillas cargadas desde el dashboard
 }
 
 export function DocumentoUploadModal({
@@ -44,7 +45,8 @@ export function DocumentoUploadModal({
   educandoId,
   educandoNombre,
   tipoDocumento,
-  onSuccess
+  onSuccess,
+  plantillas = []
 }: DocumentoUploadModalProps) {
   const [file, setFile] = useState<File | null>(null)
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null)
@@ -74,12 +76,12 @@ export function DocumentoUploadModal({
   const {
     uploadDocumento,
     downloadPlantilla,
-    getPlantillaParaTipo,
     loading: driveLoading
   } = useGoogleDrive()
 
   const tipoConfig = DOCUMENTO_TIPO_CONFIG[tipoDocumento]
-  const plantilla = getPlantillaParaTipo(tipoDocumento)
+  // Buscar plantilla correspondiente al tipo de documento desde las props
+  const plantilla = plantillas.find(p => p.tipoDocumento === tipoDocumento)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -206,8 +208,8 @@ export function DocumentoUploadModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Descargar plantilla si existe */}
-          {tipoConfig?.tienePlantilla && !showPreview && (
+          {/* Descargar plantilla si existe - usa plantillas cargadas desde el dashboard */}
+          {plantilla && !showPreview && (
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center gap-2">
                 <Download className="h-4 w-4 text-blue-600" />
@@ -217,7 +219,7 @@ export function DocumentoUploadModal({
                 size="sm"
                 variant="outline"
                 onClick={handleDownloadPlantilla}
-                disabled={driveLoading || !plantilla}
+                disabled={driveLoading}
                 className="border-blue-300 text-blue-600 hover:bg-blue-100"
               >
                 {driveLoading ? (
@@ -319,7 +321,7 @@ export function DocumentoUploadModal({
                   <strong>Revisa que el documento es correcto</strong>
                   <p className="text-sm mt-1">
                     Verifica que el archivo seleccionado corresponde al tipo de documento que vas a subir.
-                    Una vez subido, un monitor revisará y aprobará el documento.
+                    Una vez subido, el kraal de sección lo revisará y aprobará o rechazará el documento.
                   </p>
                 </AlertDescription>
               </Alert>

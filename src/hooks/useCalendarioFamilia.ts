@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { getApiUrl } from '@/lib/api-utils'
 import { useFamiliaData } from './useFamiliaData'
 
+import type { CampamentoDetalles } from '@/types/familia'
+
 export interface ActividadCalendario {
   id: string
   titulo: string
@@ -26,11 +28,13 @@ export interface ActividadCalendario {
   confirmaciones: {
     [scoutId: string]: 'confirmado' | 'pendiente' | 'no_asiste'
   }
-  tipo: 'actividad' | 'campamento' | 'jornada' | 'reunion' | 'evento'
+  tipo: 'actividad' | 'campamento' | 'jornada' | 'reunion' | 'evento' | 'excursion'
   coordenadas?: {
     lat: number
     lng: number
   }
+  // Detalles adicionales para campamentos
+  campamento?: CampamentoDetalles
 }
 
 export interface ConfirmacionAsistencia {
@@ -74,7 +78,7 @@ export function useCalendarioFamilia({
   cacheKey = 'calendario-familia-data'
 }: UseCalendarioFamiliaOptions = {}): UseCalendarioFamiliaReturn {
   const { user, token, isAuthenticated } = useAuth()
-  const { hijos } = useFamiliaData()
+  const { hijos, seccionesHijos } = useFamiliaData()
   const [actividades, setActividades] = useState<ActividadCalendario[]>([])
   const [confirmaciones, setConfirmaciones] = useState<ConfirmacionAsistencia[]>([])
   const [loading, setLoading] = useState(false)
@@ -89,8 +93,43 @@ export function useCalendarioFamilia({
     'Ruta Walhalla': '#2E7D32' // Verde botella
   }
 
+  // Cargar confirmaciones existentes del familiar
+  const fetchConfirmaciones = useCallback(async (): Promise<ConfirmacionAsistencia[]> => {
+    if (!isAuthenticated || !token || !user) {
+      return []
+    }
+
+    try {
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/confirmaciones/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Transformar al formato del frontend
+        // Usar el campo 'estado' del backend si existe, sino derivar de 'asistira'
+        return (data.data || []).map((conf: any) => ({
+          id: conf.id?.toString(),
+          actividadId: conf.actividad_id?.toString(),
+          scoutId: conf.educando_id?.toString(),
+          estado: conf.estado || (conf.asistira ? 'confirmado' : 'no_asiste'),
+          comentario: conf.comentarios,
+          fechaConfirmacion: conf.confirmado_en ? new Date(conf.confirmado_en) : new Date()
+        }))
+      }
+      return []
+    } catch (err) {
+      console.error('Error cargando confirmaciones:', err)
+      return []
+    }
+  }, [isAuthenticated, token, user])
+
   const fetchActividades = useCallback(async () => {
-    if (!isAuthenticated || !token || !user || !hijos?.length) {
+    if (!isAuthenticated || !token || !user) {
       return
     }
 
@@ -98,66 +137,151 @@ export function useCalendarioFamilia({
     setError(null)
 
     try {
-      // Intentar obtener desde cache primero
-      const cached = localStorage.getItem(cacheKey)
-      const cacheTimestamp = localStorage.getItem(`${cacheKey}-timestamp`)
+      // Obtener IDs de los hijos
+      const hijosIds = hijos?.map(h => h.id.toString()) || []
 
-      if (cached && cacheTimestamp) {
-        const cacheAge = Date.now() - parseInt(cacheTimestamp)
-        if (cacheAge < refetchInterval) {
-          const data = JSON.parse(cached)
-          setActividades(data.actividades.map((a: any) => ({
-            ...a,
-            fechaInicio: new Date(a.fechaInicio),
-            fechaFin: new Date(a.fechaFin)
-          })))
-          setLoading(false)
-          return
+      // Obtener actividades desde API - usar endpoint de actividades por mes
+      const apiUrl = getApiUrl()
+      const now = new Date()
+
+      // Cargar actividades de 3 meses atrás + 6 adelante (total 9 meses)
+      const allActividades: ActividadCalendario[] = []
+
+      // Determinar las secciones a cargar
+      // Si no hay secciones definidas, cargar todas (null)
+      const seccionesToLoad = seccionesHijos.length > 0 ? seccionesHijos : [null]
+
+      for (let i = -3; i < 7; i++) {
+        const fecha = new Date(now.getFullYear(), now.getMonth() + i, 1)
+        const anio = fecha.getFullYear()
+        const mes = fecha.getMonth() + 1
+
+        // Cargar actividades para cada sección de los hijos
+        for (const seccionId of seccionesToLoad) {
+          let url = `${apiUrl}/api/actividades/mes/${anio}/${mes}?visibilidad=familias`
+          if (seccionId) {
+            url += `&seccion_id=${seccionId}`
+          }
+
+          const response = await fetch(
+            url,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          )
+
+          if (response.ok) {
+            const data = await response.json()
+
+            // Transformar datos de la API al formato esperado
+            // La API ahora devuelve fechas en formato 'YYYY-MM-DD' sin timezone
+            const parseFechaLocal = (fechaStr: string): Date => {
+              if (!fechaStr) return new Date()
+
+              // Si es formato YYYY-MM-DD (nuevo formato sin timezone)
+              if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
+                const [año, mes, dia] = fechaStr.split('-').map(Number)
+                return new Date(año, mes - 1, dia, 12, 0, 0)
+              }
+
+              // Fallback para formato ISO con timezone (legacy)
+              // En este caso, extraemos los componentes en timezone de España
+              const d = new Date(fechaStr)
+              return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0)
+            }
+
+            const actividadesMes = (data.data || []).map((act: any) => {
+              // Construir objeto base
+              const actividad: ActividadCalendario = {
+                id: act.id.toString(),
+                titulo: act.titulo,
+                descripcion: act.descripcion || '',
+                fechaInicio: parseFechaLocal(act.fecha_inicio),
+                fechaFin: act.fecha_fin ? parseFechaLocal(act.fecha_fin) : parseFechaLocal(act.fecha_inicio),
+                lugar: act.lugar || 'Colegio Patronato Juventud Obrera',
+                seccion: act.seccion_nombre || '',
+                seccion_id: act.seccion_id || 0,
+                scoutIds: hijosIds,
+                monitorResponsable: {
+                  nombre: '',
+                  foto: '',
+                  contacto: ''
+                },
+                precio: act.precio,
+                materialNecesario: [],
+                confirmaciones: {},
+                tipo: act.tipo === 'reunion_sabado' ? 'reunion' :
+                      act.tipo === 'campamento' ? 'campamento' :
+                      act.tipo === 'salida' ? 'excursion' :
+                      act.tipo === 'evento_especial' ? 'evento' : 'actividad'
+              }
+
+              // Agregar datos de campamento si es de tipo campamento
+              if (act.tipo === 'campamento') {
+                actividad.campamento = {
+                  lugar_salida: act.lugar_salida,
+                  hora_salida: act.hora_salida,
+                  mapa_salida_url: act.mapa_salida_url,
+                  lugar_regreso: act.lugar_regreso,
+                  hora_regreso: act.hora_regreso,
+                  precio: act.precio,
+                  numero_cuenta: act.numero_cuenta,
+                  concepto_pago: act.concepto_pago,
+                  recordatorios_predefinidos: act.recordatorios_predefinidos,
+                  recordatorios_personalizados: act.recordatorios_personalizados,
+                  circular_drive_id: act.circular_drive_id,
+                  circular_drive_url: act.circular_drive_url,
+                  circular_nombre: act.circular_nombre,
+                  sheets_inscripciones_id: act.sheets_inscripciones_id
+                }
+              }
+
+              return actividad
+            })
+
+            allActividades.push(...actividadesMes)
+          }
         }
       }
 
-      // Obtener IDs de los hijos
-      const hijosIds = hijos.map(h => h.id.toString())
+      // Eliminar duplicados por ID
+      const actividadesUnicas = allActividades.filter((act, index, self) =>
+        index === self.findIndex(a => a.id === act.id)
+      )
 
-      // Obtener actividades desde API
-      const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/familia/actividades/${user.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      // Cargar confirmaciones existentes y aplicarlas a las actividades
+      const confirmacionesExistentes = await fetchConfirmaciones()
+      setConfirmaciones(confirmacionesExistentes)
+
+      // Aplicar confirmaciones a las actividades
+      const actividadesConConfirmaciones = actividadesUnicas.map(actividad => {
+        const confirmacionesActividad: { [scoutId: string]: 'confirmado' | 'pendiente' | 'no_asiste' } = {}
+
+        confirmacionesExistentes
+          .filter(c => c.actividadId === actividad.id)
+          .forEach(c => {
+            confirmacionesActividad[c.scoutId] = c.estado
+          })
+
+        return {
+          ...actividad,
+          confirmaciones: confirmacionesActividad
         }
       })
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-
-      // Procesar actividades
-      const actividadesProcesadas = data.map((actividad: any) => ({
-        ...actividad,
-        fechaInicio: new Date(actividad.fechaInicio),
-        fechaFin: new Date(actividad.fechaFin),
-        scoutIds: hijosIds.filter(id => actividad.scoutIds?.includes(id)),
-        confirmaciones: actividad.confirmaciones || {}
-      }))
-
-      setActividades(actividadesProcesadas)
-
-      // Guardar en cache
-      localStorage.setItem(cacheKey, JSON.stringify({ actividades: actividadesProcesadas }))
-      localStorage.setItem(`${cacheKey}-timestamp`, Date.now().toString())
+      setActividades(actividadesConConfirmaciones)
 
     } catch (err) {
-      // Si el endpoint no existe, simplemente no cargamos actividades (sin mostrar error)
-      console.log('ℹ️ [useCalendarioFamilia] Endpoint de actividades no disponible todavía')
+      console.error('Error cargando actividades:', err)
       setActividades([])
-      setError(null) // No mostrar error
+      setError(null)
     } finally {
       setLoading(false)
     }
-  }, [isAuthenticated, token, user, hijos, cacheKey, refetchInterval])
+  }, [isAuthenticated, token, user, hijos, seccionesHijos, fetchConfirmaciones])
 
   const confirmarAsistencia = useCallback(async (
     actividadId: string,
@@ -169,17 +293,18 @@ export function useCalendarioFamilia({
 
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/confirmaciones/confirmar`, {
+      // Llamar al endpoint correcto del backend con la estructura de datos correcta
+      const response = await fetch(`${apiUrl}/api/confirmaciones/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          actividadId,
-          scoutId,
-          estado,
-          comentario
+          actividad_id: parseInt(actividadId),
+          scout_id: parseInt(scoutId),
+          asistira: estado === 'confirmado',
+          comentarios: comentario || ''
         })
       })
 
@@ -228,15 +353,16 @@ export function useCalendarioFamilia({
 
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/confirmaciones/modificar/${confirmacionId}`, {
+      // Llamar al endpoint correcto del backend
+      const response = await fetch(`${apiUrl}/api/confirmaciones/${confirmacionId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          estado,
-          comentario
+          asistira: estado === 'confirmado',
+          comentarios: comentario || ''
         })
       })
 

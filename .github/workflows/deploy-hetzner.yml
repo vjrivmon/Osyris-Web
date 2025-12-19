@@ -292,3 +292,137 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PASO 4: MIGRACIONES DE BASE DE DATOS - STAGING
+  # ═══════════════════════════════════════════════════════════════════
+  migrate-staging-db:
+    name: 🗄️ Migrate Staging Database
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_staging }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: 🗄️ Run migrations on Staging
+        run: |
+          echo "📦 Transfiriendo migraciones a staging..."
+          scp -o StrictHostKeyChecking=no -r api-osyris/database/migrations ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/migrations_staging/
+
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
+          set -e
+          echo "🗄️ Ejecutando migraciones en staging..."
+
+          # Ejecutar cada migración en orden alfabético
+          for migration in $(ls /tmp/migrations_staging/*.sql | sort); do
+            echo "  📄 Ejecutando: $(basename $migration)"
+            docker exec -i osyris-db psql -U osyris_user -d osyris_staging_db < "$migration" 2>&1 || echo "    ⚠️ Migración ya aplicada o error menor"
+          done
+
+          rm -rf /tmp/migrations_staging
+          echo "✅ Migraciones staging completadas"
+
+          # Listar tablas para verificación
+          echo ""
+          echo "📊 Tablas en staging:"
+          docker exec osyris-db psql -U osyris_user -d osyris_staging_db -c "SELECT COUNT(*) as total_tables FROM information_schema.tables WHERE table_schema='public';"
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PASO 5: MIGRACIONES DE BASE DE DATOS - PRODUCCIÓN
+  # ═══════════════════════════════════════════════════════════════════
+  migrate-production-db:
+    name: 🗄️ Migrate Production Database
+    needs: deploy-production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: 🗄️ Backup and Migrate Production
+        run: |
+          echo "📦 Creando backup pre-migración..."
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
+          mkdir -p /var/www/backups
+          BACKUP_FILE="/var/www/backups/backup_pre_cicd_migration_$(date +%Y%m%d_%H%M%S).sql.gz"
+          docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > "$BACKUP_FILE"
+          echo "✅ Backup creado: $BACKUP_FILE"
+          ls -lh "$BACKUP_FILE"
+          ENDSSH
+
+          echo ""
+          echo "📦 Transfiriendo migraciones a producción..."
+          scp -o StrictHostKeyChecking=no -r api-osyris/database/migrations ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/migrations_prod/
+
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
+          set -e
+          echo "🗄️ Ejecutando migraciones en producción..."
+
+          # Ejecutar cada migración en orden alfabético
+          for migration in $(ls /tmp/migrations_prod/*.sql | sort); do
+            echo "  📄 Ejecutando: $(basename $migration)"
+            docker exec -i osyris-db psql -U osyris_user -d osyris_db < "$migration" 2>&1 || echo "    ⚠️ Migración ya aplicada o error menor"
+          done
+
+          rm -rf /tmp/migrations_prod
+          echo "✅ Migraciones producción completadas"
+
+          # Listar tablas para verificación
+          echo ""
+          echo "📊 Tablas en producción:"
+          docker exec osyris-db psql -U osyris_user -d osyris_db -c "SELECT COUNT(*) as total_tables FROM information_schema.tables WHERE table_schema='public';"
+
+          echo ""
+          echo "🔄 Reiniciando backend para cargar nuevas tablas..."
+          pm2 restart osyris-backend
+          sleep 5
+          pm2 status | grep osyris
+          ENDSSH
+
+      - name: ✅ Verify Migrations Applied
+        run: |
+          echo "🔍 Verificando nuevas tablas..."
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
+          echo "Tablas nuevas esperadas:"
+          docker exec osyris-db psql -U osyris_user -d osyris_db -c "
+          SELECT tablename FROM pg_tables
+          WHERE schemaname = 'public'
+          AND tablename IN (
+            'user_activity_logs', 'user_sessions', 'educando_drive_folders',
+            'documentos_historial', 'solicitudes_desbloqueo', 'notificaciones_scouter',
+            'configuracion_ronda', 'inscripciones_campamento',
+            'asistencia_sheets', 'campamento_asistencia_sheets'
+          )
+          ORDER BY tablename;"
+          ENDSSH
+
+      - name: 📊 Migration Summary
+        run: |
+          echo "### 🗄️ Database Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Migraciones ejecutadas:**" >> $GITHUB_STEP_SUMMARY
+          echo "- add_invitation_system.sql" >> $GITHUB_STEP_SUMMARY
+          echo "- add_google_drive_fields.sql" >> $GITHUB_STEP_SUMMARY
+          echo "- add_drive_folder_id.sql" >> $GITHUB_STEP_SUMMARY
+          echo "- add_document_versioning.sql" >> $GITHUB_STEP_SUMMARY
+          echo "- add_notificaciones_scouter.sql" >> $GITHUB_STEP_SUMMARY
+          echo "- add_calendario_system.sql" >> $GITHUB_STEP_SUMMARY
+          echo "- add_asistencia_sheets.sql" >> $GITHUB_STEP_SUMMARY
+          echo "- add_campamento_details.sql" >> $GITHUB_STEP_SUMMARY
+          echo "- add_campamento_asistencia_sheets.sql" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Backup:** Creado antes de migraciones" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY

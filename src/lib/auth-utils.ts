@@ -12,6 +12,7 @@ export interface UserData {
   email: string
   rol: string
   activo: boolean
+  seccion_id?: number | null
   token?: string
   lastLogin?: string
   expiresAt?: string
@@ -143,6 +144,9 @@ export const setAuthData = (token: string, userData: Omit<UserData, 'token' | 'l
   }
   localStorage.setItem('osyris_user', JSON.stringify(completeUserData))
 
+  // IMPORTANTE: También guardar en 'user' para compatibilidad con AuthContext
+  localStorage.setItem('user', JSON.stringify(completeUserData))
+
   // Store role separately for quick access
   localStorage.setItem('userRole', userData.rol)
 
@@ -150,13 +154,65 @@ export const setAuthData = (token: string, userData: Omit<UserData, 'token' | 'l
 }
 
 /**
- * Clear all authentication data
+ * Clear all authentication data - COMPLETA limpieza de sesión
+ * IMPORTANTE: Esta función limpia TODOS los datos cacheados para evitar
+ * que el estado de un usuario persista cuando otro usuario inicia sesión
  */
 export const clearAuthData = () => {
+  console.log('🧹 [clearAuthData] Limpiando TODOS los datos de autenticación y cache...')
+
+  // Limpiar localStorage - datos de autenticación
   localStorage.removeItem('token')
   localStorage.removeItem('osyris_user')
+  localStorage.removeItem('user')
   localStorage.removeItem('userRole')
-  localStorage.removeItem('osyris_token') // Clear legacy token too
+  localStorage.removeItem('osyris_token') // Legacy
+
+  // Limpiar cualquier dato de familia/portal
+  localStorage.removeItem('familia-data')
+  localStorage.removeItem('familia-data-cache')
+  localStorage.removeItem('familia-hijos-cache')
+
+  // Limpiar caches de hooks (calendario, etc.)
+  localStorage.removeItem('calendario-familia-data')
+  localStorage.removeItem('calendario-familia-data-timestamp')
+
+  // Limpiar sessionStorage también
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
+    sessionStorage.removeItem('osyris_user')
+    sessionStorage.removeItem('selectedHijo')
+  }
+
+  // IMPORTANTE: Limpiar TODOS los caches que puedan contener datos de usuario
+  // Esto incluye caches con patrones como:
+  // - osyris_*
+  // - familia_*
+  // - familia-data-user-* (cache por usuario de useFamiliaData)
+  // - calendario-*
+  // - auth_*
+  // - *-timestamp (timestamps de cache)
+  const keysToRemove: string[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && (
+      key.startsWith('osyris_') ||
+      key.startsWith('familia_') ||
+      key.startsWith('familia-data') ||
+      key.startsWith('calendario-') ||
+      key.startsWith('auth_') ||
+      key.endsWith('-timestamp') ||
+      key.includes('-user-') // Caches específicos de usuario
+    )) {
+      keysToRemove.push(key)
+    }
+  }
+
+  console.log(`🧹 [clearAuthData] Eliminando ${keysToRemove.length} claves de cache:`, keysToRemove)
+  keysToRemove.forEach(key => localStorage.removeItem(key))
+
+  console.log('✅ [clearAuthData] Limpieza completada - todos los datos de sesión y cache eliminados')
 }
 
 /**

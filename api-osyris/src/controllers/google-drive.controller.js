@@ -58,6 +58,29 @@ const downloadPlantilla = async (req, res) => {
 };
 
 /**
+ * Lista las circulares disponibles de un tipo de campamento
+ */
+const getCircularesCampamento = async (req, res) => {
+  try {
+    const { tipo } = req.params;
+
+    const circulares = await driveService.listCircularesCampamento(tipo);
+
+    res.json({
+      success: true,
+      data: circulares
+    });
+  } catch (error) {
+    console.error('Error obteniendo circulares de campamento:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener circulares',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Obtiene la estructura de documentos de un educando
  */
 const getEducandoDocumentos = async (req, res) => {
@@ -765,6 +788,7 @@ const previewFile = async (req, res) => {
 module.exports = {
   getPlantillas,
   downloadPlantilla,
+  getCircularesCampamento,
   getEducandoDocumentos,
   uploadDocumento,
   aprobarDocumento,
