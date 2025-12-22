@@ -414,17 +414,17 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
   const getTipoColor = (tipo: ActividadCalendario['tipo']) => {
     switch (tipo) {
       case 'reunion':
-        return 'bg-blue-100 text-blue-700 border-blue-200'
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
       case 'campamento':
-        return 'bg-green-100 text-green-700 border-green-200'
+        return 'bg-primary/20 dark:bg-primary/30 text-primary border-primary/30 dark:border-primary/40'
       case 'excursion':
-        return 'bg-purple-100 text-purple-700 border-purple-200'
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
       case 'actividad_especial':
-        return 'bg-orange-100 text-orange-700 border-orange-200'
+        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800'
       case 'formacion':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200'
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
     }
   }
 
@@ -432,21 +432,21 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
     switch (confirmacion) {
       case 'confirmado':
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="bg-primary/20 dark:bg-primary/30 text-primary border-primary/30 dark:border-primary/40">
             <CheckCircle className="h-3 w-3 mr-1" />
             Confirmado
           </Badge>
         )
       case 'pendiente':
         return (
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+          <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800">
             <AlertCircle className="h-3 w-3 mr-1" />
             Pendiente
           </Badge>
         )
       case 'rechazado':
         return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+          <Badge variant="outline" className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800">
             Rechazado
           </Badge>
         )
@@ -592,7 +592,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
               // Botón especial para campamentos
               <Button
                 size="sm"
-                className="w-full text-xs bg-green-600 hover:bg-green-700"
+                className="w-full text-xs bg-primary hover:bg-primary/90"
                 onClick={() => handleAbrirCampamento(actividad)}
               >
                 <Tent className="h-3 w-3 mr-1" />
@@ -707,7 +707,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                  className="w-full text-xs text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300"
                   onClick={() => handleIniciarRechazo(actividad.id)}
                   disabled={estaConfirmando}
                 >
@@ -719,7 +719,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full text-xs text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                className="w-full text-xs text-primary border-primary/30 dark:border-primary/40 hover:bg-primary/10 dark:hover:bg-primary/20"
                 onClick={() => handleConfirmacion(actividad.id, true)}
                 disabled={estaConfirmando}
               >
@@ -742,7 +742,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
             <Button
               size="sm"
               variant="outline"
-              className="w-full text-xs text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+              className="w-full text-xs text-primary border-primary/30 dark:border-primary/40 hover:bg-primary/10 dark:hover:bg-primary/20"
               onClick={() => handleAbrirCampamento(actividad)}
             >
               <Tent className="h-3 w-3 mr-1" />
@@ -837,12 +837,12 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
                       "hover:bg-primary/30 hover:border hover:border-primary/50 hover:shadow-sm hover:scale-105",
                       esHoy && "bg-primary text-primary-foreground font-bold",
                       esSeleccionado && !esHoy && "ring-2 ring-primary bg-primary/10",
-                      !esHoy && !esSeleccionado && "text-gray-900"
+                      !esHoy && !esSeleccionado && "text-foreground"
                     )}
                   >
                     <span className={cn(
                       "font-medium",
-                      esHoy ? "text-primary-foreground" : "text-gray-900"
+                      esHoy ? "text-primary-foreground" : "text-foreground"
                     )}>{dia.getDate()}</span>
                     {tieneEvento && (
                       <div className={cn(

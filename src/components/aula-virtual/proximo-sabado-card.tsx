@@ -77,7 +77,7 @@ export function ProximoSabadoCard({
             <Calendar className="h-5 w-5 text-blue-600" />
             Proximo Sabado
           </CardTitle>
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
             {actividad.seccion_nombre || 'Todas las secciones'}
           </Badge>
         </div>
@@ -86,8 +86,8 @@ export function ProximoSabadoCard({
       <CardContent className="space-y-4">
         {/* Info de la actividad */}
         <div className="space-y-2">
-          <h3 className="font-semibold text-gray-900">{actividad.titulo}</h3>
-          <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+          <h3 className="font-semibold text-foreground">{actividad.titulo}</h3>
+          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               {fechaFormateada}
@@ -109,53 +109,53 @@ export function ProximoSabadoCard({
         </div>
 
         {/* Estadisticas */}
-        <div className="grid grid-cols-3 gap-2 p-3 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-3 gap-2 p-3 bg-muted rounded-lg">
           <button
             onClick={() => expanded && setActiveTab('confirmados')}
             className={cn(
               'text-center p-2 rounded-md transition-colors',
-              expanded && activeTab === 'confirmados' && 'bg-white shadow-sm'
+              expanded && activeTab === 'confirmados' && 'bg-card shadow-sm'
             )}
           >
-            <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
+            <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400 mb-1">
               <CheckCircle className="h-4 w-4" />
               <span className="text-xl font-bold">{estadisticas.confirmados}</span>
             </div>
-            <span className="text-xs text-gray-600">Asisten</span>
+            <span className="text-xs text-muted-foreground">Asisten</span>
           </button>
 
           <button
             onClick={() => expanded && setActiveTab('no_asisten')}
             className={cn(
-              'text-center p-2 rounded-md border-x border-gray-200 transition-colors',
-              expanded && activeTab === 'no_asisten' && 'bg-white shadow-sm'
+              'text-center p-2 rounded-md border-x border-border transition-colors',
+              expanded && activeTab === 'no_asisten' && 'bg-card shadow-sm'
             )}
           >
-            <div className="flex items-center justify-center gap-1 text-red-600 mb-1">
+            <div className="flex items-center justify-center gap-1 text-red-600 dark:text-red-400 mb-1">
               <XCircle className="h-4 w-4" />
               <span className="text-xl font-bold">{estadisticas.noAsisten}</span>
             </div>
-            <span className="text-xs text-gray-600">No asisten</span>
+            <span className="text-xs text-muted-foreground">No asisten</span>
           </button>
 
           <button
             onClick={() => expanded && setActiveTab('pendientes')}
             className={cn(
               'text-center p-2 rounded-md transition-colors',
-              expanded && activeTab === 'pendientes' && 'bg-white shadow-sm'
+              expanded && activeTab === 'pendientes' && 'bg-card shadow-sm'
             )}
           >
-            <div className="flex items-center justify-center gap-1 text-yellow-600 mb-1">
+            <div className="flex items-center justify-center gap-1 text-yellow-600 dark:text-yellow-400 mb-1">
               <AlertCircle className="h-4 w-4" />
               <span className="text-xl font-bold">{estadisticas.pendientes}</span>
             </div>
-            <span className="text-xs text-gray-600">Pendientes</span>
+            <span className="text-xs text-muted-foreground">Pendientes</span>
           </button>
         </div>
 
         {/* Barra de progreso */}
         <div className="w-full">
-          <div className="flex h-2 rounded-full overflow-hidden bg-gray-200">
+          <div className="flex h-2 rounded-full overflow-hidden bg-muted">
             {estadisticas.confirmados > 0 && (
               <div
                 className="bg-green-500 transition-all duration-300"
@@ -190,7 +190,7 @@ export function ProximoSabadoCard({
               {activeTab === 'confirmados' && (
                 <>
                   {confirmados.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-2">
+                    <p className="text-sm text-muted-foreground text-center py-2">
                       No hay confirmaciones todavia
                     </p>
                   ) : (
@@ -204,7 +204,7 @@ export function ProximoSabadoCard({
               {activeTab === 'no_asisten' && (
                 <>
                   {noAsisten.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-2">
+                    <p className="text-sm text-muted-foreground text-center py-2">
                       Todos asisten
                     </p>
                   ) : (
@@ -218,7 +218,7 @@ export function ProximoSabadoCard({
               {activeTab === 'pendientes' && (
                 <>
                   {pendientes.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-2">
+                    <p className="text-sm text-muted-foreground text-center py-2">
                       Todos han confirmado
                     </p>
                   ) : (
@@ -263,7 +263,7 @@ function ConfirmacionItem({ confirmacion }: { confirmacion: ConfirmacionSabado }
   const fecha = new Date(confirmacion.confirmado_en)
 
   return (
-    <div className="flex items-center justify-between p-2 bg-white border rounded-lg">
+    <div className="flex items-center justify-between p-2 bg-card border rounded-lg">
       <div className="flex items-center gap-2">
         {confirmacion.asistira ? (
           <CheckCircle className="h-4 w-4 text-green-500" />
@@ -275,11 +275,11 @@ function ConfirmacionItem({ confirmacion }: { confirmacion: ConfirmacionSabado }
             {confirmacion.educando_nombre} {confirmacion.educando_apellidos}
           </p>
           {confirmacion.comentarios && (
-            <p className="text-xs text-gray-500">{confirmacion.comentarios}</p>
+            <p className="text-xs text-muted-foreground">{confirmacion.comentarios}</p>
           )}
         </div>
       </div>
-      <span className="text-xs text-gray-400">
+      <span className="text-xs text-muted-foreground">
         {fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
       </span>
     </div>
@@ -288,14 +288,14 @@ function ConfirmacionItem({ confirmacion }: { confirmacion: ConfirmacionSabado }
 
 function ScoutPendienteItem({ scout }: { scout: ScoutSinConfirmar }) {
   return (
-    <div className="flex items-center justify-between p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+    <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
       <div className="flex items-center gap-2">
         <AlertCircle className="h-4 w-4 text-yellow-500" />
-        <p className="text-sm font-medium text-yellow-800">
+        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
           {scout.nombre} {scout.apellidos}
         </p>
       </div>
-      <Badge variant="outline" className="text-xs bg-yellow-100 border-yellow-300 text-yellow-700">
+      <Badge variant="outline" className="text-xs bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-600 text-yellow-700 dark:text-yellow-300">
         Sin confirmar
       </Badge>
     </div>

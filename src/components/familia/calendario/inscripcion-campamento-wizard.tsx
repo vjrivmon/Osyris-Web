@@ -408,15 +408,15 @@ export function InscripcionCampamentoWizard({
   // Vista especial para inscripción cancelada
   const StepCancelado = () => (
     <div className="text-center space-y-6 py-8">
-      <div className="w-20 h-20 mx-auto rounded-full bg-red-100 flex items-center justify-center">
-        <XCircle className="h-10 w-10 text-red-600" />
+      <div className="w-20 h-20 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+        <XCircle className="h-10 w-10 text-red-600 dark:text-red-400" />
       </div>
-      <h3 className="text-xl font-semibold text-red-700">Inscripcion Cancelada</h3>
-      <p className="text-gray-600">
+      <h3 className="text-xl font-semibold text-red-700 dark:text-red-400">Inscripcion Cancelada</h3>
+      <p className="text-muted-foreground">
         La inscripcion de <span className="font-medium">{educando.nombre}</span> a este campamento fue cancelada previamente.
       </p>
       {inscripcion?.observaciones && (
-        <p className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+        <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
           <span className="font-medium">Motivo:</span> {inscripcion.observaciones}
         </p>
       )}
@@ -424,7 +424,7 @@ export function InscripcionCampamentoWizard({
         <Button variant="outline" onClick={onClose}>
           Cerrar
         </Button>
-        <Button onClick={handleReinscribir} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleReinscribir} className="bg-primary hover:bg-primary/90">
           <RefreshCw className="h-4 w-4 mr-2" />
           Volver a inscribirse
         </Button>
@@ -570,9 +570,9 @@ export function InscripcionCampamentoWizard({
           </CardHeader>
           <CardContent className="space-y-4">
             {actividad.campamento?.lugar_salida && (
-              <div className="p-3 bg-green-50 rounded-lg">
-                <p className="font-medium text-green-800">Salida</p>
-                <p className="text-sm text-green-700">
+              <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-lg">
+                <p className="font-medium text-primary dark:text-primary">Salida</p>
+                <p className="text-sm text-primary/80 dark:text-primary/70">
                   {actividad.campamento.lugar_salida}
                   {actividad.campamento.hora_salida && (
                     <> a las <strong>{formatTime(actividad.campamento.hora_salida)}</strong></>
@@ -583,7 +583,7 @@ export function InscripcionCampamentoWizard({
                     href={actividad.campamento.mapa_salida_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-green-600 hover:underline inline-flex items-center gap-1 mt-1"
+                    className="text-sm text-primary hover:underline inline-flex items-center gap-1 mt-1"
                   >
                     <MapPin className="h-3 w-3" /> Ver en mapa
                   </a>
@@ -592,9 +592,9 @@ export function InscripcionCampamentoWizard({
             )}
 
             {actividad.campamento?.lugar_regreso && (
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="font-medium text-blue-800">Regreso</p>
-                <p className="text-sm text-blue-700">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="font-medium text-blue-800 dark:text-blue-300">Regreso</p>
+                <p className="text-sm text-blue-700 dark:text-blue-400">
                   {actividad.campamento.lugar_regreso}
                   {actividad.campamento.hora_regreso && (
                     <> a las <strong>{formatTime(actividad.campamento.hora_regreso)}</strong></>
@@ -616,9 +616,9 @@ export function InscripcionCampamentoWizard({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="p-3 bg-amber-50 rounded-lg">
-              <p className="text-sm font-medium text-amber-800">Numero de cuenta:</p>
-              <p className="font-mono text-amber-900 select-all">
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Numero de cuenta:</p>
+              <p className="font-mono text-amber-900 dark:text-amber-200 select-all">
                 {actividad.campamento.numero_cuenta}
               </p>
             </div>
@@ -653,7 +653,7 @@ export function InscripcionCampamentoWizard({
                   key={index}
                   className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                     recordatoriosChecked[index]
-                      ? 'bg-green-50 border-green-200'
+                      ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/40'
                       : 'bg-background hover:bg-muted/50'
                   }`}
                   onClick={() => setRecordatoriosChecked(prev => ({
@@ -669,7 +669,7 @@ export function InscripcionCampamentoWizard({
                     }))}
                     className="h-5 w-5"
                   />
-                  <span className={`text-sm ${recordatoriosChecked[index] ? 'text-green-700 line-through' : ''}`}>
+                  <span className={`text-sm ${recordatoriosChecked[index] ? 'text-primary dark:text-primary line-through' : ''}`}>
                     {recordatorio}
                   </span>
                 </div>
@@ -727,14 +727,14 @@ export function InscripcionCampamentoWizard({
           {/* Descarga de circular - Boton estilo plantillas */}
           <div className={`flex items-center justify-between p-5 rounded-xl border transition-colors ${
             circularDescargada
-              ? 'bg-green-50/50 border-green-200'
-              : 'bg-gray-50 hover:bg-gray-100'
+              ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/40'
+              : 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800'
           }`}>
             <div className="flex-1 mr-6">
               <div className="flex items-center gap-3">
                 <p className="font-semibold text-base">Circular / Autorizacion</p>
                 {circularDescargada && (
-                  <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-100 px-2.5 py-1 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/20 dark:bg-primary/30 px-2.5 py-1 rounded-full">
                     <CheckCircle2 className="h-3 w-3" />
                     Descargada
                   </span>
@@ -755,7 +755,7 @@ export function InscripcionCampamentoWizard({
           </div>
 
           {/* Subir circular firmada */}
-          <Card className={`border-2 ${circularSubida ? 'border-green-300 bg-green-50' : 'border-dashed border-primary/30'}`}>
+          <Card className={`border-2 ${circularSubida ? 'border-primary/40 bg-primary/10 dark:bg-primary/20' : 'border-dashed border-primary/30'}`}>
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -791,9 +791,9 @@ export function InscripcionCampamentoWizard({
                 )}
 
                 {circularSubida && (
-                  <div className="flex items-center gap-2 p-3 bg-green-100 rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <span className="font-medium text-green-700">Circular subida correctamente</span>
+                  <div className="flex items-center gap-2 p-3 bg-primary/20 dark:bg-primary/30 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <span className="font-medium text-primary">Circular subida correctamente</span>
                   </div>
                 )}
               </div>
@@ -801,7 +801,7 @@ export function InscripcionCampamentoWizard({
           </Card>
 
           {/* Subir justificante de pago */}
-          <Card className={`border-2 ${justificanteSubido ? 'border-green-300 bg-green-50' : 'border-dashed border-primary/30'}`}>
+          <Card className={`border-2 ${justificanteSubido ? 'border-primary/40 bg-primary/10 dark:bg-primary/20' : 'border-dashed border-primary/30'}`}>
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -837,9 +837,9 @@ export function InscripcionCampamentoWizard({
                 )}
 
                 {justificanteSubido && (
-                  <div className="flex items-center gap-2 p-3 bg-green-100 rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <span className="font-medium text-green-700">Justificante subido correctamente</span>
+                  <div className="flex items-center gap-2 p-3 bg-primary/20 dark:bg-primary/30 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <span className="font-medium text-primary">Justificante subido correctamente</span>
                   </div>
                 )}
               </div>
@@ -1021,8 +1021,8 @@ export function InscripcionCampamentoWizard({
         // Confirmacion de NO asistencia
         <>
           <div className="flex justify-center">
-            <div className="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center">
-              <X className="h-7 w-7 text-gray-500" />
+            <div className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <X className="h-7 w-7 text-gray-500 dark:text-gray-400" />
             </div>
           </div>
           <div>
@@ -1036,12 +1036,12 @@ export function InscripcionCampamentoWizard({
         // Confirmacion de inscripcion exitosa
         <>
           <div className="flex justify-center">
-            <div className="h-14 w-14 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="h-7 w-7 text-green-600" />
+            <div className="h-14 w-14 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center">
+              <CheckCircle2 className="h-7 w-7 text-primary" />
             </div>
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-green-700">Inscripcion Completada</h3>
+            <h3 className="text-xl font-semibold text-primary">Inscripcion Completada</h3>
             <p className="text-muted-foreground mt-2">
               <strong>{educando.nombre}</strong> ha sido inscrito/a correctamente en el campamento.
             </p>
@@ -1067,9 +1067,9 @@ export function InscripcionCampamentoWizard({
               </CardHeader>
               <CardContent className="py-2 space-y-2">
                 {/* Circular Firmada */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <FileCheck className={`h-5 w-5 ${circularSubida ? 'text-green-500' : 'text-gray-400'}`} />
+                    <FileCheck className={`h-5 w-5 ${circularSubida ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`} />
                     <div>
                       <p className="font-medium text-sm">Circular Firmada</p>
                       <p className="text-xs text-muted-foreground">
@@ -1097,9 +1097,9 @@ export function InscripcionCampamentoWizard({
                 </div>
 
                 {/* Justificante de Pago */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <Receipt className={`h-5 w-5 ${justificanteSubido ? 'text-green-500' : 'text-gray-400'}`} />
+                    <Receipt className={`h-5 w-5 ${justificanteSubido ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`} />
                     <div>
                       <p className="font-medium text-sm">Justificante de Pago</p>
                       <p className="text-xs text-muted-foreground">
@@ -1293,15 +1293,15 @@ export function InscripcionCampamentoWizard({
                   key={circular.id}
                   className={`flex items-center justify-between p-5 rounded-xl border transition-colors ${
                     circularDescargada
-                      ? 'bg-green-50/50 border-green-200'
-                      : 'bg-gray-50 hover:bg-gray-100'
+                      ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/40'
+                      : 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
                   <div className="flex-1 mr-6">
                     <div className="flex items-center gap-3">
                       <p className="font-semibold text-base">{circular.name}</p>
                       {circularDescargada && (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-100 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/20 dark:bg-primary/30 px-2.5 py-1 rounded-full">
                           <CheckCircle2 className="h-3 w-3" />
                           Descargada
                         </span>

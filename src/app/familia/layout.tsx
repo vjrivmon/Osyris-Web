@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Bell, CheckCircle, XCircle, FileText, Trash2, CheckCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { MobileNavFamilia } from "@/components/familia/mobile-nav-familia";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -204,7 +205,7 @@ export default function FamiliaLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container flex items-center justify-between py-3 px-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <img
@@ -222,7 +223,7 @@ export default function FamiliaLayout({
             <Popover open={notificacionesOpen} onOpenChange={setNotificacionesOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-6 w-6" />
                   {contadorNoLeidas > 0 && (
                     <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
                       {contadorNoLeidas > 9 ? '9+' : contadorNoLeidas}
@@ -230,7 +231,7 @@ export default function FamiliaLayout({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-96 p-0" align="end">
+              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-0" align="end">
                 <div className="p-3 border-b flex items-center justify-between">
                   <h4 className="font-semibold">Notificaciones</h4>
                   <div className="flex items-center gap-2">
@@ -277,7 +278,7 @@ export default function FamiliaLayout({
                       {notificaciones.map((notif) => (
                         <div
                           key={notif.id}
-                          className={`p-3 hover:bg-accent cursor-pointer transition-colors group ${!notif.leida ? 'bg-blue-50/50' : ''}`}
+                          className={`p-3 hover:bg-accent cursor-pointer transition-colors group ${!notif.leida ? 'bg-blue-50/50 dark:bg-blue-950/50' : ''}`}
                           onClick={() => {
                             if (!notif.leida) marcarComoLeida(notif.id);
                           }}
@@ -321,28 +322,24 @@ export default function FamiliaLayout({
               </PopoverContent>
             </Popover>
 
-            <Button variant="ghost" size="icon" asChild>
+            {/* User icon - solo visible en desktop */}
+            <Button variant="ghost" size="icon" asChild className="hidden md:flex">
               <Link href="/familia/perfil">
-                <User className="h-4 w-4" />
+                <User className="h-6 w-6" />
               </Link>
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowLogoutDialog(true)}
-              className="md:hidden"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-
+            {/* Logout button - Desktop */}
             <button
               onClick={() => setShowLogoutDialog(true)}
               className="hidden md:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-5 w-5" />
               <span>Cerrar sesión</span>
             </button>
+
+            {/* Menu hamburguesa - derecha (solo movil) */}
+            <MobileNavFamilia />
 
             <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
               <AlertDialogContent>

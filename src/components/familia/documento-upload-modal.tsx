@@ -210,17 +210,17 @@ export function DocumentoUploadModal({
         <div className="space-y-4 py-4">
           {/* Descargar plantilla si existe - usa plantillas cargadas desde el dashboard */}
           {plantilla && !showPreview && (
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-center gap-2">
-                <Download className="h-4 w-4 text-blue-600" />
-                <span className="text-sm text-blue-700">Plantilla disponible</span>
+                <Download className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm text-blue-700 dark:text-blue-300">Plantilla disponible</span>
               </div>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleDownloadPlantilla}
                 disabled={driveLoading}
-                className="border-blue-300 text-blue-600 hover:bg-blue-100"
+                className="border-blue-300 text-blue-600 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/50"
               >
                 {driveLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -238,14 +238,14 @@ export function DocumentoUploadModal({
           {showPreview && file && filePreviewUrl && (
             <div className="space-y-3">
               {/* Cabecera del preview */}
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-700">Vista previa del documento</span>
+                  <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Vista previa del documento</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-blue-600 mr-2">{file.name}</span>
-                  <span className="text-xs text-blue-500">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 mr-2">{file.name}</span>
+                  <span className="text-xs text-blue-500 dark:text-blue-500">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                 </div>
               </div>
 
@@ -260,7 +260,7 @@ export function DocumentoUploadModal({
                   >
                     <ZoomOut className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-gray-600 w-16 text-center">{previewZoom}%</span>
+                  <span className="text-sm text-muted-foreground w-16 text-center">{previewZoom}%</span>
                   <Button
                     size="sm"
                     variant="outline"
@@ -269,7 +269,7 @@ export function DocumentoUploadModal({
                   >
                     <ZoomIn className="h-4 w-4" />
                   </Button>
-                  <div className="w-px h-6 bg-gray-300 mx-2" />
+                  <div className="w-px h-6 bg-border mx-2" />
                   <Button
                     size="sm"
                     variant="outline"
@@ -281,7 +281,7 @@ export function DocumentoUploadModal({
               )}
 
               {/* Área del preview */}
-              <div className="border rounded-lg overflow-hidden bg-gray-100 max-h-80 flex items-center justify-center">
+              <div className="border rounded-lg overflow-hidden bg-muted max-h-80 flex items-center justify-center">
                 {isImageFile ? (
                   <div className="overflow-auto max-h-80 w-full flex items-center justify-center p-4">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -306,8 +306,8 @@ export function DocumentoUploadModal({
                     />
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-gray-500">
-                    <FileText className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                  <div className="p-8 text-center text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-2 text-muted-foreground/60" />
                     <p>Vista previa no disponible</p>
                     <p className="text-sm">{file.name}</p>
                   </div>
@@ -315,9 +315,9 @@ export function DocumentoUploadModal({
               </div>
 
               {/* Mensaje de confirmación */}
-              <Alert className="border-amber-200 bg-amber-50">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-amber-800">
+              <Alert className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50">
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertDescription className="text-amber-800 dark:text-amber-200">
                   <strong>Revisa que el documento es correcto</strong>
                   <p className="text-sm mt-1">
                     Verifica que el archivo seleccionado corresponde al tipo de documento que vas a subir.
@@ -332,7 +332,7 @@ export function DocumentoUploadModal({
                   size="sm"
                   variant="ghost"
                   onClick={handleRemoveFile}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/50"
                 >
                   <X className="h-4 w-4 mr-1" />
                   Seleccionar otro archivo
@@ -345,17 +345,17 @@ export function DocumentoUploadModal({
           {!showPreview && (
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                file ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:border-gray-400'
+                file ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950/30' : 'border-border hover:border-muted-foreground/50'
               }`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
             >
               <div className="space-y-2">
-                <Upload className="h-8 w-8 mx-auto text-gray-400" />
-                <p className="text-gray-600">
+                <Upload className="h-8 w-8 mx-auto text-muted-foreground/60" />
+                <p className="text-muted-foreground">
                   Arrastra y suelta el archivo aquí
                 </p>
-                <p className="text-sm text-gray-500">o</p>
+                <p className="text-sm text-muted-foreground/80">o</p>
                 <Button
                   size="sm"
                   variant="outline"
@@ -363,7 +363,7 @@ export function DocumentoUploadModal({
                 >
                   Seleccionar archivo
                 </Button>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-muted-foreground/80 mt-2">
                   PDF, JPG, JPEG o PNG (máx. 10MB)
                 </p>
               </div>
@@ -393,9 +393,9 @@ export function DocumentoUploadModal({
           {uploadResult && (
             uploadResult.success ? (
               <div className="space-y-3">
-                <Alert className="border-amber-200 bg-amber-50">
-                  <Clock className="h-4 w-4 text-amber-600" />
-                  <AlertDescription className="text-amber-800">
+                <Alert className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50">
+                  <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <AlertDescription className="text-amber-800 dark:text-amber-200">
                     <strong>Documento pendiente de revisión</strong>
                     <p className="mt-1 text-sm">
                       El kraal de sección ha sido notificado y está revisando que la documentación es correcta.
@@ -420,7 +420,7 @@ export function DocumentoUploadModal({
           <Button
             onClick={handleUpload}
             disabled={!file || uploading}
-            className={showPreview ? "bg-green-600 hover:bg-green-700" : ""}
+            className={showPreview ? "bg-primary hover:bg-primary/90" : ""}
           >
             {uploading ? (
               <>

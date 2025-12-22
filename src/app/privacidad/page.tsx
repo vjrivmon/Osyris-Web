@@ -4,11 +4,8 @@ import { SiteFooter } from "@/components/site-footer"
 export default function PrivacidadPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center">
-          <MainNav />
-        </div>
-      </header>
+      {/* MainNav ya incluye su propio <header> con sticky top-0 */}
+      <MainNav />
 
       <main className="flex-1 container py-12">
         <h1 className="text-3xl font-bold mb-6">Política de Privacidad</h1>

@@ -239,9 +239,9 @@ function RegisterPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-green-600" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-green-600 dark:text-green-400" />
           <p className="text-muted-foreground">Verificando invitación...</p>
         </div>
       </div>
@@ -250,14 +250,14 @@ function RegisterPageContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30">
         <div className="max-w-md w-full mx-4">
-          <Card className="border-red-200">
+          <Card className="border-red-200 dark:border-red-800">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <AlertCircle className="h-6 w-6 text-red-600" />
+              <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
-              <CardTitle className="text-red-800">Invitación no válida</CardTitle>
+              <CardTitle className="text-red-800 dark:text-red-300">Invitación no válida</CardTitle>
               <CardDescription>
                 {error}
               </CardDescription>
@@ -278,20 +278,20 @@ function RegisterPageContent() {
 
   if (isCompleted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
         <div className="max-w-md w-full mx-4">
-          <Card className="border-green-200">
+          <Card className="border-green-200 dark:border-green-800">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
-              <CardTitle className="text-green-800">¡Registro Completado!</CardTitle>
+              <CardTitle className="text-green-800 dark:text-green-300">¡Registro Completado!</CardTitle>
               <CardDescription>
                 Tu cuenta ha sido creada exitosamente. Serás redirigido a tu dashboard en unos momentos...
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <Loader2 className="h-6 w-8 animate-spin mx-auto text-green-600" />
+              <Loader2 className="h-6 w-8 animate-spin mx-auto text-green-600 dark:text-green-400" />
             </CardContent>
           </Card>
         </div>
@@ -300,14 +300,14 @@ function RegisterPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30 py-12 px-4">
       <div className="max-w-5xl w-full">
         <Card>
           <CardHeader className="text-center pb-2">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mb-4">
               <span className="text-2xl">🏕️</span>
             </div>
-            <CardTitle className="text-3xl text-green-800">
+            <CardTitle className="text-3xl text-green-800 dark:text-green-300">
               Completa tu Registro
             </CardTitle>
             <CardDescription>
@@ -317,14 +317,14 @@ function RegisterPageContent() {
 
           {invitationData && (
             <CardContent>
-              <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-800 mb-2">
+              <div className="mb-8 p-6 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-800 dark:text-blue-300 mb-2">
                   <strong>Invitación para:</strong>
                 </p>
-                <p className="font-medium text-blue-900 text-lg">
+                <p className="font-medium text-blue-900 dark:text-blue-100 text-lg">
                   {invitationData.nombre} {invitationData.apellidos}
                 </p>
-                <p className="text-sm text-blue-700">{invitationData.email}</p>
+                <p className="text-sm text-blue-700 dark:text-blue-400">{invitationData.email}</p>
                 <div className="flex items-center gap-2 mt-3 flex-wrap">
                   <Badge variant="outline" className="text-xs">
                     {invitationData.rol === "admin" && "👑 Administrador"}
@@ -347,7 +347,7 @@ function RegisterPageContent() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Sección: Información Personal */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground/80 border-b pb-2">
                     📋 Información Personal
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -400,7 +400,7 @@ function RegisterPageContent() {
 
                 {/* Sección: Información de Contacto */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground/80 border-b pb-2">
                     📞 Información de Contacto
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -439,7 +439,7 @@ function RegisterPageContent() {
 
                 {/* Sección: Contraseña */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground/80 border-b pb-2">
                     🔒 Configuración de Contraseña
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -530,9 +530,9 @@ function RegisterPageContent() {
 export default function RegisterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-green-600" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-green-600 dark:text-green-400" />
           <p className="text-muted-foreground">Cargando...</p>
         </div>
       </div>

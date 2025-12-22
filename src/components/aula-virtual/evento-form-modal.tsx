@@ -423,7 +423,7 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-lg md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -438,8 +438,8 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
 
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="basico" className="w-full">
-            <TabsList className={`grid w-full ${isCampamento ? 'grid-cols-5' : 'grid-cols-1'}`}>
-              <TabsTrigger value="basico">Informacion Basica</TabsTrigger>
+            <TabsList className={`grid w-full ${isCampamento ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-1'}`}>
+              <TabsTrigger value="basico">Basico</TabsTrigger>
               {isCampamento && (
                 <>
                   <TabsTrigger value="logistica">Logistica</TabsTrigger>
@@ -465,7 +465,7 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
               </div>
 
               {/* Tipo y Seccion */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Tipo de evento *</Label>
                   <Select
@@ -510,7 +510,7 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
               </div>
 
               {/* Fechas */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="fecha_inicio">Fecha inicio *</Label>
                   <Input
@@ -534,7 +534,7 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
               </div>
 
               {/* Horas */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="hora_inicio">Hora inicio *</Label>
                   <Input
@@ -585,7 +585,7 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
               </div>
 
               {/* Visibilidad y Precio */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Visibilidad</Label>
                   <Select

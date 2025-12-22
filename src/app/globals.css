@@ -10,8 +10,10 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 240 50% 30%;
+    --primary: 148 32% 23%;              /* Verde Osyris #264D36 */
     --primary-foreground: 210 40% 98%;
+    --button: 240 50% 30%;               /* Azul original para botones */
+    --button-foreground: 210 40% 98%;    /* Texto blanco en botones */
     --secondary: 48 96% 53%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
@@ -32,6 +34,14 @@
     --pioneros: 0 100% 50%;
     --rutas: 120 100% 30%;
 
+    /* Status colors - Light Mode */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
     /* Sidebar colors */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -50,19 +60,29 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 240 50% 50%;
+    --primary: 148 32% 40%;              /* Verde más claro para dark mode */
     --primary-foreground: 222.2 47.4% 11.2%;
+    --button: 240 50% 50%;               /* Azul más claro para dark */
+    --button-foreground: 210 40% 98%;    /* Texto blanco en botones */
     --secondary: 48 96% 53%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 48 96% 53%;
+
+    /* Status colors - Dark Mode */
+    --success: 142 69% 58%;
+    --success-foreground: 142 76% 10%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 38 92% 10%;
+    --info: 199 89% 65%;
+    --info-foreground: 199 89% 10%;
 
     /* Sidebar colors - dark mode */
     --sidebar-background: 240 5.9% 10%;

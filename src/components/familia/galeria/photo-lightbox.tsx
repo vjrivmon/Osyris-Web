@@ -475,13 +475,13 @@ export function PhotoLightbox({
 
           {/* Panel lateral de metadatos */}
           {showMetadata && (
-            <div className="w-full lg:w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto">
+            <div className="w-full lg:w-80 bg-background border-l border-border p-6 overflow-y-auto">
               <div className="space-y-4">
                 {/* Título y descripción */}
                 <div>
                   <h2 className="text-lg font-bold mb-2">{currentPhoto.titulo}</h2>
                   {currentPhoto.descripcion && (
-                    <p className="text-sm text-gray-600">{currentPhoto.descripcion}</p>
+                    <p className="text-sm text-muted-foreground">{currentPhoto.descripcion}</p>
                   )}
                 </div>
 
@@ -490,9 +490,9 @@ export function PhotoLightbox({
                 {/* Información básica */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4 text-gray-500" />
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium">Fecha:</span>
-                    <span className="text-gray-600">
+                    <span className="text-muted-foreground">
                       {new Date(currentPhoto.fecha_captura).toLocaleDateString('es-ES', {
                         day: 'numeric',
                         month: 'long',
@@ -504,15 +504,15 @@ export function PhotoLightbox({
                   </div>
 
                   <div className="flex items-center gap-2 text-sm">
-                    <Camera className="w-4 h-4 text-gray-500" />
+                    <Camera className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium">Tamaño:</span>
-                    <span className="text-gray-600">{currentPhoto.tamaño_formato}</span>
+                    <span className="text-muted-foreground">{currentPhoto.tamaño_formato}</span>
                   </div>
 
                   <div className="flex items-center gap-2 text-sm">
-                    <Camera className="w-4 h-4 text-gray-500" />
+                    <Camera className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium">Formato:</span>
-                    <span className="text-gray-600">{currentPhoto.tipo}</span>
+                    <span className="text-muted-foreground">{currentPhoto.tipo}</span>
                   </div>
                 </div>
 
@@ -525,49 +525,49 @@ export function PhotoLightbox({
 
                       {currentPhoto.metadata.camara && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Camera className="w-4 h-4 text-gray-500" />
+                          <Camera className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">Cámara:</span>
-                          <span className="text-gray-600">{currentPhoto.metadata.camara}</span>
+                          <span className="text-muted-foreground">{currentPhoto.metadata.camara}</span>
                         </div>
                       )}
 
                       {currentPhoto.metadata.lente && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Camera className="w-4 h-4 text-gray-500" />
+                          <Camera className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">Lente:</span>
-                          <span className="text-gray-600">{currentPhoto.metadata.lente}</span>
+                          <span className="text-muted-foreground">{currentPhoto.metadata.lente}</span>
                         </div>
                       )}
 
                       {currentPhoto.metadata.apertura && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Camera className="w-4 h-4 text-gray-500" />
+                          <Camera className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">Apertura:</span>
-                          <span className="text-gray-600">{currentPhoto.metadata.apertura}</span>
+                          <span className="text-muted-foreground">{currentPhoto.metadata.apertura}</span>
                         </div>
                       )}
 
                       {currentPhoto.metadata.velocidad && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Camera className="w-4 h-4 text-gray-500" />
+                          <Camera className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">Velocidad:</span>
-                          <span className="text-gray-600">{currentPhoto.metadata.velocidad}</span>
+                          <span className="text-muted-foreground">{currentPhoto.metadata.velocidad}</span>
                         </div>
                       )}
 
                       {currentPhoto.metadata.iso && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Camera className="w-4 h-4 text-gray-500" />
+                          <Camera className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">ISO:</span>
-                          <span className="text-gray-600">{currentPhoto.metadata.iso}</span>
+                          <span className="text-muted-foreground">{currentPhoto.metadata.iso}</span>
                         </div>
                       )}
 
                       {currentPhoto.metadata.gps_lat && currentPhoto.metadata.gps_lng && (
                         <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">GPS:</span>
-                          <span className="text-gray-600">
+                          <span className="text-muted-foreground">
                             {currentPhoto.metadata.gps_lat.toFixed(6)}, {currentPhoto.metadata.gps_lng.toFixed(6)}
                           </span>
                         </div>
@@ -608,16 +608,16 @@ export function PhotoLightbox({
         {/* Modal de compartir */}
         {showShareDialog && (
           <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
+            <div className="bg-background rounded-lg max-w-md w-full p-6 space-y-4">
               <h3 className="text-lg font-semibold">Compartir foto</h3>
 
               {shareLink ? (
                 <div className="space-y-4">
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm text-green-800">Enlace generado correctamente</p>
+                  <div className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-sm text-green-800 dark:text-green-300">Enlace generado correctamente</p>
                   </div>
 
-                  <div className="flex items-center gap-2 p-3 bg-gray-50 border rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-muted border rounded-lg">
                     <Input
                       value={shareLink}
                       readOnly

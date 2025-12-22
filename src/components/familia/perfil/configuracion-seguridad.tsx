@@ -319,13 +319,13 @@ export function ConfiguracionSeguridad() {
                 {formularioPassword.nueva && (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div className="flex-1 bg-muted rounded-full h-2">
                         <div
                           className={`h-2 rounded-full transition-all ${getFortalezaColor(fortalezaPassword)}`}
                           style={{ width: `${fortalezaPassword}%` }}
                         ></div>
                       </div>
-                      <span className="text-xs text-gray-500 min-w-[50px]">
+                      <span className="text-xs text-muted-foreground min-w-[50px]">
                         {getFortalezaTexto(fortalezaPassword)}
                       </span>
                     </div>
@@ -377,9 +377,9 @@ export function ConfiguracionSeguridad() {
             )}
 
             {passwordCambiado && (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
+              <Alert className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/50">
+                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <AlertDescription className="text-green-800 dark:text-green-200">
                   ✅ Tu contraseña ha sido cambiada correctamente.
                 </AlertDescription>
               </Alert>
@@ -411,7 +411,7 @@ export function ConfiguracionSeguridad() {
                 <Fingerprint className="h-8 w-8 text-blue-500" />
                 <div>
                   <p className="font-medium">Autenticación de Dos Factores</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {dosHabilitado
                       ? "Protege tu cuenta con códigos de un solo uso"
                       : "Añade seguridad adicional a tu cuenta"}
@@ -432,21 +432,21 @@ export function ConfiguracionSeguridad() {
 
             {dosHabilitado && (
               <div className="space-y-4">
-                <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
+                <Alert className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/50">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="text-green-800 dark:text-green-200">
                     ✅ La autenticación en dos pasos está activada. Tu cuenta está protegida.
                   </AlertDescription>
                 </Alert>
 
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-muted p-4 rounded-lg">
                   <h4 className="font-medium mb-3">Códigos de Recuperación</h4>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-muted-foreground mb-3">
                     Guarda estos códigos en un lugar seguro. Úsalos cuando no tengas acceso a tu dispositivo.
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                     {codigosRecuperacion.map((codigo, index) => (
-                      <div key={index} className="bg-white p-2 border rounded text-center font-mono text-sm">
+                      <div key={index} className="bg-card p-2 border rounded text-center font-mono text-sm">
                         {codigo}
                       </div>
                     ))}
@@ -497,7 +497,7 @@ export function ConfiguracionSeguridad() {
               return (
                 <div key={sesion.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <Icon className="h-8 w-8 text-gray-500" />
+                    <Icon className="h-8 w-8 text-muted-foreground" />
                     <div>
                       <div className="flex items-center space-x-2">
                         <p className="font-medium">{sesion.dispositivo}</p>
@@ -507,7 +507,7 @@ export function ConfiguracionSeguridad() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                         <span className="flex items-center">
                           <MapPin className="h-3 w-3 mr-1" />
                           {sesion.ubicacion}
@@ -548,16 +548,16 @@ export function ConfiguracionSeguridad() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex justify-center">
-              <div className="bg-white p-4 border rounded-lg">
-                <QrCode className="h-48 w-48 text-gray-800" />
+              <div className="bg-card p-4 border rounded-lg">
+                <QrCode className="h-48 w-48 text-foreground" />
               </div>
             </div>
 
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 O introduce este código manualmente:
               </p>
-              <code className="bg-gray-100 px-3 py-2 rounded text-sm">
+              <code className="bg-muted px-3 py-2 rounded text-sm">
                 JBSW Y3DPEHPK3PXP
               </code>
             </div>

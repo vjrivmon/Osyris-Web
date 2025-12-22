@@ -265,7 +265,7 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Calendario de Actividades</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">Calendario de Actividades</h2>
           <p className="text-muted-foreground">
             {vistaMode === 'mes'
               ? `Mes: ${nombresMeses[fechaActual.getMonth()]} ${fechaActual.getFullYear()}`
@@ -357,7 +357,7 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                     className={`
                       min-h-[80px] p-2 border rounded-lg transition-all duration-200
                       ${dia ? 'hover:bg-primary/10 hover:border-primary/40 hover:shadow-md hover:scale-105 cursor-pointer' : ''}
-                      ${esHoy ? 'bg-blue-50 border-blue-200' : 'border-gray-200'}
+                      ${esHoy ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-700' : 'border-border'}
                     `}
                     onClick={() => {
                       if (dia && actividadesDia.length > 0) {
@@ -369,7 +369,7 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                       <>
                         <div className={`
                           text-sm font-medium mb-1
-                          ${esHoy ? 'text-blue-600' : 'text-gray-700'}
+                          ${esHoy ? 'text-blue-600 dark:text-blue-400' : 'text-foreground'}
                         `}>
                           {dia}
                         </div>
@@ -399,12 +399,12 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                                 </div>
                                 <div className="flex items-center justify-between mt-0.5">
                                   {actividad.tipo === 'campamento' && (
-                                    <Badge variant="outline" className="text-[10px] px-1 py-0 bg-white/50">
+                                    <Badge variant="outline" className="text-[10px] px-1 py-0 bg-white/50 dark:bg-black/30">
                                       Inscribete
                                     </Badge>
                                   )}
                                   {actividad.tipo !== 'campamento' && total > 0 && (
-                                    <span className="text-[10px] text-gray-600">
+                                    <span className="text-[10px] text-muted-foreground">
                                       {confirmados}/{total}
                                     </span>
                                   )}
@@ -414,7 +414,7 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                           })}
 
                           {actividadesDia.length > 2 && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               +{actividadesDia.length - 2} mas
                             </div>
                           )}
@@ -466,13 +466,13 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                         <TipoEventoBadge tipo={actividad.tipo || 'reunion_sabado'} size="sm" />
                       </div>
 
-                      <p className="text-gray-600 mb-4 line-clamp-2">
+                      <p className="text-muted-foreground mb-4 line-clamp-2">
                         {actividad.descripcion}
                       </p>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div className="flex items-center space-x-2">
-                          <CalendarIcon className="h-4 w-4 text-gray-500" />
+                          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                           <span>
                             {actividad.fechaInicio.toLocaleDateString('es-ES', {
                               day: 'numeric',
@@ -483,7 +483,7 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
+                          <Clock className="h-4 w-4 text-muted-foreground" />
                           <span>
                             {actividad.fechaInicio.toLocaleTimeString('es-ES', {
                               hour: '2-digit',
@@ -493,12 +493,12 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
                           <span className="truncate">{actividad.lugar}</span>
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <Users className="h-4 w-4 text-gray-500" />
+                          <Users className="h-4 w-4 text-muted-foreground" />
                           <span>{actividad.scoutIds.length} {actividad.scoutIds.length === 1 ? 'hijo' : 'hijos'}</span>
                         </div>
                       </div>

@@ -109,11 +109,11 @@ function PlantillaCard({
   // Configuración de colores por formato
   const getFormatColor = (formato: string) => {
     const colors = {
-      docx: 'text-blue-600 bg-blue-50 border-blue-200',
-      pdf: 'text-red-600 bg-red-50 border-red-200',
-      odt: 'text-green-600 bg-green-50 border-green-200'
+      docx: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+      pdf: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
+      odt: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
     }
-    return colors[formato as keyof typeof colors] || 'text-gray-600 bg-gray-50 border-gray-200'
+    return colors[formato as keyof typeof colors] || 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
   }
 
   // Estadísticas de la plantilla
@@ -141,8 +141,8 @@ function PlantillaCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3">
-            <div className="p-2 rounded-lg bg-blue-50">
-              <Icon className="h-5 w-5 text-blue-600" />
+            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+              <Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="flex-1">
               <CardTitle className="text-base leading-tight">{plantilla.titulo}</CardTitle>
@@ -226,12 +226,12 @@ function PlantillaCard({
               {showInstructions ? 'Ocultar' : 'Ver'} instrucciones
             </Button>
             {showInstructions && (
-              <div className="mt-2 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm font-medium text-blue-800 mb-2">Instrucciones:</p>
-                <ul className="text-sm text-blue-700 space-y-1">
+              <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Instrucciones:</p>
+                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                   {plantilla.instrucciones.map((instruccion, index) => (
                     <li key={index} className="flex items-start">
-                      <span className="text-blue-500 mr-2">•</span>
+                      <span className="text-blue-500 dark:text-blue-400 mr-2">•</span>
                       <span>{instruccion}</span>
                     </li>
                   ))}
@@ -340,9 +340,9 @@ export function PlantillasDocumentos({
       </div>
 
       {/* Guía rápida */}
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
         <CardHeader className="pb-3">
-          <CardTitle className="text-blue-800 flex items-center gap-2 text-base">
+          <CardTitle className="text-blue-800 dark:text-blue-200 flex items-center gap-2 text-base">
             <BookOpen className="h-5 w-5" />
             Guía Rápida de Uso
           </CardTitle>
@@ -350,31 +350,31 @@ export function PlantillasDocumentos({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
             <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+              <div className="w-6 h-6 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
               <div>
-                <p className="font-medium text-blue-800">Selecciona</p>
-                <p className="text-blue-700">Elige la plantilla que necesitas</p>
+                <p className="font-medium text-blue-800 dark:text-blue-200">Selecciona</p>
+                <p className="text-blue-700 dark:text-blue-300">Elige la plantilla que necesitas</p>
               </div>
             </div>
             <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+              <div className="w-6 h-6 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
               <div>
-                <p className="font-medium text-blue-800">Descarga</p>
-                <p className="text-blue-700">Obtén el archivo en tu dispositivo</p>
+                <p className="font-medium text-blue-800 dark:text-blue-200">Descarga</p>
+                <p className="text-blue-700 dark:text-blue-300">Obtén el archivo en tu dispositivo</p>
               </div>
             </div>
             <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+              <div className="w-6 h-6 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
               <div>
-                <p className="font-medium text-blue-800">Completa</p>
-                <p className="text-blue-700">Rellena la información requerida</p>
+                <p className="font-medium text-blue-800 dark:text-blue-200">Completa</p>
+                <p className="text-blue-700 dark:text-blue-300">Rellena la información requerida</p>
               </div>
             </div>
             <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">4</div>
+              <div className="w-6 h-6 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">4</div>
               <div>
-                <p className="font-medium text-blue-800">Sube</p>
-                <p className="text-blue-700">Adjunta el documento completado</p>
+                <p className="font-medium text-blue-800 dark:text-blue-200">Sube</p>
+                <p className="text-blue-700 dark:text-blue-300">Adjunta el documento completado</p>
               </div>
             </div>
           </div>
@@ -587,14 +587,14 @@ export function PlantillaQuickSelect({
   if (!plantillaFiltrada) return null
 
   return (
-    <Card className="border-blue-200 bg-blue-50">
+    <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <FileText className="h-8 w-8 text-blue-600" />
+            <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             <div>
-              <p className="font-medium text-blue-800">Plantilla recomendada</p>
-              <p className="text-sm text-blue-700">{plantillaFiltrada.titulo}</p>
+              <p className="font-medium text-blue-800 dark:text-blue-200">Plantilla recomendada</p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">{plantillaFiltrada.titulo}</p>
             </div>
           </div>
           <Button size="sm" onClick={() => onDownloadPlantilla(plantillaFiltrada.id)}>

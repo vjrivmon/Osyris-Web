@@ -149,23 +149,23 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
           <DialogTitle className="text-lg truncate pr-4">{documento.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 bg-gray-100 rounded-lg overflow-hidden relative">
+        <div className="flex-1 bg-muted rounded-lg overflow-hidden relative">
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500 dark:text-blue-400" />
               <span className="ml-2">Cargando documento...</span>
             </div>
           )}
 
           {error && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-4">
-              <AlertCircle className="h-12 w-12 text-red-500 mb-3" />
-              <p className="text-red-500 text-center mb-4">{error}</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background z-10 p-4">
+              <AlertCircle className="h-12 w-12 text-red-500 dark:text-red-400 mb-3" />
+              <p className="text-red-500 dark:text-red-400 text-center mb-4">{error}</p>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRetry}
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Volver a cargar
@@ -192,12 +192,12 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
           )}
 
           {blobUrl && !error && !isPdf && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white p-4">
-              <FileText className="h-16 w-16 text-gray-400 mb-4" />
-              <p className="text-gray-600 text-center mb-2">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background p-4">
+              <FileText className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center mb-2">
                 Este archivo no se puede previsualizar directamente
               </p>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-muted-foreground/80 mb-4">
                 Tipo: {mimeType || 'Desconocido'}
               </p>
               <Button

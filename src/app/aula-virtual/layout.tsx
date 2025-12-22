@@ -49,12 +49,11 @@ export default function AulaVirtualLayout({
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
         {/* Header con navegacion horizontal */}
-        <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="container mx-auto px-4">
             <div className="flex h-14 items-center justify-between gap-4">
-              {/* Menu hamburguesa (solo movil) + Logo con link */}
+              {/* Logo con link */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                <MobileNav />
                 <Link href="/aula-virtual" className="flex items-center gap-2">
                   <img
                     src="/images/logo-osyris.png"
@@ -78,7 +77,7 @@ export default function AulaVirtualLayout({
                 <Popover open={notificacionesOpen} onOpenChange={setNotificacionesOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="relative">
-                      <Bell className="h-5 w-5" />
+                      <Bell className="h-6 w-6" />
                       {(contadorNoLeidas > 0 || documentosPendientes.length > 0) && (
                         <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
                           {contadorNoLeidas + documentosPendientes.length}
@@ -86,7 +85,7 @@ export default function AulaVirtualLayout({
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0" align="end">
+                  <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 p-0" align="end">
                     <div className="p-3 border-b">
                       <h4 className="font-semibold">Notificaciones</h4>
                     </div>
@@ -105,8 +104,8 @@ export default function AulaVirtualLayout({
                               className="block p-3 hover:bg-accent transition-colors"
                             >
                               <div className="flex items-start gap-3">
-                                <div className="p-2 rounded-full bg-amber-100">
-                                  <Bell className="h-4 w-4 text-amber-600" />
+                                <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/50">
+                                  <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                                 </div>
                                 <div className="flex-1">
                                   <p className="font-medium text-sm">
@@ -123,7 +122,7 @@ export default function AulaVirtualLayout({
                           {notificaciones.slice(0, 5).map((notif) => (
                             <div
                               key={notif.id}
-                              className={`p-3 hover:bg-accent cursor-pointer transition-colors ${!notif.leida ? 'bg-blue-50/50' : ''}`}
+                              className={`p-3 hover:bg-accent cursor-pointer transition-colors ${!notif.leida ? 'bg-blue-50/50 dark:bg-blue-950/50' : ''}`}
                               onClick={() => {
                                 if (!notif.leida) marcarComoLeida(notif.id)
                                 if (notif.enlace_accion) {
@@ -154,35 +153,26 @@ export default function AulaVirtualLayout({
                   </PopoverContent>
                 </Popover>
 
-                {/* User icon */}
-                <Button variant="ghost" size="icon" asChild>
+                {/* User icon - solo visible en desktop */}
+                <Button variant="ghost" size="icon" asChild className="hidden md:flex">
                   <Link href="/aula-virtual/ajustes">
-                    <User className="h-5 w-5" />
+                    <User className="h-6 w-6" />
                   </Link>
-                </Button>
-
-                {/* Logout button - Mobile (icon only) */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowLogoutDialog(true)}
-                  className="md:hidden"
-                  aria-label="Cerrar sesion"
-                  title="Cerrar sesion"
-                >
-                  <LogOut className="h-4 w-4" />
                 </Button>
 
                 {/* Logout button - Desktop (with text) */}
                 <button
                   onClick={() => setShowLogoutDialog(true)}
-                  className="hidden md:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="hidden lg:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
                   aria-label="Cerrar sesion"
                   title="Cerrar sesion"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-5 w-5" />
                   <span>Salir</span>
                 </button>
+
+                {/* Menu hamburguesa - derecha (solo movil) */}
+                <MobileNav />
 
                 {/* Logout Confirmation Dialog */}
                 <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>

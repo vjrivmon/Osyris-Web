@@ -17,7 +17,6 @@ import {
   Clock,
   XCircle,
   Filter,
-  RefreshCw,
   MapPin,
   Edit
 } from "lucide-react"
@@ -172,37 +171,31 @@ export default function CalendarioKraalPage() {
       {/* Header */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Calendario</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Calendario</h1>
           <p className="text-muted-foreground">
             Gestiona las actividades y confirmaciones de asistencia
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => fetchActividades()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualizar
-          </Button>
-          <Button onClick={handleNuevaActividad}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Actividad
-          </Button>
-        </div>
+        <Button onClick={handleNuevaActividad} className="w-full sm:w-auto">
+          <Plus className="h-4 w-4 mr-2" />
+          Nueva Actividad
+        </Button>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="calendario">
-            <Calendar className="h-4 w-4 mr-2" />
-            Calendario
+        <TabsList className="w-full grid grid-cols-3">
+          <TabsTrigger value="calendario" className="flex-1">
+            <Calendar className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Calendario</span>
           </TabsTrigger>
-          <TabsTrigger value="lista">
-            <Users className="h-4 w-4 mr-2" />
-            Lista de Eventos
+          <TabsTrigger value="lista" className="flex-1">
+            <Users className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Lista de Eventos</span>
           </TabsTrigger>
-          <TabsTrigger value="leyenda">
-            <Filter className="h-4 w-4 mr-2" />
-            Tipos de Evento
+          <TabsTrigger value="leyenda" className="flex-1">
+            <Filter className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Tipos de Evento</span>
           </TabsTrigger>
         </TabsList>
 
@@ -227,18 +220,27 @@ export default function CalendarioKraalPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2 sm:p-6">
               {/* Dias de la semana */}
-              <div className="grid grid-cols-7 gap-2 mb-4">
-                {['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map(dia => (
-                  <div key={dia} className="text-center text-sm font-medium text-muted-foreground">
-                    {dia}
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-2 mb-2 sm:mb-4">
+                {[
+                  { short: 'L', full: 'Lun' },
+                  { short: 'M', full: 'Mar' },
+                  { short: 'X', full: 'Mie' },
+                  { short: 'J', full: 'Jue' },
+                  { short: 'V', full: 'Vie' },
+                  { short: 'S', full: 'Sab' },
+                  { short: 'D', full: 'Dom' }
+                ].map(dia => (
+                  <div key={dia.full} className="text-center text-xs sm:text-sm font-medium text-muted-foreground">
+                    <span className="sm:hidden">{dia.short}</span>
+                    <span className="hidden sm:inline">{dia.full}</span>
                   </div>
                 ))}
               </div>
 
               {/* Dias del mes */}
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-2">
                 {generarDiasMes().map((dia, index) => {
                   const esHoy = dia === new Date().getDate() &&
                                fechaActual.getMonth() === new Date().getMonth() &&
@@ -250,18 +252,18 @@ export default function CalendarioKraalPage() {
                     <div
                       key={index}
                       className={`
-                        min-h-[100px] p-2 border rounded-lg transition-all
+                        min-h-[50px] sm:min-h-[80px] lg:min-h-[100px] p-0.5 sm:p-2 border rounded-md sm:rounded-lg transition-all
                         ${dia ? 'hover:bg-primary/5 cursor-pointer' : ''}
-                        ${esHoy ? 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800' : 'border-gray-200 dark:border-gray-700'}
+                        ${esHoy ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/50 dark:border-blue-700' : 'border-border'}
                       `}
                     >
                       {dia && (
                         <>
-                          <div className={`text-sm font-medium mb-1 ${esHoy ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                          <div className={`text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 ${esHoy ? 'text-blue-600 dark:text-blue-400' : 'text-foreground'}`}>
                             {dia}
                           </div>
-                          <div className="space-y-1">
-                            {actividadesDia.slice(0, 3).map(actividad => (
+                          <div className="space-y-0.5 sm:space-y-1">
+                            {actividadesDia.slice(0, 2).map(actividad => (
                               <EventoCellKraal
                                 key={actividad.id}
                                 evento={actividad}
@@ -269,9 +271,9 @@ export default function CalendarioKraalPage() {
                                 onViewAsistencia={() => handleVerAsistencia(actividad)}
                               />
                             ))}
-                            {actividadesDia.length > 3 && (
-                              <div className="text-xs text-gray-500 text-center py-0.5">
-                                +{actividadesDia.length - 3} mas
+                            {actividadesDia.length > 2 && (
+                              <div className="text-[10px] sm:text-xs text-muted-foreground text-center py-0.5">
+                                +{actividadesDia.length - 2} mas
                               </div>
                             )}
                           </div>
@@ -308,43 +310,61 @@ export default function CalendarioKraalPage() {
                       <div
                         key={actividad.id}
                         onClick={() => handleVerAsistencia(actividad)}
-                        className="flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50 hover:shadow-sm dark:hover:bg-gray-800/50 group"
+                        className="p-3 sm:p-4 border rounded-lg cursor-pointer transition-all hover:bg-muted/50 hover:shadow-sm group"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className={`p-2 rounded-lg ${tipoConfig.bgColor}`}>
-                            <tipoConfig.icon className={`h-5 w-5 ${tipoConfig.textColor}`} />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{actividad.titulo}</h4>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>{fecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                              <span>|</span>
-                              <MapPin className="h-3 w-3" />
-                              <span>{actividad.lugar}</span>
+                        {/* Layout responsive: stack en móvil, row en desktop */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          {/* Info principal */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`p-2 rounded-lg flex-shrink-0 ${tipoConfig.bgColor}`}>
+                              <tipoConfig.icon className={`h-5 w-5 ${tipoConfig.textColor}`} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-medium truncate">{actividad.titulo}</h4>
+                              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
+                                <span>{fecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                                <span className="hidden sm:inline">|</span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />
+                                  <span className="truncate max-w-[120px] sm:max-w-none">{actividad.lugar}</span>
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-4">
-                          <TipoEventoBadge tipo={actividad.tipo} size="sm" />
-                          <AsistenciaCard
-                            confirmados={actividad.confirmados || 0}
-                            noAsisten={actividad.no_asisten || 0}
-                            pendientes={actividad.pendientes || 0}
-                            className="scale-75 origin-right"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEditarActividad(actividad)
-                            }}
-                            className="opacity-70 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Editar
-                          </Button>
+                          {/* Acciones y stats - en móvil se muestran debajo */}
+                          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
+                            <TipoEventoBadge tipo={actividad.tipo} size="sm" />
+                            {/* Stats simplificados en móvil */}
+                            <div className="hidden sm:block">
+                              <AsistenciaCard
+                                confirmados={actividad.confirmados || 0}
+                                noAsisten={actividad.no_asisten || 0}
+                                pendientes={actividad.pendientes || 0}
+                                className="scale-75 origin-right"
+                              />
+                            </div>
+                            {/* Stats compactos solo en móvil */}
+                            <div className="flex items-center gap-1 text-xs sm:hidden">
+                              <span className="text-green-600 font-medium">{actividad.confirmados || 0}</span>
+                              <span className="text-muted-foreground">/</span>
+                              <span className="text-red-600 font-medium">{actividad.no_asisten || 0}</span>
+                              <span className="text-muted-foreground">/</span>
+                              <span className="text-amber-600 font-medium">{actividad.pendientes || 0}</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditarActividad(actividad)
+                              }}
+                              className="opacity-70 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Edit className="h-4 w-4 sm:mr-1" />
+                              <span className="hidden sm:inline">Editar</span>
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     )

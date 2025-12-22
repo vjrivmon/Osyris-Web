@@ -122,11 +122,8 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center">
-          <MainNav />
-        </div>
-      </header>
+      {/* MainNav ya incluye su propio <header> con sticky top-0 */}
+      <MainNav />
       <main className="flex-1">
         {/* Hero Section */}
         <section className={`relative bg-white dark:bg-slate-900 py-12 sm:py-16 md:py-24`}>
@@ -359,28 +356,28 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
         {/* Navigation Section */}
         <section className="py-6 sm:py-8 bg-muted">
           <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+            <div className="flex flex-row justify-between items-center gap-2 w-full">
               {sectionData.navigation.prev ? (
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" size="sm" className="sm:size-default">
                   <Link href={sectionData.navigation.prev.href}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    {sectionData.navigation.prev.title}
+                    <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">{sectionData.navigation.prev.title}</span>
                   </Link>
                 </Button>
               ) : (
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" size="sm" className="sm:size-default">
                   <Link href="/secciones">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Volver a Secciones
+                    <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Volver a Secciones</span>
                   </Link>
                 </Button>
               )}
 
               {sectionData.navigation.next && (
-                <Button asChild className="mt-4 sm:mt-0">
+                <Button asChild size="sm" className="sm:size-default">
                   <Link href={sectionData.navigation.next.href}>
-                    {sectionData.navigation.next.title}
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <span className="hidden sm:inline">{sectionData.navigation.next.title}</span>
+                    <ArrowRight className="h-4 w-4 sm:ml-2" />
                   </Link>
                 </Button>
               )}

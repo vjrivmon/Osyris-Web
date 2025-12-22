@@ -86,10 +86,10 @@ export function DocumentoItemSimple({
         <div className="flex items-center space-x-3">
           <div className={cn(
             "p-2 rounded-full",
-            documento.estado === 'actualizado' ? "bg-green-100" :
-            documento.estado === 'correcto' ? "bg-blue-100" :
-            documento.estado === 'pendiente' ? "bg-yellow-100" :
-            "bg-red-100"
+            documento.estado === 'actualizado' ? "bg-green-100 dark:bg-green-900/50" :
+            documento.estado === 'correcto' ? "bg-blue-100 dark:bg-blue-900/50" :
+            documento.estado === 'pendiente' ? "bg-yellow-100 dark:bg-yellow-900/50" :
+            "bg-red-100 dark:bg-red-900/50"
           )}>
             <IconComponent className={cn(
               "h-4 w-4",
@@ -125,10 +125,10 @@ export function DocumentoItemSimple({
       <div className="flex items-start space-x-3 flex-1">
         <div className={cn(
           "p-3 rounded-lg",
-          documento.estado === 'actualizado' ? "bg-green-100" :
-          documento.estado === 'correcto' ? "bg-blue-100" :
-          documento.estado === 'pendiente' ? "bg-yellow-100" :
-          "bg-red-100"
+          documento.estado === 'actualizado' ? "bg-green-100 dark:bg-green-900/50" :
+          documento.estado === 'correcto' ? "bg-blue-100 dark:bg-blue-900/50" :
+          documento.estado === 'pendiente' ? "bg-yellow-100 dark:bg-yellow-900/50" :
+          "bg-red-100 dark:bg-red-900/50"
         )}>
           <IconComponent className={cn(
             "h-5 w-5",
@@ -262,8 +262,8 @@ export function DocumentoItemPlaceholder({ tipo }: { tipo: TipoDocumento }) {
   return (
     <div className="flex items-center justify-between p-4 rounded-lg border border-dashed bg-muted/50">
       <div className="flex items-center space-x-3">
-        <div className="p-3 rounded-lg bg-gray-100">
-          <IconComponent className="h-5 w-5 text-gray-400" />
+        <div className="p-3 rounded-lg bg-muted">
+          <IconComponent className="h-5 w-5 text-muted-foreground" />
         </div>
         <div>
           <p className="font-medium text-sm">{tipoConfig.label}</p>
@@ -271,7 +271,7 @@ export function DocumentoItemPlaceholder({ tipo }: { tipo: TipoDocumento }) {
         </div>
       </div>
 
-      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+      <Badge variant="outline" className="bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800">
         <AlertTriangle className="h-3 w-3 mr-1" />
         Falta
       </Badge>

@@ -51,8 +51,8 @@ export function ConfirmacionReunionForm({
   if (estado === 'confirmado' || estado === 'no_asiste') {
     return (
       <div className={cn('p-4 rounded-lg border', className)}>
-        <Alert className={estado === 'confirmado' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-          <AlertDescription className={estado === 'confirmado' ? 'text-green-800' : 'text-red-800'}>
+        <Alert className={estado === 'confirmado' ? 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20' : 'border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20'}>
+          <AlertDescription className={estado === 'confirmado' ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}>
             {estado === 'confirmado' ? (
               <span className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4" />
@@ -71,7 +71,7 @@ export function ConfirmacionReunionForm({
           variant="ghost"
           size="sm"
           onClick={() => setEstado('pendiente')}
-          className="mt-2 text-gray-600"
+          className="mt-2 text-muted-foreground"
         >
           Cambiar respuesta
         </Button>
@@ -86,7 +86,7 @@ export function ConfirmacionReunionForm({
       </div>
 
       <div>
-        <Label htmlFor={`comentarios-${educandoId}`} className="text-sm text-gray-600">
+        <Label htmlFor={`comentarios-${educandoId}`} className="text-sm text-muted-foreground">
           Comentario (opcional)
         </Label>
         <Textarea
@@ -110,7 +110,7 @@ export function ConfirmacionReunionForm({
         <Button
           onClick={() => handleConfirmacion(true)}
           disabled={isSubmitting}
-          className="flex-1 bg-green-600 hover:bg-green-700"
+          className="flex-1 bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
         >
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -123,7 +123,7 @@ export function ConfirmacionReunionForm({
           onClick={() => handleConfirmacion(false)}
           disabled={isSubmitting}
           variant="outline"
-          className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+          className="flex-1 border-red-300 dark:border-red-600 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
         >
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -170,7 +170,7 @@ export function ConfirmacionReunionCompact({
       <Button
         variant="ghost"
         size="sm"
-        className={cn('text-green-600 hover:text-green-700 hover:bg-green-50', className)}
+        className={cn('text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20', className)}
         onClick={() => setEstado('pendiente')}
       >
         <CheckCircle className="h-4 w-4 mr-1" />
@@ -184,7 +184,7 @@ export function ConfirmacionReunionCompact({
       <Button
         variant="ghost"
         size="sm"
-        className={cn('text-red-600 hover:text-red-700 hover:bg-red-50', className)}
+        className={cn('text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20', className)}
         onClick={() => setEstado('pendiente')}
       >
         <XCircle className="h-4 w-4 mr-1" />
@@ -200,7 +200,7 @@ export function ConfirmacionReunionCompact({
         size="sm"
         onClick={() => handleConfirmacion(true)}
         disabled={isSubmitting}
-        className="text-green-600 hover:text-green-700 hover:bg-green-50 p-1"
+        className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-1"
       >
         {isSubmitting ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -213,7 +213,7 @@ export function ConfirmacionReunionCompact({
         size="sm"
         onClick={() => handleConfirmacion(false)}
         disabled={isSubmitting}
-        className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
+        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-1"
       >
         {isSubmitting ? (
           <Loader2 className="h-4 w-4 animate-spin" />

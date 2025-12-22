@@ -108,7 +108,7 @@ export function ProximoCampamentoCard({
             <Tent className="h-5 w-5 text-emerald-600" />
             Proximo Campamento
           </CardTitle>
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+          <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
             {actividad.seccion_nombre || 'Todas las secciones'}
           </Badge>
         </div>
@@ -118,15 +118,15 @@ export function ProximoCampamentoCard({
         {/* Info del campamento */}
         <div className="space-y-2">
           <div className="flex items-start justify-between">
-            <h3 className="font-semibold text-gray-900">{actividad.titulo}</h3>
+            <h3 className="font-semibold text-foreground">{actividad.titulo}</h3>
             {actividad.precio && (
-              <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+              <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
                 <Euro className="h-3 w-3 mr-1" />
                 {actividad.precio}
               </Badge>
             )}
           </div>
-          <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               {formatFecha(fechaInicio)}
@@ -157,55 +157,55 @@ export function ProximoCampamentoCard({
 
         {/* Estadisticas principales */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-emerald-50 p-3 rounded-lg text-center">
-            <div className="flex items-center justify-center gap-1 text-emerald-600 mb-1">
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg text-center">
+            <div className="flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 mb-1">
               <Users className="h-4 w-4" />
               <span className="text-2xl font-bold">{estadisticas.inscritos}</span>
             </div>
-            <span className="text-xs text-emerald-700">Inscritos</span>
+            <span className="text-xs text-emerald-700 dark:text-emerald-300">Inscritos</span>
           </div>
 
-          <div className="bg-blue-50 p-3 rounded-lg text-center">
-            <div className="flex items-center justify-center gap-1 text-blue-600 mb-1">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-center">
+            <div className="flex items-center justify-center gap-1 text-blue-600 dark:text-blue-400 mb-1">
               <CreditCard className="h-4 w-4" />
               <span className="text-2xl font-bold">{estadisticas.pagados}</span>
             </div>
-            <span className="text-xs text-blue-700">Pagados</span>
+            <span className="text-xs text-blue-700 dark:text-blue-300">Pagados</span>
           </div>
 
-          <div className="bg-yellow-50 p-3 rounded-lg text-center">
-            <div className="flex items-center justify-center gap-1 text-yellow-600 mb-1">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg text-center">
+            <div className="flex items-center justify-center gap-1 text-yellow-600 dark:text-yellow-400 mb-1">
               <HelpCircle className="h-4 w-4" />
               <span className="text-2xl font-bold">{totalSinInscribir}</span>
             </div>
-            <span className="text-xs text-yellow-700">Sin responder</span>
+            <span className="text-xs text-yellow-700 dark:text-yellow-300">Sin responder</span>
           </div>
         </div>
 
         {/* Estadisticas de documentos */}
         <div className="grid grid-cols-3 gap-2 text-center text-xs">
-          <div className="p-2 bg-gray-50 rounded-lg">
+          <div className="p-2 bg-muted rounded-lg">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <FileText className="h-3 w-3 text-purple-500" />
-              <span className="font-semibold text-purple-600">{estadisticas.circularesSubidas}</span>
+              <FileText className="h-3 w-3 text-purple-500 dark:text-purple-400" />
+              <span className="font-semibold text-purple-600 dark:text-purple-400">{estadisticas.circularesSubidas}</span>
             </div>
-            <span className="text-gray-600">Circulares</span>
+            <span className="text-muted-foreground">Circulares</span>
           </div>
 
-          <div className="p-2 bg-gray-50 rounded-lg">
+          <div className="p-2 bg-muted rounded-lg">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <CreditCard className="h-3 w-3 text-green-500" />
-              <span className="font-semibold text-green-600">{estadisticas.justificantesSubidos}</span>
+              <CreditCard className="h-3 w-3 text-green-500 dark:text-green-400" />
+              <span className="font-semibold text-green-600 dark:text-green-400">{estadisticas.justificantesSubidos}</span>
             </div>
-            <span className="text-gray-600">Justificantes</span>
+            <span className="text-muted-foreground">Justificantes</span>
           </div>
 
-          <div className="p-2 bg-gray-50 rounded-lg">
+          <div className="p-2 bg-muted rounded-lg">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <XCircle className="h-3 w-3 text-red-500" />
-              <span className="font-semibold text-red-600">{estadisticas.noAsisten}</span>
+              <XCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+              <span className="font-semibold text-red-600 dark:text-red-400">{estadisticas.noAsisten}</span>
             </div>
-            <span className="text-gray-600">No asisten</span>
+            <span className="text-muted-foreground">No asisten</span>
           </div>
         </div>
 
@@ -254,12 +254,12 @@ export function ProximoCampamentoCard({
                     <EducandoSinInscribirItem key={educando.id} educando={educando} />
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">
+                  <p className="text-sm text-muted-foreground text-center py-4">
                     Todos los educandos han respondido
                   </p>
                 )
               ) : inscripcionesFiltradas.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   No hay inscripciones en esta categoria
                 </p>
               ) : (
@@ -310,11 +310,21 @@ function FilterButton({
   variant?: 'default' | 'yellow' | 'orange' | 'green' | 'red'
 }) {
   const variantStyles = {
-    default: active ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
-    yellow: active ? 'bg-yellow-200 text-yellow-800' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
-    orange: active ? 'bg-orange-200 text-orange-800' : 'bg-orange-100 text-orange-700 hover:bg-orange-200',
-    green: active ? 'bg-green-200 text-green-800' : 'bg-green-100 text-green-700 hover:bg-green-200',
-    red: active ? 'bg-red-200 text-red-800' : 'bg-red-100 text-red-700 hover:bg-red-200'
+    default: active
+      ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700',
+    yellow: active
+      ? 'bg-yellow-200 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200'
+      : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-900/50',
+    orange: active
+      ? 'bg-orange-200 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200'
+      : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50',
+    green: active
+      ? 'bg-green-200 dark:bg-green-900/50 text-green-800 dark:text-green-200'
+      : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50',
+    red: active
+      ? 'bg-red-200 dark:bg-red-900/50 text-red-800 dark:text-red-200'
+      : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50'
   }
 
   return (
@@ -332,14 +342,14 @@ function FilterButton({
 
 function EducandoSinInscribirItem({ educando }: { educando: ScoutSinConfirmar }) {
   return (
-    <div className="flex items-center justify-between p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+    <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
       <div className="flex items-center gap-2">
         <HelpCircle className="h-4 w-4 text-yellow-500" />
-        <p className="text-sm font-medium text-yellow-800">
+        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
           {educando.nombre} {educando.apellidos}
         </p>
       </div>
-      <Badge variant="outline" className="text-xs bg-yellow-100 border-yellow-300 text-yellow-700">
+      <Badge variant="outline" className="text-xs bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-600 text-yellow-700 dark:text-yellow-300">
         Sin responder
       </Badge>
     </div>
@@ -353,14 +363,14 @@ function InscripcionItem({ inscripcion }: { inscripcion: InscripcionCampamento }
 
   if (noAsiste) {
     return (
-      <div className="flex items-center justify-between p-2 bg-red-50 border border-red-200 rounded-lg">
+      <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
         <div className="flex items-center gap-2">
           <XCircle className="h-4 w-4 text-red-500" />
-          <p className="text-sm font-medium text-red-800">
+          <p className="text-sm font-medium text-red-800 dark:text-red-300">
             {inscripcion.educando_nombre} {inscripcion.educando_apellidos}
           </p>
         </div>
-        <Badge variant="outline" className="text-xs bg-red-100 border-red-300 text-red-700">
+        <Badge variant="outline" className="text-xs bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300">
           No asiste
         </Badge>
       </div>
@@ -372,7 +382,7 @@ function InscripcionItem({ inscripcion }: { inscripcion: InscripcionCampamento }
   return (
     <div className={cn(
       'p-3 border rounded-lg',
-      isComplete ? 'bg-green-50 border-green-200' : 'bg-white'
+      isComplete ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700' : 'bg-card'
     )}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -390,8 +400,8 @@ function InscripcionItem({ inscripcion }: { inscripcion: InscripcionCampamento }
           className={cn(
             'text-xs',
             inscripcion.pagado
-              ? 'bg-green-100 border-green-300 text-green-700'
-              : 'bg-gray-100 border-gray-300 text-gray-600'
+              ? 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-600 text-green-700 dark:text-green-300'
+              : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
           )}
         >
           {inscripcion.pagado ? 'Pagado' : 'Sin pagar'}
@@ -401,14 +411,14 @@ function InscripcionItem({ inscripcion }: { inscripcion: InscripcionCampamento }
       <div className="flex gap-3 text-xs">
         <div className={cn(
           'flex items-center gap-1',
-          tieneCircular ? 'text-green-600' : 'text-gray-400'
+          tieneCircular ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
         )}>
           <FileText className="h-3 w-3" />
           {tieneCircular ? 'Circular OK' : 'Sin circular'}
         </div>
         <div className={cn(
           'flex items-center gap-1',
-          tieneJustificante ? 'text-green-600' : 'text-gray-400'
+          tieneJustificante ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
         )}>
           <CreditCard className="h-3 w-3" />
           {tieneJustificante ? 'Justificante OK' : 'Sin justificante'}

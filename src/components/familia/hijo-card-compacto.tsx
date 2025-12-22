@@ -75,7 +75,7 @@ export function HijoCardCompacto({
           {/* Avatar más pequeño */}
           <Avatar className="h-10 w-10">
             <AvatarImage src={hijo.foto} alt={hijo.nombre} />
-            <AvatarFallback className="text-sm font-semibold bg-green-100 text-green-700">
+            <AvatarFallback className="text-sm font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
               {iniciales}
             </AvatarFallback>
           </Avatar>
@@ -101,14 +101,14 @@ export function HijoCardCompacto({
           {/* Badge de estado de documentos - texto completo */}
           <div className="flex-shrink-0">
             {documentosCriticos > 0 ? (
-              <Badge variant="outline" className="flex items-center space-x-1.5 border-red-200 bg-red-50/30">
-                <AlertTriangle className="h-3 w-3 text-red-600" />
-                <span className="text-xs text-red-600 font-medium">
+              <Badge variant="outline" className="flex items-center space-x-1.5 border-red-200 bg-red-50/30 dark:border-red-500/50 dark:bg-red-500/20">
+                <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-400" />
+                <span className="text-xs text-red-600 dark:text-red-400 font-medium">
                   {documentosCriticos} {documentosCriticos === 1 ? 'documento pendiente' : 'documentos pendientes'}
                 </span>
               </Badge>
             ) : (
-              <Badge variant="outline" className="flex items-center space-x-1 border-gray-200">
+              <Badge variant="outline" className="flex items-center space-x-1 border-gray-200 dark:border-gray-600">
                 <span className="text-xs text-muted-foreground">{documentosCompletos}/{totalDocumentos}</span>
               </Badge>
             )}
@@ -118,7 +118,7 @@ export function HijoCardCompacto({
         {/* Barra de progreso minimalista - azul corporativo si hay documentos pendientes */}
         {documentosCompletos < totalDocumentos && (
           <div className="mt-2">
-            <div className="w-full bg-gray-100 rounded-full h-1">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1">
               <div
                 className={cn(
                   "h-1 rounded-full transition-all",

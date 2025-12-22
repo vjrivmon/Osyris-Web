@@ -135,11 +135,11 @@ export default function SolicitudesDesbloqueoPage() {
   const renderEstadoBadge = (estado: string) => {
     switch (estado) {
       case 'pendiente':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="h-3 w-3 mr-1" />Pendiente</Badge>;
+        return <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800"><Clock className="h-3 w-3 mr-1" />Pendiente</Badge>;
       case 'aprobada':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" />Aprobada</Badge>;
+        return <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"><CheckCircle className="h-3 w-3 mr-1" />Aprobada</Badge>;
       case 'rechazada':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><XCircle className="h-3 w-3 mr-1" />Rechazada</Badge>;
+        return <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"><XCircle className="h-3 w-3 mr-1" />Rechazada</Badge>;
       default:
         return <Badge variant="outline">{estado}</Badge>;
     }
@@ -175,12 +175,12 @@ export default function SolicitudesDesbloqueoPage() {
 
       {/* Contador de pendientes */}
       {pendientes > 0 && (
-        <Alert className="mb-6 bg-yellow-50 border-yellow-200">
-          <Clock className="h-4 w-4 text-yellow-600" />
-          <AlertTitle className="text-yellow-700">
+        <Alert className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+          <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+          <AlertTitle className="text-yellow-700 dark:text-yellow-300">
             {pendientes} solicitud{pendientes !== 1 ? 'es' : ''} pendiente{pendientes !== 1 ? 's' : ''}
           </AlertTitle>
-          <AlertDescription className="text-yellow-600">
+          <AlertDescription className="text-yellow-600 dark:text-yellow-400">
             Las familias están esperando tu respuesta para poder actualizar sus documentos.
           </AlertDescription>
         </Alert>
@@ -225,14 +225,14 @@ export default function SolicitudesDesbloqueoPage() {
             <div className="space-y-4">
               {solicitudesFiltradas.map((solicitud) => (
                 <Card key={solicitud.id} className={
-                  solicitud.estado === 'pendiente' ? 'border-yellow-200' :
-                  solicitud.estado === 'aprobada' ? 'border-green-200' :
-                  'border-red-200'
+                  solicitud.estado === 'pendiente' ? 'border-yellow-200 dark:border-yellow-800' :
+                  solicitud.estado === 'aprobada' ? 'border-green-200 dark:border-green-800' :
+                  'border-red-200 dark:border-red-800'
                 }>
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       {/* Info de la solicitud */}
-                      <div className="space-y-2 flex-1">
+                      <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <FileText className="h-5 w-5 text-blue-600" />
                           <span className="font-medium">{solicitud.titulo_documento}</span>
@@ -256,8 +256,8 @@ export default function SolicitudesDesbloqueoPage() {
                         </p>
 
                         {solicitud.motivo && (
-                          <div className="bg-gray-50 p-3 rounded-lg mt-2">
-                            <p className="text-sm text-gray-600">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg mt-2">
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
                               <MessageSquare className="h-3 w-3 inline mr-1" />
                               <strong>Motivo:</strong> {solicitud.motivo}
                             </p>
@@ -266,10 +266,10 @@ export default function SolicitudesDesbloqueoPage() {
 
                         {solicitud.respuesta_scouter && (
                           <div className={`p-3 rounded-lg mt-2 ${
-                            solicitud.estado === 'aprobada' ? 'bg-green-50' : 'bg-red-50'
+                            solicitud.estado === 'aprobada' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
                           }`}>
                             <p className={`text-sm ${
-                              solicitud.estado === 'aprobada' ? 'text-green-700' : 'text-red-700'
+                              solicitud.estado === 'aprobada' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
                             }`}>
                               <strong>Tu respuesta:</strong> {solicitud.respuesta_scouter}
                             </p>
@@ -279,22 +279,22 @@ export default function SolicitudesDesbloqueoPage() {
 
                       {/* Acciones */}
                       {solicitud.estado === 'pendiente' && (
-                        <div className="flex gap-2 ml-4">
+                        <div className="flex gap-2 mt-3 sm:mt-0 ml-0 sm:ml-4 flex-shrink-0">
                           <Button
                             size="sm"
                             className="bg-green-600 hover:bg-green-700"
                             onClick={() => abrirModalAprobar(solicitud)}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Aprobar
+                            <CheckCircle className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Aprobar</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => abrirModalRechazar(solicitud)}
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Rechazar
+                            <XCircle className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Rechazar</span>
                           </Button>
                         </div>
                       )}

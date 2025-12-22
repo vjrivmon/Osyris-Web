@@ -332,7 +332,7 @@ export function PagePreviewMiniature({
 
     return (
       <div
-        className="w-full h-full bg-white overflow-hidden rounded-lg border"
+        className="w-full h-full bg-card overflow-hidden rounded-lg border"
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
@@ -450,7 +450,7 @@ export function PagePreviewMiniature({
 
         <CardContent className="pb-3">
           <div
-            className="relative bg-gray-50 rounded-lg overflow-hidden border"
+            className="relative bg-muted rounded-lg overflow-hidden border"
             style={{
               width: dimensions.width,
               height: dimensions.height
@@ -605,7 +605,7 @@ const SectionPreview = ({
         {customContent.slice(1).map((section, index) => (
           <div
             key={index}
-            className="p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition-colors"
+            className="p-3 bg-muted rounded cursor-pointer hover:bg-muted/80 transition-colors"
             data-section={index}
             onClick={(e) => onElementClick(`section-${index}`, e)}
             onMouseEnter={() => onElementHover(`section-${index}`)}
@@ -616,7 +616,7 @@ const SectionPreview = ({
             }}
           >
             <h3 className="font-medium text-sm mb-1">{section.title}</h3>
-            <p className="text-xs text-gray-600 line-clamp-2">
+            <p className="text-xs text-muted-foreground line-clamp-2">
               {section.content.substring(0, 150)}...
             </p>
           </div>
@@ -642,7 +642,7 @@ const MarkdownPreview = ({
   return (
     <div className="w-full h-full overflow-y-auto p-4">
       <h1
-        className="text-xl font-bold mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+        className="text-xl font-bold mb-4 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
         data-edit="page-title"
         onClick={(e) => onElementClick('page-title', e)}
         onMouseEnter={() => onElementHover('page-title')}
@@ -659,7 +659,7 @@ const MarkdownPreview = ({
         {content.map((section, index) => (
           <div
             key={index}
-            className="cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+            className="cursor-pointer hover:bg-muted p-2 rounded transition-colors"
             data-content={index}
             onClick={(e) => onElementClick(`content-${index}`, e)}
             onMouseEnter={() => onElementHover(`content-${index}`)}
@@ -672,7 +672,7 @@ const MarkdownPreview = ({
             {section.title && (
               <h2 className="text-sm font-semibold mb-1">{section.title}</h2>
             )}
-            <p className="text-xs text-gray-600 line-clamp-3">
+            <p className="text-xs text-muted-foreground line-clamp-3">
               {section.content.substring(0, 200)}...
             </p>
           </div>

@@ -175,11 +175,11 @@ export function DocumentosListaCompacta({
         </CardHeader>
         <CardContent className="p-6">
           <div className="flex flex-col items-center justify-center text-center space-y-3 py-8">
-            <div className="p-4 rounded-full bg-gray-100">
-              <FileText className="h-10 w-10 text-gray-400" />
+            <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-700">
+              <FileText className="h-10 w-10 text-gray-400 dark:text-gray-500" />
             </div>
             <div>
-              <p className="font-medium text-gray-700">No hay hijo seleccionado</p>
+              <p className="font-medium text-gray-700 dark:text-gray-300">No hay hijo seleccionado</p>
               <p className="text-sm text-muted-foreground">
                 Haz clic en una tarjeta de hijo para ver sus documentos
               </p>
@@ -206,7 +206,7 @@ export function DocumentosListaCompacta({
         </CardHeader>
         <CardContent className="p-6">
           <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-green-600 mb-4" />
+            <Loader2 className="h-8 w-8 animate-spin text-green-600 dark:text-green-400 mb-4" />
             <p className="text-sm text-muted-foreground">Cargando documentos...</p>
           </div>
         </CardContent>
@@ -243,7 +243,7 @@ export function DocumentosListaCompacta({
               variant="outline"
               size="sm"
               onClick={() => setPlantillasModalOpen(true)}
-              className="border-amber-500 text-amber-600 hover:bg-amber-50"
+              className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/30"
             >
               <Download className="h-4 w-4 mr-2" />
               Plantillas
@@ -263,13 +263,13 @@ export function DocumentosListaCompacta({
         {/* Estadísticas */}
         <div className="flex items-center gap-6 mt-5 text-sm">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-gray-600">{documentosCompletos} completos</span>
+            <CheckCircle className="h-4 w-4 text-green-500 dark:text-green-400" />
+            <span className="text-gray-600 dark:text-gray-400">{documentosCompletos} completos</span>
           </div>
           {documentosFaltantes > 0 && (
             <div className="flex items-center gap-2">
-              <Upload className="h-4 w-4 text-red-500" />
-              <span className="text-red-600">{documentosFaltantes} faltan</span>
+              <Upload className="h-4 w-4 text-red-500 dark:text-red-400" />
+              <span className="text-red-600 dark:text-red-400">{documentosFaltantes} faltan</span>
             </div>
           )}
         </div>
@@ -278,9 +278,9 @@ export function DocumentosListaCompacta({
       <CardContent className="pt-6">
         {/* Alerta si faltan documentos obligatorios */}
         {documentosFaltantes > 0 && (
-          <Alert variant="default" className="mb-6 border-red-200 bg-red-50/50">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-sm text-red-700">
+          <Alert variant="default" className="mb-6 border-red-200 bg-red-50/50 dark:border-red-500/50 dark:bg-red-900/30">
+            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+            <AlertDescription className="text-sm text-red-700 dark:text-red-400">
               {documentosFaltantes} documento{documentosFaltantes > 1 ? 's obligatorios' : ' obligatorio'} pendiente{documentosFaltantes > 1 ? 's' : ''} de subir
             </AlertDescription>
           </Alert>
@@ -289,8 +289,8 @@ export function DocumentosListaCompacta({
         {/* Lista de documentos desde Drive */}
         <div className="space-y-3">
           {documentosList.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
               <p>No se pudieron cargar los documentos</p>
               <p className="text-sm">Intenta recargar la página</p>
             </div>
@@ -310,27 +310,27 @@ export function DocumentosListaCompacta({
                 const getEstadoStyles = () => {
                   if (estaSubido) {
                     return {
-                      border: 'border-green-200 bg-green-50/30',
-                      iconBg: 'bg-green-100',
-                      icon: <FileCheck className="h-4 w-4 text-green-600" />,
-                      text: 'text-green-600',
+                      border: 'border-green-200 bg-green-50/30 dark:border-green-500/50 dark:bg-green-900/30',
+                      iconBg: 'bg-green-100 dark:bg-green-900/50',
+                      icon: <FileCheck className="h-4 w-4 text-green-600 dark:text-green-400" />,
+                      text: 'text-green-600 dark:text-green-400',
                       label: 'Documento aprobado'
                     }
                   }
                   if (enRevision) {
                     return {
-                      border: 'border-amber-200 bg-amber-50/30',
-                      iconBg: 'bg-amber-100',
-                      icon: <Clock className="h-4 w-4 text-amber-600" />,
-                      text: 'text-amber-600',
+                      border: 'border-amber-200 bg-amber-50/30 dark:border-amber-500/50 dark:bg-amber-900/30',
+                      iconBg: 'bg-amber-100 dark:bg-amber-900/50',
+                      icon: <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
+                      text: 'text-amber-600 dark:text-amber-400',
                       label: 'En revisión'
                     }
                   }
                   return {
-                    border: 'border-gray-200 hover:border-gray-300',
-                    iconBg: 'bg-gray-50',
+                    border: 'border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500',
+                    iconBg: 'bg-gray-50 dark:bg-gray-700',
                     icon: getIconForTipo(tipo),
-                    text: 'text-red-600',
+                    text: 'text-red-600 dark:text-red-400',
                     label: 'Documento faltante'
                   }
                 }
@@ -347,7 +347,7 @@ export function DocumentosListaCompacta({
                         {estilos.icon}
                       </div>
                       <div>
-                        <p className="font-medium text-sm text-gray-700">{doc.nombre}{esObligatorio && '*'}</p>
+                        <p className="font-medium text-sm text-gray-700 dark:text-gray-300">{doc.nombre}{esObligatorio && '*'}</p>
                         <p className={`text-xs font-medium flex items-center gap-1 ${estilos.text}`}>
                           {estaSubido && <CheckCircle className="h-3 w-3" />}
                           {enRevision && <Clock className="h-3 w-3" />}
@@ -372,7 +372,7 @@ export function DocumentosListaCompacta({
                             setSelectedDoc({ name: doc.archivo?.name || doc.nombre, webViewLink: doc.archivo?.webViewLink })
                             setModalOpen(true)
                           }}
-                          className={estaSubido ? "border-green-600 text-green-600 hover:bg-green-50 hover:border-green-700" : "border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600"}
+                          className={estaSubido ? "border-green-600 text-green-600 hover:bg-green-50 hover:border-green-700 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-900/30" : "border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/30"}
                         >
                           <Eye className="h-3 w-3 mr-1" />
                           Ver
@@ -384,7 +384,7 @@ export function DocumentosListaCompacta({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800"
+                          className="border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
                           onClick={() => onResubirDocumento(tipo as TipoDocumento, doc.archivo?.id ? parseInt(doc.archivo.id) : undefined)}
                         >
                           <Upload className="h-3 w-3 mr-1" />
@@ -398,7 +398,7 @@ export function DocumentosListaCompacta({
                           size="sm"
                           variant="outline"
                           onClick={() => onUploadDocumento?.(tipo as TipoDocumento)}
-                          className="border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800"
+                          className="border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
                         >
                           <Upload className="h-3 w-3 mr-1" />
                           Subir
@@ -413,12 +413,12 @@ export function DocumentosListaCompacta({
 
         {/* Información adicional - siempre mostrar leyenda de documentos obligatorios/opcionales */}
         {!compact && documentosList.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-100">
+          <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
             <div className="flex items-start gap-2">
-              <Info className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-gray-600 space-y-1">
+              <Info className="h-4 w-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                 <p>Los documentos marcados con (*) son obligatorios</p>
-                <p className="text-gray-500">Los documentos sin asterisco son opcionales</p>
+                <p className="text-gray-500 dark:text-gray-500">Los documentos sin asterisco son opcionales</p>
               </div>
             </div>
           </div>

@@ -116,7 +116,7 @@ export function DashboardHome({ className }: DashboardHomeProps) {
       {/* Header con Refresh */}
       <div className="flex items-center justify-between">
         <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-6 text-white flex-1">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
             Hola, {getNombreMostrar()} 👋
           </h1>
           <p className="text-green-100 mb-4">

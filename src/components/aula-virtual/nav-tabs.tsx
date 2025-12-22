@@ -59,7 +59,7 @@ export function NavTabs() {
                 <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
               )}
             </div>
-            <span className="hidden sm:inline">{item.label}</span>
+            <span className="hidden lg:inline">{item.label}</span>
           </Link>
         )
       })}
