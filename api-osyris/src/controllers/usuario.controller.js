@@ -18,6 +18,13 @@ const usuarioSchema = Joi.object({
   direccion: Joi.string(),
   foto_perfil: Joi.string(),
   rol: Joi.string().valid('scouter', 'admin').required(),
+  seccion_id: Joi.number().integer().min(1).max(5).when('rol', {
+    is: 'scouter',
+    then: Joi.required().messages({
+      'any.required': 'Los usuarios con rol scouter deben tener una sección asignada (1=Castores, 2=Manada, 3=Tropa, 4=Pioneros, 5=Rutas)'
+    }),
+    otherwise: Joi.optional()
+  }),
   activo: Joi.boolean()
 });
 
@@ -32,6 +39,7 @@ const usuarioUpdateSchema = Joi.object({
   direccion: Joi.string(),
   foto_perfil: Joi.string(),
   rol: Joi.string().valid('scouter', 'admin'),
+  seccion_id: Joi.number().integer().min(1).max(5).allow(null),
   activo: Joi.boolean()
 }).min(1); // Al menos un campo debe ser proporcionado
 
@@ -239,7 +247,7 @@ const update = async (req, res) => {
 
     // Validar datos de entrada
     const { error, value } = usuarioUpdateSchema.validate(req.body);
-    
+
     if (error) {
       return res.status(400).json({
         success: false,
@@ -247,7 +255,20 @@ const update = async (req, res) => {
         error: error.details[0].message
       });
     }
-    
+
+    // CRIT-001: Validar que si se cambia a rol scouter, se debe incluir seccion_id
+    const nuevoRol = value.rol || usuario.rol;
+    const nuevaSeccion = value.seccion_id !== undefined ? value.seccion_id : usuario.seccion_id;
+
+    if (nuevoRol === 'scouter' && !nuevaSeccion) {
+      return res.status(400).json({
+        success: false,
+        message: 'Los usuarios con rol scouter deben tener una sección asignada',
+        details: 'Por favor, asigna una sección válida: 1=Castores, 2=Manada, 3=Tropa, 4=Pioneros, 5=Rutas',
+        error_code: 'SCOUTER_REQUIRES_SECTION'
+      });
+    }
+
     // Si se intenta actualizar el email, verificar que no esté en uso
     if (value.email && value.email !== usuario.email) {
       let existingUser;

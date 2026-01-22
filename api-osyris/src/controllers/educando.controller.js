@@ -123,9 +123,13 @@ const getAllEducandos = async (req, res) => {
       // Forzar la sección del scouter (no puede ver otras secciones)
       seccionIdFiltro = req.usuario.seccion_id;
       if (!seccionIdFiltro) {
+        console.error(`[CRIT-001] Usuario scouter ${req.usuario.id} (${req.usuario.email}) no tiene seccion_id asignada`);
         return res.status(403).json({
           success: false,
-          message: 'Tu usuario no tiene una sección asignada. Contacta al administrador.'
+          message: 'No tienes una sección asignada a tu cuenta.',
+          details: 'Tu usuario de Kraal necesita tener una sección asignada para poder ver educandos. Contacta al administrador del sistema para que te asigne tu sección (Castores, Manada, Tropa, Pioneros o Rutas).',
+          error_code: 'SCOUTER_NO_SECTION',
+          usuario_id: req.usuario.id
         });
       }
     } else {
@@ -810,9 +814,13 @@ const searchEducandos = async (req, res) => {
     if (req.usuario.rol === 'scouter') {
       seccionIdFiltro = req.usuario.seccion_id;
       if (!seccionIdFiltro) {
+        console.error(`[CRIT-001] Usuario scouter ${req.usuario.id} (${req.usuario.email}) no tiene seccion_id asignada`);
         return res.status(403).json({
           success: false,
-          message: 'Tu usuario no tiene una sección asignada. Contacta al administrador.'
+          message: 'No tienes una sección asignada a tu cuenta.',
+          details: 'Tu usuario de Kraal necesita tener una sección asignada para poder buscar educandos. Contacta al administrador del sistema para que te asigne tu sección.',
+          error_code: 'SCOUTER_NO_SECTION',
+          usuario_id: req.usuario.id
         });
       }
     }
