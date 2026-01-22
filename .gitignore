@@ -149,3 +149,31 @@ yarn.lock
 # Archivos temporales
 *.xlsx
 .playwright-mcp/
+
+# =====================================
+# Git Worktrees (desarrollo paralelo)
+# =====================================
+/trees/
+
+# =====================================
+# Claude Code Files
+# =====================================
+.claude/COMPLETE
+.claude/PROMPT.md
+.claude/PROMPT.md.backup
+.claude/ralph-active
+.claude/.ralph-iteration
+.claude/.ralph-errors
+.claude/RALPH_SUCCESS
+.claude/checkpoints/
+.claude/logs/*.md
+
+# Permitir estructura de Claude
+!.claude/
+!.claude/hooks/
+!.claude/scripts/
+!.claude/skills/
+!.claude/commands/
+!.claude/agents/
+!.claude/settings.json
+!.claude/settings.local.json
