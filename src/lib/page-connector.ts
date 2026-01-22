@@ -465,7 +465,7 @@ function getSectionColors(sectionType: string): {from: string, to: string, accen
 function getSectionNavigation(sectionType: string): {prev?: {href: string, title: string}, next?: {href: string, title: string}} {
   const navigation = {
     castores: {
-      prev: { href: '/secciones', title: 'Volver a Secciones' },
+      prev: { href: '/secciones', title: 'Volver' },
       next: { href: '/secciones/manada', title: 'Siguiente: Manada' }
     },
     manada: {
@@ -485,7 +485,7 @@ function getSectionNavigation(sectionType: string): {prev?: {href: string, title
       next: undefined
     }
   }
-  return navigation[sectionType as keyof typeof navigation] || { prev: { href: '/secciones', title: 'Volver a Secciones' } }
+  return navigation[sectionType as keyof typeof navigation] || { prev: { href: '/secciones', title: 'Volver' } }
 }
 
 function getDefaultActivities(sectionType: string): Array<{icon: string, title: string, description: string}> {

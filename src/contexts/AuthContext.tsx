@@ -15,6 +15,7 @@ interface User {
   email: string
   rol: 'admin' | 'editor' | 'coordinador' | 'scouter' | 'familia' | 'educando'
   seccion_id?: number
+  seccion_nombre?: string
   activo: boolean
 }
 

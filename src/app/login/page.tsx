@@ -5,6 +5,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { setAuthData, getCurrentUser, getApiUrlWithFallback } from "@/lib/auth-utils"
 import { useAuthStatic } from "@/hooks/useAuthStatic"
@@ -152,10 +153,13 @@ export default function LoginPage() {
       </div>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <img
+          <Image
             src="/images/logo-osyris.png"
             alt="Logo Grupo Scout Osyris"
+            width={80}
+            height={80}
             className="h-20 w-20 rounded-full border-4 border-primary shadow-lg"
+            priority
           />
         </div>
 

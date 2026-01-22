@@ -14,6 +14,18 @@ import {
   ResumenDocumentacion
 } from '@/types/educando-scouter'
 
+/**
+ * Información de diagnóstico para debugging y feedback al usuario
+ */
+export interface DiagnosticInfo {
+  hasSectionId: boolean
+  sectionId: number | null
+  sectionName: string | null
+  canSubmit: boolean
+  blockReason: string | null
+  isLoading: boolean
+}
+
 interface UseEducandosScouterReturn {
   // Estado
   educandos: EducandoConDocs[]
@@ -26,6 +38,9 @@ interface UseEducandosScouterReturn {
     totalPages: number
   }
   filters: EducandoFilters
+
+  // Diagnóstico para feedback al usuario
+  diagnosticInfo: DiagnosticInfo
 
   // Acciones principales
   fetchEducandos: (customFilters?: EducandoFilters) => Promise<void>
@@ -58,7 +73,9 @@ const defaultFilters: EducandoFilters = {
   orderBy: 'apellidos',
   orderDir: 'asc',
   genero: '',
-  estadoDocs: 'todos'
+  estadoDocs: 'todos',
+  grupoEdad: 'todos',
+  activo: 'activos'
 }
 
 export function useEducandosScouter(): UseEducandosScouterReturn {
@@ -75,6 +92,8 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
   })
   const [filters, setFiltersState] = useState<EducandoFilters>(defaultFilters)
   const [resolvedSeccionId, setResolvedSeccionId] = useState<number | null>(null)
+  const [resolvedSeccionName, setResolvedSeccionName] = useState<string | null>(null)
+  const [diagnosticLoading, setDiagnosticLoading] = useState(false)
   const fetchingSeccion = useRef(false)
   const previousUserId = useRef<number | null>(null)
 
@@ -90,10 +109,28 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
       setPagination({ page: 1, limit: 10, total: 0, totalPages: 0 })
       setFiltersState(defaultFilters)
       setResolvedSeccionId(null)
+      setResolvedSeccionName(null)
       fetchingSeccion.current = false
       previousUserId.current = currentUserId
     }
   }, [user?.id])
+
+  // Calcular diagnosticInfo dinámicamente
+  const effectiveSectionId = user?.seccion_id || resolvedSeccionId
+  const effectiveSectionName = user?.seccion_nombre || resolvedSeccionName
+
+  const diagnosticInfo: DiagnosticInfo = {
+    hasSectionId: !!effectiveSectionId,
+    sectionId: effectiveSectionId,
+    sectionName: effectiveSectionName,
+    canSubmit: !!effectiveSectionId && !diagnosticLoading,
+    blockReason: !effectiveSectionId
+      ? 'No tienes una sección asignada. Contacta al administrador para que te asigne una sección.'
+      : diagnosticLoading
+        ? 'Cargando información de sección...'
+        : null,
+    isLoading: diagnosticLoading
+  }
 
   const getHeaders = useCallback(() => {
     return {
@@ -108,6 +145,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
 
     try {
       fetchingSeccion.current = true
+      setDiagnosticLoading(true)
       const response = await fetch(`${getApiUrl()}/api/dashboard-scouter/summary`, {
         headers: getHeaders()
       })
@@ -116,6 +154,16 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
         const data = await response.json()
         if (data.success && data.data.seccionId) {
           setResolvedSeccionId(data.data.seccionId)
+          // También guardar el nombre de la sección si está disponible
+          if (data.data.seccionNombre) {
+            setResolvedSeccionName(data.data.seccionNombre)
+          }
+          if (process.env.NODE_ENV === 'development') {
+            console.log('📍 [useEducandosScouter] Sección resuelta:', {
+              id: data.data.seccionId,
+              nombre: data.data.seccionNombre
+            })
+          }
           return data.data.seccionId
         }
       }
@@ -125,6 +173,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
       return null
     } finally {
       fetchingSeccion.current = false
+      setDiagnosticLoading(false)
     }
   }, [getHeaders])
 
@@ -164,6 +213,13 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
       if (currentFilters.orderDir) queryParams.append('orderDir', currentFilters.orderDir)
       if (currentFilters.genero) queryParams.append('genero', currentFilters.genero)
       if (currentFilters.estadoDocs) queryParams.append('estadoDocs', currentFilters.estadoDocs)
+      if (currentFilters.grupoEdad && currentFilters.grupoEdad !== 'todos') {
+        queryParams.append('grupoEdad', currentFilters.grupoEdad)
+      }
+      // El filtro 'activo' se pasa diferente: 'activos' => true, 'inactivos' => false, 'todos' => no enviar
+      if (currentFilters.activo && currentFilters.activo !== 'todos') {
+        queryParams.append('activo', currentFilters.activo === 'activos' ? 'true' : 'false')
+      }
 
       const response = await fetch(
         `${getApiUrl()}/api/educandos/seccion/${seccionId}/completo?${queryParams.toString()}`,
@@ -196,9 +252,17 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
   const setFilters = useCallback((newFilters: Partial<EducandoFilters>) => {
     setFiltersState(prev => {
       const updated = { ...prev, ...newFilters }
-      // Reset a página 1 si cambian filtros de búsqueda
-      if (newFilters.search !== undefined || newFilters.genero !== undefined || newFilters.estadoDocs !== undefined) {
-        updated.page = 1
+      // Reset a página 1 si cambian filtros de búsqueda (excepto page itself)
+      if (
+        newFilters.search !== undefined ||
+        newFilters.genero !== undefined ||
+        newFilters.estadoDocs !== undefined ||
+        newFilters.grupoEdad !== undefined ||
+        newFilters.activo !== undefined
+      ) {
+        if (newFilters.page === undefined) {
+          updated.page = 1
+        }
       }
       return updated
     })
@@ -213,9 +277,30 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
   const createEducando = useCallback(async (data: CreateEducandoData): Promise<EducandoConDocs | null> => {
     const seccionId = user?.seccion_id || resolvedSeccionId
 
+    // Verificar que podemos crear usando diagnosticInfo
     if (!seccionId) {
-      setError('No tienes una sección asignada')
+      const errorMsg = 'No tienes una sección asignada. Contacta al administrador.'
+      setError(errorMsg)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ [createEducando] Bloqueado:', {
+          seccionId,
+          userSeccionId: user?.seccion_id,
+          resolvedSeccionId,
+          diagnosticInfo: {
+            hasSectionId: !!seccionId,
+            canSubmit: false,
+            blockReason: errorMsg
+          }
+        })
+      }
       return null
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ [createEducando] Iniciando creación:', {
+        seccionId,
+        data: { nombre: data.nombre, apellidos: data.apellidos }
+      })
     }
 
     setLoading(true)
@@ -242,6 +327,9 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
       const result = await response.json()
 
       if (result.success) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ [createEducando] Educando creado exitosamente:', result.data?.id)
+        }
         // Refetch para obtener la lista actualizada
         await fetchEducandos()
         return result.data
@@ -439,6 +527,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
     error,
     pagination,
     filters,
+    diagnosticInfo,
     fetchEducandos,
     setFilters,
     resetFilters,

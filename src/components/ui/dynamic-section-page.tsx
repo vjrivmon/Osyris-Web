@@ -8,7 +8,8 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  ArrowLeft
 } from "lucide-react"
 
 interface DynamicSectionPageProps {
@@ -91,7 +92,7 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { name: "Kibu", role: "Scouter", photo: "/images/kraal/_alvaros.png" }
         ],
         navigation: {
-          prev: { href: "/secciones", title: "Volver a Secciones" },
+          prev: { href: "/secciones", title: "Volver" },
           next: { href: "/secciones/manada", title: "Siguiente: Manada" }
         }
       },
@@ -319,6 +320,7 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
                   No se encontró contenido para la sección "{sectionSlug}".
                 </p>
                 <Button onClick={() => window.history.back()} variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-1" />
                   Volver
                 </Button>
               </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { StaticText, StaticImage } from "@/components/ui/static-content"
 // import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import Link from "next/link"
+import Image from "next/image"
 
 // Jefatura del Grupo Scout Osyris
 const coordinationTeam = [
@@ -188,11 +189,14 @@ export default function KraalPage() {
         <section className="relative py-16 md:py-24 overflow-hidden">
           {/* Background Image */}
           <div className="absolute inset-0 z-0">
-            <img
+            <Image
               src="/images/kraal/kraal.jpg"
               alt="Kraal"
-              className="w-full h-full object-cover object-center"
+              fill
+              sizes="100vw"
+              className="object-cover object-center"
               style={{ objectPosition: 'center 30%' }}
+              priority
             />
             <div className="absolute inset-0 bg-primary/80"></div>
           </div>

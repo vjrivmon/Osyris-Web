@@ -65,6 +65,36 @@ const config = {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        // Scout section colors
+        scout: {
+          green: {
+            DEFAULT: "hsl(150, 45%, 22%)",
+            light: "hsl(150, 40%, 35%)",
+            dark: "hsl(150, 50%, 18%)",
+          },
+          gold: "hsl(45, 100%, 51%)",
+          cream: "hsl(45, 40%, 96%)",
+        },
+        castores: {
+          DEFAULT: "hsl(var(--castores))",
+          light: "hsl(var(--castores-light))",
+        },
+        manada: {
+          DEFAULT: "hsl(var(--manada))",
+          light: "hsl(var(--manada-light))",
+        },
+        tropa: {
+          DEFAULT: "hsl(var(--tropa))",
+          light: "hsl(var(--tropa-light))",
+        },
+        pioneros: {
+          DEFAULT: "hsl(var(--pioneros))",
+          light: "hsl(var(--pioneros-light))",
+        },
+        rutas: {
+          DEFAULT: "hsl(var(--rutas))",
+          light: "hsl(var(--rutas-light))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

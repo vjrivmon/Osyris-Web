@@ -21,6 +21,7 @@ import { DocumentosListaCompacta } from "@/components/familia/documentos-lista-c
 import { CalendarioCompacto } from "@/components/familia/calendario-compacto"
 import { DocumentoUploadModal } from "@/components/familia/documento-upload-modal"
 import { DocumentoResubirModal } from "@/components/familia/documentos/documento-resubir-modal"
+import { MensajesMonitorCompacto } from "@/components/familia/mensajes-monitor-compacto"
 import { ScoutHijo, Documento, TipoDocumento } from "@/types/familia"
 import Link from "next/link"
 import { getApiUrl } from "@/lib/api-utils"
@@ -396,6 +397,9 @@ export default function FamiliaDashboardPage() {
         {/* Iconos de acción rápida */}
         <QuickActionsGroup actions={accionesRapidas} />
       </div>
+
+      {/* MED-005: Mensajes del Monitor */}
+      <MensajesMonitorCompacto maxMensajes={3} />
 
       {/* Mis Hijos - Tarjetas compactas */}
       <div className="space-y-5">

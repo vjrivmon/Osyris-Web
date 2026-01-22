@@ -360,15 +360,15 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
               {sectionData.navigation.prev ? (
                 <Button asChild variant="outline" size="sm" className="sm:size-default">
                   <Link href={sectionData.navigation.prev.href}>
-                    <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                    <ArrowLeft className="h-4 w-4 sm:mr-1" />
                     <span className="hidden sm:inline">{sectionData.navigation.prev.title}</span>
                   </Link>
                 </Button>
               ) : (
                 <Button asChild variant="outline" size="sm" className="sm:size-default">
                   <Link href="/secciones">
-                    <ArrowLeft className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Volver a Secciones</span>
+                    <ArrowLeft className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Volver</span>
                   </Link>
                 </Button>
               )}

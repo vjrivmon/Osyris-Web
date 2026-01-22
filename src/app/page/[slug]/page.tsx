@@ -181,7 +181,7 @@ export default function PageBySlug({ params }: PageProps) {
             <p className="text-muted-foreground mb-8">{error}</p>
             <Link href="/">
               <Button>
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 mr-1" />
                 Volver al inicio
               </Button>
             </Link>
@@ -204,7 +204,7 @@ export default function PageBySlug({ params }: PageProps) {
             <div className="flex items-center justify-between mb-4">
               <Link href="/">
                 <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <ArrowLeft className="h-4 w-4 mr-1" />
                   Volver al inicio
                 </Button>
               </Link>

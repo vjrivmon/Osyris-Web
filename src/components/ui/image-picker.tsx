@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -207,11 +208,14 @@ export function ImagePicker({
             onClick={() => handleImageSelect(image)}
           >
             <CardContent className="p-3">
-              <div className="aspect-square mb-2 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800">
-                <img
+              <div className="aspect-square mb-2 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800 relative">
+                <Image
                   src={imageUrl}
                   alt={image.alt_text || image.titulo}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  className="object-cover"
+                  loading="lazy"
                   onError={(e) => {
                     e.currentTarget.src = '/placeholder-image.png'
                   }}
@@ -269,11 +273,14 @@ export function ImagePicker({
           >
             <CardContent className="p-3">
               <div className="flex items-center gap-3">
-                <div className="w-16 h-16 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800 flex-shrink-0">
-                  <img
+                <div className="w-16 h-16 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800 flex-shrink-0 relative">
+                  <Image
                     src={imageUrl}
                     alt={image.alt_text || image.titulo}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                    loading="lazy"
                     onError={(e) => {
                       e.currentTarget.src = '/placeholder-image.png'
                     }}
@@ -471,14 +478,19 @@ export function ImagePicker({
             {externalUrl && (
               <div className="border rounded-lg p-3 bg-muted/50">
                 <p className="text-sm font-medium mb-2">Vista previa:</p>
-                <img
-                  src={externalUrl}
-                  alt={externalAlt || "Vista previa"}
-                  className="max-w-full max-h-32 object-contain rounded"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
+                <div className="relative w-full h-32">
+                  <Image
+                    src={externalUrl}
+                    alt={externalAlt || "Vista previa"}
+                    fill
+                    sizes="100%"
+                    className="object-contain rounded"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                    unoptimized // Para URLs externas no configuradas
+                  />
+                </div>
               </div>
             )}
             <DialogFooter>

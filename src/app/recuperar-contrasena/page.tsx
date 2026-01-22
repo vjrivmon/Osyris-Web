@@ -5,6 +5,7 @@ import { getApiUrl } from '@/lib/api-utils'
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -67,10 +68,13 @@ export default function RecuperarContrasenaPage() {
       </div>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <img
+          <Image
             src="/images/logo-osyris.png"
             alt="Logo Grupo Scout Osyris"
+            width={80}
+            height={80}
             className="h-20 w-20 rounded-full border-4 border-primary shadow-lg"
+            priority
           />
         </div>
 

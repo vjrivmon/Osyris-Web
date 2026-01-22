@@ -1,11 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { getApiUrl } from '@/lib/api-utils'
 
+// CRIT-002: Cache configuration - reduced TTL to prevent stale notifications
+const CACHE_TTL = 30 * 1000 // 30 seconds (reduced from 2 minutes)
+const CACHE_VERSION = 'v2' // Increment to force cache invalidation
+const POLLING_INTERVAL = 30 * 1000 // 30 seconds polling when visible
+
 // Tipos de notificaciones
-export type TipoNotificacion = 'urgente' | 'importante' | 'informativo' | 'recordatorio'
+// MED-005: Agregado 'mensaje_scouter' para mensajes directos de scouters a familias
+export type TipoNotificacion = 'urgente' | 'importante' | 'informativo' | 'recordatorio' | 'mensaje_scouter'
 export type PrioridadNotificacion = 'alta' | 'normal' | 'baja'
 export type CategoriaNotificacion = 'documentos' | 'actividades' | 'galeria' | 'general' | 'comunicados'
 export type EstadoNotificacion = 'no_leida' | 'leida' | 'archivada'
@@ -84,14 +90,18 @@ interface UseNotificacionesFamiliaOptions {
   refetchInterval?: number
   cacheKey?: string
   scoutId?: number
+  enablePolling?: boolean // CRIT-002: Enable polling when visible
+  enableVisibilityRefetch?: boolean // CRIT-002: Refetch on visibility change
 }
 
 // Hook principal
 export function useNotificacionesFamilia({
   autoRefetch = true,
-  refetchInterval = 2 * 60 * 1000, // 2 minutos
+  refetchInterval = CACHE_TTL, // CRIT-002: Use constant TTL (30s)
   cacheKey = 'notificaciones-familia',
-  scoutId
+  scoutId,
+  enablePolling = true, // CRIT-002: Enable by default
+  enableVisibilityRefetch = true // CRIT-002: Enable by default
 }: UseNotificacionesFamiliaOptions = {}) {
   const { user, token, isAuthenticated } = useAuth()
   const [notificaciones, setNotificaciones] = useState<NotificacionFamilia[]>([])
@@ -99,6 +109,25 @@ export function useNotificacionesFamilia({
   const [error, setError] = useState<string | null>(null)
   const [preferencias, setPreferencias] = useState<PreferenciasNotificacion | null>(null)
   const [loadingPreferencias, setLoadingPreferencias] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false) // CRIT-002: Track manual refresh
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const lastFetchRef = useRef<number>(0) // CRIT-002: Track last fetch time
+
+  // CRIT-002: Build versioned cache key to force invalidation when version changes
+  const getVersionedCacheKey = useCallback((baseKey: string) => {
+    return `${CACHE_VERSION}-${baseKey}`
+  }, [])
+
+  // CRIT-002: Invalidate cache function
+  const invalidateCache = useCallback(() => {
+    const baseKey = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
+    const versionedKey = getVersionedCacheKey(baseKey)
+    localStorage.removeItem(versionedKey)
+    localStorage.removeItem(`${versionedKey}-timestamp`)
+    // Also remove old non-versioned cache
+    localStorage.removeItem(baseKey)
+    localStorage.removeItem(`${baseKey}-timestamp`)
+  }, [cacheKey, scoutId, getVersionedCacheKey])
 
   // Obtener notificaciones
   const fetchNotificaciones = useCallback(async (options: {
@@ -107,6 +136,7 @@ export function useNotificacionesFamilia({
     categoria?: CategoriaNotificacion
     prioridad?: PrioridadNotificacion
     limit?: number
+    skipCache?: boolean // CRIT-002: Option to skip cache entirely
   } = {}) => {
     if (!isAuthenticated || !token || !user) {
       return []
@@ -116,17 +146,23 @@ export function useNotificacionesFamilia({
     setError(null)
 
     try {
-      // Intentar obtener desde cache primero
-      const cacheKeyWithScout = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
-      const cached = localStorage.getItem(cacheKeyWithScout)
-      const cacheTimestamp = localStorage.getItem(`${cacheKeyWithScout}-timestamp`)
+      // CRIT-002: Use versioned cache key
+      const baseKey = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
+      const versionedKey = getVersionedCacheKey(baseKey)
 
-      if (cached && cacheTimestamp && !options.soloNoLeidas) {
-        const cacheAge = Date.now() - parseInt(cacheTimestamp)
-        if (cacheAge < refetchInterval) {
-          setNotificaciones(JSON.parse(cached))
-          setLoading(false)
-          return JSON.parse(cached)
+      // CRIT-002: Check cache only if not skipping and not filtering
+      if (!options.skipCache && !options.soloNoLeidas) {
+        const cached = localStorage.getItem(versionedKey)
+        const cacheTimestamp = localStorage.getItem(`${versionedKey}-timestamp`)
+
+        if (cached && cacheTimestamp) {
+          const cacheAge = Date.now() - parseInt(cacheTimestamp)
+          if (cacheAge < CACHE_TTL) {
+            const cachedData = JSON.parse(cached)
+            setNotificaciones(cachedData)
+            setLoading(false)
+            return cachedData
+          }
         }
       }
 
@@ -155,11 +191,12 @@ export function useNotificacionesFamilia({
       const notificacionesData = result.data || []
 
       setNotificaciones(notificacionesData)
+      lastFetchRef.current = Date.now() // CRIT-002: Track last fetch
 
-      // Guardar en cache si no es solo no leídas
+      // CRIT-002: Save to versioned cache if not filtering
       if (!options.soloNoLeidas) {
-        localStorage.setItem(cacheKeyWithScout, JSON.stringify(notificacionesData))
-        localStorage.setItem(`${cacheKeyWithScout}-timestamp`, Date.now().toString())
+        localStorage.setItem(versionedKey, JSON.stringify(notificacionesData))
+        localStorage.setItem(`${versionedKey}-timestamp`, Date.now().toString())
       }
 
       return notificacionesData
@@ -167,59 +204,26 @@ export function useNotificacionesFamilia({
     } catch (err) {
       console.error('Error fetching notificaciones:', err)
 
-      // Si hay error, intentar usar datos del cache aunque sea viejo
-      const cacheKeyWithScout = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
-      const cached = localStorage.getItem(cacheKeyWithScout)
-      if (cached) {
-        setNotificaciones(JSON.parse(cached))
-        setError('Usando datos guardados localmente')
-        return JSON.parse(cached)
-      } else {
-        setError('No se pudieron cargar las notificaciones')
+      // CRIT-002: Only use cache as fallback, NO hardcoded static data
+      const baseKey = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
+      const versionedKey = getVersionedCacheKey(baseKey)
+      const cached = localStorage.getItem(versionedKey)
 
-        // Datos de fallback para desarrollo
-        const fallbackData: NotificacionFamilia[] = [
-          {
-            id: 1,
-            familiar_id: user?.id || 1,
-            scout_id: 1,
-            scout_nombre: "Carlos",
-            scout_apellidos: "García López",
-            titulo: "Recordatorio Campamento",
-            mensaje: "No olvides preparar la mochila para el campamento de este fin de semana. Lista de material incluida en el mensaje anterior.",
-            tipo: "urgente",
-            prioridad: "alta",
-            categoria: "actividades",
-            fecha_creacion: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // Hace 2 horas
-            estado: "no_leida",
-            remitente_nombre: "Ana Martínez",
-            remitente_rol: "Monitor Manada"
-          },
-          {
-            id: 2,
-            familiar_id: user?.id || 1,
-            scout_id: 1,
-            scout_nombre: "Carlos",
-            scout_apellidos: "García López",
-            titulo: "Confirmación Recibida",
-            mensaje: "Hemos recibido tu confirmación para la Jornada de Integración. ¡Nos vemos allí!",
-            tipo: "informativo",
-            prioridad: "normal",
-            categoria: "actividades",
-            fecha_creacion: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Ayer
-            fecha_lectura: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // Leído hace 12 horas
-            estado: "leida",
-            remitente_nombre: "Sistema Osyris",
-            remitente_rol: "Automático"
-          }
-        ]
-        setNotificaciones(fallbackData)
-        return fallbackData
+      if (cached) {
+        const cachedData = JSON.parse(cached)
+        setNotificaciones(cachedData)
+        setError('Error de conexion. Mostrando datos guardados localmente.')
+        return cachedData
+      } else {
+        // CRIT-002: Return empty array instead of hardcoded fallback data
+        setError('No se pudieron cargar las notificaciones. Verifica tu conexion.')
+        setNotificaciones([])
+        return []
       }
     } finally {
       setLoading(false)
     }
-  }, [isAuthenticated, token, user, cacheKey, refetchInterval, scoutId])
+  }, [isAuthenticated, token, user, cacheKey, scoutId, getVersionedCacheKey])
 
   // Obtener preferencias
   const fetchPreferencias = useCallback(async () => {
@@ -303,10 +307,8 @@ export function useNotificacionesFamilia({
           : notif
       ))
 
-      // Invalidar cache
-      const cacheKeyWithScout = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
-      localStorage.removeItem(cacheKeyWithScout)
-      localStorage.removeItem(`${cacheKeyWithScout}-timestamp`)
+      // CRIT-002: Invalidate cache after action
+      invalidateCache()
 
       return true
     } catch (err) {
@@ -314,7 +316,7 @@ export function useNotificacionesFamilia({
       setError('Error al marcar la notificación como leída')
       return false
     }
-  }, [token, cacheKey, scoutId])
+  }, [token, invalidateCache])
 
   // Marcar todas como leídas
   const marcarTodasComoLeidas = useCallback(async () => {
@@ -344,10 +346,8 @@ export function useNotificacionesFamilia({
         fecha_lectura: new Date().toISOString()
       })))
 
-      // Invalidar cache
-      const cacheKeyWithScout = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
-      localStorage.removeItem(cacheKeyWithScout)
-      localStorage.removeItem(`${cacheKeyWithScout}-timestamp`)
+      // CRIT-002: Invalidate cache after action
+      invalidateCache()
 
       return result.afectadas || 0
     } catch (err) {
@@ -355,7 +355,7 @@ export function useNotificacionesFamilia({
       setError('Error al marcar todas las notificaciones como leídas')
       return false
     }
-  }, [token, cacheKey, scoutId])
+  }, [token, scoutId, invalidateCache])
 
   // Archivar notificación
   const archivarNotificacion = useCallback(async (notificacionId: number) => {
@@ -382,10 +382,8 @@ export function useNotificacionesFamilia({
           : notif
       ))
 
-      // Invalidar cache
-      const cacheKeyWithScout = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
-      localStorage.removeItem(cacheKeyWithScout)
-      localStorage.removeItem(`${cacheKeyWithScout}-timestamp`)
+      // CRIT-002: Invalidate cache after action
+      invalidateCache()
 
       return true
     } catch (err) {
@@ -393,7 +391,7 @@ export function useNotificacionesFamilia({
       setError('Error al archivar la notificación')
       return false
     }
-  }, [token, cacheKey, scoutId])
+  }, [token, invalidateCache])
 
   // Eliminar notificación
   const eliminarNotificacion = useCallback(async (notificacionId: number) => {
@@ -416,10 +414,8 @@ export function useNotificacionesFamilia({
       // Actualizar estado local
       setNotificaciones(prev => prev.filter(notif => notif.id !== notificacionId))
 
-      // Invalidar cache
-      const cacheKeyWithScout = scoutId ? `${cacheKey}-${scoutId}` : cacheKey
-      localStorage.removeItem(cacheKeyWithScout)
-      localStorage.removeItem(`${cacheKeyWithScout}-timestamp`)
+      // CRIT-002: Invalidate cache after action
+      invalidateCache()
 
       return true
     } catch (err) {
@@ -427,7 +423,7 @@ export function useNotificacionesFamilia({
       setError('Error al eliminar la notificación')
       return false
     }
-  }, [token, cacheKey, scoutId])
+  }, [token, invalidateCache])
 
   // Actualizar preferencias
   const actualizarPreferencias = useCallback(async (nuevasPreferencias: Partial<PreferenciasNotificacion>) => {
@@ -529,6 +525,17 @@ export function useNotificacionesFamilia({
     await fetchNotificaciones()
   }, [fetchNotificaciones])
 
+  // CRIT-002: Force refresh - invalidates cache and fetches fresh data
+  const forceRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    invalidateCache()
+    try {
+      await fetchNotificaciones({ skipCache: true })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [invalidateCache, fetchNotificaciones])
+
   // Efectos
   useEffect(() => {
     if (isAuthenticated) {
@@ -537,7 +544,54 @@ export function useNotificacionesFamilia({
     }
   }, [isAuthenticated, fetchNotificaciones, fetchPreferencias])
 
-  // Auto-refetch
+  // CRIT-002: Polling when component is visible
+  useEffect(() => {
+    if (!enablePolling || !isAuthenticated) return
+
+    const startPolling = () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+      }
+      pollingIntervalRef.current = setInterval(() => {
+        // Only fetch if document is visible
+        if (document.visibilityState === 'visible') {
+          fetchNotificaciones({ soloNoLeidas: true })
+        }
+      }, POLLING_INTERVAL)
+    }
+
+    startPolling()
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+        pollingIntervalRef.current = null
+      }
+    }
+  }, [enablePolling, isAuthenticated, fetchNotificaciones])
+
+  // CRIT-002: Refetch when window becomes visible
+  useEffect(() => {
+    if (!enableVisibilityRefetch || !isAuthenticated) return
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Check if enough time has passed since last fetch
+        const timeSinceLastFetch = Date.now() - lastFetchRef.current
+        if (timeSinceLastFetch > CACHE_TTL) {
+          fetchNotificaciones({ skipCache: true })
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [enableVisibilityRefetch, isAuthenticated, fetchNotificaciones])
+
+  // Auto-refetch (legacy support)
   useEffect(() => {
     if (!autoRefetch || !isAuthenticated) return
 
@@ -557,9 +611,12 @@ export function useNotificacionesFamilia({
     loading,
     loadingPreferencias,
     error,
+    isRefreshing, // CRIT-002: Expose refresh state
 
     // Acciones
     refetch,
+    forceRefresh, // CRIT-002: Force refresh with cache invalidation
+    invalidateCache, // CRIT-002: Manually invalidate cache
     marcarComoLeida,
     marcarTodasComoLeidas,
     archivarNotificacion,
@@ -586,6 +643,7 @@ export function useNotificacionesStats(scoutId?: number) {
     importantes: notificaciones.filter(n => n.tipo === 'importante').length,
     informativas: notificaciones.filter(n => n.tipo === 'informativo').length,
     recordatorios: notificaciones.filter(n => n.tipo === 'recordatorio').length,
+    mensajesScouter: notificaciones.filter(n => n.tipo === 'mensaje_scouter').length, // MED-005
     documentos: notificaciones.filter(n => n.categoria === 'documentos').length,
     actividades: notificaciones.filter(n => n.categoria === 'actividades').length,
     galeria: notificaciones.filter(n => n.categoria === 'galeria').length,

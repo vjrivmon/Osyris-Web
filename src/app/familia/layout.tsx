@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getApiUrl } from '@/lib/api-utils';
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Bell, CheckCircle, XCircle, FileText, Trash2, CheckCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -208,10 +209,13 @@ export default function FamiliaLayout({
       <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container flex items-center justify-between py-3 px-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src="/images/logo-osyris.png"
               alt="Logo Grupo Scout Osyris"
+              width={32}
+              height={32}
               className="h-8 w-8 rounded-full border-2 border-primary"
+              priority
             />
             <h1 className="text-lg font-semibold">Portal Familias</h1>
           </div>

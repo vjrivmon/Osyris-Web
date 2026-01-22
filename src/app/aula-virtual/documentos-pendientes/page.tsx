@@ -198,7 +198,7 @@ export default function DocumentosPendientesPage() {
               </p>
               <Button asChild variant="outline">
                 <Link href="/aula-virtual">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4 mr-1" />
                   Volver al inicio
                 </Link>
               </Button>

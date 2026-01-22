@@ -2,8 +2,15 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Loader2, AlertCircle, RefreshCw, Download, FileText } from "lucide-react"
-import { useState, useEffect, useCallback } from "react"
+import { Loader2, AlertCircle, RefreshCw, Download, FileText, ZoomIn, ZoomOut, Maximize2, RotateCw } from "lucide-react"
+import { useState, useEffect, useCallback, useRef } from "react"
+
+// Constantes de zoom
+const ZOOM_MIN = 50
+const ZOOM_MAX = 200
+const ZOOM_STEP = 25
+const ZOOM_DEFAULT = 100
+const ZOOM_STORAGE_KEY = 'osyris_document_zoom_preference'
 
 interface DocumentoViewerModalProps {
   isOpen: boolean
@@ -22,6 +29,61 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
   const [retryKey, setRetryKey] = useState(0)
   const [isPdf, setIsPdf] = useState(true)
   const [mimeType, setMimeType] = useState<string>('')
+  const [zoomLevel, setZoomLevel] = useState(ZOOM_DEFAULT)
+  const [isFitWidth, setIsFitWidth] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Cargar preferencia de zoom desde localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedZoom = localStorage.getItem(ZOOM_STORAGE_KEY)
+      if (savedZoom) {
+        const parsed = parseInt(savedZoom, 10)
+        if (!isNaN(parsed) && parsed >= ZOOM_MIN && parsed <= ZOOM_MAX) {
+          setZoomLevel(parsed)
+        }
+      }
+    }
+  }, [])
+
+  // Guardar preferencia de zoom en localStorage
+  const saveZoomPreference = useCallback((zoom: number) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(ZOOM_STORAGE_KEY, zoom.toString())
+    }
+  }, [])
+
+  // Controles de zoom
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel(prev => {
+      const newZoom = Math.min(prev + ZOOM_STEP, ZOOM_MAX)
+      saveZoomPreference(newZoom)
+      setIsFitWidth(false)
+      return newZoom
+    })
+  }, [saveZoomPreference])
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel(prev => {
+      const newZoom = Math.max(prev - ZOOM_STEP, ZOOM_MIN)
+      saveZoomPreference(newZoom)
+      setIsFitWidth(false)
+      return newZoom
+    })
+  }, [saveZoomPreference])
+
+  const handleZoomReset = useCallback(() => {
+    setZoomLevel(ZOOM_DEFAULT)
+    saveZoomPreference(ZOOM_DEFAULT)
+    setIsFitWidth(false)
+  }, [saveZoomPreference])
+
+  const handleFitWidth = useCallback(() => {
+    setIsFitWidth(prev => !prev)
+    if (!isFitWidth) {
+      setZoomLevel(ZOOM_DEFAULT)
+    }
+  }, [isFitWidth])
 
   const handleRetry = useCallback(() => {
     setError(null)
@@ -130,7 +192,52 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
     }
   }, [isOpen, documento, retryKey])
 
+  // Manejar atajos de teclado para zoom
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault()
+        handleZoomIn()
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault()
+        handleZoomOut()
+      } else if (e.key === '0') {
+        e.preventDefault()
+        handleZoomReset()
+      } else if (e.key === 'w' || e.key === 'W') {
+        e.preventDefault()
+        handleFitWidth()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, handleZoomIn, handleZoomOut, handleZoomReset, handleFitWidth])
+
   if (!documento) return null
+
+  // Calcular estilos de zoom para imágenes
+  const getImageZoomStyles = () => {
+    if (isFitWidth) {
+      return {
+        width: '100%',
+        height: 'auto',
+        maxWidth: '100%',
+        maxHeight: 'none'
+      }
+    }
+    return {
+      transform: `scale(${zoomLevel / 100})`,
+      transformOrigin: 'center center',
+      maxWidth: 'none',
+      maxHeight: 'none'
+    }
+  }
+
+  // Verificar si es imagen
+  const isImage = mimeType.includes('image/')
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -141,15 +248,75 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
         setError(null)
         setIsPdf(true)
         setMimeType('')
+        setIsFitWidth(false)
       }
       onClose()
     }}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-lg truncate pr-4">{documento.name}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0">
+        {/* Header con titulo y controles de zoom */}
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
+          <DialogHeader className="flex-1 min-w-0">
+            <DialogTitle className="text-lg truncate pr-4">{documento.name}</DialogTitle>
+          </DialogHeader>
 
-        <div className="flex-1 bg-muted rounded-lg overflow-hidden relative">
+          {/* Controles de zoom - solo mostrar cuando el documento esta cargado */}
+          {blobUrl && !error && isPdf && (
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleZoomOut}
+                disabled={zoomLevel <= ZOOM_MIN}
+                title="Reducir zoom (-)"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+
+              <span className="text-sm font-medium min-w-[4rem] text-center">
+                {isFitWidth ? 'Ajustar' : `${zoomLevel}%`}
+              </span>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= ZOOM_MAX}
+                title="Aumentar zoom (+)"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleFitWidth}
+                title="Ajustar al ancho (W)"
+              >
+                <Maximize2 className={`h-4 w-4 ${isFitWidth ? 'text-blue-600' : ''}`} />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleZoomReset}
+                title="Restablecer zoom (0)"
+              >
+                <RotateCw className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div
+          ref={containerRef}
+          className="flex-1 bg-muted overflow-auto relative"
+        >
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
               <Loader2 className="h-8 w-8 animate-spin text-blue-500 dark:text-blue-400" />
@@ -174,21 +341,33 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
           )}
 
           {blobUrl && !error && isPdf && (
-            <object
-              data={blobUrl}
-              type={mimeType.includes('image/') ? mimeType : 'application/pdf'}
-              className="w-full h-full"
-            >
-              {mimeType.includes('image/') ? (
-                <img src={blobUrl} alt={documento.name} className="max-w-full max-h-full object-contain mx-auto" />
+            <>
+              {isImage ? (
+                /* Visor de imagenes con zoom */
+                <div className="flex items-center justify-center min-h-full p-4">
+                  <img
+                    src={blobUrl}
+                    alt={documento.name}
+                    className="transition-transform duration-200"
+                    style={getImageZoomStyles()}
+                    draggable={false}
+                  />
+                </div>
               ) : (
+                /* Visor de PDF con zoom aplicado via query params */
                 <iframe
-                  src={blobUrl}
+                  src={`${blobUrl}#zoom=${zoomLevel}&view=FitH`}
                   className="w-full h-full border-0"
                   title={documento.name}
+                  style={{
+                    transform: isFitWidth ? 'none' : `scale(${zoomLevel / 100})`,
+                    transformOrigin: 'top left',
+                    width: isFitWidth ? '100%' : `${10000 / zoomLevel}%`,
+                    height: isFitWidth ? '100%' : `${10000 / zoomLevel}%`
+                  }}
                 />
               )}
-            </object>
+            </>
           )}
 
           {blobUrl && !error && !isPdf && (
@@ -215,6 +394,15 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
             </div>
           )}
         </div>
+
+        {/* Footer con atajos de teclado */}
+        {blobUrl && !error && isPdf && (
+          <div className="px-6 py-2 border-t bg-muted/50 text-xs text-muted-foreground flex items-center justify-center gap-4">
+            <span><kbd className="px-1.5 py-0.5 bg-background rounded border">+</kbd> / <kbd className="px-1.5 py-0.5 bg-background rounded border">-</kbd> Zoom</span>
+            <span><kbd className="px-1.5 py-0.5 bg-background rounded border">0</kbd> Restablecer</span>
+            <span><kbd className="px-1.5 py-0.5 bg-background rounded border">W</kbd> Ajustar ancho</span>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )

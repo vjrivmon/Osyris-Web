@@ -39,10 +39,13 @@ export function ActivityFilter({ filtros, onFiltrosChange, className }: Activity
 
   const tiposActividad = [
     { value: 'todos', label: 'Todos los tipos' },
-    { value: 'reunion_sabado', label: 'Reuniones de Sábado' },
-    { value: 'salida', label: 'Salidas' },
+    { value: 'reunion_sabado', label: 'Reuniones de Sabado' },
     { value: 'campamento', label: 'Campamentos' },
-    { value: 'evento_especial', label: 'Eventos' }
+    { value: 'salida', label: 'Salidas / Excursiones' },
+    { value: 'evento_especial', label: 'Eventos Especiales' },
+    { value: 'asamblea', label: 'Asambleas' },
+    { value: 'formacion', label: 'Formacion' },
+    { value: 'festivo', label: 'Festivos' }
   ]
 
   const estadosConfirmacion = [

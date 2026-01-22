@@ -17,9 +17,41 @@ import {
   AlertTriangle,
   Info,
   Heart,
-  Utensils
+  Utensils,
+  HelpCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+
+// Componente de tooltip para campos de formulario
+interface FieldTooltipProps {
+  content: string
+  label?: string
+}
+
+function FieldTooltip({ content, label }: FieldTooltipProps) {
+  return (
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger
+          type="button"
+          className="inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ml-1"
+          aria-label={label ? `Informacion sobre ${label}` : 'Mas informacion'}
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-sm">
+          <p>{content}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
 
 interface DatosSaludPrellenados {
   alergias?: string
@@ -67,6 +99,8 @@ export function InscripcionCampamentoForm({
   className
 }: InscripcionCampamentoFormProps) {
   const [asistira, setAsistira] = useState<'si' | 'no' | null>(null)
+  const [asistiraError, setAsistiraError] = useState(false)
+  const [asistiraTouched, setAsistiraTouched] = useState(false)
   const [motivoNoAsiste, setMotivoNoAsiste] = useState('')
   const [alergias, setAlergias] = useState(datosSaludPrellenados?.alergias || '')
   const [intolerancias, setIntolerancias] = useState(datosSaludPrellenados?.intolerancias || '')
@@ -88,8 +122,21 @@ export function InscripcionCampamentoForm({
     }
   }, [datosSaludPrellenados])
 
+  // Limpiar error de asistira cuando se selecciona una opcion
+  const handleAsistiraChange = (value: 'si' | 'no') => {
+    setAsistira(value)
+    setAsistiraError(false)
+    setAsistiraTouched(true)
+  }
+
   const handleSubmit = async () => {
-    if (!asistira) return
+    // Validar campo obligatorio de campamento/asistencia
+    if (!asistira) {
+      setAsistiraError(true)
+      setAsistiraTouched(true)
+      setError('Debes indicar si asistira al campamento')
+      return
+    }
 
     setIsSubmitting(true)
     setError(null)
@@ -197,21 +244,52 @@ export function InscripcionCampamentoForm({
 
       <CardContent className="space-y-6">
         <div className="space-y-3">
-          <Label className="text-base font-medium">Asistira {educandoNombre} al campamento?</Label>
-          <RadioGroup
-            value={asistira || ''}
-            onValueChange={(value) => setAsistira(value as 'si' | 'no')}
-            className="flex gap-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="si" id="asiste-si" />
-              <Label htmlFor="asiste-si" className="cursor-pointer">Si, asistira</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id="asiste-no" />
-              <Label htmlFor="asiste-no" className="cursor-pointer">No podra asistir</Label>
-            </div>
-          </RadioGroup>
+          <Label className={cn(
+            "text-base font-medium",
+            asistiraError && "text-destructive"
+          )}>
+            Asistira {educandoNombre} al campamento? <span className="text-destructive">*</span>
+          </Label>
+          <div className={cn(
+            "p-3 rounded-lg border-2 transition-colors",
+            asistiraError
+              ? "border-destructive bg-destructive/5"
+              : asistira
+                ? "border-primary/30 bg-primary/5"
+                : "border-muted"
+          )}>
+            <RadioGroup
+              value={asistira || ''}
+              onValueChange={handleAsistiraChange}
+              className="flex gap-6"
+              aria-required="true"
+              aria-invalid={asistiraError}
+              aria-describedby={asistiraError ? "asistira-error" : undefined}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value="si"
+                  id="asiste-si"
+                  className={cn(asistiraError && "border-destructive")}
+                />
+                <Label htmlFor="asiste-si" className="cursor-pointer font-medium">Si, asistira</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value="no"
+                  id="asiste-no"
+                  className={cn(asistiraError && "border-destructive")}
+                />
+                <Label htmlFor="asiste-no" className="cursor-pointer font-medium">No podra asistir</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          {asistiraError && (
+            <p id="asistira-error" className="text-sm text-destructive flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4" />
+              Este campo es obligatorio. Selecciona una opcion.
+            </p>
+          )}
         </div>
 
         {asistira === 'no' && (
@@ -249,7 +327,13 @@ export function InscripcionCampamentoForm({
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="alergias">Alergias</Label>
+                  <div className="flex items-center">
+                    <Label htmlFor="alergias">Alergias</Label>
+                    <FieldTooltip
+                      content="Alergias alimentarias, medicamentosas, ambientales u otras que debamos conocer durante el campamento"
+                      label="Alergias"
+                    />
+                  </div>
                   <Input
                     id="alergias"
                     placeholder="Ej: Polen, acaros..."
@@ -259,7 +343,13 @@ export function InscripcionCampamentoForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="intolerancias">Intolerancias alimentarias</Label>
+                  <div className="flex items-center">
+                    <Label htmlFor="intolerancias">Intolerancias alimentarias</Label>
+                    <FieldTooltip
+                      content="Intolerancias a alimentos especificos que debamos tener en cuenta para la elaboracion de menus"
+                      label="Intolerancias alimentarias"
+                    />
+                  </div>
                   <Input
                     id="intolerancias"
                     placeholder="Ej: Lactosa, gluten..."
@@ -270,7 +360,13 @@ export function InscripcionCampamentoForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="medicacion">Medicacion que toma</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="medicacion">Medicacion que toma</Label>
+                  <FieldTooltip
+                    content="Medicamentos que el educando toma regularmente. Indicar nombre del medicamento, dosis y frecuencia"
+                    label="Medicacion"
+                  />
+                </div>
                 <Input
                   id="medicacion"
                   placeholder="Indicar medicamentos y dosis si aplica"
@@ -289,7 +385,13 @@ export function InscripcionCampamentoForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dieta">Dieta especial</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="dieta">Dieta especial</Label>
+                  <FieldTooltip
+                    content="Indicar si sigue una dieta especifica por motivos de salud, religiosos o de preferencia personal"
+                    label="Dieta especial"
+                  />
+                </div>
                 <Input
                   id="dieta"
                   placeholder="Ej: Vegetariano, vegano, sin cerdo..."
@@ -302,7 +404,13 @@ export function InscripcionCampamentoForm({
             <Separator />
 
             <div className="space-y-2">
-              <Label htmlFor="observaciones">Otras observaciones</Label>
+              <div className="flex items-center">
+                <Label htmlFor="observaciones">Otras observaciones</Label>
+                <FieldTooltip
+                  content="Cualquier otra informacion importante que los monitores deban conocer durante el campamento"
+                  label="Otras observaciones"
+                />
+              </div>
               <Textarea
                 id="observaciones"
                 placeholder="Cualquier otra informacion relevante para el campamento..."
@@ -343,7 +451,7 @@ export function InscripcionCampamentoForm({
 
         <Button
           onClick={handleSubmit}
-          disabled={!asistira || isSubmitting || (asistira === 'si' && !datosConfirmados)}
+          disabled={isSubmitting || (asistira === 'si' && !datosConfirmados)}
           className="w-full"
           size="lg"
         >

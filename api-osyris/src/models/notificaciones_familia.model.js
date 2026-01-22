@@ -507,6 +507,172 @@ const crearNotificacionDocumentoRechazado = async ({
   }
 };
 
+// ==========================================
+// FUNCIONES DE MENSAJERIA SCOUTER-FAMILIA
+// ==========================================
+
+/**
+ * Envia un mensaje de un scouter a todas las familias de su seccion
+ * MED-005: Sistema de comunicacion scouter-familia
+ */
+const enviarMensajeASeccion = async ({
+  scouterId,
+  scouterNombre,
+  seccionId,
+  asunto,
+  mensaje,
+  prioridad = 'normal'
+}) => {
+  try {
+    // Obtener todos los familiares con educandos activos en la seccion
+    const familiares = await query(`
+      SELECT DISTINCT fe.familiar_id, e.id as educando_id, u.nombre as familiar_nombre
+      FROM familiares_educandos fe
+      JOIN educandos e ON fe.educando_id = e.id
+      JOIN usuarios u ON fe.familiar_id = u.id
+      WHERE e.seccion_id = $1 AND e.activo = true
+    `, [seccionId]);
+
+    if (familiares.length === 0) {
+      return { enviados: 0, mensaje: 'No hay familias vinculadas en esta seccion' };
+    }
+
+    const notificaciones = familiares.map(familiar => ({
+      familiar_id: familiar.familiar_id,
+      educando_id: familiar.educando_id,
+      titulo: asunto,
+      mensaje: mensaje,
+      tipo: 'mensaje_scouter',
+      prioridad: prioridad,
+      categoria: 'comunicados',
+      enlace_accion: '/familia/notificaciones',
+      metadata: {
+        tipo: 'mensaje_scouter',
+        remitente_id: scouterId,
+        remitente_nombre: scouterNombre,
+        seccion_id: seccionId
+      }
+    }));
+
+    const resultados = await createBulk(notificaciones);
+    return {
+      enviados: resultados.length,
+      mensaje: `Mensaje enviado a ${resultados.length} familias`
+    };
+  } catch (error) {
+    console.error('Error enviando mensaje a seccion:', error);
+    throw error;
+  }
+};
+
+/**
+ * Envia un mensaje de un scouter a las familias de un educando especifico
+ * MED-005: Sistema de comunicacion scouter-familia
+ */
+const enviarMensajeAFamiliasEducando = async ({
+  scouterId,
+  scouterNombre,
+  educandoId,
+  asunto,
+  mensaje,
+  prioridad = 'normal'
+}) => {
+  try {
+    // Obtener todos los familiares del educando
+    const familiares = await query(`
+      SELECT fe.familiar_id, u.nombre as familiar_nombre
+      FROM familiares_educandos fe
+      JOIN usuarios u ON fe.familiar_id = u.id
+      WHERE fe.educando_id = $1
+    `, [educandoId]);
+
+    if (familiares.length === 0) {
+      return { enviados: 0, mensaje: 'Este educando no tiene familias vinculadas' };
+    }
+
+    const notificaciones = familiares.map(familiar => ({
+      familiar_id: familiar.familiar_id,
+      educando_id: educandoId,
+      titulo: asunto,
+      mensaje: mensaje,
+      tipo: 'mensaje_scouter',
+      prioridad: prioridad,
+      categoria: 'comunicados',
+      enlace_accion: '/familia/notificaciones',
+      metadata: {
+        tipo: 'mensaje_scouter',
+        remitente_id: scouterId,
+        remitente_nombre: scouterNombre
+      }
+    }));
+
+    const resultados = await createBulk(notificaciones);
+    return {
+      enviados: resultados.length,
+      mensaje: `Mensaje enviado a ${resultados.length} familiares`
+    };
+  } catch (error) {
+    console.error('Error enviando mensaje a familias de educando:', error);
+    throw error;
+  }
+};
+
+/**
+ * Envia un mensaje a multiples educandos seleccionados
+ * MED-005: Sistema de comunicacion scouter-familia
+ */
+const enviarMensajeAEducandosSeleccionados = async ({
+  scouterId,
+  scouterNombre,
+  educandoIds,
+  asunto,
+  mensaje,
+  prioridad = 'normal'
+}) => {
+  try {
+    if (!educandoIds || educandoIds.length === 0) {
+      return { enviados: 0, mensaje: 'No se seleccionaron educandos' };
+    }
+
+    // Obtener todos los familiares de los educandos seleccionados
+    const familiares = await query(`
+      SELECT DISTINCT fe.familiar_id, fe.educando_id
+      FROM familiares_educandos fe
+      JOIN educandos e ON fe.educando_id = e.id
+      WHERE fe.educando_id = ANY($1) AND e.activo = true
+    `, [educandoIds]);
+
+    if (familiares.length === 0) {
+      return { enviados: 0, mensaje: 'Los educandos seleccionados no tienen familias vinculadas' };
+    }
+
+    const notificaciones = familiares.map(familiar => ({
+      familiar_id: familiar.familiar_id,
+      educando_id: familiar.educando_id,
+      titulo: asunto,
+      mensaje: mensaje,
+      tipo: 'mensaje_scouter',
+      prioridad: prioridad,
+      categoria: 'comunicados',
+      enlace_accion: '/familia/notificaciones',
+      metadata: {
+        tipo: 'mensaje_scouter',
+        remitente_id: scouterId,
+        remitente_nombre: scouterNombre
+      }
+    }));
+
+    const resultados = await createBulk(notificaciones);
+    return {
+      enviados: resultados.length,
+      mensaje: `Mensaje enviado a ${resultados.length} familias`
+    };
+  } catch (error) {
+    console.error('Error enviando mensaje a educandos seleccionados:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   findByFamiliarId,
   findByScoutId,
@@ -523,5 +689,9 @@ module.exports = {
   // Funciones de documentos
   crearNotificacionDocumentoPendiente,
   crearNotificacionDocumentoAprobado,
-  crearNotificacionDocumentoRechazado
+  crearNotificacionDocumentoRechazado,
+  // MED-005: Funciones de mensajeria scouter-familia
+  enviarMensajeASeccion,
+  enviarMensajeAFamiliasEducando,
+  enviarMensajeAEducandosSeleccionados
 };

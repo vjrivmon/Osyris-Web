@@ -305,8 +305,8 @@ export function PrivateGalleryView({
                   size="sm"
                   onClick={volverAAlbumes}
                 >
-                  <X className="h-4 w-4 mr-2" />
-                  Volver a álbumes
+                  <X className="h-4 w-4 mr-1" />
+                  Volver
                 </Button>
               )}
               <div>

@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { MainNav } from "@/components/main-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
@@ -39,11 +40,14 @@ export default function SeccionesPage() {
                   className={`flex flex-col lg:flex-row gap-6 sm:gap-8 items-center ${i % 2 !== 0 ? "lg:flex-row-reverse" : ""}`}
                 >
                   <div className="lg:w-1/2 w-full">
-                    <div className={`rounded-lg overflow-hidden h-48 sm:h-56 md:h-64 ${section.gradientClass}`}>
-                      <img
+                    <div className={`rounded-lg overflow-hidden h-48 sm:h-56 md:h-64 relative ${section.gradientClass}`}>
+                      <Image
                         src={section.image || "/placeholder.svg?height=300&width=600"}
                         alt={section.title}
-                        className="w-full h-full object-cover mix-blend-overlay"
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                        className="object-cover mix-blend-overlay"
+                        loading="lazy"
                       />
                     </div>
                   </div>

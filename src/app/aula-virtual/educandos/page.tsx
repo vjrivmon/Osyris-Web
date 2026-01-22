@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEducandosScouter } from '@/hooks/useEducandosScouter'
 import { EducandosList } from '@/components/aula-virtual/educandos/educandos-list'
@@ -8,10 +8,11 @@ import { EducandoFilters } from '@/components/aula-virtual/educandos/educando-fi
 import { EducandoFormModal } from '@/components/aula-virtual/educandos/educando-form-modal'
 import { EducandoDetailModal } from '@/components/aula-virtual/educandos/educando-detail-modal'
 import { SendNotificationModal } from '@/components/aula-virtual/educandos/send-notification-modal'
+import { SendMessageModal } from '@/components/aula-virtual/educandos/send-message-modal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Plus, AlertCircle, Users, Loader2 } from 'lucide-react'
+import { Plus, AlertCircle, Users, Loader2, Mail } from 'lucide-react'
 import { EducandoConDocs } from '@/types/educando-scouter'
 
 export default function EducandosPage() {
@@ -22,6 +23,7 @@ export default function EducandosPage() {
     error,
     pagination,
     filters,
+    diagnosticInfo,
     setFilters,
     resetFilters,
     createEducando,
@@ -35,6 +37,7 @@ export default function EducandosPage() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false)
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false)
   const [selectedEducando, setSelectedEducando] = useState<EducandoConDocs | null>(null)
   const [isEditing, setIsEditing] = useState(false)
 
@@ -117,10 +120,22 @@ export default function EducandosPage() {
             Gestiona los educandos de tu sección y controla el estado de su documentación
           </p>
         </div>
-        <Button onClick={handleAddNew} className="shrink-0">
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Educando
-        </Button>
+        <div className="flex gap-2 shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setIsMessageModalOpen(true)}
+            disabled={educandos.filter(e => e.tiene_familia_vinculada).length === 0}
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Mensaje a Familias</span>
+            <span className="sm:hidden">Mensaje</span>
+          </Button>
+          <Button onClick={handleAddNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Nuevo Educando</span>
+            <span className="sm:hidden">Nuevo</span>
+          </Button>
+        </div>
       </div>
 
       {/* Error Alert */}
@@ -166,11 +181,15 @@ export default function EducandosPage() {
       </div>
 
       {/* Filters */}
-      <EducandoFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        onReset={resetFilters}
-      />
+      <Suspense fallback={
+        <div className="h-12 bg-muted/50 rounded-lg animate-pulse" />
+      }>
+        <EducandoFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          onReset={resetFilters}
+        />
+      </Suspense>
 
       {/* Main Content */}
       <Card>
@@ -183,12 +202,20 @@ export default function EducandosPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Users className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">No hay educandos</h3>
-              <p className="text-muted-foreground mt-1">
-                {filters.search || filters.genero || filters.estadoDocs !== 'todos'
-                  ? 'No se encontraron educandos con los filtros seleccionados'
+              <p className="text-muted-foreground mt-1 max-w-md">
+                {filters.search ||
+                 filters.genero ||
+                 filters.estadoDocs !== 'todos' ||
+                 filters.grupoEdad !== 'todos' ||
+                 filters.activo !== 'activos'
+                  ? 'No se encontraron educandos con los filtros seleccionados. Prueba a modificar o limpiar los filtros.'
                   : 'Aun no tienes educandos en tu seccion'}
               </p>
-              {!filters.search && !filters.genero && filters.estadoDocs === 'todos' && (
+              {!filters.search &&
+               !filters.genero &&
+               filters.estadoDocs === 'todos' &&
+               filters.grupoEdad === 'todos' &&
+               filters.activo === 'activos' && (
                 <Button onClick={handleAddNew} className="mt-4">
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar primer educando
@@ -215,6 +242,7 @@ export default function EducandosPage() {
         educando={isEditing ? selectedEducando : null}
         onSubmit={handleFormSubmit}
         seccionId={user?.seccion_id}
+        diagnosticInfo={diagnosticInfo}
       />
 
       <EducandoDetailModal
@@ -233,6 +261,14 @@ export default function EducandosPage() {
         educando={selectedEducando}
         onSend={handleSendNotification}
         fetchDocumentacion={fetchDocumentacion}
+      />
+
+      {/* MED-005: Modal para enviar mensajes a familias */}
+      <SendMessageModal
+        open={isMessageModalOpen}
+        onOpenChange={setIsMessageModalOpen}
+        educandos={educandos}
+        preselectedEducandoIds={selectedEducando ? [selectedEducando.id] : []}
       />
     </div>
   )

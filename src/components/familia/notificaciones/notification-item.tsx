@@ -50,7 +50,8 @@ import {
   Eye,
   EyeOff,
   Reply,
-  Forward
+  Forward,
+  Mail
 } from "lucide-react"
 import { NotificacionFamilia, TipoNotificacion, CategoriaNotificacion } from '@/hooks/useNotificacionesFamilia'
 import { cn } from '@/lib/utils'
@@ -127,6 +128,7 @@ export function NotificationItem({
       case 'importante': return <AlertCircle className="h-5 w-5" />
       case 'informativo': return <Info className="h-5 w-5" />
       case 'recordatorio': return <Calendar className="h-5 w-5" />
+      case 'mensaje_scouter': return <Mail className="h-5 w-5" />
       default: return <Bell className="h-5 w-5" />
     }
   }
@@ -141,6 +143,8 @@ export function NotificationItem({
         return 'text-blue-600 bg-blue-50 border-blue-200'
       case 'recordatorio':
         return 'text-green-600 bg-green-50 border-green-200'
+      case 'mensaje_scouter':
+        return 'text-purple-600 bg-purple-50 border-purple-200'
       default:
         return 'text-gray-600 bg-gray-50 border-gray-200'
     }
@@ -175,6 +179,7 @@ export function NotificationItem({
       case 'importante': return '⚠️ Importante'
       case 'informativo': return 'ℹ️ Informativo'
       case 'recordatorio': return '📅 Recordatorio'
+      case 'mensaje_scouter': return '✉️ Mensaje del Monitor'
       default: return tipo
     }
   }
@@ -515,6 +520,7 @@ export function NotificationItemCompact({
       case 'importante': return <AlertCircle className="h-4 w-4 text-orange-500" />
       case 'informativo': return <Info className="h-4 w-4 text-blue-500" />
       case 'recordatorio': return <Calendar className="h-4 w-4 text-green-500" />
+      case 'mensaje_scouter': return <Mail className="h-4 w-4 text-purple-500" />
       default: return <Bell className="h-4 w-4 text-gray-500" />
     }
   }

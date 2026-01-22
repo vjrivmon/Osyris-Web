@@ -74,6 +74,10 @@ const { query } = require('../config/db.config');
  *         id_externo:
  *           type: integer
  *           description: ID del sistema anterior (MEV)
+ *         autorizacion_imagenes:
+ *           type: boolean
+ *           nullable: true
+ *           description: Autorización de uso de imágenes (true=autorizado, false=no autorizado, null=no especificado)
  *       example:
  *         nombre: Joan
  *         apellidos: Bárzena Bresó
@@ -238,8 +242,9 @@ const create = async (educandoData) => {
         nombre, apellidos, genero, fecha_nacimiento,
         dni, pasaporte, direccion, codigo_postal, municipio,
         telefono_casa, telefono_movil, email,
-        alergias, notas_medicas, seccion_id, foto_perfil, activo, notas, id_externo
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        alergias, notas_medicas, seccion_id, foto_perfil, activo, notas, id_externo,
+        autorizacion_imagenes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
       RETURNING id
     `, [
       educandoData.nombre,
@@ -260,7 +265,8 @@ const create = async (educandoData) => {
       educandoData.foto_perfil || null,
       educandoData.activo !== undefined ? educandoData.activo : true,
       educandoData.notas || null,
-      educandoData.id_externo || null
+      educandoData.id_externo || null,
+      educandoData.autorizacion_imagenes !== undefined ? educandoData.autorizacion_imagenes : null
     ]);
 
     // result es un array cuando hay RETURNING, acceder a result[0].id
@@ -371,6 +377,16 @@ const update = async (id, educandoData) => {
     if (educandoData.notas !== undefined) {
       fields.push(`notas = $${paramIndex}`);
       values.push(educandoData.notas);
+      paramIndex++;
+    }
+    if (educandoData.drive_folder_id !== undefined) {
+      fields.push(`drive_folder_id = $${paramIndex}`);
+      values.push(educandoData.drive_folder_id);
+      paramIndex++;
+    }
+    if (educandoData.autorizacion_imagenes !== undefined) {
+      fields.push(`autorizacion_imagenes = $${paramIndex}`);
+      values.push(educandoData.autorizacion_imagenes);
       paramIndex++;
     }
 

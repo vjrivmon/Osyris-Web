@@ -9,6 +9,24 @@
 export type EstadoDocumentoEducando = 'subido' | 'faltante' | 'pendiente_revision' | 'rechazado'
 
 /**
+ * Tipo de relación familiar
+ */
+export type TipoRelacionFamiliar = 'padre' | 'madre' | 'tutor_legal' | 'abuelo' | 'otro'
+
+/**
+ * Información de un familiar vinculado al educando
+ */
+export interface FamiliarVinculado {
+  id: number
+  nombre: string
+  apellidos: string
+  telefono?: string
+  email?: string
+  relacion: TipoRelacionFamiliar
+  es_contacto_principal: boolean
+}
+
+/**
  * Información de un documento específico
  */
 export interface DocumentoEducando {
@@ -66,9 +84,13 @@ export interface EducandoConDocs {
   notas?: string
   fecha_alta?: string
 
+  // Autorización de imágenes (true=autorizado, false=no autorizado, null=no especificado)
+  autorizacion_imagenes?: boolean | null
+
   // Información de familia vinculada
   tiene_familia_vinculada: boolean
   familiares_count: number
+  familiares?: FamiliarVinculado[]
 
   // Información de documentación
   docs_completos: number
@@ -97,6 +119,7 @@ export interface CreateEducandoData {
   alergias?: string
   notas_medicas?: string
   notas?: string
+  autorizacion_imagenes?: boolean | null
 }
 
 /**
@@ -105,6 +128,11 @@ export interface CreateEducandoData {
 export interface UpdateEducandoData extends Partial<CreateEducandoData> {
   activo?: boolean
 }
+
+/**
+ * Grupos de edad predefinidos para filtrado
+ */
+export type GrupoEdad = 'todos' | '5-7' | '8-10' | '11-13' | '14-16' | '17-19'
 
 /**
  * Parámetros de filtrado para la lista de educandos
@@ -117,6 +145,20 @@ export interface EducandoFilters {
   orderDir?: 'asc' | 'desc'
   genero?: string
   estadoDocs?: 'todos' | 'completos' | 'incompletos' | 'pendientes'
+  grupoEdad?: GrupoEdad
+  activo?: 'todos' | 'activos' | 'inactivos'
+}
+
+/**
+ * Configuración de grupos de edad con rangos
+ */
+export const GRUPOS_EDAD_CONFIG: Record<GrupoEdad, { label: string; min: number; max: number } | null> = {
+  'todos': null,
+  '5-7': { label: 'Castores (5-7 años)', min: 5, max: 7 },
+  '8-10': { label: 'Manada (8-10 años)', min: 8, max: 10 },
+  '11-13': { label: 'Tropa (11-13 años)', min: 11, max: 13 },
+  '14-16': { label: 'Pioneros (14-16 años)', min: 14, max: 16 },
+  '17-19': { label: 'Rutas (17-19 años)', min: 17, max: 19 },
 }
 
 /**

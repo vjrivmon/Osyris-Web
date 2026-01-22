@@ -12,6 +12,7 @@ import { StaticText } from "@/components/ui/static-content"
 // import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LazyImage } from "@/components/ui/lazy-image"
+import { GalleryImage, OptimizedImage } from "@/components/ui/optimized-image"
 import { ChevronLeft, ChevronRight, X, Search, Download, Share, Loader2 } from "lucide-react"
 
 interface Photo {
@@ -217,14 +218,12 @@ export default function GaleriaPage() {
                           onClick={() => openLightbox(photo, albumIndex)}
                         >
                           <CardContent className="p-0">
-                            <div className="aspect-[4/3] relative">
-                              <LazyImage
-                                src={photo.src}
-                                alt={photo.alt}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
+                            <GalleryImage
+                              src={photo.src}
+                              alt={photo.alt}
+                              aspectRatio="4/3"
+                              className="rounded-t-lg rounded-b-none"
+                            />
                             <div className="p-4">
                               <h3 className="font-semibold text-sm truncate mb-2">{photo.title}</h3>
                               <div className="flex justify-between items-center text-xs text-muted-foreground">
@@ -271,11 +270,13 @@ export default function GaleriaPage() {
                       </div>
                     )}
 
-                    <img
+                    <OptimizedImage
                       src={selectedImage.src}
                       alt={selectedImage.alt}
-                      className="w-full h-full object-contain"
-                      onLoad={() => setLightboxLoading(false)}
+                      fill
+                      className="object-contain"
+                      onImageLoad={() => setLightboxLoading(false)}
+                      priority
                     />
 
                     {/* Navigation Buttons */}

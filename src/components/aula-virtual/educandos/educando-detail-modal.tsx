@@ -37,7 +37,10 @@ import {
   Clock,
   AlertCircle,
   Loader2,
-  User
+  User,
+  Users,
+  Camera,
+  HelpCircle
 } from 'lucide-react'
 import { EducandoConDocs, EducandoUtils, DocumentoEducando, ResumenDocumentacion } from '@/types/educando-scouter'
 
@@ -304,11 +307,114 @@ export function EducandoDetailModal({
               </>
             )}
 
-            {/* Familia */}
+            {/* Autorizacion de Imagenes */}
             <Separator />
             <div>
-              <h4 className="font-medium mb-3">Familia Vinculada</h4>
-              {educando.tiene_familia_vinculada ? (
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Camera className="h-4 w-4" />
+                Autorizacion de Imagenes
+              </h4>
+              <div className="flex items-center gap-2">
+                {educando.autorizacion_imagenes === true && (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <Badge className="bg-green-100 text-green-800">Autorizado</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Se permite el uso de imagenes en redes sociales y web
+                    </span>
+                  </>
+                )}
+                {educando.autorizacion_imagenes === false && (
+                  <>
+                    <XCircle className="h-5 w-5 text-red-600" />
+                    <Badge className="bg-red-100 text-red-800">No autorizado</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      No publicar imagenes de este educando
+                    </span>
+                  </>
+                )}
+                {(educando.autorizacion_imagenes === null || educando.autorizacion_imagenes === undefined) && (
+                  <>
+                    <HelpCircle className="h-5 w-5 text-gray-400" />
+                    <Badge variant="outline">Sin especificar</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Pendiente de respuesta por parte de la familia
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Contacto de Emergencia / Familiares */}
+            <Separator />
+            <div>
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Contacto de Emergencia
+              </h4>
+              {educando.tiene_familia_vinculada && educando.familiares && educando.familiares.length > 0 ? (
+                <div className="space-y-3">
+                  {educando.familiares.map((familiar) => {
+                    // Formatear la relación para mostrar
+                    const relacionLabels: Record<string, string> = {
+                      padre: 'Padre',
+                      madre: 'Madre',
+                      tutor_legal: 'Tutor Legal',
+                      abuelo: 'Abuelo/a',
+                      otro: 'Familiar'
+                    }
+                    const relacionLabel = relacionLabels[familiar.relacion] || 'Familiar'
+
+                    return (
+                      <div
+                        key={familiar.id}
+                        className={`p-3 rounded-lg border ${familiar.es_contacto_principal ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">
+                              {familiar.nombre} {familiar.apellidos}
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {relacionLabel}
+                            </Badge>
+                            {familiar.es_contacto_principal && (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                Principal
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          {familiar.telefono && (
+                            <a
+                              href={`tel:${familiar.telefono}`}
+                              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              <Phone className="h-4 w-4" />
+                              <span>{familiar.telefono}</span>
+                            </a>
+                          )}
+                          {familiar.email && (
+                            <a
+                              href={`mailto:${familiar.email}`}
+                              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                            >
+                              <Mail className="h-3 w-3" />
+                              <span>{familiar.email}</span>
+                            </a>
+                          )}
+                          {!familiar.telefono && !familiar.email && (
+                            <p className="text-sm text-muted-foreground italic">
+                              Sin datos de contacto registrados
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : educando.tiene_familia_vinculada ? (
                 <Badge className="bg-green-100 text-green-800">
                   {educando.familiares_count} familiar(es) vinculado(s)
                 </Badge>

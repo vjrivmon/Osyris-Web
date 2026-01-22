@@ -20,6 +20,12 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Scout-themed button variant
+        scout:
+          "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary/90 hover:to-green-600/90 shadow-md",
+        // Scout gold/secondary accent
+        scoutGold:
+          "bg-gradient-to-r from-yellow-500 to-amber-500 text-black hover:from-yellow-400 hover:to-amber-400 shadow-md font-semibold",
       },
       size: {
         default: "h-10 px-4 py-2",

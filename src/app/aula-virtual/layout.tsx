@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { NavTabs } from "@/components/aula-virtual/nav-tabs"
 import { MobileNav } from "@/components/aula-virtual/mobile-nav"
@@ -55,10 +56,13 @@ export default function AulaVirtualLayout({
               {/* Logo con link */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Link href="/aula-virtual" className="flex items-center gap-2">
-                  <img
+                  <Image
                     src="/images/logo-osyris.png"
                     alt="Logo Grupo Scout Osyris"
+                    width={32}
+                    height={32}
                     className="h-8 w-8 rounded-full border-2 border-primary"
+                    priority
                   />
                   <span className="font-semibold text-lg hidden sm:inline">Aula Virtual</span>
                 </Link>

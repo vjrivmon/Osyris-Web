@@ -28,7 +28,7 @@ export interface ActividadCalendario {
   confirmaciones: {
     [scoutId: string]: 'confirmado' | 'pendiente' | 'no_asiste'
   }
-  tipo: 'actividad' | 'campamento' | 'jornada' | 'reunion' | 'evento' | 'excursion'
+  tipo: 'reunion_sabado' | 'reunion' | 'campamento' | 'salida' | 'excursion' | 'evento_especial' | 'evento' | 'actividad' | 'jornada' | 'festivo' | 'asamblea' | 'consejo_grupo' | 'reunion_kraal' | 'formacion' | 'otro'
   coordenadas?: {
     lat: number
     lng: number
@@ -213,10 +213,8 @@ export function useCalendarioFamilia({
                 precio: act.precio,
                 materialNecesario: [],
                 confirmaciones: {},
-                tipo: act.tipo === 'reunion_sabado' ? 'reunion' :
-                      act.tipo === 'campamento' ? 'campamento' :
-                      act.tipo === 'salida' ? 'excursion' :
-                      act.tipo === 'evento_especial' ? 'evento' : 'actividad'
+                // Mantener el tipo original del backend para diferenciacion visual correcta
+                tipo: act.tipo || 'actividad'
               }
 
               // Agregar datos de campamento si es de tipo campamento

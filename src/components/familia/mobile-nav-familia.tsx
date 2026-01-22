@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, Home, FileText, Calendar, ImageIcon, User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -55,9 +56,11 @@ export function MobileNavFamilia() {
       </SheetTrigger>
       <SheetContent side="right" className="w-72">
         <SheetTitle className="flex items-center gap-3 mb-6">
-          <img
+          <Image
             src="/images/logo-osyris.png"
             alt="Logo Grupo Scout Osyris"
+            width={32}
+            height={32}
             className="h-8 w-8 rounded-full border-2 border-primary"
           />
           <span className="text-lg font-semibold">Portal Familias</span>

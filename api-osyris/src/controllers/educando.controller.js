@@ -35,7 +35,8 @@ const educandoCreateSchema = Joi.object({
   foto_perfil: Joi.string().uri().allow(null, ''),
   activo: Joi.boolean().default(true),
   notas: Joi.string().allow(null, ''),
-  id_externo: Joi.number().integer().allow(null)
+  id_externo: Joi.number().integer().allow(null),
+  autorizacion_imagenes: Joi.boolean().allow(null).default(null)
 });
 
 // Esquema de validación para la actualización de educandos
@@ -57,7 +58,8 @@ const educandoUpdateSchema = Joi.object({
   seccion_id: Joi.number().integer(),
   foto_perfil: Joi.string().uri().allow(null, ''),
   activo: Joi.boolean(),
-  notas: Joi.string().allow(null, '')
+  notas: Joi.string().allow(null, ''),
+  autorizacion_imagenes: Joi.boolean().allow(null)
 }).min(1);
 
 /**
@@ -300,10 +302,28 @@ const createEducando = async (req, res) => {
 
     const nuevoEducando = await Educando.create(value);
 
+    // CRIT-003: Crear carpeta en Google Drive para el educando
+    // No bloquear si falla - el educando se crea igual
+    let driveFolderCreated = false;
+    try {
+      const folder = await driveService.createEducandoFolder(nuevoEducando);
+      if (folder && folder.id) {
+        // Actualizar el educando con el drive_folder_id
+        await Educando.update(nuevoEducando.id, { drive_folder_id: folder.id });
+        nuevoEducando.drive_folder_id = folder.id;
+        driveFolderCreated = true;
+        console.log(`✅ Carpeta Drive creada y vinculada para educando ${nuevoEducando.id}`);
+      }
+    } catch (driveError) {
+      console.error(`⚠️ Error creando carpeta en Drive para educando ${nuevoEducando.id}:`, driveError.message);
+      // No fallar la creación del educando por error de Drive
+    }
+
     res.status(201).json({
       success: true,
       message: 'Educando creado exitosamente',
-      data: nuevoEducando
+      data: nuevoEducando,
+      driveFolderCreated
     });
   } catch (error) {
     if (error.message.includes('Ya existe')) {
@@ -1089,12 +1109,16 @@ const getEducandosBySeccionCompleto = async (req, res) => {
     const orderDir = req.query.orderDir === 'desc' ? 'desc' : 'asc';
     const genero = req.query.genero || '';
     const estadoDocs = req.query.estadoDocs || 'todos';
+    const grupoEdad = req.query.grupoEdad || 'todos';
+    // Filtro de activo: puede ser 'true', 'false' o undefined (todos)
+    const activoParam = req.query.activo;
+    const activoFiltro = activoParam !== undefined ? activoParam === 'true' : undefined;
 
     // Obtener TODOS los educandos (sin paginación) para poder filtrar correctamente
     // La paginación se aplicará después del filtrado por estadoDocs
     const filters = {
       seccion_id: seccionId,
-      activo: true,
+      activo: activoFiltro, // undefined = todos, true = solo activos, false = solo inactivos
       search: search || undefined,
       genero: genero || undefined
       // NO incluimos limit/offset aquí - la paginación se hace al final
@@ -1146,11 +1170,23 @@ const getEducandosBySeccionCompleto = async (req, res) => {
           console.error(`Error obteniendo docs para educando ${educando.id}:`, err.message);
         }
 
+        // Formatear datos de familiares para el frontend
+        const familiaresFormateados = familiares.map(f => ({
+          id: f.familiar_id,
+          nombre: f.nombre,
+          apellidos: f.apellidos,
+          telefono: f.telefono,
+          email: f.email,
+          relacion: f.relacion,
+          es_contacto_principal: f.es_contacto_principal
+        }));
+
         return {
           ...educando,
           edad,
           tiene_familia_vinculada: tieneFamiliaVinculada,
           familiares_count: familiares.length,
+          familiares: familiaresFormateados,
           docs_completos: docsResumen.completos,
           docs_total: docsResumen.total,
           docs_pendientes: docsResumen.pendientes,
@@ -1162,12 +1198,23 @@ const getEducandosBySeccionCompleto = async (req, res) => {
     // Filtrar por estado de documentación si se especifica
     let educandosFiltrados = educandosEnriquecidos;
     if (estadoDocs !== 'todos') {
-      educandosFiltrados = educandosEnriquecidos.filter(e => {
+      educandosFiltrados = educandosFiltrados.filter(e => {
         if (estadoDocs === 'completos') return e.docs_completos === e.docs_total;
         if (estadoDocs === 'incompletos') return e.docs_completos < e.docs_total;
         if (estadoDocs === 'pendientes') return e.docs_pendientes > 0;
         return true;
       });
+    }
+
+    // Filtrar por grupo de edad si se especifica
+    if (grupoEdad !== 'todos') {
+      // Parsear el rango de edad del formato "5-7", "8-10", etc.
+      const [minEdad, maxEdad] = grupoEdad.split('-').map(Number);
+      if (!isNaN(minEdad) && !isNaN(maxEdad)) {
+        educandosFiltrados = educandosFiltrados.filter(e =>
+          e.edad >= minEdad && e.edad <= maxEdad
+        );
+      }
     }
 
     // Ordenar

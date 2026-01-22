@@ -173,12 +173,12 @@ const TIPOS_EVENTO = {
   },
   reunion_kraal: {
     label: 'Reunion Kraal',
-    color: 'cyan',
-    bgColor: 'bg-cyan-100',
-    textColor: 'text-cyan-700',
-    borderColor: 'border-cyan-300',
-    dotColor: 'bg-cyan-500',
-    icon: 'ClipboardList'
+    color: 'violet',
+    bgColor: 'bg-violet-100',
+    textColor: 'text-violet-700',
+    borderColor: 'border-violet-300',
+    dotColor: 'bg-violet-500',
+    icon: 'UserCog'
   },
   formacion: {
     label: 'Formacion',

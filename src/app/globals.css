@@ -10,29 +10,40 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 148 32% 23%;              /* Verde Osyris #264D36 */
-    --primary-foreground: 210 40% 98%;
-    --button: 240 50% 30%;               /* Azul original para botones */
-    --button-foreground: 210 40% 98%;    /* Texto blanco en botones */
-    --secondary: 48 96% 53%;
+    --primary: 150 45% 22%;              /* Verde Scout Osyris - mas saturado */
+    --primary-foreground: 0 0% 100%;
+    --button: 150 45% 28%;               /* Verde scout para botones */
+    --button-foreground: 0 0% 100%;      /* Texto blanco en botones */
+    --secondary: 45 100% 51%;            /* Amarillo dorado scout */
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --muted: 150 10% 96%;
+    --muted-foreground: 150 10% 40%;
+    --accent: 150 15% 95%;
+    --accent-foreground: 150 40% 20%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 48 96% 53%;
+    --border: 150 15% 90%;
+    --input: 150 15% 90%;
+    --ring: 45 100% 51%;
     --radius: 0.5rem;
 
-    /* Scout section colors */
-    --castores: 30 100% 60%;
-    --manada: 48 100% 50%;
-    --tropa: 210 100% 50%;
-    --pioneros: 0 100% 50%;
-    --rutas: 120 100% 30%;
+    /* Scout section colors - colores oficiales */
+    --castores: 25 95% 55%;              /* Naranja castor */
+    --castores-light: 25 95% 95%;
+    --manada: 48 100% 50%;               /* Amarillo lobato */
+    --manada-light: 48 100% 95%;
+    --tropa: 210 85% 50%;                /* Azul tropa */
+    --tropa-light: 210 85% 95%;
+    --pioneros: 350 85% 55%;             /* Rojo pioneros */
+    --pioneros-light: 350 85% 95%;
+    --rutas: 145 60% 35%;                /* Verde rutas */
+    --rutas-light: 145 60% 95%;
+
+    /* Scout brand colors */
+    --scout-gold: 45 100% 51%;           /* Flor de lis dorada */
+    --scout-green-dark: 150 50% 18%;     /* Verde oscuro scout */
+    --scout-green-light: 150 40% 35%;    /* Verde claro scout */
+    --scout-cream: 45 40% 96%;           /* Crema para fondos */
 
     /* Status colors - Light Mode */
     --success: 142 76% 36%;
@@ -43,38 +54,45 @@
     --info-foreground: 0 0% 100%;
 
     /* Sidebar colors */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-background: 150 15% 98%;
+    --sidebar-foreground: 150 30% 20%;
+    --sidebar-primary: 150 45% 22%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 150 15% 95%;
+    --sidebar-accent-foreground: 150 40% 20%;
+    --sidebar-border: 150 15% 90%;
+    --sidebar-ring: 45 100% 51%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 148 32% 40%;              /* Verde más claro para dark mode */
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --button: 240 50% 50%;               /* Azul más claro para dark */
-    --button-foreground: 210 40% 98%;    /* Texto blanco en botones */
-    --secondary: 48 96% 53%;
+    --background: 150 20% 6%;
+    --foreground: 150 10% 95%;
+    --card: 150 20% 8%;
+    --card-foreground: 150 10% 95%;
+    --popover: 150 20% 8%;
+    --popover-foreground: 150 10% 95%;
+    --primary: 150 45% 45%;              /* Verde scout mas claro para dark mode */
+    --primary-foreground: 0 0% 100%;
+    --button: 150 45% 40%;               /* Verde scout para botones dark */
+    --button-foreground: 0 0% 100%;      /* Texto blanco en botones */
+    --secondary: 45 100% 55%;            /* Amarillo dorado mas claro */
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --muted: 150 15% 15%;
+    --muted-foreground: 150 10% 65%;
+    --accent: 150 20% 15%;
+    --accent-foreground: 150 10% 95%;
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 48 96% 53%;
+    --border: 150 20% 18%;
+    --input: 150 20% 18%;
+    --ring: 45 100% 55%;
+
+    /* Scout section colors - dark mode */
+    --castores-light: 25 60% 15%;
+    --manada-light: 48 60% 15%;
+    --tropa-light: 210 60% 15%;
+    --pioneros-light: 350 60% 15%;
+    --rutas-light: 145 40% 15%;
 
     /* Status colors - Dark Mode */
     --success: 142 69% 58%;
@@ -85,14 +103,14 @@
     --info-foreground: 199 89% 10%;
 
     /* Sidebar colors - dark mode */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 150 20% 8%;
+    --sidebar-foreground: 150 10% 95%;
+    --sidebar-primary: 150 45% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 150 20% 15%;
+    --sidebar-accent-foreground: 150 10% 95%;
+    --sidebar-border: 150 20% 18%;
+    --sidebar-ring: 45 100% 55%;
   }
 }
 
@@ -280,6 +298,79 @@ nav,
 .dark .bg-section-pattern {
   background-color: rgba(20, 20, 30, 0.95);
 }
+
+/* Scout identity styles */
+.scout-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--scout-green-light)) 100%);
+}
+
+.scout-gradient-gold {
+  background: linear-gradient(135deg, hsl(var(--scout-gold)) 0%, hsl(45 100% 40%) 100%);
+}
+
+.scout-header-accent {
+  position: relative;
+}
+
+.scout-header-accent::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    hsl(var(--castores)) 0%,
+    hsl(var(--manada)) 25%,
+    hsl(var(--tropa)) 50%,
+    hsl(var(--pioneros)) 75%,
+    hsl(var(--rutas)) 100%
+  );
+}
+
+/* Scout pattern overlay - sutil flor de lis */
+.scout-pattern {
+  position: relative;
+}
+
+.scout-pattern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 5 L35 20 L50 20 L38 30 L42 45 L30 35 L18 45 L22 30 L10 20 L25 20 Z' fill='%23264D36' fill-opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+
+.dark .scout-pattern::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 5 L35 20 L50 20 L38 30 L42 45 L30 35 L18 45 L22 30 L10 20 L25 20 Z' fill='%2345a86e' fill-opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* Scout card hover effect */
+.scout-card {
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.scout-card:hover {
+  border-left-color: hsl(var(--primary));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(38, 77, 54, 0.15);
+}
+
+.dark .scout-card:hover {
+  box-shadow: 0 8px 25px -5px rgba(69, 168, 110, 0.2);
+}
+
+/* Section-specific card accents */
+.scout-card-castores:hover { border-left-color: hsl(var(--castores)); }
+.scout-card-manada:hover { border-left-color: hsl(var(--manada)); }
+.scout-card-tropa:hover { border-left-color: hsl(var(--tropa)); }
+.scout-card-pioneros:hover { border-left-color: hsl(var(--pioneros)); }
+.scout-card-rutas:hover { border-left-color: hsl(var(--rutas)); }
 
 /* Custom scrollbar styles - thin and subtle */
 .scrollbar-thin {

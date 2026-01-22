@@ -43,17 +43,24 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter({ scoutId, className }: NotificationCenterProps) {
+  // CRIT-002: Use forceRefresh and isRefreshing from hook
   const {
     notificaciones,
     loading,
     error,
+    isRefreshing: hookIsRefreshing,
     refetch,
+    forceRefresh,
     marcarComoLeida,
     marcarTodasComoLeidas,
     archivarNotificacion,
     eliminarNotificacion,
     getContadorNoLeidas
-  } = useNotificacionesFamilia({ scoutId })
+  } = useNotificacionesFamilia({
+    scoutId,
+    enablePolling: true, // CRIT-002: Enable polling
+    enableVisibilityRefetch: true // CRIT-002: Enable visibility refetch
+  })
 
   const stats = useNotificacionesStats(scoutId)
 
@@ -66,7 +73,9 @@ export function NotificationCenter({ scoutId, className }: NotificationCenterPro
   const [sortBy, setSortBy] = useState<'fecha' | 'prioridad' | 'tipo'>('fecha')
   const [selectedNotificaciones, setSelectedNotificaciones] = useState<number[]>([])
   const [showFilters, setShowFilters] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  // CRIT-002: Use hook's isRefreshing state instead of local state
+  const [localRefreshing, setLocalRefreshing] = useState(false)
+  const isRefreshing = hookIsRefreshing || localRefreshing
 
   // Contador de no leídas actualizado
   const [noLeidasCount, setNoLeidasCount] = useState(0)
@@ -127,10 +136,14 @@ export function NotificationCenter({ scoutId, className }: NotificationCenterPro
   }, [notificaciones, searchTerm, filtroEstado, filtroTipo, filtroCategoria, filtroPrioridad, sortBy])
 
   // Handlers
+  // CRIT-002: Use forceRefresh to ensure fresh data
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await refetch()
-    setTimeout(() => setIsRefreshing(false), 1000)
+    setLocalRefreshing(true)
+    try {
+      await forceRefresh()
+    } finally {
+      setTimeout(() => setLocalRefreshing(false), 500)
+    }
   }
 
   const handleSelectAll = () => {
@@ -351,6 +364,7 @@ export function NotificationCenter({ scoutId, className }: NotificationCenterPro
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos los tipos</SelectItem>
+                  <SelectItem value="mensaje_scouter">✉️ Mensajes del Monitor</SelectItem>
                   <SelectItem value="urgente">🚨 Urgente</SelectItem>
                   <SelectItem value="importante">⚠️ Importante</SelectItem>
                   <SelectItem value="informativo">ℹ️ Informativo</SelectItem>

@@ -292,6 +292,19 @@ router.post('/', verifyToken, checkRole(['admin', 'scouter']), async (req, res) 
       creado_por: req.usuario.id
     };
 
+    // HIGH-004: Si el usuario es scouter, forzar seccion_id a su propia seccion
+    // Solo admin puede crear eventos para cualquier seccion
+    if (req.usuario.rol === 'scouter') {
+      if (!req.usuario.seccion_id) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes una seccion asignada. Contacta con el administrador.'
+        });
+      }
+      // Forzar la seccion del scouter, ignorando cualquier valor enviado
+      actividadData.seccion_id = req.usuario.seccion_id;
+    }
+
     // Validaciones basicas
     if (!actividadData.titulo) {
       return res.status(400).json({
@@ -346,6 +359,30 @@ router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res
       });
     }
 
+    // HIGH-004: Si el usuario es scouter, verificar que solo edite actividades de su seccion
+    // y no permitir cambiar la seccion
+    if (req.usuario.rol === 'scouter') {
+      if (!req.usuario.seccion_id) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes una seccion asignada. Contacta con el administrador.'
+        });
+      }
+
+      // Verificar que la actividad pertenece a su seccion
+      if (actividadExistente.seccion_id && actividadExistente.seccion_id !== req.usuario.seccion_id) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para editar actividades de otras secciones'
+        });
+      }
+
+      // No permitir cambiar la seccion_id
+      if (req.body.seccion_id !== undefined) {
+        req.body.seccion_id = req.usuario.seccion_id;
+      }
+    }
+
     const actividadActualizada = await ActividadModel.update(id, req.body);
 
     res.status(200).json({
@@ -377,6 +414,24 @@ router.post('/:id/cancelar', verifyToken, checkRole(['admin', 'scouter']), async
     const id = parseInt(req.params.id);
     const { motivo } = req.body;
 
+    // HIGH-004: Si el usuario es scouter, verificar que solo cancele actividades de su seccion
+    if (req.usuario.rol === 'scouter') {
+      const actividadExistente = await ActividadModel.findById(id);
+      if (!actividadExistente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Actividad no encontrada'
+        });
+      }
+
+      if (actividadExistente.seccion_id && actividadExistente.seccion_id !== req.usuario.seccion_id) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para cancelar actividades de otras secciones'
+        });
+      }
+    }
+
     const actividadCancelada = await ActividadModel.cancelar(id, motivo);
 
     res.status(200).json({
@@ -406,6 +461,25 @@ router.post('/:id/cancelar', verifyToken, checkRole(['admin', 'scouter']), async
 router.delete('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
+    // HIGH-004: Si el usuario es scouter, verificar que solo elimine actividades de su seccion
+    if (req.usuario.rol === 'scouter') {
+      const actividadExistente = await ActividadModel.findById(id);
+      if (!actividadExistente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Actividad no encontrada'
+        });
+      }
+
+      if (actividadExistente.seccion_id && actividadExistente.seccion_id !== req.usuario.seccion_id) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para eliminar actividades de otras secciones'
+        });
+      }
+    }
+
     const eliminado = await ActividadModel.remove(id);
 
     if (!eliminado) {

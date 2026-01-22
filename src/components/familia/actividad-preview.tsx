@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -395,11 +396,14 @@ export function ActividadPreview({
                     </p>
                     <div className="grid grid-cols-4 gap-2">
                       {actividad.fotos.slice(0, 8).map((foto, index) => (
-                        <div key={index} className="aspect-square bg-muted rounded-lg overflow-hidden">
-                          <img 
-                            src={foto} 
+                        <div key={index} className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                          <Image
+                            src={foto}
                             alt={`Foto ${index + 1}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes="(max-width: 768px) 25vw, 10vw"
+                            className="object-cover"
+                            loading="lazy"
                           />
                         </div>
                       ))}

@@ -83,6 +83,69 @@ const createFolder = async (folderName, parentFolderId) => {
 };
 
 /**
+ * Crea una carpeta para un educando nuevo en Google Drive
+ * Estructura: Sección > Año > "Apellidos, Nombre (ID)"
+ *
+ * @param {Object} educando - Objeto educando con nombre, apellidos, fecha_nacimiento, seccion_id, id
+ * @returns {Object|null} - { id, name } de la carpeta creada o null si falla
+ */
+const createEducandoFolder = async (educando) => {
+  try {
+    // Validar que tenemos los datos necesarios
+    if (!educando || !educando.id || !educando.nombre || !educando.apellidos) {
+      console.log('⚠️ [createEducandoFolder] Datos de educando incompletos, no se puede crear carpeta');
+      return null;
+    }
+
+    // Obtener el slug de la sección
+    const seccionSlug = DRIVE_CONFIG.SECCIONES_ASISTENCIA.find(s => s.id === educando.seccion_id)?.slug;
+    if (!seccionSlug) {
+      console.log(`⚠️ [createEducandoFolder] Sección no encontrada para id=${educando.seccion_id}`);
+      return null;
+    }
+
+    // Obtener el ID de la carpeta de la sección
+    const seccionFolderId = getSeccionFolderId(seccionSlug);
+    if (!seccionFolderId) {
+      console.log(`⚠️ [createEducandoFolder] Variable GOOGLE_DRIVE_${seccionSlug.toUpperCase()}_FOLDER_ID no configurada`);
+      return null;
+    }
+
+    const drive = await initializeDriveClient();
+
+    // Calcular año de nacimiento
+    const fechaNacimiento = new Date(educando.fecha_nacimiento);
+    const anioNacimiento = fechaNacimiento.getFullYear();
+
+    // Buscar o crear carpeta del año dentro de la sección
+    let anioFolder = await findFolderByName(anioNacimiento.toString(), seccionFolderId);
+    if (!anioFolder) {
+      console.log(`📁 Creando carpeta de año ${anioNacimiento} en ${seccionSlug}...`);
+      anioFolder = await createFolder(anioNacimiento.toString(), seccionFolderId);
+    }
+
+    // Formato del nombre de carpeta: "Apellidos, Nombre (ID)"
+    const folderName = `${educando.apellidos}, ${educando.nombre} (${educando.id})`;
+
+    // Verificar si ya existe una carpeta con ese nombre
+    const existingFolder = await findFolderByName(folderName, anioFolder.id);
+    if (existingFolder) {
+      console.log(`📂 Carpeta ya existe para educando ${educando.id}: ${existingFolder.id}`);
+      return existingFolder;
+    }
+
+    // Crear la carpeta del educando
+    const educandoFolder = await createFolder(folderName, anioFolder.id);
+    console.log(`✅ Carpeta creada para educando ${educando.id}: ${educandoFolder.id}`);
+
+    return educandoFolder;
+  } catch (error) {
+    console.error(`❌ [createEducandoFolder] Error creando carpeta para educando ${educando?.id}:`, error.message);
+    return null;
+  }
+};
+
+/**
  * Obtiene o crea la carpeta de un educando
  * Estructura: Sección > Año > Nombre Educando
  *
@@ -1052,6 +1115,7 @@ module.exports = {
   initializeDriveClient,
   findFolderByName,
   createFolder,
+  createEducandoFolder,
   getOrCreateEducandoFolder,
   listEducandoDocuments,
   listPlantillas,

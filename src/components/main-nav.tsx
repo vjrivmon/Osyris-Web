@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -67,19 +68,28 @@ export function MainNav() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background border-b shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-background border-b shadow-sm scout-header-accent">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo - Always on the left */}
           <Link
             href="/"
-            className="flex items-center transition-opacity hover:opacity-90">
-            <img
-              src="/images/logo-osyris.png"
-              alt="Logo Grupo Scout Osyris"
-              className="h-10 w-10 rounded-full border-2 border-primary shadow-md"
-            />
-            <span className="ml-2 font-semibold text-lg hidden lg:inline">Grupo Scout Osyris</span>
+            className="flex items-center gap-3 transition-all hover:opacity-90 group">
+            <div className="relative">
+              <Image
+                src="/images/logo-osyris.png"
+                alt="Logo Grupo Scout Osyris"
+                width={44}
+                height={44}
+                className="h-11 w-11 rounded-full border-2 border-primary shadow-md transition-transform group-hover:scale-105"
+                priority
+              />
+              <span className="absolute -top-1 -right-1 text-xs" aria-hidden="true">&#9884;</span>
+            </div>
+            <div className="hidden lg:flex flex-col">
+              <span className="font-bold text-lg text-primary leading-tight">Grupo Scout Osyris</span>
+              <span className="text-xs text-muted-foreground leading-tight">Desde 1981 en Valencia</span>
+            </div>
           </Link>
 
           {/* Mobile Navigation - On the right */}
@@ -92,14 +102,21 @@ export function MainNav() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[85%] sm:w-[385px] bg-background">
-                <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-                <div className="flex items-center mb-6">
-                  <img
+                <SheetTitle className="sr-only">Menu de navegacion</SheetTitle>
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-primary/20">
+                  <Image
                     src="/images/logo-osyris.png"
                     alt="Logo Grupo Scout Osyris"
-                    className="h-10 w-10 rounded-full border-2 border-primary"
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 rounded-full border-2 border-primary shadow-md"
                   />
-                  <span className="ml-2 font-semibold text-lg">Grupo Scout Osyris</span>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-lg text-primary">Grupo Scout Osyris</span>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <span>&#9884;</span> MEV-MSC Valencia
+                    </span>
+                  </div>
                 </div>
 
                 <nav className="flex flex-col gap-4">
@@ -259,10 +276,13 @@ export function MainNav() {
                       <li className="row-span-5">
                         <NavigationMenuLink asChild>
                           <a
-                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
+                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md relative overflow-hidden"
                             href="/secciones"
                           >
-                            <div className="mt-4 mb-2 text-lg font-medium text-white">Nuestras Secciones</div>
+                            <div className="absolute top-3 right-3 text-3xl opacity-30" aria-hidden="true">&#9884;</div>
+                            <div className="mt-4 mb-2 text-lg font-medium text-white flex items-center gap-2">
+                              <span>&#9650;</span> Nuestras Secciones
+                            </div>
                             <p className="text-sm leading-tight text-white/90">
                               Descubre las diferentes etapas del escultismo en el Grupo Scout Osyris
                             </p>

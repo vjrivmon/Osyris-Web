@@ -37,7 +37,7 @@ const getFallbackData = (slug: string) => {
         { name: "Monitor Adjunto", role: "Scouter de Castores", photo: "/placeholder.svg?height=100&width=100" }
       ],
       navigation: {
-        prev: { href: "/secciones", title: "Volver a Secciones" },
+        prev: { href: "/secciones", title: "Volver" },
         next: { href: "/secciones/manada", title: "Siguiente: Manada" }
       }
     },

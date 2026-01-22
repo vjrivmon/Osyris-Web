@@ -118,11 +118,18 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
 
     if (filtros.tipo !== 'todos') {
       // Mapear los tipos del filtro a los tipos de la base de datos
+      // Los tipos del filtro pueden agrupar varios tipos relacionados
       const tipoMap: Record<string, string[]> = {
         'reunion_sabado': ['reunion', 'reunion_sabado'],
-        'salida': ['evento', 'salida', 'excursion'],
+        'salida': ['salida', 'excursion'],
         'campamento': ['campamento'],
-        'evento_especial': ['evento', 'evento_especial', 'actividad_especial']
+        'evento_especial': ['evento', 'evento_especial', 'actividad'],
+        'asamblea': ['asamblea'],
+        'formacion': ['formacion'],
+        'festivo': ['festivo'],
+        'jornada': ['jornada'],
+        'consejo_grupo': ['consejo_grupo'],
+        'reunion_kraal': ['reunion_kraal']
       }
       const tiposABuscar = tipoMap[filtros.tipo] || [filtros.tipo]
       actividadesFiltradas = actividadesFiltradas.filter(a => tiposABuscar.includes(a.tipo))

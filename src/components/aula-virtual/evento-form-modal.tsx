@@ -49,10 +49,18 @@ import {
   CheckCircle,
   AlertCircle,
   Plus,
-  Link as LinkIcon
+  Link as LinkIcon,
+  HelpCircle
 } from "lucide-react"
 import { getApiUrl } from '@/lib/api-utils'
+import { useAuth } from '@/contexts/AuthContext'
 import type { RecordatorioPredefinido } from '@/types/familia'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface Actividad {
   id?: number
@@ -113,7 +121,33 @@ const VISIBILIDAD = [
 
 const DEFAULT_NUMERO_CUENTA = 'ES76 3159 0063 5125 0527 9113'
 
+// Componente de tooltip para campos de formulario
+interface FieldTooltipProps {
+  content: string
+  label?: string
+}
+
+function FieldTooltip({ content, label }: FieldTooltipProps) {
+  return (
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger
+          type="button"
+          className="inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ml-1"
+          aria-label={label ? `Informacion sobre ${label}` : 'Mas informacion'}
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-sm">
+          <p>{content}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
 export function EventoFormModal({ open, onOpenChange, actividad, onSave }: EventoFormModalProps) {
+  const { user } = useAuth()
   const [loading, setSaving] = useState(false)
   const [uploadingCircular, setUploadingCircular] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -121,6 +155,11 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
   const [recordatoriosPredefinidos, setRecordatoriosPredefinidos] = useState<RecordatorioPredefinido[]>([])
   const [nuevoRecordatorio, setNuevoRecordatorio] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // HIGH-004: Determinar si el usuario es scouter (no admin)
+  const isScouter = user?.rol === 'scouter'
+  const isAdmin = user?.rol === 'admin'
+  const userSeccionId = user?.seccion_id
 
   const [formData, setFormData] = useState<Actividad>({
     titulo: '',
@@ -173,10 +212,13 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
         fecha_fin: actividad.fecha_fin?.split('T')[0] || '',
         numero_cuenta: actividad.numero_cuenta || DEFAULT_NUMERO_CUENTA,
         recordatorios_predefinidos: mergedRecordatorios,
-        recordatorios_personalizados: actividad.recordatorios_personalizados || []
+        recordatorios_personalizados: actividad.recordatorios_personalizados || [],
+        // HIGH-004: Si es scouter, forzar su seccion
+        seccion_id: isScouter ? userSeccionId || null : actividad.seccion_id
       })
     } else {
       // Reset form for new activity
+      // HIGH-004: Si es scouter, establecer su seccion por defecto
       setFormData({
         titulo: '',
         descripcion: '',
@@ -186,7 +228,7 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
         hora_inicio: '16:30',
         hora_fin: '18:30',
         lugar: 'Colegio Patronato Juventud Obrera',
-        seccion_id: null,
+        seccion_id: isScouter ? userSeccionId || null : null,
         visibilidad: 'todos',
         requiere_confirmacion: true,
         precio: undefined,
@@ -204,7 +246,7 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
         circular_nombre: ''
       })
     }
-  }, [actividad, open, recordatoriosPredefinidos])
+  }, [actividad, open, recordatoriosPredefinidos, isScouter, userSeccionId])
 
   const fetchSecciones = async () => {
     try {
@@ -467,7 +509,13 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
               {/* Tipo y Seccion */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Tipo de evento *</Label>
+                  <div className="flex items-center">
+                    <Label>Tipo de evento *</Label>
+                    <FieldTooltip
+                      content="Categoria del evento: reunion regular, campamento, salida, evento especial, reunion de kraal, consejo de grupo o formacion"
+                      label="Tipo de evento"
+                    />
+                  </div>
                   <Select
                     value={formData.tipo}
                     onValueChange={(value) => setFormData({ ...formData, tipo: value })}
@@ -486,26 +534,46 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Seccion</Label>
-                  <Select
-                    value={formData.seccion_id?.toString() || 'todas'}
-                    onValueChange={(value) => setFormData({
-                      ...formData,
-                      seccion_id: value === 'todas' ? null : parseInt(value)
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas las secciones" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todas">Todas las secciones</SelectItem>
-                      {secciones.map(seccion => (
-                        <SelectItem key={seccion.id} value={seccion.id.toString()}>
-                          {seccion.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center">
+                    <Label>Seccion</Label>
+                    <FieldTooltip
+                      content="Selecciona la seccion a la que va dirigido el evento, o deja 'Todas' si es para todo el grupo"
+                      label="Seccion"
+                    />
+                  </div>
+                  {/* HIGH-004: Si es scouter, mostrar solo su seccion como readonly */}
+                  {isScouter ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={secciones.find(s => s.id === userSeccionId)?.nombre || 'Tu seccion'}
+                        disabled
+                        className="bg-muted cursor-not-allowed"
+                      />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        (Solo tu seccion)
+                      </span>
+                    </div>
+                  ) : (
+                    <Select
+                      value={formData.seccion_id?.toString() || 'todas'}
+                      onValueChange={(value) => setFormData({
+                        ...formData,
+                        seccion_id: value === 'todas' ? null : parseInt(value)
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Todas las secciones" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todas">Todas las secciones</SelectItem>
+                        {secciones.map(seccion => (
+                          <SelectItem key={seccion.id} value={seccion.id.toString()}>
+                            {seccion.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
 
@@ -587,7 +655,13 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
               {/* Visibilidad y Precio */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Visibilidad</Label>
+                  <div className="flex items-center">
+                    <Label>Visibilidad</Label>
+                    <FieldTooltip
+                      content="'Todos' muestra el evento a familias y kraal. 'Solo Kraal' lo oculta de las familias"
+                      label="Visibilidad"
+                    />
+                  </div>
                   <Select
                     value={formData.visibilidad}
                     onValueChange={(value) => setFormData({ ...formData, visibilidad: value })}
@@ -607,7 +681,13 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
 
                 {isCampamento && (
                   <div className="space-y-2">
-                    <Label htmlFor="precio">Precio (EUR)</Label>
+                    <div className="flex items-center">
+                      <Label htmlFor="precio">Precio (EUR)</Label>
+                      <FieldTooltip
+                        content="Coste total del campamento por participante. Se mostrara a las familias en el formulario de inscripcion"
+                        label="Precio"
+                      />
+                    </div>
                     <Input
                       id="precio"
                       type="number"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CalendarioView } from '@/components/familia/calendario/calendario-view'
-import { ChevronLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -35,8 +35,8 @@ export default function FamiliaCalendarioPage() {
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/familia/dashboard">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Volver al Dashboard
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Volver
           </Link>
         </Button>
       </div>

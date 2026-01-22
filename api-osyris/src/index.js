@@ -52,6 +52,8 @@ const rondaRoutes = require('./routes/ronda.routes');
 const inscripcionesCampamentoRoutes = require('./routes/inscripciones-campamento.routes');
 // 📊 RUTAS DEL DASHBOARD SCOUTER
 const dashboardScouterRoutes = require('./routes/dashboard-scouter.routes');
+// 💬 MED-005: RUTAS DE MENSAJERIA SCOUTER-FAMILIA
+const mensajesScouterRoutes = require('./routes/mensajes-scouter.routes');
 // 🚀 FEATURE FLAGS
 // const featureFlagsRoutes = require('./routes/feature-flags.routes'); // ⚠️ DESHABILITADO: módulo incompleto
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
@@ -143,6 +145,8 @@ app.use('/api/ronda', rondaRoutes);
 app.use('/api/inscripciones-campamento', inscripcionesCampamentoRoutes);
 // 📊 DASHBOARD SCOUTER
 app.use('/api/dashboard-scouter', dashboardScouterRoutes);
+// 💬 MED-005: MENSAJERIA SCOUTER-FAMILIA
+app.use('/api/mensajes-scouter', mensajesScouterRoutes);
 // 🚀 FEATURE FLAGS
 // app.use('/api/feature-flags', featureFlagsRoutes); // ⚠️ DESHABILITADO: módulo incompleto
 // app.use('/api/preview', previewRoutes); // Temporarily disabled

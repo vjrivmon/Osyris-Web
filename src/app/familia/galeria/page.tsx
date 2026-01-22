@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useGaleriaFamilia } from '@/hooks/useGaleriaFamilia'
 import { Card, CardContent } from '@/components/ui/card'
 import { Camera, Image as ImageIcon, Loader2, ArrowLeft } from 'lucide-react'
@@ -35,8 +36,8 @@ export default function GaleriaFamiliaPage() {
         href="/familia/dashboard"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" />
-        <span>Volver</span>
+        <ArrowLeft className="h-4 w-4 mr-1" />
+        Volver
       </Link>
 
       <div>
@@ -60,11 +61,16 @@ export default function GaleriaFamiliaPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {fotos.map((foto) => (
             <Card key={foto.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <img
-                src={foto.url}
-                alt={foto.titulo || 'Foto'}
-                className="w-full h-48 object-cover"
-              />
+              <div className="relative w-full h-48">
+                <Image
+                  src={foto.url}
+                  alt={foto.titulo || 'Foto'}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover"
+                  loading="lazy"
+                />
+              </div>
               <CardContent className="p-4">
                 <h3 className="font-semibold">{foto.titulo}</h3>
                 {foto.descripcion && (
