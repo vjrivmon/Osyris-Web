@@ -6,10 +6,10 @@ import { Loader2, AlertCircle, RefreshCw, Download, FileText, ZoomIn, ZoomOut, M
 import { useState, useEffect, useCallback, useRef } from "react"
 
 // Constantes de zoom
-const ZOOM_MIN = 50
+const ZOOM_MIN = 25
 const ZOOM_MAX = 200
 const ZOOM_STEP = 25
-const ZOOM_DEFAULT = 100
+const ZOOM_DEFAULT = 100 // Por defecto 100% para mostrar documento completo
 const ZOOM_STORAGE_KEY = 'osyris_document_zoom_preference'
 
 interface DocumentoViewerModalProps {
@@ -219,20 +219,36 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
   if (!documento) return null
 
   // Calcular estilos de zoom para imágenes
-  const getImageZoomStyles = () => {
+  // Por defecto (100%), la imagen se ajusta al contenedor sin desbordar
+  // Al hacer zoom, la imagen crece y permite scroll
+  const getImageZoomStyles = (): React.CSSProperties => {
     if (isFitWidth) {
       return {
         width: '100%',
         height: 'auto',
         maxWidth: '100%',
-        maxHeight: 'none'
+        maxHeight: 'none',
+        objectFit: 'contain' as const
       }
     }
+    // Al 100%, la imagen se ajusta completamente al contenedor
+    // Por encima de 100%, la imagen crece proporcionalmente
+    if (zoomLevel <= 100) {
+      return {
+        maxWidth: '100%',
+        maxHeight: '100%',
+        width: 'auto',
+        height: 'auto',
+        objectFit: 'contain' as const
+      }
+    }
+    // Zoom superior al 100%: la imagen crece y permite scroll
     return {
-      transform: `scale(${zoomLevel / 100})`,
-      transformOrigin: 'center center',
+      width: `${zoomLevel}%`,
+      height: 'auto',
       maxWidth: 'none',
-      maxHeight: 'none'
+      maxHeight: 'none',
+      objectFit: 'contain' as const
     }
   }
 
@@ -344,11 +360,11 @@ export function DocumentoViewerModal({ isOpen, onClose, documento }: DocumentoVi
             <>
               {isImage ? (
                 /* Visor de imagenes con zoom */
-                <div className="flex items-center justify-center min-h-full p-4">
+                <div className={`flex items-center justify-center p-4 ${zoomLevel <= 100 ? 'h-full' : 'min-h-full'}`}>
                   <img
                     src={blobUrl}
                     alt={documento.name}
-                    className="transition-transform duration-200"
+                    className="transition-all duration-200"
                     style={getImageZoomStyles()}
                     draggable={false}
                   />

@@ -5,10 +5,10 @@ import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react"
 export function SiteFooter() {
   return (
     <footer className="bg-primary text-primary-foreground relative overflow-hidden">
-      {/* Scout pattern overlay */}
+      {/* Scout pattern overlay - Flor de lis */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 8 L46 26 L65 26 L50 38 L55 56 L40 44 L25 56 L30 38 L15 26 L34 26 Z' fill='%23ffffff' fill-opacity='1'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 6c-3 5-4 11-4 16 0-5-1-11-4-16-1 4-1 8 0 12-4-4-9-7-15-7 4 3 7 7 8 11-5-3-11-4-16-4 5 3 10 7 12 12-3-1-7-1-10 0 3 2 6 4 7 7l-5 1c3 2 5 4 6 7 0 3-2 6-3 8h5c2-3 3-5 6-7 1 2 3 5 3 8h5c0-3 2-6 3-8 3 2 4 4 6 7h5c-2-2-3-5-3-8 2-3 3-5 6-7l-5-1c1-3 4-5 7-7-3-1-7-1-10 0 2-5 7-9 12-12-5 0-11 1-16 4 1-4 4-8 8-11-6 0-11 3-15 7 1-4 1-8 0-12z' fill='%23ffffff' fill-opacity='1'/%3E%3C/svg%3E")`,
           backgroundSize: '80px 80px'
         }} />
       </div>

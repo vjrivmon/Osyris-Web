@@ -207,10 +207,10 @@ export default function Home() {
 
         {/* Valores - Enhanced with better visuals */}
         <section className="bg-primary py-12 sm:py-16 text-primary-foreground relative overflow-hidden">
-          {/* Scout pattern background */}
+          {/* Scout pattern background - Flor de lis */}
           <div className="absolute inset-0 opacity-5">
             <div className="absolute inset-0" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 5 L35 20 L50 20 L38 30 L42 45 L30 35 L18 45 L22 30 L10 20 L25 20 Z' fill='%23ffffff' fill-opacity='1'/%3E%3C/svg%3E")`,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 5c-2 4-3 8-3 12 0-4-1-8-3-12-1 3-1 6 0 9-3-3-7-5-11-5 3 2 5 5 6 8-4-2-8-3-12-3 4 2 7 5 9 9-2-1-5-1-7 0 2 1 4 3 5 5l-4 1c2 1 3 3 4 5 0 2-1 4-2 6h4c1-2 2-4 4-5 1 2 2 4 2 6h4c0-2 1-4 2-6 2 1 3 3 4 5h4c-1-2-2-4-2-6 1-2 2-4 4-5l-4-1c1-2 3-4 5-5-2-1-5-1-7 0 2-4 5-7 9-9-4 0-8 1-12 3 1-3 3-6 6-8-4 0-8 2-11 5 1-3 1-6 0-9z' fill='%23ffffff' fill-opacity='1'/%3E%3C/svg%3E")`,
               backgroundSize: '60px 60px'
             }} />
           </div>

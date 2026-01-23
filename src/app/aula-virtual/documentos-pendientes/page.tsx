@@ -286,20 +286,32 @@ export default function DocumentosPendientesPage() {
 
       {/* Modal de preview con acciones */}
       <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>{selectedDoc?.titulo}</DialogTitle>
             <DialogDescription>
               {selectedDoc?.educando_nombre} {selectedDoc?.educando_apellidos} - {selectedDoc?.seccion_nombre}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto min-h-0">
             {selectedDoc && (
-              <iframe
-                src={getPreviewUrl(selectedDoc)}
-                className="w-full h-[60vh] rounded border"
-                title="Vista previa del documento"
-              />
+              selectedDoc.archivo_nombre?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                /* Visor de imagenes - ajustado al contenedor */
+                <div className="w-full h-full flex items-center justify-center p-4">
+                  <img
+                    src={getPreviewUrl(selectedDoc)}
+                    alt={selectedDoc.titulo}
+                    className="max-w-full max-h-full object-contain rounded"
+                  />
+                </div>
+              ) : (
+                /* Visor de PDF/otros documentos */
+                <iframe
+                  src={getPreviewUrl(selectedDoc)}
+                  className="w-full h-full rounded border"
+                  title="Vista previa del documento"
+                />
+              )
             )}
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
