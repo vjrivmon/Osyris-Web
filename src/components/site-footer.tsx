@@ -112,31 +112,31 @@ export function SiteFooter() {
               <li>
                 <Link href="/secciones/castores" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                  Castores (5-7 anos)
+                  Castores (5-7 años)
                 </Link>
               </li>
               <li>
                 <Link href="/secciones/manada" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
-                  Manada (7-10 anos)
+                  Manada (7-10 años)
                 </Link>
               </li>
               <li>
                 <Link href="/secciones/tropa" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                  Tropa (10-13 anos)
+                  Tropa (10-13 años)
                 </Link>
               </li>
               <li>
                 <Link href="/secciones/pioneros" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-red-600"></span>
-                  Pioneros (13-16 anos)
+                  Pioneros (13-16 años)
                 </Link>
               </li>
               <li>
                 <Link href="/secciones/rutas" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-700"></span>
-                  Rutas (16-19 anos)
+                  Rutas (16-19 años)
                 </Link>
               </li>
             </ul>
@@ -153,11 +153,11 @@ export function SiteFooter() {
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-secondary" />
-                <span className="text-sm">+34 600 123 456</span>
+                <span className="text-sm">+34 601 037 577</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-secondary" />
-                <span className="text-sm">info@grupoosyris.es</span>
+                <span className="text-sm">web.osyris@gmail.com</span>
               </div>
             </address>
           </div>
@@ -168,6 +168,22 @@ export function SiteFooter() {
             <p className="text-sm text-primary-foreground/60 text-center sm:text-left">
               &copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.
             </p>
+            <div className="text-center sm:text-right">
+              <p className="text-xs text-primary-foreground/50 italic mb-1">
+                "Un nuevo escultismo es posible"
+              </p>
+              <p className="text-sm text-primary-foreground/60">
+                Desarrollado por:{" "}
+                <Link
+                  href="https://www.vicenterivasmonferrer.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-secondary hover:text-secondary/80 transition-colors font-medium"
+                >
+                  Vicente Rivas Monferrer
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
