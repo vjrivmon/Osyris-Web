@@ -168,22 +168,17 @@ export function SiteFooter() {
             <p className="text-sm text-primary-foreground/60 text-center sm:text-left">
               &copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.
             </p>
-            <div className="text-center sm:text-right">
-              <p className="text-xs text-primary-foreground/50 italic mb-1">
-                "Un nuevo escultismo es posible"
-              </p>
-              <p className="text-sm text-primary-foreground/60">
-                Desarrollado por:{" "}
-                <Link
-                  href="https://www.vicenterivasmonferrer.dev"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-secondary hover:text-secondary/80 transition-colors font-medium"
-                >
-                  Vicente Rivas Monferrer
-                </Link>
-              </p>
-            </div>
+            <p className="text-sm text-primary-foreground/60">
+              ⚜️ & 💻 Siempre listo para programar ·{" "}
+              <Link
+                href="https://www.vicenterivasmonferrer.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary hover:text-secondary/80 transition-colors font-medium"
+              >
+                Vicente Rivas Monferrer
+              </Link>
+            </p>
           </div>
         </div>
       </div>
