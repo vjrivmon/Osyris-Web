@@ -98,7 +98,7 @@ export default function AdminDashboard() {
           apellidos: apiUser.apellidos,
           rol: apiUser.rol,
           estado: apiUser.activo ? "activo" : "inactivo",
-          seccion: apiUser.seccion_id ? SECCIONES_MAP[apiUser.seccion_id] || `Seccion ${apiUser.seccion_id}` : undefined,
+          seccion: apiUser.seccion_id ? SECCIONES_MAP[apiUser.seccion_id] || `Sección ${apiUser.seccion_id}` : undefined,
           ultimoAcceso: apiUser.ultimo_acceso,
           fechaCreacion: apiUser.fecha_registro
         }))
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
         <div>
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl sm:text-3xl font-bold">Panel de Administracion</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Panel de Administración</h1>
           </div>
           <p className="text-muted-foreground mt-1">
             Gestiona usuarios, invitaciones y familias del sistema
@@ -197,14 +197,14 @@ export default function AdminDashboard() {
         <FamiliasResumenCard />
       </div>
 
-      {/* Gestion de Usuarios - Tabla completa */}
+      {/* Gestión de Usuarios - Tabla completa */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               <div>
-                <CardTitle>Gestion de Usuarios</CardTitle>
+                <CardTitle>Gestión de Usuarios</CardTitle>
                 <CardDescription>
                   Administra todos los usuarios del sistema
                 </CardDescription>

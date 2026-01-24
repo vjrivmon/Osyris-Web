@@ -176,7 +176,7 @@ export function useNotificacionesFamilia({
       if (scoutId) params.append('scout_id', scoutId.toString())
 
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/listar?${params}`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/listar?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -235,7 +235,7 @@ export function useNotificacionesFamilia({
 
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/preferencias`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/preferencias`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -288,7 +288,7 @@ export function useNotificacionesFamilia({
 
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/marcar-leida/${notificacionId}`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/marcar-leida/${notificacionId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -325,7 +325,7 @@ export function useNotificacionesFamilia({
     try {
       const params = scoutId ? `?scout_id=${scoutId}` : ''
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/marcar-todas-leidas${params}`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/marcar-todas-leidas${params}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -363,7 +363,7 @@ export function useNotificacionesFamilia({
 
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/archivar/${notificacionId}`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/archivar/${notificacionId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -399,7 +399,7 @@ export function useNotificacionesFamilia({
 
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/eliminar/${notificacionId}`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/eliminar/${notificacionId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -431,7 +431,7 @@ export function useNotificacionesFamilia({
 
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/actualizar-preferencias`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/actualizar-preferencias`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -467,7 +467,7 @@ export function useNotificacionesFamilia({
 
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/enviar-mensaje`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/enviar-mensaje`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -501,7 +501,7 @@ export function useNotificacionesFamilia({
     try {
       const params = scoutId ? `?scout_id=${scoutId}` : ''
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/contador-no-leidas${params}`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/contador-no-leidas${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -669,7 +669,7 @@ export function usePlantillasMensaje() {
     setLoading(true)
     try {
       const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/api/notificaciones_familia/plantillas`, {
+      const response = await fetch(`${apiUrl}/api/notificaciones-familia/plantillas`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

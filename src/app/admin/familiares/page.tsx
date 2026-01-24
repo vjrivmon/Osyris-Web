@@ -123,7 +123,7 @@ export default function AdminFamiliaresPage() {
               {estadisticas?.documentosPendientes || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Requerieren aprobación
+              Requieren aprobación
             </p>
           </CardContent>
         </Card>

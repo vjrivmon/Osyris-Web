@@ -96,6 +96,8 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
   const [diagnosticLoading, setDiagnosticLoading] = useState(false)
   const fetchingSeccion = useRef(false)
   const previousUserId = useRef<number | null>(null)
+  const initialLoadDone = useRef(false)
+  const filtersRef = useRef(filters)
 
   // IMPORTANTE: Resetear todo el estado cuando cambia el usuario
   useEffect(() => {
@@ -111,9 +113,15 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
       setResolvedSeccionId(null)
       setResolvedSeccionName(null)
       fetchingSeccion.current = false
+      initialLoadDone.current = false
       previousUserId.current = currentUserId
     }
   }, [user?.id])
+
+  // Mantener filtersRef actualizado
+  useEffect(() => {
+    filtersRef.current = filters
+  }, [filters])
 
   // Calcular diagnosticInfo dinámicamente
   const effectiveSectionId = user?.seccion_id || resolvedSeccionId
@@ -511,15 +519,29 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
     await fetchEducandos()
   }, [fetchEducandos])
 
-  // Cargar educandos cuando cambian los filtros
+  // Efecto para carga inicial (solo una vez cuando tenemos token y sección)
   useEffect(() => {
-    if (token && (user?.seccion_id || resolvedSeccionId)) {
+    if (!token || initialLoadDone.current) return
+
+    const seccionId = user?.seccion_id || resolvedSeccionId
+    if (seccionId) {
+      initialLoadDone.current = true
       fetchEducandos()
-    } else if (token && !user?.seccion_id && !resolvedSeccionId) {
-      // Si no hay seccion_id pero hay token, intentar cargar (fetchEducandos intentará resolver)
+    } else if (!fetchingSeccion.current) {
+      // Intentar resolver sección si no la tenemos
       fetchEducandos()
     }
-  }, [filters, user?.seccion_id, resolvedSeccionId, token]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [token, user?.seccion_id, resolvedSeccionId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Efecto separado para cuando cambian los filtros (después de carga inicial)
+  useEffect(() => {
+    if (!token || !initialLoadDone.current) return
+
+    const seccionId = user?.seccion_id || resolvedSeccionId
+    if (seccionId) {
+      fetchEducandos()
+    }
+  }, [filters]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     educandos,

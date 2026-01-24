@@ -43,7 +43,7 @@ export function FamiliasResumenCard() {
               <UsersRound className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <CardTitle className="text-lg">Gestion de Familias</CardTitle>
+              <CardTitle className="text-lg">Gestión de Familias</CardTitle>
               <CardDescription>Resumen del portal familiar</CardDescription>
             </div>
           </div>

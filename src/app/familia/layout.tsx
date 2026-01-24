@@ -255,7 +255,7 @@ export default function FamiliaLayout({
                         onClick={marcarTodasComoLeidas}
                       >
                         <CheckCheck className="h-3 w-3 mr-1" />
-                        Marcar todas leídas
+                        Marcar todas como leídas
                       </Button>
                     )}
                     {notificaciones.some(n => n.leida) && (

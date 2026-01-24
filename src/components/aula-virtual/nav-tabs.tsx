@@ -30,7 +30,7 @@ export function NavTabs() {
     <nav
       className="hidden md:flex items-center gap-1"
       role="navigation"
-      aria-label="Navegacion principal"
+      aria-label="Navegación principal"
     >
       {navItems.map(item => {
         const isActive = item.exact

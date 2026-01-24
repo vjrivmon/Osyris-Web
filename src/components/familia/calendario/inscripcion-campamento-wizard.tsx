@@ -11,7 +11,7 @@ import { getApiUrl } from '@/lib/api-utils'
  * Paso 3: Confirmacion y recordatorios
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -130,6 +130,10 @@ export function InscripcionCampamentoWizard({
   // Estado para reinscripción (cuando está cancelado)
   const [reinscribiendo, setReinscribiendo] = useState(false)
 
+  // Ref para distinguir entre carga inicial y navegación del usuario
+  // Evita que el useEffect de inscripción interfiera cuando el usuario navega manualmente
+  const isInitialLoadRef = useRef(true)
+
   // Estado para modal de visualización de documentos
   const [docViewerOpen, setDocViewerOpen] = useState(false)
   const [selectedDocumento, setSelectedDocumento] = useState<{ name: string; webViewLink?: string; id?: string } | null>(null)
@@ -237,6 +241,15 @@ export function InscripcionCampamentoWizard({
     }
   }, [circularesModalOpen, circulares.length, fetchCirculares])
 
+  // Resetear el ref de carga inicial cuando se abre el wizard
+  // Esto permite que el useEffect de inscripción funcione correctamente si el usuario
+  // cierra y vuelve a abrir el wizard
+  useEffect(() => {
+    if (isOpen) {
+      isInitialLoadRef.current = true
+    }
+  }, [isOpen])
+
   // Prellenar datos del familiar cuando estén disponibles
   // IMPORTANTE: useState solo usa el valor inicial en el primer render
   // Si familiarData viene de auth asíncrono, necesitamos este useEffect
@@ -276,23 +289,26 @@ export function InscripcionCampamentoWizard({
     }
   }, [inscripcion])
 
-  // Si ya existe inscripcion, ir al paso correspondiente (solo en carga inicial)
-  // IMPORTANTE: No resetear el paso si ya estamos más adelante (evita race condition)
+  // Si ya existe inscripcion, ir al paso correspondiente (SOLO en carga inicial)
+  // IMPORTANTE: Usamos isInitialLoadRef para evitar que este efecto interfiera
+  // cuando el usuario está navegando manualmente (ej: después de confirmar asistencia)
   useEffect(() => {
-    if (inscripcion) {
+    // Solo aplicar navegación automática en carga inicial
+    if (inscripcion && isInitialLoadRef.current) {
+      isInitialLoadRef.current = false  // Marcar que ya pasó la carga inicial
+
       if (inscripcion.estado === 'no_asiste') {
         // Si ya había dicho que no, mostrar paso 0 para que pueda cambiar de opinión
         setAsistira(false)
         setCurrentStep(0)
       } else if (inscripcion.estado === 'inscrito' || inscripcion.datos_confirmados) {
-        // Si la inscripción ya está completa, ir directamente al paso de confirmación
+        // Inscripción completa previa → ir a confirmación
         setAsistira(true)
-        setCurrentStep(prev => prev <= 2 ? 3 : prev)
+        setCurrentStep(3)
       } else {
+        // Inscripción en progreso → ir al paso 2 (documentos)
         setAsistira(true)
-        // Solo ir a paso 2 si estamos en paso 0 o 1 (carga inicial)
-        // Si ya estamos en paso 2 o 3, no resetear
-        setCurrentStep(prev => prev <= 1 ? 2 : prev)
+        setCurrentStep(2)
       }
     }
   }, [inscripcion])
@@ -308,6 +324,10 @@ export function InscripcionCampamentoWizard({
         onClose()
       }
     } else {
+      // IMPORTANTE: Marcar que el usuario está navegando manualmente
+      // Esto evita que el useEffect de inscripción interfiera cuando se crea/actualiza la inscripción
+      isInitialLoadRef.current = false
+
       // Crear inscripcion inicial si no existe para permitir subir documentos
       if (!inscripcion) {
         const success = await inscribir({

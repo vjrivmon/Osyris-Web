@@ -67,8 +67,8 @@ export function InvitacionesPanel({ onRefresh }: InvitacionesPanelProps) {
 
       if (response) {
         toast({
-          title: 'Invitacion reenviada',
-          description: 'Se ha enviado un nuevo correo de invitacion',
+          title: 'Invitación reenviada',
+          description: 'Se ha enviado un nuevo correo de invitación',
         })
         loadPendingUsers()
       }
@@ -76,7 +76,7 @@ export function InvitacionesPanel({ onRefresh }: InvitacionesPanelProps) {
       console.error('Error resending invitation:', error)
       toast({
         title: 'Error',
-        description: 'No se pudo reenviar la invitacion',
+        description: 'No se pudo reenviar la invitación',
         variant: 'destructive',
       })
     }
@@ -87,7 +87,7 @@ export function InvitacionesPanel({ onRefresh }: InvitacionesPanelProps) {
     onRefresh?.()
     toast({
       title: 'Usuario invitado',
-      description: 'La invitacion se ha enviado correctamente',
+      description: 'La invitación se ha enviado correctamente',
     })
   }
 
@@ -122,7 +122,7 @@ export function InvitacionesPanel({ onRefresh }: InvitacionesPanelProps) {
             trigger={
               <Button className="w-full bg-green-600 hover:bg-green-700">
                 <UserPlus className="h-4 w-4 mr-2" />
-                Enviar Invitacion
+                Enviar Invitación
               </Button>
             }
           />
@@ -132,7 +132,7 @@ export function InvitacionesPanel({ onRefresh }: InvitacionesPanelProps) {
             trigger={
               <Button variant="outline" className="w-full border-orange-500 text-orange-600 hover:bg-orange-50">
                 <Users className="h-4 w-4 mr-2" />
-                Invitaciones Multiples
+                Invitaciones Múltiples
               </Button>
             }
           />
@@ -186,7 +186,7 @@ export function InvitacionesPanel({ onRefresh }: InvitacionesPanelProps) {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleResendInvitation(user.id)}
-                    title="Reenviar invitacion"
+                    title="Reenviar invitación"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
@@ -194,7 +194,7 @@ export function InvitacionesPanel({ onRefresh }: InvitacionesPanelProps) {
               ))}
               {pendingUsers.length > 5 && (
                 <p className="text-xs text-muted-foreground text-center pt-2">
-                  Y {pendingUsers.length - 5} mas...
+                  Y {pendingUsers.length - 5} más...
                 </p>
               )}
             </div>

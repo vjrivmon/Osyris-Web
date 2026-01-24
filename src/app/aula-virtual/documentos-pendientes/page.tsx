@@ -296,12 +296,13 @@ export default function DocumentosPendientesPage() {
           <div className="flex-1 overflow-auto min-h-0">
             {selectedDoc && (
               selectedDoc.archivo_nombre?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                /* Visor de imagenes - ajustado al contenedor */
-                <div className="w-full h-full flex items-center justify-center p-4">
+                /* Visor de imagenes - ajustado al contenedor con dimensiones explícitas */
+                <div className="w-full h-full flex items-center justify-center p-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
                   <img
                     src={getPreviewUrl(selectedDoc)}
                     alt={selectedDoc.titulo}
-                    className="max-w-full max-h-full object-contain rounded"
+                    className="object-contain rounded"
+                    style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }}
                   />
                 </div>
               ) : (

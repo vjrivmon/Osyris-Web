@@ -50,8 +50,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/50 to-primary/30"></div>
 
           <div className="container relative z-10 mx-auto px-4 sm:px-6 text-center">
-            <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
-              <span className="text-secondary">&#9884;</span>
+            <div className="mb-4 sm:mb-6 inline-flex items-center rounded-full bg-white px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
               Educando en valores desde 1981
             </div>
             <StaticText
@@ -154,19 +153,16 @@ export default function Home() {
         </section>
 
         {/* Secciones - Improved with better visuals and layout */}
-        <section className="bg-section-pattern py-12 sm:py-16 scout-pattern">
+        <section className="bg-section-pattern py-12 sm:py-16">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="mb-8 sm:mb-12 text-center">
-              <div className="inline-flex items-center gap-2 mb-3">
-                <span className="text-2xl text-primary">&#9650;</span>
-              </div>
               <StaticText
                 content="Nuestras Secciones"
                 tag="h2"
                 className="mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold"
               />
               <StaticText
-                content="El escultismo se adapta a las diferentes etapas de desarrollo de ninos y jovenes, ofreciendo actividades y metodologias especificas para cada edad."
+                content="El escultismo se adapta a las diferentes etapas de desarrollo de niños y jóvenes, ofreciendo actividades y metodologías específicas para cada edad."
                 tag="p"
                 className="mx-auto max-w-2xl text-sm sm:text-base text-muted-foreground px-4"
               />
@@ -206,26 +202,16 @@ export default function Home() {
         </section>
 
         {/* Valores - Enhanced with better visuals */}
-        <section className="bg-primary py-12 sm:py-16 text-primary-foreground relative overflow-hidden">
-          {/* Scout pattern background - Flor de lis */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 5c-2 4-3 8-3 12 0-4-1-8-3-12-1 3-1 6 0 9-3-3-7-5-11-5 3 2 5 5 6 8-4-2-8-3-12-3 4 2 7 5 9 9-2-1-5-1-7 0 2 1 4 3 5 5l-4 1c2 1 3 3 4 5 0 2-1 4-2 6h4c1-2 2-4 4-5 1 2 2 4 2 6h4c0-2 1-4 2-6 2 1 3 3 4 5h4c-1-2-2-4-2-6 1-2 2-4 4-5l-4-1c1-2 3-4 5-5-2-1-5-1-7 0 2-4 5-7 9-9-4 0-8 1-12 3 1-3 3-6 6-8-4 0-8 2-11 5 1-3 1-6 0-9z' fill='%23ffffff' fill-opacity='1'/%3E%3C/svg%3E")`,
-              backgroundSize: '60px 60px'
-            }} />
-          </div>
-          <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <section className="bg-primary py-12 sm:py-16 text-primary-foreground">
+          <div className="container mx-auto px-4 sm:px-6">
             <div className="mb-8 sm:mb-12 text-center">
-              <div className="inline-flex items-center gap-2 mb-3">
-                <span className="text-2xl text-secondary">&#9884;</span>
-              </div>
               <StaticText
                 content="Nuestros Valores"
                 tag="h2"
                 className="mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold"
               />
               <StaticText
-                content="El escultismo se basa en valores fundamentales que guian nuestras actividades y nuestra forma de entender la educacion."
+                content="El escultismo se basa en valores fundamentales que guían nuestras actividades y nuestra forma de entender la educación."
                 tag="p"
                 className="mx-auto max-w-2xl text-sm sm:text-base text-primary-foreground/80 px-4"
               />
@@ -270,21 +256,16 @@ export default function Home() {
                     className="w-full h-full object-cover"
                     priority
                   />
-                  {/* Scout badge overlay */}
-                  <div className="absolute bottom-4 right-4 bg-primary/90 text-white px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2">
-                    <span>&#9884;</span> Siempre listos
-                  </div>
                 </div>
 
                 {/* Right side - Title and Form */}
                 <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
                   <div>
-                    <div className="inline-flex items-center gap-2 text-primary mb-2">
-                      <span className="text-xl">&#9650;</span>
+                    <div className="text-primary mb-2">
                       <span className="text-sm font-medium">Forma parte de la aventura</span>
                     </div>
                     <StaticText
-                      content="Unete al grupo"
+                      content="Únete al grupo"
                       tag="h2"
                       className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4"
                     />
@@ -336,12 +317,9 @@ export default function Home() {
         </section>
 
         {/* Testimonios - Enhanced with better cards */}
-        <section className="bg-gray-100 dark:bg-slate-900 py-12 sm:py-16 scout-pattern">
+        <section className="bg-gray-100 dark:bg-slate-900 py-12 sm:py-16">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="mb-8 sm:mb-12 text-center">
-              <div className="inline-flex items-center gap-2 mb-3">
-                <span className="text-2xl text-primary">&#10084;</span>
-              </div>
               <StaticText
                 content="Testimonios"
                 tag="h2"
@@ -365,9 +343,7 @@ export default function Home() {
                       </div>
                       <div>
                         <h4 className="font-semibold">{testimonial.name}</h4>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <span className="text-primary text-xs">&#9884;</span> {testimonial.role}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                       </div>
                     </div>
                   </CardContent>

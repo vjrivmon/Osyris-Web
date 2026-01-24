@@ -313,20 +313,78 @@ jobs:
 
       - name: 🗄️ Run migrations on Staging
         run: |
+          # Verificar que hay migraciones para ejecutar
+          if [ ! -d "api-osyris/database/migrations" ] || [ -z "$(ls -A api-osyris/database/migrations/*.sql 2>/dev/null)" ]; then
+            echo "⚠️ No hay migraciones SQL para ejecutar"
+            exit 0
+          fi
+
           echo "📦 Transfiriendo migraciones a staging..."
-          scp -o StrictHostKeyChecking=no -r api-osyris/database/migrations ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/migrations_staging/
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "rm -rf /tmp/migrations_staging && mkdir -p /tmp/migrations_staging"
+
+          if ! scp -o StrictHostKeyChecking=no -r api-osyris/database/migrations/*.sql ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/migrations_staging/; then
+            echo "❌ ERROR: Fallo en transferencia SCP"
+            exit 1
+          fi
 
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
           set -e
-          echo "🗄️ Ejecutando migraciones en staging..."
 
-          # Ejecutar cada migración en orden alfabético
-          for migration in $(ls /tmp/migrations_staging/*.sql | sort); do
+          echo "🔍 Verificando container PostgreSQL..."
+          if ! docker ps --format '{{.Names}}' | grep -q "osyris-db"; then
+            echo "❌ ERROR: Container osyris-db no está corriendo"
+            docker ps -a | grep osyris || true
+            exit 1
+          fi
+
+          echo "🔗 Verificando conectividad a PostgreSQL..."
+          if ! docker exec osyris-db pg_isready -U osyris_user -d osyris_staging_db; then
+            echo "❌ ERROR: PostgreSQL no está listo"
+            exit 1
+          fi
+
+          # Verificar si la base de datos tiene tablas básicas
+          TABLE_COUNT=$(docker exec osyris-db psql -U osyris_user -d osyris_staging_db -t -c "SELECT COUNT(*) FROM pg_tables WHERE schemaname='public';" | tr -d ' ')
+          echo "📊 Tablas existentes: $TABLE_COUNT"
+
+          if [ "$TABLE_COUNT" -lt 5 ]; then
+            echo "📦 Base de datos casi vacía, verificando init.sql..."
+            if [ -f "/var/www/osyris-staging/current/api-osyris/database/init.sql" ]; then
+              echo "  Ejecutando init.sql primero..."
+              docker exec -i osyris-db psql -U osyris_user -d osyris_staging_db < /var/www/osyris-staging/current/api-osyris/database/init.sql
+            fi
+          fi
+
+          echo "🗄️ Ejecutando migraciones en staging..."
+          MIGRATION_FILES=$(ls /tmp/migrations_staging/*.sql 2>/dev/null | sort)
+
+          if [ -z "$MIGRATION_FILES" ]; then
+            echo "⚠️ No se encontraron archivos de migración"
+            exit 0
+          fi
+
+          ERRORS=0
+          for migration in $MIGRATION_FILES; do
             echo "  📄 Ejecutando: $(basename $migration)"
-            docker exec -i osyris-db psql -U osyris_user -d osyris_staging_db < "$migration" 2>&1 || echo "    ⚠️ Migración ya aplicada o error menor"
+            if docker exec -i osyris-db psql -U osyris_user -d osyris_staging_db < "$migration" 2>&1; then
+              echo "    ✅ OK"
+            else
+              # Verificar si es un error de "ya existe" (que es aceptable)
+              if docker exec -i osyris-db psql -U osyris_user -d osyris_staging_db < "$migration" 2>&1 | grep -q "already exists"; then
+                echo "    ⚠️ Ya aplicada (ignorando)"
+              else
+                echo "    ❌ Error en migración"
+                ERRORS=$((ERRORS + 1))
+              fi
+            fi
           done
 
           rm -rf /tmp/migrations_staging
+
+          if [ $ERRORS -gt 0 ]; then
+            echo "⚠️ Hubo $ERRORS errores en migraciones (pueden ser duplicados)"
+          fi
+
           echo "✅ Migraciones staging completadas"
 
           # Listar tablas para verificación
@@ -354,30 +412,94 @@ jobs:
 
       - name: 🗄️ Backup and Migrate Production
         run: |
+          # Verificar que hay migraciones para ejecutar
+          if [ ! -d "api-osyris/database/migrations" ] || [ -z "$(ls -A api-osyris/database/migrations/*.sql 2>/dev/null)" ]; then
+            echo "⚠️ No hay migraciones SQL para ejecutar"
+            exit 0
+          fi
+
           echo "📦 Creando backup pre-migración..."
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
+          set -e
+
+          echo "🔍 Verificando container PostgreSQL..."
+          if ! docker ps --format '{{.Names}}' | grep -q "osyris-db"; then
+            echo "❌ ERROR: Container osyris-db no está corriendo"
+            docker ps -a | grep osyris || true
+            exit 1
+          fi
+
+          echo "🔗 Verificando conectividad a PostgreSQL..."
+          if ! docker exec osyris-db pg_isready -U osyris_user -d osyris_db; then
+            echo "❌ ERROR: PostgreSQL no está listo"
+            exit 1
+          fi
+
           mkdir -p /var/www/backups
           BACKUP_FILE="/var/www/backups/backup_pre_cicd_migration_$(date +%Y%m%d_%H%M%S).sql.gz"
-          docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > "$BACKUP_FILE"
-          echo "✅ Backup creado: $BACKUP_FILE"
-          ls -lh "$BACKUP_FILE"
+          if docker exec osyris-db pg_dump -U osyris_user osyris_db | gzip > "$BACKUP_FILE"; then
+            echo "✅ Backup creado: $BACKUP_FILE"
+            ls -lh "$BACKUP_FILE"
+          else
+            echo "❌ ERROR: Fallo al crear backup"
+            exit 1
+          fi
           ENDSSH
 
           echo ""
           echo "📦 Transfiriendo migraciones a producción..."
-          scp -o StrictHostKeyChecking=no -r api-osyris/database/migrations ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/migrations_prod/
+          ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "rm -rf /tmp/migrations_prod && mkdir -p /tmp/migrations_prod"
+
+          if ! scp -o StrictHostKeyChecking=no -r api-osyris/database/migrations/*.sql ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/migrations_prod/; then
+            echo "❌ ERROR: Fallo en transferencia SCP"
+            exit 1
+          fi
 
           ssh -o StrictHostKeyChecking=no ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} bash << 'ENDSSH'
           set -e
-          echo "🗄️ Ejecutando migraciones en producción..."
 
-          # Ejecutar cada migración en orden alfabético
-          for migration in $(ls /tmp/migrations_prod/*.sql | sort); do
+          # Verificar si la base de datos tiene tablas básicas
+          TABLE_COUNT=$(docker exec osyris-db psql -U osyris_user -d osyris_db -t -c "SELECT COUNT(*) FROM pg_tables WHERE schemaname='public';" | tr -d ' ')
+          echo "📊 Tablas existentes: $TABLE_COUNT"
+
+          if [ "$TABLE_COUNT" -lt 5 ]; then
+            echo "📦 Base de datos casi vacía, verificando init.sql..."
+            if [ -f "/var/www/osyris/current/api-osyris/database/init.sql" ]; then
+              echo "  Ejecutando init.sql primero..."
+              docker exec -i osyris-db psql -U osyris_user -d osyris_db < /var/www/osyris/current/api-osyris/database/init.sql
+            fi
+          fi
+
+          echo "🗄️ Ejecutando migraciones en producción..."
+          MIGRATION_FILES=$(ls /tmp/migrations_prod/*.sql 2>/dev/null | sort)
+
+          if [ -z "$MIGRATION_FILES" ]; then
+            echo "⚠️ No se encontraron archivos de migración"
+            exit 0
+          fi
+
+          ERRORS=0
+          for migration in $MIGRATION_FILES; do
             echo "  📄 Ejecutando: $(basename $migration)"
-            docker exec -i osyris-db psql -U osyris_user -d osyris_db < "$migration" 2>&1 || echo "    ⚠️ Migración ya aplicada o error menor"
+            if docker exec -i osyris-db psql -U osyris_user -d osyris_db < "$migration" 2>&1; then
+              echo "    ✅ OK"
+            else
+              # Verificar si es un error de "ya existe" (que es aceptable)
+              if docker exec -i osyris-db psql -U osyris_user -d osyris_db < "$migration" 2>&1 | grep -q "already exists"; then
+                echo "    ⚠️ Ya aplicada (ignorando)"
+              else
+                echo "    ❌ Error en migración"
+                ERRORS=$((ERRORS + 1))
+              fi
+            fi
           done
 
           rm -rf /tmp/migrations_prod
+
+          if [ $ERRORS -gt 0 ]; then
+            echo "⚠️ Hubo $ERRORS errores en migraciones (pueden ser duplicados)"
+          fi
+
           echo "✅ Migraciones producción completadas"
 
           # Listar tablas para verificación

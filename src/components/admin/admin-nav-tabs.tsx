@@ -24,7 +24,7 @@ export function AdminNavTabs() {
     <nav
       className="hidden md:flex items-center gap-1"
       role="navigation"
-      aria-label="Navegacion principal admin"
+      aria-label="Navegación principal admin"
     >
       {navItems.map(item => {
         const isActive = item.exact
