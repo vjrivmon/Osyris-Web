@@ -523,18 +523,18 @@ export function EducandoFormModal({
             <AccordionContent>
               <div className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="direccion">Direccion</Label>
+                  <Label htmlFor="direccion">Dirección</Label>
                   <Input
                     id="direccion"
                     value={formData.direccion}
                     onChange={(e) => handleChange('direccion', e.target.value)}
-                    placeholder="Calle, numero, piso..."
+                    placeholder="Calle, número, piso..."
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="codigo_postal">Codigo Postal</Label>
+                    <Label htmlFor="codigo_postal">Código Postal</Label>
                     <Input
                       id="codigo_postal"
                       value={formData.codigo_postal}
@@ -622,7 +622,7 @@ export function EducandoFormModal({
                     <div className="flex items-center">
                       <Label htmlFor="pasaporte">Pasaporte</Label>
                       <FieldTooltip
-                        content="Solo necesario si el educando no tiene DNI espanol. Utilizar el numero de pasaporte vigente"
+                        content="Solo necesario si el educando no tiene DNI español. Utilizar el número de pasaporte vigente"
                         label="Pasaporte"
                       />
                     </div>
@@ -630,7 +630,7 @@ export function EducandoFormModal({
                       id="pasaporte"
                       value={formData.pasaporte}
                       onChange={(e) => handleChange('pasaporte', e.target.value)}
-                      placeholder="Numero de pasaporte"
+                      placeholder="Número de pasaporte"
                     />
                   </div>
                 </div>
@@ -668,17 +668,17 @@ export function EducandoFormModal({
 
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <Label htmlFor="notas_medicas">Notas Medicas</Label>
+                    <Label htmlFor="notas_medicas">Notas Médicas</Label>
                     <FieldTooltip
-                      content="Medicacion actual, tratamientos en curso, condiciones cronicas u otra informacion medica importante para los monitores"
-                      label="Notas Medicas"
+                      content="Medicación actual, tratamientos en curso, condiciones crónicas u otra información médica importante para los monitores"
+                      label="Notas Médicas"
                     />
                   </div>
                   <Textarea
                     id="notas_medicas"
                     value={formData.notas_medicas}
                     onChange={(e) => handleChange('notas_medicas', e.target.value)}
-                    placeholder="Informacion medica relevante..."
+                    placeholder="Información médica relevante..."
                     rows={3}
                   />
                 </div>

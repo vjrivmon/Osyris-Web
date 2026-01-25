@@ -58,13 +58,13 @@ export default function AulaVirtualLayout({
     e.stopPropagation()
     setDeletingId(id)
 
-    // Esperar animacion
+    // Esperar animación
     setTimeout(async () => {
       const success = await eliminarNotificacion(id)
       setDeletingId(null)
       if (success) {
         toast({
-          title: "Notificacion eliminada",
+          title: "Notificación eliminada",
           description: "Se ha eliminado correctamente",
         })
       }
@@ -76,7 +76,7 @@ export default function AulaVirtualLayout({
     if (count > 0) {
       toast({
         title: "Notificaciones marcadas",
-        description: `${count} notificacion(es) marcada(s) como leida(s)`,
+        description: `${count} notificación(es) marcada(s) como leída(s)`,
       })
     }
   }
@@ -86,12 +86,12 @@ export default function AulaVirtualLayout({
     if (count > 0) {
       toast({
         title: "Notificaciones limpiadas",
-        description: `${count} notificacion(es) eliminada(s)`,
+        description: `${count} notificación(es) eliminada(s)`,
       })
     } else {
       toast({
-        title: "Sin notificaciones leidas",
-        description: "No hay notificaciones leidas para eliminar",
+        title: "Sin notificaciones leídas",
+        description: "No hay notificaciones leídas para eliminar",
       })
     }
   }
