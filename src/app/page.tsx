@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { StaticText } from "@/components/ui/static-content"
 import { SeamlessVideoLoop } from "@/components/ui/seamless-video-loop"
+import { ScoutDivider, ScoutPatchCard, CanvasBackground, ScoutSectionCard, ValuesCard } from "@/components/scout-identity"
 import {
   CalendarDays,
   FileText,
@@ -38,19 +39,16 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <MainNav />
       <main className="flex-1">
-        {/* Hero Section - Improved with better visuals and call to action */}
+        {/* Hero Section */}
         <section className="relative bg-black overflow-hidden py-20 sm:py-28 md:py-36 lg:py-48">
-          {/* Video Background with seamless loop */}
           <SeamlessVideoLoop
             src="/videos/hero-background.mp4"
             opacity={0.6}
           />
-
-          {/* Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-r from-primary/50 to-primary/30"></div>
 
           <div className="container relative z-10 mx-auto px-4 sm:px-6 text-center">
-            <div className="mb-4 sm:mb-6 inline-flex items-center rounded-full bg-white px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium text-primary shadow-md dark:bg-white/10 dark:text-white">
+            <div className="mb-4 sm:mb-6 inline-flex items-center rounded-full bg-white px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium text-primary shadow-md">
               Educando en valores desde 1981
             </div>
             <StaticText
@@ -79,60 +77,83 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Featured Section - New section highlighting key aspects */}
-        <section className="py-12 sm:py-16">
+        {/* Separador con tres puntos */}
+        <ScoutDivider variant="dots" className="bg-white" />
+
+        {/* Featured Section - Tarjetas con efecto parche scout */}
+        <CanvasBackground pattern="grid" className="py-12 sm:py-16">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4 rounded-full bg-primary/10 p-4">
-                  <Compass className="h-8 w-8 text-primary" />
+              {/* Tarjeta 1 - Aventura */}
+              <ScoutPatchCard variant="default" showStitches={true}>
+                <div className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="mb-4 rounded-full bg-primary/10 p-4 border-2 border-[#C9A66B]/30">
+                      <Compass className="h-8 w-8 text-primary" />
+                    </div>
+                    <StaticText
+                      content="Aventura y Aprendizaje"
+                      tag="h3"
+                      className="mb-2 text-xl font-bold"
+                    />
+                    <StaticText
+                      content="Actividades emocionantes que combinan diversión y desarrollo personal en un entorno seguro."
+                      tag="p"
+                      className="text-muted-foreground"
+                    />
+                  </div>
                 </div>
-                <StaticText
-                  content="Aventura y Aprendizaje"
-                  tag="h3"
-                  className="mb-2 text-xl font-bold"
-                />
-                <StaticText
-                  content="Actividades emocionantes que combinan diversión y desarrollo personal en un entorno seguro."
-                  tag="p"
-                  className="text-muted-foreground"
-                />
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4 rounded-full bg-primary/10 p-4">
-                  <Heart className="h-8 w-8 text-primary" />
+              </ScoutPatchCard>
+
+              {/* Tarjeta 2 - Valores */}
+              <ScoutPatchCard variant="default" showStitches={true}>
+                <div className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="mb-4 rounded-full bg-primary/10 p-4 border-2 border-[#C9A66B]/30">
+                      <Heart className="h-8 w-8 text-primary" />
+                    </div>
+                    <StaticText
+                      content="Valores y Amistad"
+                      tag="h3"
+                      className="mb-2 text-xl font-bold"
+                    />
+                    <StaticText
+                      content="Fomentamos valores como el respeto, la responsabilidad y la amistad a través del método scout."
+                      tag="p"
+                      className="text-muted-foreground"
+                    />
+                  </div>
                 </div>
-                <StaticText
-                  content="Valores y Amistad"
-                  tag="h3"
-                  className="mb-2 text-xl font-bold"
-                />
-                <StaticText
-                  content="Fomentamos valores como el respeto, la responsabilidad y la amistad a través del método scout."
-                  tag="p"
-                  className="text-muted-foreground"
-                />
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4 rounded-full bg-primary/10 p-4">
-                  <Tent className="h-8 w-8 text-primary" />
+              </ScoutPatchCard>
+
+              {/* Tarjeta 3 - Naturaleza */}
+              <ScoutPatchCard variant="default" showStitches={true} className="sm:col-span-2 lg:col-span-1">
+                <div className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="mb-4 rounded-full bg-primary/10 p-4 border-2 border-[#C9A66B]/30">
+                      <Tent className="h-8 w-8 text-primary" />
+                    </div>
+                    <StaticText
+                      content="Naturaleza y Sostenibilidad"
+                      tag="h3"
+                      className="mb-2 text-xl font-bold"
+                    />
+                    <StaticText
+                      content="Conectamos con la naturaleza y aprendemos a cuidar nuestro entorno a través de actividades al aire libre."
+                      tag="p"
+                      className="text-muted-foreground"
+                    />
+                  </div>
                 </div>
-                <StaticText
-                  content="Naturaleza y Sostenibilidad"
-                  tag="h3"
-                  className="mb-2 text-xl font-bold"
-                />
-                <StaticText
-                  content="Conectamos con la naturaleza y aprendemos a cuidar nuestro entorno a través de actividades al aire libre."
-                  tag="p"
-                  className="text-muted-foreground"
-                />
-              </div>
+              </ScoutPatchCard>
             </div>
           </div>
-        </section>
+        </CanvasBackground>
 
-        {/* Stats Section - Trust indicators */}
+        {/* Separador con rombo */}
+        <ScoutDivider variant="diamond" className="bg-primary" />
+
+        {/* Stats Section */}
         <section className="py-12 sm:py-16 bg-primary">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-6 md:gap-8">
@@ -152,8 +173,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Secciones - Improved with better visuals and layout */}
-        <section className="bg-section-pattern py-12 sm:py-16">
+        {/* Separador con cruz */}
+        <ScoutDivider variant="cross" />
+
+        {/* Secciones */}
+        <CanvasBackground pattern="grid" className="py-12 sm:py-16">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="mb-8 sm:mb-12 text-center">
               <StaticText
@@ -169,39 +193,38 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
               {sections.map((section, i) => (
-                <Link href={section.href} key={i} className="group" >
-                  <Card className={`h-full overflow-hidden transition-all duration-300 hover:shadow-lg group-hover:translate-y-[-5px] scout-card scout-card-${section.slug}`}>
-                    <div className="relative h-40 overflow-hidden bg-white dark:bg-slate-900">
-                      {/* Section color accent bar */}
-                      <div className={`absolute top-0 left-0 right-0 h-1 ${section.accentColor}`}></div>
-                      <div className="absolute inset-0 flex items-center justify-center p-4">
-                        {section.logo && (
-                          <Image
-                            src={section.logo}
-                            alt={`Logo ${section.title}`}
-                            width={120}
-                            height={120}
-                            className="object-contain transition-transform group-hover:scale-105"
-                          />
-                        )}
-                      </div>
+                <Link href={section.href} key={i} className="group">
+                  <ScoutSectionCard sectionColor={section.hexColor} className="h-full">
+                    <div className="relative h-36 overflow-hidden flex items-center justify-center p-4">
+                      {section.logo && (
+                        <Image
+                          src={section.logo}
+                          alt={`Logo ${section.title}`}
+                          width={100}
+                          height={100}
+                          className="object-contain transition-transform group-hover:scale-110"
+                        />
+                      )}
                     </div>
-                    <CardContent className="p-6 text-center">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <span className="text-lg">{section.icon}</span>
-                        <h3 className="text-xl font-bold">{section.title}</h3>
+                    <div className="p-4 pt-2 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <span className="text-base">{section.icon}</span>
+                        <h3 className="text-lg font-bold">{section.title}</h3>
                       </div>
-                      <p className="mb-2 text-sm font-medium text-muted-foreground">{section.ageRange}</p>
-                      <p className="text-sm text-muted-foreground">{section.description}</p>
-                    </CardContent>
-                  </Card>
+                      <p className="text-xs font-medium text-muted-foreground">{section.ageRange}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{section.description}</p>
+                    </div>
+                  </ScoutSectionCard>
                 </Link>
               ))}
             </div>
           </div>
-        </section>
+        </CanvasBackground>
 
-        {/* Valores - Enhanced with better visuals */}
+        {/* Separador doble */}
+        <ScoutDivider variant="double" className="bg-primary" />
+
+        {/* Valores */}
         <section className="bg-primary py-12 sm:py-16 text-primary-foreground">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="mb-8 sm:mb-12 text-center">
@@ -218,39 +241,43 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               {values.map((value, i) => (
-                <div
+                <ScoutPatchCard
                   key={i}
-                  className="rounded-lg bg-primary-foreground/10 p-6 text-center transition-colors hover:bg-primary-foreground/20"
+                  borderColor="#C9A66B"
+                  variant="default"
+                  showStitches={true}
+                  className="bg-white shadow-lg"
                 >
-                  <div className="mb-4 inline-flex items-center justify-center rounded-full bg-primary-foreground p-4 text-primary">
-                    {value.icon}
+                  <div className="p-6 text-center">
+                    <div className="mb-4 inline-flex items-center justify-center rounded-full bg-primary/10 p-4 text-primary border-2 border-[#C9A66B]/40">
+                      {value.icon}
+                    </div>
+                    <h3 className="mb-2 text-xl font-bold text-primary">
+                      {value.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      {value.description}
+                    </p>
                   </div>
-                  <StaticText
-                    content={value.title}
-                    tag="h3"
-                    className="mb-2 text-xl font-bold"
-                  />
-                  <StaticText
-                    content={value.description}
-                    tag="p"
-                    className="text-primary-foreground/80"
-                  />
-                </div>
+                </ScoutPatchCard>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Join Us Section - With image and form */}
-        <section className="py-12 sm:py-16 lg:py-20 bg-white dark:bg-background">
+        {/* Separador con tres puntos */}
+        <ScoutDivider variant="dots" />
+
+        {/* Join Us Section */}
+        <CanvasBackground pattern="diagonal" className="py-12 sm:py-16 lg:py-20">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-6xl mx-auto">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center">
-                {/* Left side - Image */}
+                {/* Image */}
                 <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] rounded-xl overflow-hidden shadow-xl order-2 lg:order-1">
                   <Image
                     src="/images/unete-a-nosotros.jpg"
-                    alt="Grupo Scout Osyris - Unete a nosotros"
+                    alt="Grupo Scout Osyris - Únete a nosotros"
                     width={600}
                     height={500}
                     className="w-full h-full object-cover"
@@ -258,7 +285,7 @@ export default function Home() {
                   />
                 </div>
 
-                {/* Right side - Title and Form */}
+                {/* Form */}
                 <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
                   <div>
                     <div className="text-primary mb-2">
@@ -276,14 +303,14 @@ export default function Home() {
                     />
                   </div>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Déjanos tus datos</CardTitle>
-                      <CardDescription>
-                        Actualmente tenemos lista de espera. Mándanos una solicitud y nos pondremos en contacto contigo lo antes posible.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                  <ScoutPatchCard variant="strong" showStitches={true} hover={false}>
+                    <div className="p-6">
+                      <div className="mb-4">
+                        <h3 className="text-xl font-bold mb-1">Déjanos tus datos</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Actualmente tenemos lista de espera. Mándanos una solicitud y nos pondremos en contacto contigo lo antes posible.
+                        </p>
+                      </div>
                       <form className="space-y-4">
                         <div className="space-y-2">
                           <Label htmlFor="join-name">Tu nombre</Label>
@@ -291,6 +318,7 @@ export default function Home() {
                             id="join-name"
                             type="text"
                             placeholder="Ej: María García"
+                            className="border-[#C9A66B]/30 focus:border-[#C9A66B]"
                           />
                         </div>
                         <div className="space-y-2">
@@ -299,25 +327,29 @@ export default function Home() {
                             id="join-email"
                             type="email"
                             placeholder="tu@email.com"
+                            className="border-[#C9A66B]/30 focus:border-[#C9A66B]"
                           />
                         </div>
+                        <Button className="w-full" size="lg">
+                          <Send className="mr-2 h-4 w-4" />
+                          Enviar
+                        </Button>
                       </form>
-                    </CardContent>
-                    <CardFooter>
-                      <Button className="w-full" size="lg">
-                        <Send className="mr-2 h-4 w-4" />
-                        Enviar
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                    </div>
+                  </ScoutPatchCard>
                 </div>
               </div>
             </div>
           </div>
-        </section>
+        </CanvasBackground>
 
-        {/* Testimonios - Enhanced with better cards */}
-        <section className="bg-gray-100 dark:bg-slate-900 py-12 sm:py-16">
+        {/* Separador elegante con fondo crema */}
+        <div className="bg-[#f5f2ed]">
+          <ScoutDivider variant="diamond" />
+        </div>
+
+        {/* Testimonios */}
+        <section className="py-12 sm:py-16 bg-[#f5f2ed]">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="mb-8 sm:mb-12 text-center">
               <StaticText
@@ -333,11 +365,11 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {testimonials.map((testimonial, index) => (
-                <Card key={index} className="flex h-full flex-col bg-card scout-card">
-                  <CardContent className="flex h-full flex-col p-6">
-                    <div className="mb-6 text-4xl text-primary">"</div>
-                    <p className="italic">{testimonial.text}</p>
-                    <div className="mt-auto flex items-center gap-4 pt-8">
+                <ScoutPatchCard key={index} variant="subtle" showStitches={true} className="h-full">
+                  <div className="flex h-full flex-col p-6">
+                    <div className="mb-4 text-5xl text-[#C9A66B] font-serif leading-none">"</div>
+                    <p className="italic text-muted-foreground flex-grow">{testimonial.text}</p>
+                    <div className="flex items-center gap-4 pt-6 mt-auto border-t border-[#C9A66B]/20">
                       <div className={`h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${testimonial.bgColor}`}>
                         {testimonial.initials}
                       </div>
@@ -346,8 +378,8 @@ export default function Home() {
                         <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </ScoutPatchCard>
               ))}
             </div>
           </div>
@@ -363,10 +395,10 @@ const sections = [
   {
     title: "Castores",
     slug: "castores",
-    ageRange: "5-7 anos",
+    ageRange: "5-7 años",
     description: "Colonia La Veleta",
-    gradientClass: "bg-gradient-to-br from-orange-400 to-orange-600",
     accentColor: "bg-orange-500",
+    hexColor: "#f97316",
     icon: "🦫",
     logo: "/images/secciones/castores.png",
     href: "/secciones/castores",
@@ -374,10 +406,10 @@ const sections = [
   {
     title: "Manada",
     slug: "manada",
-    ageRange: "7-10 anos",
+    ageRange: "7-10 años",
     description: "Manada Waingunga",
-    gradientClass: "bg-gradient-to-br from-yellow-400 to-yellow-600",
     accentColor: "bg-yellow-400",
+    hexColor: "#facc15",
     icon: "🐺",
     logo: "/images/secciones/manada.png",
     href: "/secciones/manada",
@@ -385,10 +417,10 @@ const sections = [
   {
     title: "Tropa",
     slug: "tropa",
-    ageRange: "10-13 anos",
+    ageRange: "10-13 años",
     description: "Tropa Brownsea",
-    gradientClass: "bg-gradient-to-br from-blue-400 to-blue-600",
     accentColor: "bg-blue-500",
+    hexColor: "#3b82f6",
     icon: "🏕️",
     logo: "/images/secciones/tropa.png",
     href: "/secciones/tropa",
@@ -396,10 +428,10 @@ const sections = [
   {
     title: "Pioneros",
     slug: "pioneros",
-    ageRange: "13-16 anos",
+    ageRange: "13-16 años",
     description: "Posta Kanhiwara",
-    gradientClass: "bg-gradient-to-br from-red-400 to-red-600",
     accentColor: "bg-red-600",
+    hexColor: "#dc2626",
     icon: "🧭",
     logo: "/images/secciones/pioneros.png",
     href: "/secciones/pioneros",
@@ -407,10 +439,10 @@ const sections = [
   {
     title: "Rutas",
     slug: "rutas",
-    ageRange: "16-19 anos",
+    ageRange: "16-19 años",
     description: "Ruta Walhalla",
-    gradientClass: "bg-gradient-to-br from-green-500 to-green-700",
     accentColor: "bg-green-700",
+    hexColor: "#15803d",
     icon: "🌍",
     logo: "/images/secciones/rutas.png",
     href: "/secciones/rutas",
@@ -422,8 +454,7 @@ const values = [
   {
     icon: <UsersRound className="h-12 w-12" />,
     title: "Comunidad",
-    description:
-      "Fomentamos el sentido de pertenencia y el trabajo en equipo, creando vínculos fuertes entre todos los miembros.",
+    description: "Fomentamos el sentido de pertenencia y el trabajo en equipo, creando vínculos fuertes entre todos los miembros.",
   },
   {
     icon: <TreePine className="h-12 w-12" />,
@@ -439,46 +470,6 @@ const values = [
     icon: <GraduationCap className="h-12 w-12" />,
     title: "Educación",
     description: "Trabajamos por el desarrollo integral de niños y jóvenes a través del método scout.",
-  },
-]
-
-// Mock data
-const upcomingActivities = [
-  {
-    id: "1",
-    title: "Reunión Semanal",
-    day: "15",
-    month: "Jun",
-    date: "15 de Junio, 2025",
-    location: "Local Scout",
-    description: "Actividades regulares de cada sección con juegos y dinámicas.",
-    section: "Todas las secciones",
-    sectionClass: "bg-primary/20 text-primary",
-    image: "/placeholder.svg?height=200&width=400",
-  },
-  {
-    id: "2",
-    title: "Salida Sierra Norte",
-    day: "22",
-    month: "Jun",
-    date: "22-23 de Junio, 2025",
-    location: "Sierra Norte",
-    description: "Acampada de fin de semana con actividades de orientación y supervivencia.",
-    section: "Tropa",
-    sectionClass: "badge-tropa",
-    image: "/placeholder.svg?height=200&width=400",
-  },
-  {
-    id: "3",
-    title: "Campamento de Verano",
-    day: "15",
-    month: "Jul",
-    date: "15-30 de Julio, 2025",
-    location: "Pirineos",
-    description: "Campamento anual de verano con actividades de montaña, talleres y juegos.",
-    section: "Todas las secciones",
-    sectionClass: "bg-primary/20 text-primary",
-    image: "/placeholder.svg?height=200&width=400",
   },
 ]
 

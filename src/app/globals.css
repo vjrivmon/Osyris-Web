@@ -45,6 +45,26 @@
     --scout-green-light: 150 40% 35%;    /* Verde claro scout */
     --scout-cream: 45 40% 96%;           /* Crema para fondos */
 
+    /* Osyris Identity Colors - Extraídos del logo */
+    --osyris-navy: 220 28% 25%;          /* #2E3B52 - Fondo azul marino */
+    --osyris-navy-dark: 220 30% 17%;     /* #1E2738 - Navy oscuro */
+    --osyris-navy-light: 220 25% 33%;    /* #3D4D6A - Navy claro */
+    --osyris-gold: 30 45% 65%;           /* #D4A574 - Cuerda dorada */
+    --osyris-gold-dark: 30 30% 42%;      /* #8B6B4A - Cuerda sombra */
+    --osyris-gold-light: 30 40% 82%;     /* #E8D5B8 - Cuerda clara */
+    --osyris-yellow: 45 100% 50%;        /* #FFC107 - Texto amarillo */
+    --osyris-yellow-dark: 38 100% 50%;   /* #FFA000 - Amarillo oscuro */
+    --osyris-yellow-light: 45 100% 66%;  /* #FFD54F - Amarillo claro */
+    --osyris-brown: 25 55% 31%;          /* #7D4E24 - Sombrero marrón */
+    --osyris-green-scout: 140 22% 29%;   /* #3A5A40 - Cinta verde */
+    --osyris-green-light: 140 25% 40%;   /* #4A7C59 - Verde hojas */
+    --osyris-red: 1 76% 55%;             /* #E53935 - Pañoleta roja */
+    --osyris-red-dark: 5 55% 55%;        /* #D44C47 - Rojo oscuro */
+    --osyris-cream: 35 40% 94%;          /* #F5F0E8 - Fondo cálido */
+    --osyris-cream-dark: 35 30% 87%;     /* #E8DFD3 - Crema oscuro */
+    --stitch-color: 25 25% 26%;          /* #5C4033 - Color costura */
+    --fabric-texture: 35 30% 96%;        /* #F8F4EF - Textura tela */
+
     /* Status colors - Light Mode */
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
@@ -297,6 +317,67 @@ nav,
 
 .dark .bg-section-pattern {
   background-color: rgba(20, 20, 30, 0.95);
+}
+
+/* Osyris Identity Patterns */
+/* Patrón de flor de lis - muy sutil como watermark */
+.pattern-fleur-de-lis {
+  position: relative;
+  background-color: hsl(var(--osyris-cream));
+}
+
+.pattern-fleur-de-lis::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Flor de lis simplificada y clara */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cg fill='%232E3B52' fill-opacity='0.04'%3E%3Cpath d='M50 2c0 0-6 10-6 23 0 10 2 17 6 25 4-8 6-15 6-25 0-13-6-23-6-23z'/%3E%3Cpath d='M44 50c-4-2-12-8-22-10-10-2-17 2-14 12 3 10 14 16 27 13 7-2 9-7 9-15z'/%3E%3Cpath d='M56 50c4-2 12-8 22-10 10-2 17 2 14 12-3 10-14 16-27 13-7-2-9-7-9-15z'/%3E%3Cpath d='M35 65c-7 3-17 7-23 17-4 8 3 10 10 6 8-4 16-12 20-20-3-1-5-2-7-3z'/%3E%3Cpath d='M65 65c7 3 17 7 23 17 4 8-3 10-10 6-8-4-16-12-20-20 3-1 5-2 7-3z'/%3E%3Crect x='44' y='50' width='12' height='68' rx='6'/%3E%3Crect x='40' y='68' width='20' height='4' rx='2'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 80px 96px;
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.texture-canvas {
+  background-color: hsl(var(--osyris-cream));
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.02) 2px,
+      rgba(0, 0, 0, 0.02) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.02) 2px,
+      rgba(0, 0, 0, 0.02) 4px
+    );
+}
+
+.texture-parchment {
+  background-color: #F5F0E8;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-blend-mode: soft-light;
+}
+
+.bg-osyris-navy {
+  background-color: hsl(var(--osyris-navy));
+}
+
+.bg-osyris-cream {
+  background-color: hsl(var(--osyris-cream));
+}
+
+.text-osyris-gold {
+  color: hsl(var(--osyris-gold));
+}
+
+.text-osyris-yellow {
+  color: hsl(var(--osyris-yellow));
 }
 
 /* Scout identity styles */

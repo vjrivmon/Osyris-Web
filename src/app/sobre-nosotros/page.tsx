@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { StaticText, StaticImage, StaticList } from "@/components/ui/static-content"
+import { ScoutHeroBackground } from "@/components/scout-identity"
 // import { useSectionContent } from "@/hooks/useSectionContent" // NO SE USA - datos estáticos
 import Link from "next/link"
 import { ArrowRight, Award, Calendar, FileText, Heart, MapPin, Users, UsersRound, HandHeart, Target, TreePine, TrendingUp, GraduationCap } from "lucide-react"
@@ -110,7 +111,7 @@ export default function SobreNosotrosPage() {
       <MainNav />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-primary py-12 sm:py-16 md:py-24">
+        <ScoutHeroBackground pattern="topographic" className="bg-primary py-12 sm:py-16 md:py-24">
           <div className="container mx-auto px-4 sm:px-6 text-center text-primary-foreground">
             <StaticText
               contentId={200}
@@ -132,7 +133,7 @@ export default function SobreNosotrosPage() {
               Conoce la historia, valores y personas que forman el Grupo Scout Osyris
             </StaticText>
           </div>
-        </section>
+        </ScoutHeroBackground>
 
         {/* Tabs Section */}
         <section className="py-8 sm:py-12">

@@ -269,7 +269,7 @@ export function MainNav() {
                       <li className="row-span-5">
                         <NavigationMenuLink asChild>
                           <a
-                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
+                            className="flex h-full w-full select-none flex-col justify-end rounded-lg bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
                             href="/secciones"
                           >
                             <div className="mt-4 mb-2 text-lg font-medium text-white">
@@ -284,7 +284,7 @@ export function MainNav() {
                       <ListItem
                         href="/secciones/castores"
                         title="Castores"
-                        className="border-l-4 border-orange-500"
+                        className="hover:bg-orange-50 border-b border-dashed border-gray-300"
                         icon={<span className="w-3 h-3 rounded-full bg-orange-500 mr-2"></span>}
                       >
                         Colonia La Veleta (5-7 años)
@@ -292,7 +292,7 @@ export function MainNav() {
                       <ListItem
                         href="/secciones/manada"
                         title="Manada"
-                        className="border-l-4 border-yellow-400"
+                        className="hover:bg-yellow-50 border-b border-dashed border-gray-300"
                         icon={<span className="w-3 h-3 rounded-full bg-yellow-400 mr-2"></span>}
                       >
                         Manada Waingunga (7-10 años)
@@ -300,7 +300,7 @@ export function MainNav() {
                       <ListItem
                         href="/secciones/tropa"
                         title="Tropa"
-                        className="border-l-4 border-blue-500"
+                        className="hover:bg-blue-50 border-b border-dashed border-gray-300"
                         icon={<span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>}
                       >
                         Tropa Brownsea (10-13 años)
@@ -308,7 +308,7 @@ export function MainNav() {
                       <ListItem
                         href="/secciones/pioneros"
                         title="Pioneros"
-                        className="border-l-4 border-red-600"
+                        className="hover:bg-red-50 border-b border-dashed border-gray-300"
                         icon={<span className="w-3 h-3 rounded-full bg-red-600 mr-2"></span>}
                       >
                         Posta Kanhiwara (13-16 años)
@@ -316,7 +316,7 @@ export function MainNav() {
                       <ListItem
                         href="/secciones/rutas"
                         title="Rutas"
-                        className="border-l-4 border-green-700"
+                        className="hover:bg-green-50"
                         icon={<span className="w-3 h-3 rounded-full bg-green-700 mr-2"></span>}
                       >
                         Ruta Walhalla (16-19 años)
@@ -340,6 +340,7 @@ export function MainNav() {
                       <ListItem
                         href="/sobre-nosotros"
                         title="Quiénes Somos"
+                        className="hover:bg-primary/5 border-b border-dashed border-gray-300"
                         icon={<span className="w-3 h-3 rounded-full bg-primary mr-2"></span>}
                       >
                         Historia y valores del Grupo Scout Osyris
@@ -347,6 +348,7 @@ export function MainNav() {
                       <ListItem
                         href="/sobre-nosotros/kraal"
                         title="Nuestro Kraal"
+                        className="hover:bg-primary/5 border-b border-dashed border-gray-300"
                         icon={<span className="w-3 h-3 rounded-full bg-primary mr-2"></span>}
                       >
                         Conoce al equipo de monitores
@@ -354,6 +356,7 @@ export function MainNav() {
                       <ListItem
                         href="/sobre-nosotros/comite"
                         title="Comité de Grupo"
+                        className="hover:bg-primary/5"
                         icon={<span className="w-3 h-3 rounded-full bg-primary mr-2"></span>}
                       >
                         Familias y colaboradores

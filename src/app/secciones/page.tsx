@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { ScoutHeroBackground } from "@/components/scout-identity"
 
 export default function SeccionesPage() {
   return (
@@ -12,14 +13,14 @@ export default function SeccionesPage() {
       <MainNav />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-primary py-12 sm:py-16 md:py-24">
+        <ScoutHeroBackground pattern="topographic" className="bg-primary py-12 sm:py-16 md:py-24">
           <div className="container mx-auto px-4 sm:px-6 text-center text-primary-foreground">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 sm:mb-6">Nuestras Secciones</h1>
             <p className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl max-w-3xl mx-auto px-4">
               El escultismo se adapta a las diferentes etapas de desarrollo de niños y jóvenes
             </p>
           </div>
-        </section>
+        </ScoutHeroBackground>
 
         {/* Secciones Overview */}
         <section className="py-8 sm:py-12">
