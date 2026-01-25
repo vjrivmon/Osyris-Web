@@ -38,10 +38,6 @@ import {
   Circle,
   ClipboardList,
   HelpCircle,
-  Camera,
-  Check,
-  X,
-  HelpCircle as QuestionMark,
   AlertCircle,
   Info
 } from 'lucide-react'
@@ -81,10 +77,6 @@ const FIELD_SECTIONS = {
   medico: {
     required: [],
     optional: ['alergias', 'notas_medicas']
-  },
-  permisos: {
-    required: [],
-    optional: ['autorizacion_imagenes']
   },
   otros: {
     required: [],
@@ -207,7 +199,6 @@ export function EducandoFormModal({
       contacto: calculateSection('contacto'),
       documentacion: calculateSection('documentacion'),
       medico: calculateSection('medico'),
-      permisos: calculateSection('permisos'),
       otros: calculateSection('otros')
     }
   }, [formData])
@@ -690,73 +681,6 @@ export function EducandoFormModal({
                     placeholder="Informacion medica relevante..."
                     rows={3}
                   />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* SECCION: Permisos */}
-          <AccordionItem value="permisos" className="border rounded-lg mb-2 px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center">
-                <Camera className="h-4 w-4 mr-2 text-purple-500" />
-                <span className="font-medium">Permisos y autorizaciones</span>
-                <SectionBadge section="permisos" />
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-4 pt-2">
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <Label>Autorizacion de uso de imagenes</Label>
-                    <FieldTooltip
-                      content="Indica si los padres/tutores autorizan el uso de fotografias y videos del educando en redes sociales, web del grupo y materiales promocionales"
-                      label="Autorizacion de imagenes"
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Autorizo el uso de imagenes de mi hijo/a en actividades del grupo scout
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant={formData.autorizacion_imagenes === true ? "default" : "outline"}
-                      size="sm"
-                      className={formData.autorizacion_imagenes === true ? "bg-green-600 hover:bg-green-700" : ""}
-                      onClick={() => handleChange('autorizacion_imagenes', true)}
-                    >
-                      <Check className="h-4 w-4 mr-1" />
-                      Si, autorizo
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={formData.autorizacion_imagenes === false ? "default" : "outline"}
-                      size="sm"
-                      className={formData.autorizacion_imagenes === false ? "bg-red-600 hover:bg-red-700" : ""}
-                      onClick={() => handleChange('autorizacion_imagenes', false)}
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      No autorizo
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={formData.autorizacion_imagenes === null ? "default" : "outline"}
-                      size="sm"
-                      className={formData.autorizacion_imagenes === null ? "bg-gray-500 hover:bg-gray-600" : ""}
-                      onClick={() => handleChange('autorizacion_imagenes', null)}
-                    >
-                      <QuestionMark className="h-4 w-4 mr-1" />
-                      Sin especificar
-                    </Button>
-                  </div>
-                  {formData.autorizacion_imagenes === false && (
-                    <Alert className="border-amber-500 bg-amber-50">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <AlertDescription className="text-amber-800">
-                        Se respetara esta decision. El educando no aparecera en fotos publicadas en redes sociales o web del grupo.
-                      </AlertDescription>
-                    </Alert>
-                  )}
                 </div>
               </div>
             </AccordionContent>
