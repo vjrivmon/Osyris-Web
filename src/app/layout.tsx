@@ -1,11 +1,12 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter as FontSans } from "next/font/google"
-import Script from "next/script"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/AuthContext"
+import { CookieBanner } from "@/components/cookies"
+import { GoogleAnalytics } from "@/components/analytics/google-analytics"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -108,27 +109,13 @@ export default function RootLayout({
           fontSans.variable,
         )}
       >
-        {/* Google Analytics - Solo se carga si existe el ID de medición */}
-        {GA_MEASUREMENT_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_MEASUREMENT_ID}');
-              `}
-            </Script>
-          </>
-        )}
-
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange={false}>
           <AuthProvider>
             {children}
+            {/* Google Analytics - Solo se carga si el usuario ha dado consentimiento */}
+            {GA_MEASUREMENT_ID && <GoogleAnalytics measurementId={GA_MEASUREMENT_ID} />}
+            {/* Banner de cookies */}
+            <CookieBanner />
           </AuthProvider>
         </ThemeProvider>
       </body>

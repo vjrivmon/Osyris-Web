@@ -1,12 +1,13 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react"
+import { Facebook, Instagram, Mail, MapPin, Phone, Youtube, FileText, Scale, Cookie } from "lucide-react"
+import { CookieSettingsButton } from "@/components/cookies"
 
 export function SiteFooter() {
   return (
     <footer className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <Image
@@ -100,6 +101,35 @@ export function SiteFooter() {
                 <Link href="/contacto" className="hover:text-secondary transition-colors text-sm">
                   Contacto
                 </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-lg mb-4">
+              Legal
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/privacidad" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
+                  <FileText className="h-3 w-3" />
+                  Política de Privacidad
+                </Link>
+              </li>
+              <li>
+                <Link href="/terminos" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
+                  <Scale className="h-3 w-3" />
+                  Términos de Servicio
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookies" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
+                  <Cookie className="h-3 w-3" />
+                  Política de Cookies
+                </Link>
+              </li>
+              <li>
+                <CookieSettingsButton className="hover:text-secondary transition-colors text-sm flex items-center gap-2" />
               </li>
             </ul>
           </div>

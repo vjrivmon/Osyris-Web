@@ -1,176 +1,328 @@
-import { MainNav } from "@/components/main-nav"
-import { SiteFooter } from "@/components/site-footer"
+import { LegalPageTemplate, LegalList, LegalHighlight } from "@/components/legal"
+import {
+  FileText,
+  Database,
+  Shield,
+  Share2,
+  Lock,
+  Scale,
+  Clock,
+  Users,
+  RefreshCw,
+  Mail,
+} from "lucide-react"
+
+export const metadata = {
+  title: "Política de Privacidad",
+  description:
+    "Política de privacidad del Grupo Scout Osyris. Conoce cómo protegemos y utilizamos tu información personal.",
+}
+
+const sections = [
+  {
+    id: "introduccion",
+    title: "1. Introducción",
+    icon: <FileText className="h-5 w-5" />,
+    content: (
+      <>
+        <p>
+          El Grupo Scout Osyris (&ldquo;nosotros&rdquo;, &ldquo;nos&rdquo;, &ldquo;nuestro&rdquo;) se compromete a
+          proteger tu privacidad. Esta Política de Privacidad explica cómo recopilamos,
+          usamos, divulgamos y protegemos tu información cuando utilizas nuestro sitio
+          web y servicios relacionados (colectivamente, los &ldquo;Servicios&rdquo;).
+        </p>
+        <LegalHighlight>
+          <p className="font-medium">
+            Al utilizar nuestros Servicios, aceptas las prácticas descritas en esta
+            Política de Privacidad. Si no estás de acuerdo, por favor no utilices
+            nuestros Servicios.
+          </p>
+        </LegalHighlight>
+      </>
+    ),
+  },
+  {
+    id: "informacion",
+    title: "2. Información que Recopilamos",
+    icon: <Database className="h-5 w-5" />,
+    content: (
+      <>
+        <h3 className="text-lg font-medium mt-4 mb-2">2.1 Información Personal</h3>
+        <p>Podemos recopilar la siguiente información personal:</p>
+        <LegalList>
+          <li>
+            <strong>Información de identificación:</strong> nombre, dirección de correo
+            electrónico, número de teléfono, dirección postal, fecha de nacimiento.
+          </li>
+          <li>
+            <strong>Información de cuenta:</strong> nombre de usuario, contraseña,
+            preferencias de cuenta.
+          </li>
+          <li>
+            <strong>Información de pago:</strong> detalles de tarjeta de crédito,
+            información bancaria (para pagos de cuotas, campamentos, etc.).
+          </li>
+          <li>
+            <strong>Información médica:</strong> alergias, condiciones médicas,
+            medicamentos (para garantizar la seguridad durante las actividades).
+          </li>
+          <li>
+            <strong>Imágenes y videos:</strong> fotografías y grabaciones de actividades
+            y eventos.
+          </li>
+        </LegalList>
+
+        <h3 className="text-lg font-medium mt-6 mb-2">2.2 Información Automática</h3>
+        <p>
+          También recopilamos automáticamente cierta información cuando utilizas
+          nuestros Servicios:
+        </p>
+        <LegalList>
+          <li>
+            <strong>Información del dispositivo:</strong> tipo de dispositivo, sistema
+            operativo, tipo de navegador.
+          </li>
+          <li>
+            <strong>Información de uso:</strong> páginas visitadas, tiempo de
+            permanencia, clics, acciones.
+          </li>
+          <li>
+            <strong>Información de ubicación:</strong> ubicación geográfica general
+            basada en tu dirección IP.
+          </li>
+          <li>
+            <strong>Cookies:</strong> utilizamos cookies y tecnologías similares. Consulta
+            nuestra{" "}
+            <a href="/cookies" className="text-primary hover:underline">
+              Política de Cookies
+            </a>{" "}
+            para más detalles.
+          </li>
+        </LegalList>
+      </>
+    ),
+  },
+  {
+    id: "uso",
+    title: "3. Cómo Utilizamos tu Información",
+    icon: <Shield className="h-5 w-5" />,
+    content: (
+      <>
+        <p>Utilizamos la información que recopilamos para:</p>
+        <LegalList>
+          <li>Proporcionar, mantener y mejorar nuestros Servicios.</li>
+          <li>Procesar inscripciones, pagos y gestionar tu cuenta.</li>
+          <li>
+            Comunicarnos contigo, incluyendo enviar notificaciones, actualizaciones y
+            alertas de seguridad.
+          </li>
+          <li>Organizar y gestionar actividades, eventos y campamentos.</li>
+          <li>
+            Garantizar la seguridad y bienestar de los participantes durante las
+            actividades.
+          </li>
+          <li>Cumplir con obligaciones legales y reglamentarias.</li>
+          <li>
+            Detectar, investigar y prevenir actividades fraudulentas y accesos no
+            autorizados.
+          </li>
+          <li>Analizar y mejorar la eficacia de nuestros Servicios.</li>
+        </LegalList>
+      </>
+    ),
+  },
+  {
+    id: "comparticion",
+    title: "4. Compartición de Información",
+    icon: <Share2 className="h-5 w-5" />,
+    content: (
+      <>
+        <p>Podemos compartir tu información personal en las siguientes circunstancias:</p>
+        <LegalList>
+          <li>
+            <strong>Con tu consentimiento:</strong> cuando nos has dado permiso para
+            compartir tu información.
+          </li>
+          <li>
+            <strong>Con proveedores de servicios:</strong> compartimos información con
+            proveedores que nos ayudan a operar y mejorar nuestros Servicios.
+          </li>
+          <li>
+            <strong>Con organizaciones scout:</strong> podemos compartir información con
+            la federación scout (MSC-ASDE) para fines administrativos y de seguro.
+          </li>
+          <li>
+            <strong>Por razones legales:</strong> podemos compartir información si es
+            necesario para cumplir con una obligación legal, proteger la seguridad de
+            cualquier persona, o proteger nuestros derechos legales.
+          </li>
+        </LegalList>
+      </>
+    ),
+  },
+  {
+    id: "seguridad",
+    title: "5. Seguridad de la Información",
+    icon: <Lock className="h-5 w-5" />,
+    content: (
+      <>
+        <p>
+          Implementamos medidas de seguridad diseñadas para proteger tu información
+          personal contra acceso, divulgación, alteración y destrucción no autorizados.
+        </p>
+        <LegalHighlight>
+          <p>
+            Sin embargo, ningún método de transmisión por Internet o método de
+            almacenamiento electrónico es 100% seguro, por lo que no podemos garantizar
+            su seguridad absoluta.
+          </p>
+        </LegalHighlight>
+        <p className="mt-4">Nuestras medidas de seguridad incluyen:</p>
+        <LegalList>
+          <li>Cifrado de datos en tránsito y en reposo</li>
+          <li>Acceso restringido a datos personales</li>
+          <li>Copias de seguridad regulares</li>
+          <li>Monitoreo continuo de seguridad</li>
+        </LegalList>
+      </>
+    ),
+  },
+  {
+    id: "derechos",
+    title: "6. Tus Derechos",
+    icon: <Scale className="h-5 w-5" />,
+    content: (
+      <>
+        <p>
+          De acuerdo con el Reglamento General de Protección de Datos (RGPD), tienes los
+          siguientes derechos:
+        </p>
+        <LegalList>
+          <li>
+            <strong>Derecho de acceso:</strong> solicitar una copia de tus datos
+            personales.
+          </li>
+          <li>
+            <strong>Derecho de rectificación:</strong> corregir datos inexactos o
+            incompletos.
+          </li>
+          <li>
+            <strong>Derecho de supresión:</strong> solicitar la eliminación de tus datos
+            personales.
+          </li>
+          <li>
+            <strong>Derecho de limitación:</strong> restringir el procesamiento de tus
+            datos.
+          </li>
+          <li>
+            <strong>Derecho de portabilidad:</strong> recibir tus datos en formato
+            estructurado.
+          </li>
+          <li>
+            <strong>Derecho de oposición:</strong> oponerte al procesamiento de tus datos.
+          </li>
+          <li>
+            <strong>Derecho a retirar el consentimiento:</strong> en cualquier momento,
+            sin afectar la licitud del tratamiento previo.
+          </li>
+        </LegalList>
+        <p className="mt-4">
+          Para ejercer estos derechos, contáctanos utilizando la información en la
+          sección &ldquo;Contacto&rdquo;.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "retencion",
+    title: "7. Retención de Datos",
+    icon: <Clock className="h-5 w-5" />,
+    content: (
+      <p>
+        Retendremos tu información personal solo durante el tiempo necesario para los
+        fines establecidos en esta Política de Privacidad, a menos que se requiera un
+        período de retención más largo por ley. Los datos de miembros activos se
+        conservan durante su pertenencia al grupo y hasta 5 años después de su baja para
+        fines históricos y legales.
+      </p>
+    ),
+  },
+  {
+    id: "menores",
+    title: "8. Menores",
+    icon: <Users className="h-5 w-5" />,
+    content: (
+      <>
+        <p>
+          Nuestros Servicios están destinados a ser utilizados por personas de todas las
+          edades, incluidos menores. Como grupo scout, trabajamos principalmente con
+          jóvenes de 5 a 19 años.
+        </p>
+        <LegalHighlight>
+          <p>
+            <strong>Importante:</strong> Recopilamos información de menores solo con el
+            consentimiento verificable de un padre, madre o tutor legal. Si descubrimos
+            que hemos recopilado información personal de un menor sin el consentimiento
+            parental adecuado, tomaremos medidas para eliminar esa información.
+          </p>
+        </LegalHighlight>
+      </>
+    ),
+  },
+  {
+    id: "cambios",
+    title: "9. Cambios a esta Política",
+    icon: <RefreshCw className="h-5 w-5" />,
+    content: (
+      <p>
+        Podemos actualizar esta Política de Privacidad periódicamente. Te notificaremos
+        cualquier cambio publicando la nueva Política en esta página y actualizando la
+        fecha de &ldquo;última actualización&rdquo;. Te recomendamos revisar esta Política
+        periódicamente.
+      </p>
+    ),
+  },
+  {
+    id: "contacto",
+    title: "10. Contacto",
+    icon: <Mail className="h-5 w-5" />,
+    content: (
+      <>
+        <p>
+          Si tienes alguna pregunta sobre esta Política de Privacidad o deseas ejercer
+          tus derechos, contáctanos en:
+        </p>
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+          <p className="font-semibold">Grupo Scout Osyris</p>
+          <p>Calle Poeta Ricard Sanmarti n3</p>
+          <p>Barrio de Benimaclet, Valencia</p>
+          <p className="mt-2">
+            <strong>Email:</strong>{" "}
+            <a href="mailto:web.osyris@gmail.com" className="text-primary hover:underline">
+              web.osyris@gmail.com
+            </a>
+          </p>
+          <p>
+            <strong>Teléfono:</strong> +34 601 037 577
+          </p>
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground">
+          También puedes presentar una reclamación ante la Agencia Española de Protección
+          de Datos (AEPD) si consideras que tus derechos han sido vulnerados.
+        </p>
+      </>
+    ),
+  },
+]
 
 export default function PrivacidadPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* MainNav ya incluye su propio <header> con sticky top-0 */}
-      <MainNav />
-
-      <main className="flex-1 container py-12">
-        <h1 className="text-3xl font-bold mb-6">Política de Privacidad</h1>
-
-        <div className="prose max-w-none">
-          <p>Última actualización: 21 de marzo de 2025</p>
-
-          <h2>1. Introducción</h2>
-          <p>
-            El Grupo Scout Osyris ("nosotros", "nos", "nuestro") se compromete a proteger su privacidad. Esta Política
-            de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos su información cuando utiliza
-            nuestro sitio web y servicios relacionados (colectivamente, los "Servicios").
-          </p>
-          <p>
-            Al utilizar nuestros Servicios, usted acepta las prácticas descritas en esta Política de Privacidad. Si no
-            está de acuerdo con esta Política de Privacidad, por favor no utilice nuestros Servicios.
-          </p>
-
-          <h2>2. Información que Recopilamos</h2>
-          <h3>2.1 Información Personal</h3>
-          <p>Podemos recopilar la siguiente información personal:</p>
-          <ul>
-            <li>
-              <strong>Información de identificación:</strong> nombre, dirección de correo electrónico, número de
-              teléfono, dirección postal, fecha de nacimiento.
-            </li>
-            <li>
-              <strong>Información de cuenta:</strong> nombre de usuario, contraseña, preferencias de cuenta.
-            </li>
-            <li>
-              <strong>Información de pago:</strong> detalles de tarjeta de crédito, información bancaria (para pagos de
-              cuotas, campamentos, etc.).
-            </li>
-            <li>
-              <strong>Información médica:</strong> alergias, condiciones médicas, medicamentos (para garantizar la
-              seguridad durante las actividades).
-            </li>
-            <li>
-              <strong>Imágenes y videos:</strong> fotografías y grabaciones de actividades y eventos.
-            </li>
-          </ul>
-
-          <h3>2.2 Información Automática</h3>
-          <p>También recopilamos automáticamente cierta información cuando utiliza nuestros Servicios, incluyendo:</p>
-          <ul>
-            <li>
-              <strong>Información del dispositivo:</strong> tipo de dispositivo, sistema operativo, tipo de navegador.
-            </li>
-            <li>
-              <strong>Información de uso:</strong> páginas visitadas, tiempo de permanencia en el sitio, clics,
-              acciones.
-            </li>
-            <li>
-              <strong>Información de ubicación:</strong> ubicación geográfica general basada en su dirección IP.
-            </li>
-            <li>
-              <strong>Cookies y tecnologías similares:</strong> utilizamos cookies y tecnologías similares para
-              recopilar información sobre su actividad, navegador y dispositivo.
-            </li>
-          </ul>
-
-          <h2>3. Cómo Utilizamos su Información</h2>
-          <p>Utilizamos la información que recopilamos para:</p>
-          <ul>
-            <li>Proporcionar, mantener y mejorar nuestros Servicios.</li>
-            <li>Procesar inscripciones, pagos y gestionar su cuenta.</li>
-            <li>Comunicarnos con usted, incluyendo enviar notificaciones, actualizaciones y alertas de seguridad.</li>
-            <li>Organizar y gestionar actividades, eventos y campamentos.</li>
-            <li>Garantizar la seguridad y bienestar de los participantes durante las actividades.</li>
-            <li>Cumplir con obligaciones legales y reglamentarias.</li>
-            <li>
-              Detectar, investigar y prevenir actividades fraudulentas y accesos no autorizados a nuestros Servicios.
-            </li>
-            <li>Analizar y mejorar la eficacia de nuestros Servicios.</li>
-          </ul>
-
-          <h2>4. Compartición de Información</h2>
-          <p>Podemos compartir su información personal en las siguientes circunstancias:</p>
-          <ul>
-            <li>
-              <strong>Con su consentimiento:</strong> cuando nos ha dado su consentimiento para compartir su
-              información.
-            </li>
-            <li>
-              <strong>Con proveedores de servicios:</strong> compartimos información con proveedores de servicios que
-              nos ayudan a operar, proporcionar, mejorar, integrar, personalizar y apoyar nuestros Servicios.
-            </li>
-            <li>
-              <strong>Con organizaciones scout:</strong> podemos compartir información con la federación scout a la que
-              pertenecemos para fines administrativos y de seguro.
-            </li>
-            <li>
-              <strong>Por razones legales:</strong> podemos compartir información si creemos que es necesario para
-              cumplir con una obligación legal, proteger la seguridad de cualquier persona, abordar fraude o seguridad,
-              o proteger nuestros derechos legales.
-            </li>
-          </ul>
-
-          <h2>5. Seguridad de la Información</h2>
-          <p>
-            Implementamos medidas de seguridad diseñadas para proteger su información personal contra acceso,
-            divulgación, alteración y destrucción no autorizados. Sin embargo, ningún método de transmisión por Internet
-            o método de almacenamiento electrónico es 100% seguro, por lo que no podemos garantizar su seguridad
-            absoluta.
-          </p>
-
-          <h2>6. Derechos de Protección de Datos</h2>
-          <p>
-            Dependiendo de su ubicación, puede tener ciertos derechos con respecto a su información personal,
-            incluyendo:
-          </p>
-          <ul>
-            <li>Derecho a acceder a su información personal.</li>
-            <li>Derecho a rectificar información inexacta o incompleta.</li>
-            <li>Derecho a borrar su información personal.</li>
-            <li>Derecho a restringir el procesamiento de su información personal.</li>
-            <li>Derecho a la portabilidad de datos.</li>
-            <li>Derecho a oponerse al procesamiento de su información personal.</li>
-            <li>Derecho a retirar el consentimiento en cualquier momento.</li>
-          </ul>
-          <p>
-            Para ejercer estos derechos, por favor contáctenos utilizando la información proporcionada en la sección
-            "Contacto" a continuación.
-          </p>
-
-          <h2>7. Retención de Datos</h2>
-          <p>
-            Retendremos su información personal solo durante el tiempo que sea necesario para los fines establecidos en
-            esta Política de Privacidad, a menos que se requiera o permita un período de retención más largo por ley.
-          </p>
-
-          <h2>8. Menores</h2>
-          <p>
-            Nuestros Servicios están destinados a ser utilizados por personas de todas las edades, incluidos menores.
-            Recopilamos información de menores solo con el consentimiento verificable de un padre o tutor legal. Si
-            descubrimos que hemos recopilado información personal de un menor sin el consentimiento parental
-            verificable, tomaremos medidas para eliminar esa información de nuestros servidores.
-          </p>
-
-          <h2>9. Cambios a esta Política de Privacidad</h2>
-          <p>
-            Podemos actualizar esta Política de Privacidad de vez en cuando. Le notificaremos cualquier cambio
-            publicando la nueva Política de Privacidad en esta página y actualizando la fecha de "última actualización"
-            en la parte superior. Se le aconseja revisar esta Política de Privacidad periódicamente para cualquier
-            cambio.
-          </p>
-
-          <h2>10. Contacto</h2>
-          <p>Si tiene alguna pregunta sobre esta Política de Privacidad, por favor contáctenos en:</p>
-          <p>
-            Grupo Scout Osyris
-            <br />
-            Calle Poeta Ricard Sanmartí nº3
-            <br />
-            Barrio de Benimaclet, Valencia
-            <br />
-            Email: info@grupoosyris.es
-            <br />
-            Teléfono: +34 600 123 456
-          </p>
-        </div>
-      </main>
-
-      <SiteFooter />
-    </div>
+    <LegalPageTemplate
+      title="Política de Privacidad"
+      description="Conoce cómo el Grupo Scout Osyris protege y utiliza tu información personal."
+      lastUpdated="25 de enero de 2026"
+      version="2.0"
+      sections={sections}
+    />
   )
 }
-
