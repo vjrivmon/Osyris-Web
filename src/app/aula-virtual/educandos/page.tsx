@@ -166,7 +166,7 @@ export default function EducandosPage() {
           <CardHeader className="pb-2">
             <CardDescription>Docs Pendientes</CardDescription>
             <CardTitle className="text-3xl text-amber-600">
-              {educandos.filter(e => e.docs_pendientes > 0).length}
+              {educandos.filter(e => e.docs_completos < e.docs_total).length}
             </CardTitle>
           </CardHeader>
         </Card>
