@@ -12,23 +12,12 @@ import Image from "next/image"
 // Jefatura del Grupo Scout Osyris
 const coordinationTeam = [
   {
-    name: "María",
-    role: "Jefatura de Grupo",
-    description:
-      "Miembro de la jefatura del Grupo Scout Osyris. Coordina y supervisa todas las actividades del grupo.",
+    name: "Oonai",
     photo: "/images/kraal/_maria.png",
   },
   {
     name: "Lucía",
-    role: "Jefatura de Grupo",
-    description: "Miembro de la jefatura del Grupo Scout Osyris. Colabora en la gestión y coordinación del grupo.",
     photo: "/images/kraal/_lucia.png",
-  },
-  {
-    name: "Dani",
-    role: "Jefatura de Grupo",
-    description: "Miembro de la jefatura del Grupo Scout Osyris. Apoya en la organización y dirección del grupo.",
-    photo: "/images/kraal/_dani.png",
   },
 ]
 
@@ -39,22 +28,18 @@ const sections = [
     members: [
       {
         name: "Lekes",
-        role: "Jefa de Sección y Tesorera",
         photo: "/images/kraal/_noelia.png",
       },
       {
         name: "Rasti",
-        role: "Scouter",
         photo: "/images/kraal/_joan.png",
       },
       {
         name: "Barú",
-        role: "Scouter",
         photo: "/images/kraal/_jaume.png",
       },
       {
         name: "Kibu",
-        role: "Scouter",
         photo: "/images/kraal/_alvaros.png",
       },
     ],
@@ -65,27 +50,22 @@ const sections = [
     members: [
       {
         name: "Germà Gris",
-        role: "Jefe de Sección",
         photo: "/images/kraal/_lopo.png",
       },
       {
-        name: "Akhela",
-        role: "Tesorería y Botiquín",
+        name: "Akela",
         photo: "/images/kraal/_itziar.png",
       },
       {
         name: "Baloo",
-        role: "Material",
         photo: "/images/kraal/_hector.png",
       },
       {
-        name: "Brymby",
-        role: "Scouter",
+        name: "Brumby",
         photo: "/images/kraal/_asier.png",
       },
       {
         name: "Oonai",
-        role: "Scouter",
         photo: "/images/kraal/_maria.png",
       },
     ],
@@ -95,28 +75,19 @@ const sections = [
     colorClass: "bg-blue-500",
     members: [
       {
-        name: "Mireia",
-        role: "Jefa de Sección",
-        photo: "/images/kraal/_mireia.png",
-      },
-      {
         name: "Vicente",
-        role: "Tesorero y Secretario",
         photo: "/images/kraal/_vicente.png",
       },
       {
         name: "Amelia",
-        role: "Scouter",
         photo: "/images/kraal/_amelia.png",
       },
       {
         name: "Lucía",
-        role: "Scouter",
         photo: "/images/kraal/_lucia.png",
       },
       {
         name: "Mateo",
-        role: "Scouter",
         photo: "/images/kraal/_mateo.png",
       },
     ],
@@ -127,22 +98,18 @@ const sections = [
     members: [
       {
         name: "Esther",
-        role: "Jefa de Sección",
         photo: "/images/kraal/_esther.png",
       },
       {
         name: "Rodrigo",
-        role: "Tesorero",
         photo: "/images/kraal/_rodrigo.png",
       },
       {
         name: "Elena",
-        role: "Scouter",
         photo: "/images/kraal/_elena.png",
       },
       {
         name: "Miguel",
-        role: "Scouter",
         photo: "/images/kraal/_miguel.png",
       },
     ],
@@ -152,18 +119,15 @@ const sections = [
     colorClass: "bg-green-700",
     members: [
       {
+        name: "Mireia",
+        photo: "/images/kraal/_mireia.png",
+      },
+      {
         name: "Artur",
-        role: "Scouter",
         photo: "/images/kraal/_artur.png",
       },
       {
-        name: "Dani",
-        role: "Scouter",
-        photo: "/images/kraal/_dani.png",
-      },
-      {
         name: "Alejandra",
-        role: "Scouter",
         photo: "/images/kraal/_alejandra.png",
       },
     ],
@@ -256,28 +220,9 @@ export default function KraalPage() {
                         identificador={`coord-${i}-name`}
                         seccion="kraal"
                         as="h3"
-                        className="text-xl font-bold mb-1"
+                        className="text-xl font-bold"
                       >
                         {member.name}
-                      </StaticText>
-                      <StaticText
-                        contentId={225 + i * 4}
-                        identificador={`coord-${i}-role`}
-                        seccion="kraal"
-                        as="p"
-                        className="text-primary mb-2"
-                      >
-                        {member.role}
-                      </StaticText>
-                      <StaticText
-                        contentId={226 + i * 4}
-                        identificador={`coord-${i}-description`}
-                        seccion="kraal"
-                        as="p"
-                        multiline
-                        className="text-sm text-muted-foreground"
-                      >
-                        {member.description}
                       </StaticText>
                     </CardContent>
                   </Card>
@@ -333,18 +278,9 @@ export default function KraalPage() {
                             identificador={`section-${i}-member-${j}-name`}
                             seccion="kraal"
                             as="h4"
-                            className="font-bold mb-1"
+                            className="font-bold"
                           >
                             {member.name}
-                          </StaticText>
-                          <StaticText
-                            contentId={239 + i * 20 + j * 4}
-                            identificador={`section-${i}-member-${j}-role`}
-                            seccion="kraal"
-                            as="p"
-                            className="text-sm text-muted-foreground"
-                          >
-                            {member.role}
                           </StaticText>
                         </CardContent>
                       </Card>
