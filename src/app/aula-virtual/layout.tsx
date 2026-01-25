@@ -9,7 +9,6 @@ import { NavTabs } from "@/components/aula-virtual/nav-tabs"
 import { MobileNav } from "@/components/aula-virtual/mobile-nav"
 import { Button } from "@/components/ui/button"
 import { LogOut, Bell, User, X, Trash2, CheckCheck } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { useNotificacionesScouter } from "@/hooks/useNotificacionesScouter"
 import {
   AlertDialog,
@@ -130,8 +129,6 @@ export default function AulaVirtualLayout({
 
               {/* Acciones del header */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                <ThemeToggle />
-
                 {/* Notificaciones */}
                 <Popover open={notificacionesOpen} onOpenChange={setNotificacionesOpen}>
                   <PopoverTrigger asChild>

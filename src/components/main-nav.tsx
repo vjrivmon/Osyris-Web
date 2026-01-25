@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Menu, LogOut, User } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { useIsMobile } from "@/components/ui/sidebar"
 import { useAuthStatic } from "@/hooks/useAuthStatic"
@@ -91,7 +90,6 @@ export function MainNav() {
 
           {/* Mobile Navigation - On the right */}
           <div className="flex lg:hidden items-center gap-2">
-            <ThemeToggle />
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Menú">
@@ -395,7 +393,6 @@ export function MainNav() {
             </NavigationMenu>
 
             <div className="flex items-center gap-2">
-              <ThemeToggle />
               {isAuthenticated && user?.rol === 'admin' ? (
                 <div className="hidden lg:flex items-center gap-3">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-md">

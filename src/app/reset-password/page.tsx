@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { AlertCircle, ArrowLeft, CheckCircle, Eye, EyeOff, Loader2 } from "lucide-react"
 
@@ -90,9 +89,6 @@ function ResetPasswordContent() {
   if (!token) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-section-pattern p-4">
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
-        </div>
         <div className="w-full max-w-md">
           <Card className="border-red-200">
             <CardHeader className="text-center">
@@ -124,9 +120,6 @@ function ResetPasswordContent() {
             <span className="sr-only">Volver al inicio de sesión</span>
           </Link>
         </Button>
-      </div>
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
       </div>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">

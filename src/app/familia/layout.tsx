@@ -7,7 +7,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Bell, CheckCircle, XCircle, FileText, Trash2, CheckCheck } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNavFamilia } from "@/components/familia/mobile-nav-familia";
 import {
   AlertDialog,
@@ -221,8 +220,6 @@ export default function FamiliaLayout({
           </div>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle />
-
             {/* Notificaciones */}
             <Popover open={notificacionesOpen} onOpenChange={setNotificacionesOpen}>
               <PopoverTrigger asChild>

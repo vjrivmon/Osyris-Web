@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { AlertCircle, ArrowLeft, CheckCircle } from "lucide-react"
 
 export default function RecuperarContrasenaPage() {
@@ -62,9 +61,6 @@ export default function RecuperarContrasenaPage() {
             <span className="sr-only">Volver al inicio de sesión</span>
           </Link>
         </Button>
-      </div>
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
       </div>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">

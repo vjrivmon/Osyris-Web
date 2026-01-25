@@ -8,7 +8,6 @@ import { AdminNavTabs } from "@/components/admin/admin-nav-tabs"
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav"
 import { Button } from "@/components/ui/button"
 import { LogOut, Shield, User } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { getCurrentUser, clearAuthData } from "@/lib/auth-utils"
 import {
   AlertDialog,
@@ -65,8 +64,6 @@ export default function AdminLayout({
 
               {/* Right: Actions */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                <ThemeToggle />
-
                 {/* User info - only on desktop */}
                 {userInfo && (
                   <div className="hidden lg:flex items-center gap-2 px-2 py-1 rounded-md bg-muted text-sm">

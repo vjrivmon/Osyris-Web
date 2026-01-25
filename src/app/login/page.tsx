@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { AlertCircle, ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
@@ -147,9 +146,6 @@ export default function LoginPage() {
             <span className="sr-only">Volver al inicio</span>
           </Link>
         </Button>
-      </div>
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
       </div>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
