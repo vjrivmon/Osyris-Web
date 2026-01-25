@@ -162,7 +162,6 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Servicio", description: "Compromiso con el servicio a los demás." }
         ],
         team: [
-          { name: "Mireia", role: "", photo: "/images/kraal/_mireia.png" },
           { name: "Vicente", role: "", photo: "/images/kraal/_vicente.png" },
           { name: "Amelia", role: "", photo: "/images/kraal/_amelia.png" },
           { name: "Lucía", role: "", photo: "/images/kraal/_lucia.png" },
@@ -237,8 +236,8 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "La Responsabilidad", description: "Preparación para asumir responsabilidades adultas." }
         ],
         team: [
+          { name: "Mireia", role: "", photo: "/images/kraal/_mireia.png" },
           { name: "Artur", role: "", photo: "/images/kraal/_artur.png" },
-          { name: "Dani", role: "", photo: "/images/kraal/_dani.png" },
           { name: "Alejandra", role: "", photo: "/images/kraal/_alejandra.png" }
         ],
         navigation: {
