@@ -1,13 +1,13 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Facebook, Instagram, Mail, MapPin, Phone, Youtube, FileText, Scale, Cookie } from "lucide-react"
+import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react"
 import { CookieSettingsButton } from "@/components/cookies"
 
 export function SiteFooter() {
   return (
     <footer className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <Image
@@ -24,10 +24,10 @@ export function SiteFooter() {
               </div>
             </div>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">
-              Educando en valores desde 1981. Formamos parte del Moviment Escolta de Valencia - Movimiento Scout Catolico.
+              Educando en valores desde 1981. Formamos parte del Moviment Escolta de Valencia - Movimiento Scout Católico.
             </p>
             <div className="pt-2">
-              <p className="text-xs text-primary-foreground/60 italic mb-3">"Siempre listos para servir"</p>
+              <p className="text-xs text-primary-foreground/60 italic mb-3">&ldquo;Siempre listos para servir&rdquo;</p>
               <div className="flex space-x-3">
                 <Link
                   href="https://www.facebook.com/osyris.gruposcout/"
@@ -69,7 +69,7 @@ export function SiteFooter() {
 
           <div>
             <h4 className="font-semibold text-lg mb-4">
-              Enlaces Rapidos
+              Enlaces Rápidos
             </h4>
             <ul className="space-y-2">
               <li>
@@ -89,7 +89,7 @@ export function SiteFooter() {
               </li>
               <li>
                 <Link href="/galeria" className="hover:text-secondary transition-colors text-sm">
-                  Galeria
+                  Galería
                 </Link>
               </li>
               <li>
@@ -101,35 +101,6 @@ export function SiteFooter() {
                 <Link href="/contacto" className="hover:text-secondary transition-colors text-sm">
                   Contacto
                 </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-lg mb-4">
-              Legal
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/privacidad" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
-                  <FileText className="h-3 w-3" />
-                  Política de Privacidad
-                </Link>
-              </li>
-              <li>
-                <Link href="/terminos" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
-                  <Scale className="h-3 w-3" />
-                  Términos de Servicio
-                </Link>
-              </li>
-              <li>
-                <Link href="/cookies" className="hover:text-secondary transition-colors text-sm flex items-center gap-2">
-                  <Cookie className="h-3 w-3" />
-                  Política de Cookies
-                </Link>
-              </li>
-              <li>
-                <CookieSettingsButton className="hover:text-secondary transition-colors text-sm flex items-center gap-2" />
               </li>
             </ul>
           </div>
@@ -179,7 +150,7 @@ export function SiteFooter() {
             <address className="not-italic space-y-3">
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-secondary" />
-                <span className="text-sm">Calle Poeta Ricard Sanmarti n3, Barrio de Benimaclet, Valencia</span>
+                <span className="text-sm">Calle Poeta Ricard Sanmartí n3, Barrio de Benimaclet, Valencia</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-secondary" />
@@ -193,22 +164,43 @@ export function SiteFooter() {
           </div>
         </div>
 
+        {/* Barra inferior con copyright, legal y créditos */}
         <div className="border-t border-primary-foreground/20 mt-6 sm:mt-8 pt-6 sm:pt-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-primary-foreground/60 text-center sm:text-left">
-              &copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.
-            </p>
-            <p className="text-sm text-primary-foreground/60">
-              ⚜️ & 💻 Siempre listo para programar ·{" "}
-              <Link
-                href="https://www.vicenterivasmonferrer.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-secondary hover:text-secondary/80 transition-colors font-medium"
-              >
-                Vicente Rivas Monferrer
+          <div className="flex flex-col gap-4">
+            {/* Fila principal: Copyright y Créditos */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <p className="text-sm text-primary-foreground/60 text-center sm:text-left">
+                &copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.
+              </p>
+              <p className="text-sm text-primary-foreground/60">
+                ⚜️ & 💻 Siempre listo para programar ·{" "}
+                <Link
+                  href="https://www.vicenterivasmonferrer.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-secondary hover:text-secondary/80 transition-colors font-medium"
+                >
+                  Vicente Rivas Monferrer
+                </Link>
+              </p>
+            </div>
+
+            {/* Enlaces legales centrados */}
+            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-xs text-primary-foreground/50">
+              <Link href="/privacidad" className="hover:text-secondary transition-colors">
+                Privacidad
               </Link>
-            </p>
+              <span className="hidden sm:inline">·</span>
+              <Link href="/terminos" className="hover:text-secondary transition-colors">
+                Términos
+              </Link>
+              <span className="hidden sm:inline">·</span>
+              <Link href="/cookies" className="hover:text-secondary transition-colors">
+                Cookies
+              </Link>
+              <span className="hidden sm:inline">·</span>
+              <CookieSettingsButton className="hover:text-secondary transition-colors" />
+            </div>
           </div>
         </div>
       </div>

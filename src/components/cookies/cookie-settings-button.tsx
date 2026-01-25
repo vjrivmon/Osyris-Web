@@ -7,9 +7,15 @@ import { CookieSettingsModal } from "./cookie-settings-modal"
 
 interface CookieSettingsButtonProps {
   className?: string
+  showIcon?: boolean
+  label?: string
 }
 
-export function CookieSettingsButton({ className }: CookieSettingsButtonProps) {
+export function CookieSettingsButton({
+  className,
+  showIcon = false,
+  label = "Configurar Cookies"
+}: CookieSettingsButtonProps) {
   const { preferences, savePreferences, isLoaded } = useCookieConsent()
   const [showSettings, setShowSettings] = useState(false)
 
@@ -24,8 +30,8 @@ export function CookieSettingsButton({ className }: CookieSettingsButtonProps) {
         className={className}
         aria-label="Configurar cookies"
       >
-        <Settings className="h-4 w-4 inline mr-1" />
-        Configurar Cookies
+        {showIcon && <Settings className="h-4 w-4 inline mr-1" />}
+        {label}
       </button>
 
       <CookieSettingsModal
