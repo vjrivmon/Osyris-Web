@@ -19,4 +19,13 @@ router.get('/documentos-pendientes', notificacionesController.getDocumentosPendi
 // PUT /api/notificaciones-scouter/:id/leida - Marcar como leída
 router.put('/:id/leida', notificacionesController.marcarComoLeida);
 
+// PUT /api/notificaciones-scouter/marcar-todas-leidas - Marcar todas como leídas
+router.put('/marcar-todas-leidas', notificacionesController.marcarTodasComoLeidas);
+
+// DELETE /api/notificaciones-scouter/leidas - Eliminar todas las leídas
+router.delete('/leidas', notificacionesController.eliminarTodasLeidas);
+
+// DELETE /api/notificaciones-scouter/:id - Eliminar notificación individual
+router.delete('/:id', notificacionesController.eliminarNotificacion);
+
 module.exports = router;

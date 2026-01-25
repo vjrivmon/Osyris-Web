@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route"
 import { NavTabs } from "@/components/aula-virtual/nav-tabs"
 import { MobileNav } from "@/components/aula-virtual/mobile-nav"
 import { Button } from "@/components/ui/button"
-import { LogOut, Bell, User } from "lucide-react"
+import { LogOut, Bell, User, X, Trash2, CheckCheck } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useNotificacionesScouter } from "@/hooks/useNotificacionesScouter"
 import {
@@ -30,6 +30,8 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { useToast } from "@/hooks/use-toast"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function AulaVirtualLayout({
   children,
@@ -38,8 +40,61 @@ export default function AulaVirtualLayout({
 }) {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const [notificacionesOpen, setNotificacionesOpen] = useState(false)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
   const router = useRouter()
-  const { notificaciones, contadorNoLeidas, marcarComoLeida, documentosPendientes } = useNotificacionesScouter()
+  const { toast } = useToast()
+  const {
+    notificaciones,
+    contadorNoLeidas,
+    marcarComoLeida,
+    eliminarNotificacion,
+    eliminarTodasLeidas,
+    marcarTodasComoLeidas,
+    documentosPendientes
+  } = useNotificacionesScouter()
+
+  // Handlers para notificaciones
+  const handleEliminarNotificacion = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setDeletingId(id)
+
+    // Esperar animacion
+    setTimeout(async () => {
+      const success = await eliminarNotificacion(id)
+      setDeletingId(null)
+      if (success) {
+        toast({
+          title: "Notificacion eliminada",
+          description: "Se ha eliminado correctamente",
+        })
+      }
+    }, 200)
+  }
+
+  const handleMarcarTodasLeidas = async () => {
+    const count = await marcarTodasComoLeidas()
+    if (count > 0) {
+      toast({
+        title: "Notificaciones marcadas",
+        description: `${count} notificacion(es) marcada(s) como leida(s)`,
+      })
+    }
+  }
+
+  const handleLimpiarLeidas = async () => {
+    const count = await eliminarTodasLeidas()
+    if (count > 0) {
+      toast({
+        title: "Notificaciones limpiadas",
+        description: `${count} notificacion(es) eliminada(s)`,
+      })
+    } else {
+      toast({
+        title: "Sin notificaciones leidas",
+        description: "No hay notificaciones leidas para eliminar",
+      })
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("osyris_user")
@@ -90,8 +145,37 @@ export default function AulaVirtualLayout({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 p-0" align="end">
-                    <div className="p-3 border-b">
+                    {/* Header con acciones */}
+                    <div className="p-3 border-b flex items-center justify-between gap-2">
                       <h4 className="font-semibold">Notificaciones</h4>
+                      <div className="flex items-center gap-1">
+                        {/* Marcar todas como leidas */}
+                        {contadorNoLeidas > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleMarcarTodasLeidas}
+                            className="h-8 px-2 text-xs"
+                            title="Marcar todas como leidas"
+                          >
+                            <CheckCheck className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-1">Leidas</span>
+                          </Button>
+                        )}
+                        {/* Limpiar leidas */}
+                        {notificaciones.some(n => n.leida) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleLimpiarLeidas}
+                            className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
+                            title="Eliminar notificaciones leidas"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-1">Limpiar</span>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <ScrollArea className="h-[300px]">
                       {documentosPendientes.length === 0 && notificaciones.length === 0 ? (
@@ -122,11 +206,13 @@ export default function AulaVirtualLayout({
                               </div>
                             </Link>
                           )}
-                          {/* Otras notificaciones */}
+                          {/* Otras notificaciones con boton X */}
                           {notificaciones.slice(0, 5).map((notif) => (
                             <div
                               key={notif.id}
-                              className={`p-3 hover:bg-accent cursor-pointer transition-colors ${!notif.leida ? 'bg-blue-50/50 dark:bg-blue-950/50' : ''}`}
+                              className={`group relative p-3 hover:bg-accent cursor-pointer transition-all ${
+                                !notif.leida ? 'bg-blue-50/50 dark:bg-blue-950/50' : ''
+                              } ${deletingId === notif.id ? 'animate-fade-out' : ''}`}
                               onClick={() => {
                                 if (!notif.leida) marcarComoLeida(notif.id)
                                 if (notif.enlace_accion) {
@@ -135,11 +221,22 @@ export default function AulaVirtualLayout({
                                 }
                               }}
                             >
-                              <p className="font-medium text-sm">{notif.titulo}</p>
-                              <p className="text-xs text-muted-foreground line-clamp-2">{notif.mensaje}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {formatDistanceToNow(new Date(notif.fecha_creacion), { addSuffix: true, locale: es })}
-                              </p>
+                              <div className="pr-6">
+                                <p className="font-medium text-sm">{notif.titulo}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-2">{notif.mensaje}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {formatDistanceToNow(new Date(notif.fecha_creacion), { addSuffix: true, locale: es })}
+                                </p>
+                              </div>
+                              {/* Boton X - visible al hover, area tactil 32x32 (Fitts) */}
+                              <button
+                                onClick={(e) => handleEliminarNotificacion(notif.id, e)}
+                                className="absolute right-2 top-2 h-8 w-8 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                                title="Eliminar notificacion"
+                                aria-label="Eliminar notificacion"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
                             </div>
                           ))}
                         </div>
@@ -211,6 +308,9 @@ export default function AulaVirtualLayout({
         <main className="container mx-auto px-4 py-6 max-w-7xl">
           {children}
         </main>
+
+        {/* Toast notifications */}
+        <Toaster />
       </div>
     </ProtectedRoute>
   )

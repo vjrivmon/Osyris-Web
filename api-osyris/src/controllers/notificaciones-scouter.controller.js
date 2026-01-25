@@ -179,9 +179,206 @@ const getDocumentosPendientes = async (req, res) => {
   }
 };
 
+/**
+ * Elimina una notificación individual
+ * Verifica que pertenezca a la sección del scouter
+ */
+const eliminarNotificacion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.usuario?.id || req.user?.id;
+
+    const { query } = require('../config/db.config');
+
+    // Obtener sección del scouter
+    const scouterResult = await query(`
+      SELECT seccion_id, rol FROM usuarios WHERE id = $1
+    `, [userId]);
+
+    if (scouterResult.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    const { seccion_id, rol } = scouterResult[0];
+
+    // Verificar que la notificación pertenece a la sección del scouter (o es admin)
+    const notifResult = await query(`
+      SELECT seccion_id FROM notificaciones_scouter WHERE id = $1
+    `, [id]);
+
+    if (notifResult.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Notificación no encontrada'
+      });
+    }
+
+    if (rol !== 'admin' && notifResult[0].seccion_id !== seccion_id) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permiso para eliminar esta notificación'
+      });
+    }
+
+    await notificacionesScouterModel.remove(id);
+
+    res.json({
+      success: true,
+      message: 'Notificación eliminada'
+    });
+  } catch (error) {
+    console.error('Error eliminando notificación:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar notificación',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Elimina todas las notificaciones leídas del scouter
+ */
+const eliminarTodasLeidas = async (req, res) => {
+  try {
+    const userId = req.usuario?.id || req.user?.id;
+
+    const { query } = require('../config/db.config');
+
+    // Obtener sección del scouter
+    const scouterResult = await query(`
+      SELECT seccion_id, rol FROM usuarios WHERE id = $1
+    `, [userId]);
+
+    if (scouterResult.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    const { seccion_id, rol } = scouterResult[0];
+
+    let deleteQuery;
+    let params = [];
+
+    if (rol === 'admin' && !seccion_id) {
+      // Admin sin sección: eliminar todas las leídas
+      deleteQuery = `
+        DELETE FROM notificaciones_scouter
+        WHERE leida = true
+        RETURNING id
+      `;
+    } else if (seccion_id) {
+      // Scouter con sección: eliminar solo de su sección
+      deleteQuery = `
+        DELETE FROM notificaciones_scouter
+        WHERE seccion_id = $1 AND leida = true
+        RETURNING id
+      `;
+      params = [seccion_id];
+    } else {
+      return res.json({
+        success: true,
+        count: 0,
+        message: 'No tienes una sección asignada'
+      });
+    }
+
+    const result = await query(deleteQuery, params);
+
+    res.json({
+      success: true,
+      count: result.length,
+      message: `${result.length} notificación(es) eliminada(s)`
+    });
+  } catch (error) {
+    console.error('Error eliminando notificaciones leídas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar notificaciones',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Marca todas las notificaciones como leídas
+ */
+const marcarTodasComoLeidas = async (req, res) => {
+  try {
+    const userId = req.usuario?.id || req.user?.id;
+
+    const { query } = require('../config/db.config');
+
+    // Obtener sección del scouter
+    const scouterResult = await query(`
+      SELECT seccion_id, rol FROM usuarios WHERE id = $1
+    `, [userId]);
+
+    if (scouterResult.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    const { seccion_id, rol } = scouterResult[0];
+
+    let updateQuery;
+    let params = [];
+
+    if (rol === 'admin' && !seccion_id) {
+      // Admin sin sección: marcar todas
+      updateQuery = `
+        UPDATE notificaciones_scouter
+        SET leida = true, fecha_lectura = NOW()
+        WHERE leida = false
+        RETURNING id
+      `;
+    } else if (seccion_id) {
+      // Scouter con sección: marcar solo de su sección
+      updateQuery = `
+        UPDATE notificaciones_scouter
+        SET leida = true, fecha_lectura = NOW()
+        WHERE seccion_id = $1 AND leida = false
+        RETURNING id
+      `;
+      params = [seccion_id];
+    } else {
+      return res.json({
+        success: true,
+        count: 0,
+        message: 'No tienes una sección asignada'
+      });
+    }
+
+    const result = await query(updateQuery, params);
+
+    res.json({
+      success: true,
+      count: result.length,
+      message: `${result.length} notificación(es) marcada(s) como leída(s)`
+    });
+  } catch (error) {
+    console.error('Error marcando todas como leídas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al marcar notificaciones',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getNotificaciones,
   getContadorNoLeidas,
   marcarComoLeida,
-  getDocumentosPendientes
+  getDocumentosPendientes,
+  eliminarNotificacion,
+  eliminarTodasLeidas,
+  marcarTodasComoLeidas
 };

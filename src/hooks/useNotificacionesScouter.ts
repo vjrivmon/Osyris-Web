@@ -144,6 +144,91 @@ export function useNotificacionesScouter() {
     }
   }
 
+  // Eliminar notificación individual (con optimistic update)
+  const eliminarNotificacion = async (id: number): Promise<boolean> => {
+    // Guardar estado anterior para rollback
+    const prevNotificaciones = notificaciones
+    const notifToDelete = notificaciones.find(n => n.id === id)
+
+    // Optimistic update
+    setNotificaciones(prev => prev.filter(n => n.id !== id))
+    if (notifToDelete && !notifToDelete.leida) {
+      setContadorNoLeidas(prev => Math.max(0, prev - 1))
+    }
+
+    try {
+      const response = await fetch(
+        `${getApiUrl()}/api/notificaciones-scouter/${id}`,
+        {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        }
+      )
+
+      if (!response.ok) throw new Error('Error eliminando notificación')
+      return true
+    } catch (err) {
+      // Rollback en caso de error
+      setNotificaciones(prevNotificaciones)
+      if (notifToDelete && !notifToDelete.leida) {
+        setContadorNoLeidas(prev => prev + 1)
+      }
+      console.error('Error eliminando notificación:', err)
+      return false
+    }
+  }
+
+  // Eliminar todas las notificaciones leídas
+  const eliminarTodasLeidas = async (): Promise<number> => {
+    try {
+      const response = await fetch(
+        `${getApiUrl()}/api/notificaciones-scouter/leidas`,
+        {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        }
+      )
+
+      if (!response.ok) throw new Error('Error eliminando notificaciones leídas')
+
+      const data = await response.json()
+
+      // Actualizar estado local - eliminar solo las leídas
+      setNotificaciones(prev => prev.filter(n => !n.leida))
+
+      return data.count || 0
+    } catch (err) {
+      console.error('Error eliminando notificaciones leídas:', err)
+      return 0
+    }
+  }
+
+  // Marcar todas las notificaciones como leídas
+  const marcarTodasComoLeidas = async (): Promise<number> => {
+    try {
+      const response = await fetch(
+        `${getApiUrl()}/api/notificaciones-scouter/marcar-todas-leidas`,
+        {
+          method: 'PUT',
+          headers: getAuthHeaders()
+        }
+      )
+
+      if (!response.ok) throw new Error('Error marcando todas como leídas')
+
+      const data = await response.json()
+
+      // Actualizar estado local
+      setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })))
+      setContadorNoLeidas(0)
+
+      return data.count || 0
+    } catch (err) {
+      console.error('Error marcando todas como leídas:', err)
+      return 0
+    }
+  }
+
   // Aprobar documento
   const aprobarDocumento = async (documentoId: number) => {
     try {
@@ -221,6 +306,9 @@ export function useNotificacionesScouter() {
     fetchNotificaciones,
     fetchDocumentosPendientes,
     marcarComoLeida,
+    eliminarNotificacion,
+    eliminarTodasLeidas,
+    marcarTodasComoLeidas,
     aprobarDocumento,
     rechazarDocumento,
     refresh: () => {
