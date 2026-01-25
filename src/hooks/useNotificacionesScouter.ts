@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getApiUrl } from '@/lib/api-utils'
+import { useAuth } from '@/contexts/AuthContext'
 
 export interface NotificacionScouter {
   id: number
@@ -44,19 +45,19 @@ export interface DocumentoPendiente {
 }
 
 export function useNotificacionesScouter() {
+  const { token, authReady, isAuthenticated } = useAuth()
   const [notificaciones, setNotificaciones] = useState<NotificacionScouter[]>([])
   const [documentosPendientes, setDocumentosPendientes] = useState<DocumentoPendiente[]>([])
   const [contadorNoLeidas, setContadorNoLeidas] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('token')
+  const getAuthHeaders = useCallback(() => {
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     }
-  }
+  }, [token])
 
   // Cargar notificaciones
   const fetchNotificaciones = useCallback(async (soloNoLeidas = false) => {
@@ -80,7 +81,7 @@ export function useNotificacionesScouter() {
       console.error('Error fetching notificaciones:', err)
       setError(err instanceof Error ? err.message : 'Error desconocido')
     }
-  }, [])
+  }, [getAuthHeaders])
 
   // Cargar contador de no leídas
   const fetchContador = useCallback(async () => {
@@ -99,7 +100,7 @@ export function useNotificacionesScouter() {
     } catch (err) {
       console.error('Error fetching contador:', err)
     }
-  }, [])
+  }, [getAuthHeaders])
 
   // Cargar documentos pendientes
   const fetchDocumentosPendientes = useCallback(async () => {
@@ -119,7 +120,7 @@ export function useNotificacionesScouter() {
       console.error('Error fetching documentos pendientes:', err)
       setError(err instanceof Error ? err.message : 'Error desconocido')
     }
-  }, [])
+  }, [getAuthHeaders])
 
   // Marcar notificación como leída
   const marcarComoLeida = async (id: number) => {
@@ -282,8 +283,14 @@ export function useNotificacionesScouter() {
     }
   }
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales - SOLO cuando la autenticacion esta lista
   useEffect(() => {
+    // No cargar hasta que authReady sea true y haya sesion
+    if (!authReady || !isAuthenticated || !token) {
+      setLoading(false)
+      return
+    }
+
     const loadData = async () => {
       setLoading(true)
       await Promise.all([
@@ -295,7 +302,7 @@ export function useNotificacionesScouter() {
     }
 
     loadData()
-  }, [fetchNotificaciones, fetchContador, fetchDocumentosPendientes])
+  }, [authReady, isAuthenticated, token, fetchNotificaciones, fetchContador, fetchDocumentosPendientes])
 
   return {
     notificaciones,

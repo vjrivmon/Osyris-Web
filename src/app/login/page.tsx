@@ -8,7 +8,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { setAuthData, getCurrentUser, getApiUrlWithFallback } from "@/lib/auth-utils"
-import { useAuthStatic } from "@/hooks/useAuthStatic"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -43,10 +42,57 @@ const MOCK_USERS = [
   { email: "admin@grupoosyris.es", password: "OsyrisAdmin2024!", role: "admin" },
 ]
 
+// Función auxiliar para esperar a que la autenticación esté sincronizada
+const waitForAuthSync = (): Promise<void> => {
+  return new Promise((resolve) => {
+    // Verificar que los datos estén en localStorage correctamente
+    const checkSync = () => {
+      const token = localStorage.getItem('token')
+      // Intentar ambas claves por compatibilidad
+      let userStr = localStorage.getItem('user')
+      if (!userStr || userStr === 'undefined' || userStr === 'null') {
+        userStr = localStorage.getItem('osyris_user')
+      }
+
+      // Validar que no sean valores corruptos
+      if (token && token !== 'undefined' && token !== 'null' &&
+          userStr && userStr !== 'undefined' && userStr !== 'null' && userStr.startsWith('{')) {
+        try {
+          const parsedUser = JSON.parse(userStr)
+          if (parsedUser.id && parsedUser.expiresAt) {
+            return true
+          }
+        } catch {
+          return false
+        }
+      }
+      return false
+    }
+
+    // Si ya está sincronizado, resolver inmediatamente
+    if (checkSync()) {
+      // Pequeño delay adicional para asegurar propagación en React
+      setTimeout(resolve, 100)
+      return
+    }
+
+    // Si no, verificar cada 50ms con timeout de 2 segundos
+    let attempts = 0
+    const maxAttempts = 40
+    const interval = setInterval(() => {
+      attempts++
+      if (checkSync() || attempts >= maxAttempts) {
+        clearInterval(interval)
+        // Delay adicional para propagación
+        setTimeout(resolve, 100)
+      }
+    }, 50)
+  })
+}
+
 export default function LoginPage() {
   noStore()
   const router = useRouter()
-  const { refreshUser } = useAuthStatic()
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
@@ -110,21 +156,26 @@ export default function LoginPage() {
           seccion_id: data.data.usuario.seccion_id || null
         });
 
-        // Actualizar el estado del contexto de autenticación
-        await refreshUser();
+        // IMPORTANTE: Esperar a que el estado esté sincronizado antes de redirigir
+        // Esto evita race conditions donde los hooks leen un estado inconsistente
+        await waitForAuthSync();
+        console.log('✅ [Login] Autenticación sincronizada, redirigiendo...');
 
         // Redireccionar según el rol
+        // IMPORTANTE: Usamos window.location.href para forzar recarga completa
+        // Con router.push(), el AuthProvider de la nueva página se inicializa
+        // ANTES de que localStorage tenga los datos, causando el bug de "No hay educandos"
         const userRole = data.data.usuario.rol;
 
         if (userRole === 'admin') {
           // Admin va al panel de administración separado
-          router.push('/admin');
+          window.location.href = '/admin';
         } else if (userRole === 'familia') {
           // Familiares van al dashboard familiar
-          router.push('/familia/dashboard');
+          window.location.href = '/familia/dashboard';
         } else {
           // Los demás van al aula virtual
-          router.push('/aula-virtual');
+          window.location.href = '/aula-virtual';
         }
       } else {
         setError(data.message || "Credenciales incorrectas. Por favor, inténtalo de nuevo.");

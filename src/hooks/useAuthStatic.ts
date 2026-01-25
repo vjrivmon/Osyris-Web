@@ -44,9 +44,10 @@ export function useAuthStatic(): AuthContextType {
   useEffect(() => {
     // Solo ejecutar en el cliente
     if (typeof window !== 'undefined') {
-      // Simular carga de autenticación desde localStorage
-      const token = localStorage.getItem('auth_token')
-      const userStr = localStorage.getItem('auth_user')
+      // Cargar autenticación desde localStorage
+      // IMPORTANTE: Usar las mismas claves que setAuthData() y AuthContext
+      const token = localStorage.getItem('token')
+      const userStr = localStorage.getItem('osyris_user')
 
       if (token && userStr) {
         try {
@@ -92,8 +93,10 @@ export function useAuthStatic(): AuthContextType {
 
       if (response.ok) {
         const data = await response.json()
-        localStorage.setItem('auth_token', data.token)
-        localStorage.setItem('auth_user', JSON.stringify(data.user))
+        // Usar las mismas claves que setAuthData() y AuthContext
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('osyris_user', JSON.stringify(data.user))
+        localStorage.setItem('user', JSON.stringify(data.user))
 
         setAuthState({
           user: data.user,
@@ -113,9 +116,11 @@ export function useAuthStatic(): AuthContextType {
   const logout = () => {
     if (typeof window === 'undefined') return
 
-    // Limpiar localStorage
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('auth_user')
+    // Limpiar localStorage usando las claves correctas
+    localStorage.removeItem('token')
+    localStorage.removeItem('osyris_user')
+    localStorage.removeItem('user')
+    localStorage.removeItem('userRole')
 
     // Actualizar estado local
     setAuthState({
@@ -129,7 +134,8 @@ export function useAuthStatic(): AuthContextType {
   const refreshUser = async () => {
     if (typeof window === 'undefined') return
 
-    const token = localStorage.getItem('auth_token')
+    // Usar las claves correctas
+    const token = localStorage.getItem('token')
     if (!token) return
 
     try {
@@ -140,15 +146,23 @@ export function useAuthStatic(): AuthContextType {
       })
 
       if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem('auth_user', JSON.stringify(data.user))
+        const responseData = await response.json()
+        // La API devuelve { success, data: { usuario, tokenInfo } }
+        const user = responseData.data?.usuario
 
-        setAuthState(prev => ({
-          ...prev,
-          user: data.user,
-          isAuthenticated: true,
-          isLoading: false
-        }))
+        // Solo guardar si tenemos datos de usuario validos
+        if (user && user.id) {
+          localStorage.setItem('osyris_user', JSON.stringify(user))
+          localStorage.setItem('user', JSON.stringify(user))
+
+          setAuthState(prev => ({
+            ...prev,
+            user: user,
+            isAuthenticated: true,
+            isLoading: false
+          }))
+        }
+        // Si no hay usuario, no hacemos nada (mantener datos existentes)
       } else {
         logout()
       }

@@ -24,12 +24,15 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
+  authReady: boolean  // Indica que la autenticación está completamente sincronizada
+  sessionExpired: boolean  // Indica que la sesión ha expirado
 }
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   refreshUser: () => Promise<void>
+  waitForAuthReady: () => Promise<void>  // Espera hasta que authReady sea true
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -39,7 +42,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: null,
     token: null,
     isAuthenticated: false,
-    isLoading: true
+    isLoading: true,
+    authReady: false,  // Se pone true cuando la autenticación está completamente sincronizada
+    sessionExpired: false  // Se pone true cuando la sesión ha expirado
   })
 
   useEffect(() => {
@@ -50,24 +55,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Verificar si estamos en el servidor
       if (typeof window === 'undefined') {
-        setAuthState(prev => ({ ...prev, isLoading: false }))
+        setAuthState(prev => ({ ...prev, isLoading: false, authReady: true, sessionExpired: false }))
         return
       }
 
       const token = localStorage.getItem('token')
-      const userStr = localStorage.getItem('user')
+      // Intentar leer de ambas claves por compatibilidad
+      let userStr = localStorage.getItem('user')
+      if (!userStr || userStr === 'undefined' || userStr === 'null') {
+        userStr = localStorage.getItem('osyris_user')
+      }
 
       console.log('🔍 [AuthContext] Verificando sesión...')
 
-      // Si no hay token o usuario, no hay sesión
-      if (!token || !userStr) {
-        console.log('❌ [AuthContext] No hay token o usuario en localStorage')
-        clearAuthData() // Limpiar cualquier dato residual
+      // Validar que los datos no estén corruptos
+      // A veces localStorage puede tener valores como "undefined" o "null" como strings
+      const isValidToken = token && token !== 'undefined' && token !== 'null'
+      const isValidUserStr = userStr && userStr !== 'undefined' && userStr !== 'null' && userStr.startsWith('{')
+
+      // Si no hay token o usuario válido, no hay sesión
+      if (!isValidToken || !isValidUserStr) {
+        console.log('❌ [AuthContext] No hay token o usuario válido en localStorage')
+        clearAuthData() // Limpiar cualquier dato residual o corrupto
         setAuthState({
           user: null,
           token: null,
           isAuthenticated: false,
-          isLoading: false
+          isLoading: false,
+          authReady: true,  // Auth está listo aunque no haya sesión
+          sessionExpired: false
         })
         return
       }
@@ -87,7 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               user: null,
               token: null,
               isAuthenticated: false,
-              isLoading: false
+              isLoading: false,
+              authReady: true,
+              sessionExpired: true  // Marcar que la sesión expiró
             })
             return
           }
@@ -114,7 +132,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user,
           token,
           isAuthenticated: true,
-          isLoading: false
+          isLoading: false,
+          authReady: true,  // Auth completamente sincronizado
+          sessionExpired: false
         })
       } catch (parseError) {
         console.error('❌ [AuthContext] Error parseando usuario de localStorage:', parseError)
@@ -123,7 +143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user: null,
           token: null,
           isAuthenticated: false,
-          isLoading: false
+          isLoading: false,
+          authReady: true,
+          sessionExpired: false
         })
       }
     } catch (error) {
@@ -134,7 +156,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: null,
         token: null,
         isAuthenticated: false,
-        isLoading: false
+        isLoading: false,
+        authReady: true,
+        sessionExpired: false
       })
     }
   }
@@ -143,6 +167,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // IMPORTANTE: Limpiar cualquier sesión anterior antes de iniciar nueva
       clearAuthData()
+
+      // Marcar authReady como false durante el proceso de login
+      setAuthState(prev => ({ ...prev, authReady: false, sessionExpired: false }))
 
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -177,19 +204,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log(`✅ [AuthContext] Login exitoso: ${usuario.email} (${usuario.rol})`)
         console.log(`✅ [AuthContext] Sesión expira: ${expiresAt.toLocaleString()}`)
 
+        // Actualizar estado con authReady: false primero
         setAuthState({
           user: userWithSession,
           token,
           isAuthenticated: true,
-          isLoading: false
+          isLoading: false,
+          authReady: false,  // Aún no está listo, esperamos propagación
+          sessionExpired: false
         })
+
+        // Usar un pequeño delay para asegurar que el estado se propague
+        // antes de marcar authReady como true
+        await new Promise(resolve => setTimeout(resolve, 50))
+
+        // Ahora marcar authReady como true
+        setAuthState(prev => ({ ...prev, authReady: true }))
+        console.log('✅ [AuthContext] authReady: true - Estado sincronizado')
 
         return true
       } else {
+        // En caso de error de login, marcar authReady como true para desbloquear UI
+        setAuthState(prev => ({ ...prev, authReady: true }))
         return false
       }
     } catch (error) {
       console.error('Login error:', error)
+      // En caso de error, marcar authReady como true para desbloquear UI
+      setAuthState(prev => ({ ...prev, authReady: true }))
       return false
     }
   }
@@ -201,12 +243,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false
+      isLoading: false,
+      authReady: true,  // Auth está listo aunque no haya sesión
+      sessionExpired: false
     })
   }
 
   const refreshUser = async () => {
     await checkAuthStatus()
+  }
+
+  // Función que espera hasta que authReady sea true
+  const waitForAuthReady = (): Promise<void> => {
+    return new Promise((resolve) => {
+      // Si ya está listo, resolver inmediatamente
+      if (authState.authReady) {
+        resolve()
+        return
+      }
+
+      // Si no, verificar periódicamente
+      const checkInterval = setInterval(() => {
+        // Re-leer el estado actual desde localStorage como fallback
+        const token = localStorage.getItem('token')
+        const userStr = localStorage.getItem('user')
+
+        if (token && userStr) {
+          try {
+            const user = JSON.parse(userStr)
+            if (user.expiresAt) {
+              // Hay sesión válida, podemos resolver
+              clearInterval(checkInterval)
+              console.log('✅ [waitForAuthReady] Sesión detectada, resolviendo...')
+              resolve()
+              return
+            }
+          } catch {
+            // Ignorar errores de parsing
+          }
+        }
+      }, 50)
+
+      // Timeout después de 2 segundos para evitar espera infinita
+      setTimeout(() => {
+        clearInterval(checkInterval)
+        console.log('⚠️ [waitForAuthReady] Timeout alcanzado, resolviendo de todas formas')
+        resolve()
+      }, 2000)
+    })
   }
 
   return (
@@ -215,7 +299,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...authState,
         login,
         logout,
-        refreshUser
+        refreshUser,
+        waitForAuthReady
       }}
     >
       {children}
@@ -238,9 +323,12 @@ export function useAuth(): AuthContextType {
         token: null,
         isAuthenticated: false,
         isLoading: false,
+        authReady: false,
+        sessionExpired: false,
         login: async () => false,
         logout: () => {},
-        refreshUser: async () => {}
+        refreshUser: async () => {},
+        waitForAuthReady: async () => {}
       }
     }
     throw error
