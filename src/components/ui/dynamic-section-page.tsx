@@ -72,24 +72,24 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           to: "to-orange-600",
           accent: "orange"
         },
-        description: "Los Castores son los más pequeños del grupo scout. A través del juego y la fantasía, aprenden a compartir y a descubrir el mundo que les rodea.",
-        details: "En la Colonia La Veleta, los niños y niñas de 5 a 7 años comienzan su aventura scout en un ambiente seguro y divertido.",
-        frame: "El marco simbólico de los Castores está inspirado en el cuento 'Los amigos del bosque'.",
+        description: "La Colonia del grupo scout Osyris está formada por niños y niñas de 5 a 7 años. Somos la sección más pequeña del grupo. Nuestro lema es \"Compartir\" y vestimos de naranja.",
+        details: "En 2012, cuando reabrimos la Colonia en el Osyris decidimos llamarla La Veleta, para que marcara la dirección del grupo y cimentara el futuro del mismo.",
+        frame: "El marco simbólico que seguimos es el libro \"El río de los Castores\" de Fernando Martínez Gil. A través de él, los castores y castoras ayudan a Moi, un pequeño castor, a salvar a su amigo el río, que está enfermo por culpa de la acción humana. Viajando a través del bosque, conocerán distintos personajes como Barú, Kalú, Kibu, Rasti o Lekes; que les enseñarán los valores scout que trabajamos en el grupo.",
         activities: [
-          { icon: "🎮", title: "Juegos", description: "Juegos cooperativos, de imaginación y al aire libre." },
-          { icon: "🌳", title: "Naturaleza", description: "Primeros contactos con la naturaleza." },
-          { icon: "🎨", title: "Manualidades", description: "Talleres creativos donde desarrollan su imaginación." }
+          { icon: "🏗️", title: "Presas", description: "Pequeños proyectos sobre temáticas que eligen los propios castores y castoras sobre los que se trabaja durante un periodo de tiempo." },
+          { icon: "📓", title: "Cuaderno de Presa", description: "Es un cuadernito que utilizamos como herramienta para trabajar la progresión personal y consolidar la educación en valores." },
+          { icon: "🎮", title: "Juegos", description: "Trabajamos la autonomía, el trabajo en equipo y las relaciones sociales a través de juegos." }
         ],
         methodology: [
-          { title: "El Juego", description: "El juego es la principal herramienta educativa para los Castores." },
-          { title: "La Fantasía", description: "El marco simbólico permite vivir aventuras imaginarias." },
-          { title: "El Pequeño Grupo", description: "Se organizan en pequeños grupos llamados 'madrigueras'." }
+          { title: "Aprender Jugando", description: "El juego es nuestra principal herramienta educativa. A través de él, los castores desarrollan habilidades sociales y valores scout de forma natural y divertida." },
+          { title: "El Marco Simbólico", description: "Las aventuras de Moi y sus amigos del bosque nos permiten vivir experiencias que transmiten valores como la amistad, el cuidado del medio ambiente y la cooperación." },
+          { title: "La Colonia", description: "Trabajamos todos juntos como una gran familia, donde cada castor aprende a compartir, respetar y ayudar a los demás." }
         ],
         team: [
-          { name: "Lekes", role: "Jefa de Sección y Tesorera", photo: "/images/kraal/_noelia.png" },
-          { name: "Rasti", role: "Scouter", photo: "/images/kraal/_joan.png" },
-          { name: "Barú", role: "Scouter", photo: "/images/kraal/_jaume.png" },
-          { name: "Kibu", role: "Scouter", photo: "/images/kraal/_alvaros.png" }
+          { name: "Lekes", role: "", photo: "/images/kraal/_noelia.png" },
+          { name: "Rasti", role: "", photo: "/images/kraal/_joan.png" },
+          { name: "Barú", role: "", photo: "/images/kraal/_jaume.png" },
+          { name: "Kibu", role: "", photo: "/images/kraal/_alvaros.png" }
         ],
         navigation: {
           prev: { href: "/secciones", title: "Volver" },
@@ -109,25 +109,25 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           to: "to-yellow-600",
           accent: "yellow"
         },
-        description: "La Manada vive la aventura del Libro de la Selva, desarrollando su autonomía y aprendiendo a trabajar en grupo.",
-        details: "En la Manada Waingunga, los niños y niñas de 7 a 10 años viven aventuras siguiendo las huellas de Mowgli.",
-        frame: "El marco simbólico está basado en el Libro de la Selva de Rudyard Kipling.",
+        description: "La Manada Waingunga es la sección amarilla del Grupo Scout Osyris, formada por las lobatas y los lobatos, niños y niñas que comienzan su camino en el escultismo aprendiendo a convivir, descubrir y crecer junto a los demás.",
+        details: "Nuestra ambientación se inspira en El Libro de la Selva, donde Mowgli aprende de la naturaleza y de sus amigos. Por eso, los scouters tomamos nombres de personajes como Baloo, Bagheera o Akela, que acompañan y guían a los lobatos en su aprendizaje.",
+        frame: "En la manada trabajamos en seisenas, pequeños grupos de seis miembros que se organizan con autonomía. Cada seisena tiene su seisenera, que ayuda a coordinar al grupo y a que todos participen y aporten lo mejor de sí.",
         activities: [
-          { icon: "🏃", title: "Aventuras", description: "Grandes juegos y aventuras basadas en el Libro de la Selva." },
-          { icon: "🌲", title: "Exploración", description: "Exploración del entorno natural y urbano." },
-          { icon: "🎯", title: "Especialidades", description: "Desarrollo de habilidades a través de las especialidades." }
+          { icon: "🎯", title: "Las Cazas", description: "Durante el trimestre, la manada elige qué caza quiere emprender: un proyecto común que marca la temática de nuestras actividades, salidas y talleres." },
+          { icon: "👥", title: "Trabajo en Seisenas", description: "Las propias seisenas preparan algunas actividades, aprenden a organizarse y, sobre todo, a disfrutar colaborando." },
+          { icon: "🏕️", title: "Naturaleza y Aventura", description: "Nos encanta salir a la naturaleza, explorar nuevos lugares, acampar bajo las estrellas y compartir experiencias que nos ayudan a crecer como personas y como grupo." }
         ],
         methodology: [
-          { title: "El Juego Aventura", description: "Grandes juegos que recrean las aventuras de Mowgli." },
-          { title: "La Ley de la Manada", description: "Principios que guían la convivencia en la manada." },
-          { title: "Las Especialidades", description: "Sistema de progresión personal basado en habilidades." }
+          { title: "El Libro de la Selva", description: "Nuestra ambientación se inspira en las aventuras de Mowgli. Los scouters tomamos nombres de personajes que acompañan y guían a los lobatos en su aprendizaje." },
+          { title: "Las Seisenas", description: "Pequeños grupos de seis miembros que se organizan con autonomía. Cada seisena tiene su seisenera, que ayuda a coordinar al grupo." },
+          { title: "Aprender Jugando", description: "En la Manada Waingunga aprendemos jugando, ayudándonos y cuidando del entorno y de los demás." }
         ],
         team: [
-          { name: "Germà Gris", role: "Jefe de Sección", photo: "/images/kraal/_lopo.png" },
-          { name: "Akhela", role: "Tesorería y Botiquín", photo: "/images/kraal/_itziar.png" },
-          { name: "Baloo", role: "Material", photo: "/images/kraal/_hector.png" },
-          { name: "Brymby", role: "Scouter", photo: "/images/kraal/_asier.png" },
-          { name: "Oonai", role: "Scouter", photo: "/images/kraal/_maria.png" }
+          { name: "Germà Gris", role: "", photo: "/images/kraal/_lopo.png" },
+          { name: "Akela", role: "", photo: "/images/kraal/_itziar.png" },
+          { name: "Baloo", role: "", photo: "/images/kraal/_hector.png" },
+          { name: "Brumby", role: "", photo: "/images/kraal/_asier.png" },
+          { name: "Oonai", role: "", photo: "/images/kraal/_maria.png" }
         ],
         navigation: {
           prev: { href: "/secciones/castores", title: "Anterior: Castores" },
@@ -140,6 +140,7 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
         slug: "tropa",
         emoji: "⚜️",
         logo: "/images/secciones/tropa.png",
+        heroImage: "/images/secciones/tropa-actividad.webp",
         motto: "Siempre listos",
         ageRange: "Chicos y chicas de 10 a 13 años",
         colors: {
@@ -161,11 +162,11 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Servicio", description: "Compromiso con el servicio a los demás." }
         ],
         team: [
-          { name: "Mireia", role: "Jefa de Sección", photo: "/images/kraal/_mireia.png" },
-          { name: "Vicente", role: "Tesorero y Secretario", photo: "/images/kraal/_vicente.png" },
-          { name: "Amelia", role: "Scouter", photo: "/images/kraal/_amelia.png" },
-          { name: "Lucía", role: "Scouter", photo: "/images/kraal/_lucia.png" },
-          { name: "Mateo", role: "Scouter", photo: "/images/kraal/_mateo.png" }
+          { name: "Mireia", role: "", photo: "/images/kraal/_mireia.png" },
+          { name: "Vicente", role: "", photo: "/images/kraal/_vicente.png" },
+          { name: "Amelia", role: "", photo: "/images/kraal/_amelia.png" },
+          { name: "Lucía", role: "", photo: "/images/kraal/_lucia.png" },
+          { name: "Mateo", role: "", photo: "/images/kraal/_mateo.png" }
         ],
         navigation: {
           prev: { href: "/secciones/manada", title: "Anterior: Manada" },
@@ -199,10 +200,10 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "Compromiso Social", description: "Fuerte componente de servicio a la comunidad." }
         ],
         team: [
-          { name: "Esther", role: "Jefa de Sección", photo: "/images/kraal/_esther.png" },
-          { name: "Rodrigo", role: "Tesorero", photo: "/images/kraal/_rodrigo.png" },
-          { name: "Elena", role: "Scouter", photo: "/images/kraal/_elena.png" },
-          { name: "Miguel", role: "Scouter", photo: "/images/kraal/_miguel.png" }
+          { name: "Esther", role: "", photo: "/images/kraal/_esther.png" },
+          { name: "Rodrigo", role: "", photo: "/images/kraal/_rodrigo.png" },
+          { name: "Elena", role: "", photo: "/images/kraal/_elena.png" },
+          { name: "Miguel", role: "", photo: "/images/kraal/_miguel.png" }
         ],
         navigation: {
           prev: { href: "/secciones/tropa", title: "Anterior: Tropa" },
@@ -236,9 +237,9 @@ export function DynamicSectionPage({ sectionSlug }: DynamicSectionPageProps) {
           { title: "La Responsabilidad", description: "Preparación para asumir responsabilidades adultas." }
         ],
         team: [
-          { name: "Artur", role: "Scouter", photo: "/images/kraal/_artur.png" },
-          { name: "Dani", role: "Scouter", photo: "/images/kraal/_dani.png" },
-          { name: "Alejandra", role: "Scouter", photo: "/images/kraal/_alejandra.png" }
+          { name: "Artur", role: "", photo: "/images/kraal/_artur.png" },
+          { name: "Dani", role: "", photo: "/images/kraal/_dani.png" },
+          { name: "Alejandra", role: "", photo: "/images/kraal/_alejandra.png" }
         ],
         navigation: {
           prev: { href: "/secciones/pioneros", title: "Anterior: Pioneros" },

@@ -16,6 +16,7 @@ interface SectionData {
   slug: string
   emoji: string
   logo?: string
+  heroImage?: string
   motto: string
   ageRange: string
   colors: {
@@ -170,10 +171,10 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                   contentId={baseId + 2}
                   identificador="hero-image"
                   seccion={sectionData.slug}
-                  className="rounded-lg w-full h-64 sm:h-72 md:h-80"
+                  className="rounded-lg w-full aspect-[16/9] object-cover object-[center_80%]"
                   alt={`${sectionData.name} en actividad`}
                 >
-                  {getContent('hero-image', '/placeholder.svg?height=400&width=600')}
+                  {getContent('hero-image', sectionData.heroImage || '/placeholder.svg?height=400&width=600')}
                 </StaticImage>
               </div>
               <div className="lg:w-1/2 w-full space-y-3 sm:space-y-4">
@@ -337,15 +338,6 @@ export function SectionPageTemplate({ sectionData }: SectionPageTemplateProps) {
                     className="font-bold text-foreground"
                   >
                     {getContent(`team-${i}-name`, member.name)}
-                  </StaticText>
-                  <StaticText
-                    contentId={baseId + 33 + (i * 3)}
-                    identificador={`team-${i}-role`}
-                    seccion={sectionData.slug}
-                    as="p"
-                    className="text-sm text-muted-foreground"
-                  >
-                    {getContent(`team-${i}-role`, member.role)}
                   </StaticText>
                 </div>
               ))}
