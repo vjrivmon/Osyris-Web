@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,47 +8,32 @@ import { Input } from '@/components/ui/input'
 import {
   Users,
   UserPlus,
-  Link,
   CheckCircle,
   Clock,
-  RefreshCw,
   Search,
-  GraduationCap
+  GraduationCap,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { useAdminFamiliares } from '@/hooks/useAdminFamiliares'
 import { InvitarFamiliasSimple } from '@/components/admin/invitar-familias-simple'
-import { VincularEducandoModal } from '@/components/admin/familiares/vincular-educando'
-import { TablaRelaciones } from '@/components/admin/familiares/tabla-relaciones'
-import { useToast } from '@/hooks/use-toast'
 
 export default function AdminFamiliaresPage() {
   const [showInvitarModal, setShowInvitarModal] = useState(false)
-  const [showVincularModal, setShowVincularModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [vinculacionRefreshTrigger, setVinculacionRefreshTrigger] = useState(0)
 
   const {
     loading,
     familiares,
-    estadisticas,
+    pagination,
     cargarFamiliares,
-    cargarEstadisticas,
   } = useAdminFamiliares()
 
-  const { toast } = useToast()
-
-  useEffect(() => {
-    cargarFamiliares()
-    cargarEstadisticas()
-  }, [])
-
   const handleRefresh = () => {
-    cargarFamiliares()
-    cargarEstadisticas()
-    setVinculacionRefreshTrigger(prev => prev + 1)
+    cargarFamiliares(1)
   }
 
-  // Filtrar familiares por búsqueda
+  // Filtrar familiares por búsqueda (client-side sobre la página actual)
   const filteredFamiliares = familiares.filter(f => {
     if (!searchQuery) return true
     const search = searchQuery.toLowerCase()
@@ -59,9 +44,26 @@ export default function AdminFamiliaresPage() {
     )
   })
 
+  const handlePageChange = (newPage: number) => {
+    cargarFamiliares(newPage)
+  }
+
+  // Generar números de página con elipsis
+  const getPageNumbers = (current: number, total: number): (number | 'ellipsis')[] => {
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
+    const pages: (number | 'ellipsis')[] = [1]
+    if (current > 3) pages.push('ellipsis')
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i)
+    }
+    if (current < total - 2) pages.push('ellipsis')
+    if (total > 1) pages.push(total)
+    return pages
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header con acciones */}
+      {/* Header simplificado */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
@@ -69,62 +71,13 @@ export default function AdminFamiliaresPage() {
             Gestión de Familias
           </h1>
           <p className="text-muted-foreground mt-1">
-            {estadisticas?.totalFamilias || 0} familias registradas
+            {pagination.total || 0} familias registradas
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Actualizar
-          </Button>
-          <Button onClick={() => setShowInvitarModal(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Invitar Familia
-          </Button>
-          <Button variant="outline" onClick={() => setShowVincularModal(true)}>
-            <Link className="h-4 w-4 mr-2" />
-            Vincular Educando
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats rápidas - 3 cards en fila */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{estadisticas?.totalFamilias || 0}</p>
-              <p className="text-sm text-muted-foreground">Familias totales</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-green-600">{estadisticas?.familiasActivas || 0}</p>
-              <p className="text-sm text-muted-foreground">Activas</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <GraduationCap className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-600">{estadisticas?.educandosConFamilia || 0}</p>
-              <p className="text-sm text-muted-foreground">Educandos vinculados</p>
-            </div>
-          </CardContent>
-        </Card>
+        <Button onClick={() => setShowInvitarModal(true)}>
+          <UserPlus className="h-4 w-4 mr-2" />
+          Invitar Familia
+        </Button>
       </div>
 
       {/* Búsqueda */}
@@ -222,51 +175,62 @@ export default function AdminFamiliaresPage() {
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
 
-      {/* Tabla de relaciones (vinculaciones detalladas) */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Link className="h-5 w-5" />
-                Detalle de Vinculaciones
-              </CardTitle>
-              <CardDescription>
-                Relaciones entre familiares y educandos
-              </CardDescription>
+          {/* Paginación */}
+          {pagination.totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 mt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} de{' '}
+                {pagination.total} familias
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1 || loading}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                {getPageNumbers(pagination.page, pagination.totalPages).map((page, idx) =>
+                  page === 'ellipsis' ? (
+                    <span key={`e-${idx}`} className="px-1 text-muted-foreground">...</span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={page === pagination.page ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handlePageChange(page)}
+                      disabled={loading}
+                      className="h-8 w-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages || loading}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowVincularModal(true)}>
-              <Link className="h-4 w-4 mr-2" />
-              Nueva Vinculación
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <TablaRelaciones onRefresh={handleRefresh} refreshTrigger={vinculacionRefreshTrigger} />
+          )}
         </CardContent>
       </Card>
 
-      {/* Modales */}
+      {/* Modal */}
       <InvitarFamiliasSimple
         open={showInvitarModal}
         onOpenChange={setShowInvitarModal}
         onSuccess={() => {
           handleRefresh()
-        }}
-      />
-
-      <VincularEducandoModal
-        open={showVincularModal}
-        onOpenChange={setShowVincularModal}
-        onSuccess={() => {
-          handleRefresh()
-          toast({
-            title: "Vinculación exitosa",
-            description: "El educando ha sido vinculado correctamente",
-          })
         }}
       />
     </div>

@@ -134,7 +134,9 @@ const adminController = {
         search = '',
         rol = '',
         seccion = '',
-        estado = ''
+        estado = '',
+        sort = 'ultimo_acceso',
+        order = 'desc'
       } = req.query;
 
       const offset = (page - 1) * limit;
@@ -178,6 +180,12 @@ const adminController = {
 
       const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
+      // Determinar columna y dirección de ordenación
+      const allowedSortColumns = ['fecha_registro', 'ultimo_acceso', 'nombre', 'email'];
+      const sortColumn = allowedSortColumns.includes(sort) ? sort : 'ultimo_acceso';
+      const sortDirection = order === 'asc' ? 'ASC' : 'DESC';
+      const nullsOrder = sortColumn === 'ultimo_acceso' ? 'NULLS LAST' : '';
+
       // Query para obtener usuarios con JOIN a secciones
       const users = await db.query(`
         SELECT
@@ -187,7 +195,7 @@ const adminController = {
         FROM usuarios u
         LEFT JOIN secciones s ON u.seccion_id = s.id
         ${whereClause}
-        ORDER BY u.fecha_registro DESC
+        ORDER BY u.${sortColumn} ${sortDirection} ${nullsOrder}
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
       `, [...params, parseInt(limit), offset]);
 

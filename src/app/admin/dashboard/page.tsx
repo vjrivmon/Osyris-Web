@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,14 +9,11 @@ import {
   Heart,
   GraduationCap,
   UserPlus,
-  Link as LinkIcon,
   ArrowRight,
   Clock,
 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
 import { getAuthToken, makeAuthenticatedRequest, getCurrentUser } from "@/lib/auth-utils"
-import { InvitarFamiliasSimple } from "@/components/admin/invitar-familias-simple"
-import { VincularEducandoModal } from "@/components/admin/familiares/vincular-educando"
+import { BulkInviteModal } from "@/components/admin/bulk-invite-modal"
 
 interface DashboardStats {
   scouters: number
@@ -34,13 +30,9 @@ interface RecentActivity {
 }
 
 export default function AdminDashboard() {
-  const router = useRouter()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats>({ scouters: 0, familias: 0, educandos: 0 })
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
-  const [showInvitarModal, setShowInvitarModal] = useState(false)
-  const [showVincularModal, setShowVincularModal] = useState(false)
   const [userName, setUserName] = useState("")
 
   useEffect(() => {
@@ -85,11 +77,11 @@ export default function AdminDashboard() {
 
       // Cargar stats de familias (endpoint correcto: /api/admin/familiares/estadisticas)
       const familiasResponse = await makeAuthenticatedRequest('/api/admin/familiares/estadisticas')
-      if (familiasResponse?.data?.estadisticas) {
+      if (familiasResponse?.estadisticas) {
         setStats(prev => ({
           ...prev,
-          familias: familiasResponse.data.estadisticas.familiasActivas || 0,
-          educandos: familiasResponse.data.estadisticas.educandosConFamilia || 0
+          familias: familiasResponse.estadisticas.familiasActivas || 0,
+          educandos: familiasResponse.estadisticas.educandosConFamilia || 0
         }))
       }
     } catch (error) {
@@ -179,26 +171,16 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      {/* Acciones principales - Prominentes según Fitts's Law */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button
-          size="lg"
-          className="flex-1 h-14 text-base"
-          onClick={() => setShowInvitarModal(true)}
-        >
-          <UserPlus className="h-5 w-5 mr-2" />
-          Invitar Familia
-        </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          className="flex-1 h-14 text-base"
-          onClick={() => setShowVincularModal(true)}
-        >
-          <LinkIcon className="h-5 w-5 mr-2" />
-          Vincular Educando
-        </Button>
-      </div>
+      {/* Accion principal */}
+      <BulkInviteModal
+        onInvitesSent={handleRefresh}
+        trigger={
+          <Button size="lg" className="w-full h-14 text-base">
+            <UserPlus className="h-5 w-5 mr-2" />
+            Invitar Usuario
+          </Button>
+        }
+      />
 
       {/* Actividad reciente - Progressive Disclosure */}
       <div>
@@ -250,26 +232,6 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Modales */}
-      <InvitarFamiliasSimple
-        open={showInvitarModal}
-        onOpenChange={setShowInvitarModal}
-        onSuccess={() => {
-          handleRefresh()
-        }}
-      />
-
-      <VincularEducandoModal
-        open={showVincularModal}
-        onOpenChange={setShowVincularModal}
-        onSuccess={() => {
-          handleRefresh()
-          toast({
-            title: "Vinculacion exitosa",
-            description: "El educando ha sido vinculado correctamente",
-          })
-        }}
-      />
     </div>
   )
 }

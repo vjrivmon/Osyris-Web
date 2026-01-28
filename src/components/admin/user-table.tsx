@@ -32,14 +32,12 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Shield,
-  ShieldCheck,
-  ShieldOff,
-  Eye,
   Mail,
   Calendar,
   UserCheck,
   UserX,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
@@ -95,6 +93,18 @@ export function UserTable({
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [userToEdit, setUserToEdit] = useState<User | null>(null)
   const { toast } = useToast()
+
+  const getPageNumbers = (current: number, total: number): (number | 'ellipsis')[] => {
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
+    const pages: (number | 'ellipsis')[] = [1]
+    if (current > 3) pages.push('ellipsis')
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i)
+    }
+    if (current < total - 2) pages.push('ellipsis')
+    if (total > 1) pages.push(total)
+    return pages
+  }
 
   const getRoleBadge = (rol: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -271,176 +281,301 @@ export function UserTable({
 
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Sección</TableHead>
-              <TableHead>Último Acceso</TableHead>
-              <TableHead>Creación</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                    <span className="ml-2">Cargando usuarios...</span>
-                  </div>
-                </TableCell>
+                <TableHead>Usuario</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Sección</TableHead>
+                <TableHead>Último Acceso</TableHead>
+                <TableHead>Creación</TableHead>
+                <TableHead className="w-[70px]"></TableHead>
               </TableRow>
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <p className="text-muted-foreground">No se encontraron usuarios</p>
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {user.nombre} {user.apellidos}
-                      </div>
-                      <div className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {user.email}
-                      </div>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      <span className="ml-2">Cargando usuarios...</span>
                     </div>
                   </TableCell>
-                  <TableCell>{getRoleBadge(user.rol)}</TableCell>
-                  <TableCell>{getStatusBadge(user.estado)}</TableCell>
-                  <TableCell>
-                    {user.seccion ? (
-                      <Badge variant="outline" className="capitalize">
-                        {getSectionName(user.seccion)}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.ultimoAcceso ? (
-                      <div className="text-sm">
-                        <div>{formatDate(user.ultimoAcceso)}</div>
-                        <div className="text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(user.ultimoAcceso).toLocaleTimeString("es-ES", {
-                            hour: "2-digit",
-                            minute: "2-digit"
-                          })}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">Nunca</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {formatDate(user.fechaCreacion)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          disabled={actionLoading === user.id}
-                        >
-                          {actionLoading === user.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                          ) : (
-                            <MoreHorizontal className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem
-                          onClick={() => handleToggleStatus(user)}
-                          disabled={user.rol === "admin"}
-                        >
-                          {user.estado === "activo" ? (
-                            <>
-                              <UserX className="mr-2 h-4 w-4" />
-                              Desactivar
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck className="mr-2 h-4 w-4" />
-                              Activar
-                            </>
-                          )}
-                        </DropdownMenuItem>
-
-                        <DropdownMenuSeparator />
-
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setUserToDelete(user)
-                            setDeleteDialogOpen(true)
-                          }}
-                          disabled={user.rol === "admin"}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                </TableRow>
+              ) : users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <p className="text-muted-foreground">No se encontraron usuarios</p>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">
+                          {user.nombre} {user.apellidos}
+                        </div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          {user.email}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getRoleBadge(user.rol)}</TableCell>
+                    <TableCell>{getStatusBadge(user.estado)}</TableCell>
+                    <TableCell>
+                      {user.seccion ? (
+                        <Badge variant="outline" className="capitalize">
+                          {getSectionName(user.seccion)}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.ultimoAcceso ? (
+                        <div className="text-sm">
+                          <div>{formatDate(user.ultimoAcceso)}</div>
+                          <div className="text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(user.ultimoAcceso).toLocaleTimeString("es-ES", {
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Nunca</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {formatDate(user.fechaCreacion)}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-10 w-10 p-0"
+                            disabled={actionLoading === user.id}
+                          >
+                            {actionLoading === user.id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                            ) : (
+                              <MoreHorizontal className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => handleToggleStatus(user)}
+                            disabled={user.rol === "admin"}
+                          >
+                            {user.estado === "activo" ? (
+                              <>
+                                <UserX className="mr-2 h-4 w-4" />
+                                Desactivar
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="mr-2 h-4 w-4" />
+                                Activar
+                              </>
+                            )}
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setUserToDelete(user)
+                              setDeleteDialogOpen(true)
+                            }}
+                            disabled={user.rol === "admin"}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <span className="ml-2">Cargando usuarios...</span>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No se encontraron usuarios</p>
+          </div>
+        ) : (
+          <div className="divide-y border rounded-lg">
+            {users.map((user) => (
+              <div key={user.id} className="p-4 space-y-3">
+                {/* Header con nombre y estado */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">
+                      {user.nombre} {user.apellidos}
+                    </div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-1 truncate">
+                      <Mail className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    {getRoleBadge(user.rol)}
+                    {getStatusBadge(user.estado)}
+                  </div>
+                </div>
+
+                {/* Info adicional */}
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Sección:</span>
+                    <span className="ml-1">
+                      {user.seccion ? getSectionName(user.seccion) : "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Creación:</span>
+                    <span className="ml-1">{formatDate(user.fechaCreacion)}</span>
+                  </div>
+                  {user.ultimoAcceso && (
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground">Último acceso:</span>
+                      <span className="ml-1">{formatDate(user.ultimoAcceso)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Acciones */}
+                <div className="flex justify-end gap-2 pt-2 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditUser(user)}
+                    className="min-h-[44px]"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Editar
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="min-h-[44px]"
+                        disabled={actionLoading === user.id}
+                      >
+                        {actionLoading === user.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        ) : (
+                          <MoreHorizontal className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => handleToggleStatus(user)}
+                        disabled={user.rol === "admin"}
+                      >
+                        {user.estado === "activo" ? (
+                          <>
+                            <UserX className="mr-2 h-4 w-4" />
+                            Desactivar
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="mr-2 h-4 w-4" />
+                            Activar
+                          </>
+                        )}
+                      </DropdownMenuItem>
+
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setUserToDelete(user)
+                          setDeleteDialogOpen(true)
+                        }}
+                        disabled={user.rol === "admin"}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Paginador */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between px-2 py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 py-4">
           <div className="text-sm text-muted-foreground">
             Mostrando {((pagination.page - 1) * pagination.limit) + 1} a {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} usuarios
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPageChange?.(pagination.page - 1)}
               disabled={pagination.page === 1 || loading}
+              className="h-8 w-8 p-0"
             >
-              Anterior
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+            {getPageNumbers(pagination.page, pagination.totalPages).map((page, idx) =>
+              page === 'ellipsis' ? (
+                <span key={`e-${idx}`} className="px-1 text-muted-foreground">...</span>
+              ) : (
                 <Button
                   key={page}
                   variant={page === pagination.page ? "default" : "outline"}
                   size="sm"
                   onClick={() => onPageChange?.(page)}
                   disabled={loading}
-                  className="w-8 h-8"
+                  className="h-8 w-8 p-0"
                 >
                   {page}
                 </Button>
-              ))}
-            </div>
+              )
+            )}
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPageChange?.(pagination.page + 1)}
               disabled={pagination.page === pagination.totalPages || loading}
+              className="h-8 w-8 p-0"
             >
-              Siguiente
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>

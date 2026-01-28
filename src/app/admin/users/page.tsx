@@ -4,14 +4,13 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, RefreshCw } from "lucide-react"
+import { Users, UserPlus, ChevronLeft, ChevronRight } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getApiUrl } from "@/lib/api-utils"
 
-// Importar los nuevos componentes
+// Importar componentes
 import { SearchBar } from "@/components/admin/search-bar"
 import { UserTable } from "@/components/admin/user-table"
-import { QuickAddModal } from "@/components/admin/quick-add-modal"
 import { BulkInviteModal } from "@/components/admin/bulk-invite-modal"
 
 interface User {
@@ -88,6 +87,8 @@ export default function AdminUsersPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
+        sort: "ultimo_acceso",
+        order: "desc",
         ...Object.fromEntries(
           Object.entries(apiFilters).filter(([_, value]) => value !== "")
         )
@@ -149,15 +150,6 @@ export default function AdminUsersPage() {
     loadUsers(clearedFilters, 1)
   }
 
-  // Manejar adición de usuario
-  const handleUserAdded = (newUser: any) => {
-    toast({
-      title: "Usuario agregado",
-      description: "El usuario ha sido agregado exitosamente",
-    })
-    loadUsers(searchFilters, pagination.page)
-  }
-
   // Manejar actualización de usuario
   const handleUserUpdate = (userId: number, updates: Partial<User>) => {
     setUsers(prev => prev.map(user =>
@@ -185,6 +177,19 @@ export default function AdminUsersPage() {
     }
   }
 
+  // Generar números de página con elipsis
+  const getPageNumbers = (current: number, total: number): (number | 'ellipsis')[] => {
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
+    const pages: (number | 'ellipsis')[] = [1]
+    if (current > 3) pages.push('ellipsis')
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i)
+    }
+    if (current < total - 2) pages.push('ellipsis')
+    if (total > 1) pages.push(total)
+    return pages
+  }
+
   // Cambiar de página
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }))
@@ -201,65 +206,17 @@ export default function AdminUsersPage() {
             Administra todos los usuarios del sistema Osyris
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <QuickAddModal onUserAdded={handleUserAdded} />
-          <BulkInviteModal onInvitesSent={() => {
+        <BulkInviteModal
+          onInvitesSent={() => {
             loadUsers(searchFilters, pagination.page)
-          }} />
-          <Button variant="outline" onClick={() => loadUsers(searchFilters, pagination.page)}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualizar
-          </Button>
-        </div>
-      </div>
-
-      {/* Estadísticas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium">Total Usuarios</span>
-            </div>
-            <div className="text-2xl font-bold mt-2">{pagination.total}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-green-600">Activos</Badge>
-              <span className="text-sm font-medium">Usuarios Activos</span>
-            </div>
-            <div className="text-2xl font-bold mt-2">
-              {users.filter(u => u.estado === 'activo').length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Badge variant="destructive">Admin</Badge>
-              <span className="text-sm font-medium">Administradores</span>
-            </div>
-            <div className="text-2xl font-bold mt-2">
-              {users.filter(u => u.rol === 'admin').length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-green-600">Scouter</Badge>
-              <span className="text-sm font-medium">Scouters</span>
-            </div>
-            <div className="text-2xl font-bold mt-2">
-              {users.filter(u => u.rol === 'scouter').length}
-            </div>
-          </CardContent>
-        </Card>
+          }}
+          trigger={
+            <Button>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Invitar Usuarios
+            </Button>
+          }
+        />
       </div>
 
       {/* Lista de usuarios */}
@@ -296,31 +253,46 @@ export default function AdminUsersPage() {
 
           {/* Paginación */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-sm text-muted-foreground">
                 Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
                 {Math.min(pagination.page * pagination.limit, pagination.total)} de{' '}
                 {pagination.total} usuarios
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page === 1}
+                  disabled={pagination.page === 1 || isLoading}
+                  className="h-8 w-8 p-0"
                 >
-                  Anterior
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm">
-                  Página {pagination.page} de {pagination.totalPages}
-                </span>
+                {getPageNumbers(pagination.page, pagination.totalPages).map((page, idx) =>
+                  page === 'ellipsis' ? (
+                    <span key={`e-${idx}`} className="px-1 text-muted-foreground">...</span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={page === pagination.page ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handlePageChange(page as number)}
+                      disabled={isLoading}
+                      className="h-8 w-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page === pagination.totalPages}
+                  disabled={pagination.page === pagination.totalPages || isLoading}
+                  className="h-8 w-8 p-0"
                 >
-                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
