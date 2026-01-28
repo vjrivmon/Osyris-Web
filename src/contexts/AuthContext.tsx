@@ -1,10 +1,20 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { clearAuthData, isSessionExpired, setAuthData } from '@/lib/auth-utils'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import {
+  clearAuthData,
+  isSessionExpired,
+  setAuthData,
+  registerLogoutCallback,
+  unregisterLogoutCallback,
+  type SessionExpiredReason
+} from '@/lib/auth-utils'
 import { getApiUrl } from '@/lib/api-utils'
+import { useInactivityTimer } from '@/hooks/useInactivityTimer'
+import { SessionExpiredModal } from '@/components/auth/session-expired-modal'
+import { InactivityWarningModal } from '@/components/auth/inactivity-warning-modal'
 
-// Configuración de sesión
+// Configuracion de sesion
 const SESSION_DURATION_HOURS = 24
 const SESSION_DURATION_MS = SESSION_DURATION_HOURS * 60 * 60 * 1000
 
@@ -24,13 +34,15 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
-  authReady: boolean  // Indica que la autenticación está completamente sincronizada
-  sessionExpired: boolean  // Indica que la sesión ha expirado
+  authReady: boolean  // Indica que la autenticacion esta completamente sincronizada
+  sessionExpired: boolean  // Indica que la sesion ha expirado
+  sessionExpiredReason: SessionExpiredReason | null  // Razon de la expiracion
 }
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
+  logoutWithReason: (reason: SessionExpiredReason) => void
   refreshUser: () => Promise<void>
   waitForAuthReady: () => Promise<void>  // Espera hasta que authReady sea true
 }
@@ -43,9 +55,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     token: null,
     isAuthenticated: false,
     isLoading: true,
-    authReady: false,  // Se pone true cuando la autenticación está completamente sincronizada
-    sessionExpired: false  // Se pone true cuando la sesión ha expirado
+    authReady: false,  // Se pone true cuando la autenticacion esta completamente sincronizada
+    sessionExpired: false,  // Se pone true cuando la sesion ha expirado
+    sessionExpiredReason: null  // Razon de la expiracion
   })
+
+  // Estados para modales
+  const [showExpiredModal, setShowExpiredModal] = useState(false)
+  const [expiredModalReason, setExpiredModalReason] = useState<SessionExpiredReason>('token_invalid')
 
   useEffect(() => {
     checkAuthStatus()
@@ -73,17 +90,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const isValidToken = token && token !== 'undefined' && token !== 'null'
       const isValidUserStr = userStr && userStr !== 'undefined' && userStr !== 'null' && userStr.startsWith('{')
 
-      // Si no hay token o usuario válido, no hay sesión
+      // Si no hay token o usuario valido, no hay sesion
       if (!isValidToken || !isValidUserStr) {
-        console.log('❌ [AuthContext] No hay token o usuario válido en localStorage')
+        console.log('❌ [AuthContext] No hay token o usuario valido en localStorage')
         clearAuthData() // Limpiar cualquier dato residual o corrupto
         setAuthState({
           user: null,
           token: null,
           isAuthenticated: false,
           isLoading: false,
-          authReady: true,  // Auth está listo aunque no haya sesión
-          sessionExpired: false
+          authReady: true,  // Auth esta listo aunque no haya sesion
+          sessionExpired: false,
+          sessionExpiredReason: null
         })
         return
       }
@@ -97,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const expiresAt = new Date(user.expiresAt).getTime()
 
           if (now > expiresAt) {
-            console.log('🔒 [AuthContext] Sesión expirada, limpiando datos...')
+            console.log('🔒 [AuthContext] Sesion expirada, limpiando datos...')
             clearAuthData()
             setAuthState({
               user: null,
@@ -105,8 +123,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               isAuthenticated: false,
               isLoading: false,
               authReady: true,
-              sessionExpired: true  // Marcar que la sesión expiró
+              sessionExpired: true,  // Marcar que la sesion expiro
+              sessionExpiredReason: 'token_expired'
             })
+            // Mostrar modal de sesion expirada
+            setExpiredModalReason('token_expired')
+            setShowExpiredModal(true)
             return
           }
 
@@ -134,7 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isAuthenticated: true,
           isLoading: false,
           authReady: true,  // Auth completamente sincronizado
-          sessionExpired: false
+          sessionExpired: false,
+          sessionExpiredReason: null
         })
       } catch (parseError) {
         console.error('❌ [AuthContext] Error parseando usuario de localStorage:', parseError)
@@ -145,12 +168,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isAuthenticated: false,
           isLoading: false,
           authReady: true,
-          sessionExpired: false
+          sessionExpired: false,
+          sessionExpiredReason: null
         })
       }
     } catch (error) {
       console.error('Error checking auth status:', error)
-      // En caso de error, limpiar sesión para seguridad
+      // En caso de error, limpiar sesion para seguridad
       clearAuthData()
       setAuthState({
         user: null,
@@ -158,7 +182,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: false,
         isLoading: false,
         authReady: true,
-        sessionExpired: false
+        sessionExpired: false,
+        sessionExpiredReason: null
       })
     }
   }
@@ -210,8 +235,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           token,
           isAuthenticated: true,
           isLoading: false,
-          authReady: false,  // Aún no está listo, esperamos propagación
-          sessionExpired: false
+          authReady: false,  // Aun no esta listo, esperamos propagacion
+          sessionExpired: false,
+          sessionExpiredReason: null
         })
 
         // Usar un pequeño delay para asegurar que el estado se propague
@@ -236,33 +262,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const logout = () => {
-    console.log('👋 Logging out, clearing all auth data')
+  /**
+   * Logout con razon especifica - muestra modal apropiado
+   */
+  const logoutWithReason = useCallback((reason: SessionExpiredReason) => {
+    console.log(`👋 [AuthContext] Logout con razon: ${reason}`)
+    clearAuthData()
+
+    setAuthState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+      authReady: true,
+      sessionExpired: true,
+      sessionExpiredReason: reason
+    })
+
+    // Mostrar modal solo si no es logout manual
+    if (reason !== 'manual') {
+      setExpiredModalReason(reason)
+      setShowExpiredModal(true)
+    }
+  }, [])
+
+  /**
+   * Logout estandar (manual por el usuario)
+   */
+  const logout = useCallback(() => {
+    console.log('👋 [AuthContext] Logging out, clearing all auth data')
     clearAuthData()
     setAuthState({
       user: null,
       token: null,
       isAuthenticated: false,
       isLoading: false,
-      authReady: true,  // Auth está listo aunque no haya sesión
-      sessionExpired: false
+      authReady: true,
+      sessionExpired: false,
+      sessionExpiredReason: null
     })
-  }
+    setShowExpiredModal(false)
+  }, [])
 
   const refreshUser = async () => {
     await checkAuthStatus()
   }
 
-  // Función que espera hasta que authReady sea true
+  // Funcion que espera hasta que authReady sea true
   const waitForAuthReady = (): Promise<void> => {
     return new Promise((resolve) => {
-      // Si ya está listo, resolver inmediatamente
+      // Si ya esta listo, resolver inmediatamente
       if (authState.authReady) {
         resolve()
         return
       }
 
-      // Si no, verificar periódicamente
+      // Si no, verificar periodicamente
       const checkInterval = setInterval(() => {
         // Re-leer el estado actual desde localStorage como fallback
         const token = localStorage.getItem('token')
@@ -272,9 +327,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const user = JSON.parse(userStr)
             if (user.expiresAt) {
-              // Hay sesión válida, podemos resolver
+              // Hay sesion valida, podemos resolver
               clearInterval(checkInterval)
-              console.log('✅ [waitForAuthReady] Sesión detectada, resolviendo...')
+              console.log('✅ [waitForAuthReady] Sesion detectada, resolviendo...')
               resolve()
               return
             }
@@ -284,7 +339,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }, 50)
 
-      // Timeout después de 2 segundos para evitar espera infinita
+      // Timeout despues de 2 segundos para evitar espera infinita
       setTimeout(() => {
         clearInterval(checkInterval)
         console.log('⚠️ [waitForAuthReady] Timeout alcanzado, resolviendo de todas formas')
@@ -293,17 +348,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
+  // ============================================================================
+  // INACTIVITY TIMER - Cierre automatico por inactividad
+  // ============================================================================
+
+  // Callback cuando expira por inactividad
+  const handleInactivityExpire = useCallback(() => {
+    console.log('⏰ [AuthContext] Sesion expirada por inactividad')
+    logoutWithReason('inactivity')
+  }, [logoutWithReason])
+
+  // Hook de inactividad - solo activo cuando hay usuario autenticado
+  const {
+    secondsRemaining,
+    showWarning: showInactivityWarning,
+    resetTimer,
+    isActive: inactivityTimerActive
+  } = useInactivityTimer({
+    onExpire: handleInactivityExpire,
+    enabled: authState.isAuthenticated && authState.authReady
+  })
+
+  // ============================================================================
+  // CALLBACK GLOBAL - Interceptor de 401 desde authenticatedFetch
+  // ============================================================================
+
+  // Registrar callback global para ser notificado de 401 desde cualquier fetch
+  useEffect(() => {
+    const handleGlobalLogout = (reason: SessionExpiredReason) => {
+      console.log(`🔔 [AuthContext] Callback global de logout recibido: ${reason}`)
+      logoutWithReason(reason)
+    }
+
+    registerLogoutCallback(handleGlobalLogout)
+
+    return () => {
+      unregisterLogoutCallback(handleGlobalLogout)
+    }
+  }, [logoutWithReason])
+
+  // ============================================================================
+  // HANDLERS PARA MODALES
+  // ============================================================================
+
+  // Handler para "Continuar conectado" en modal de advertencia
+  const handleContinueSession = useCallback(() => {
+    console.log('🔄 [AuthContext] Usuario eligio continuar conectado')
+    resetTimer()
+  }, [resetTimer])
+
+  // Handler para cerrar modal de sesion expirada
+  const handleCloseExpiredModal = useCallback(() => {
+    setShowExpiredModal(false)
+  }, [])
+
   return (
     <AuthContext.Provider
       value={{
         ...authState,
         login,
         logout,
+        logoutWithReason,
         refreshUser,
         waitForAuthReady
       }}
     >
       {children}
+
+      {/* Modal de advertencia de inactividad */}
+      <InactivityWarningModal
+        isOpen={showInactivityWarning && authState.isAuthenticated}
+        secondsRemaining={secondsRemaining}
+        onContinue={handleContinueSession}
+        onLogout={logout}
+      />
+
+      {/* Modal de sesion expirada */}
+      <SessionExpiredModal
+        isOpen={showExpiredModal}
+        reason={expiredModalReason}
+        onClose={handleCloseExpiredModal}
+      />
     </AuthContext.Provider>
   )
 }
@@ -316,7 +441,7 @@ export function useAuth(): AuthContextType {
     }
     return context
   } catch (error) {
-    // Durante el build estático o SSR sin AuthProvider, retornar valores seguros
+    // Durante el build estatico o SSR sin AuthProvider, retornar valores seguros
     if (typeof window === 'undefined') {
       return {
         user: null,
@@ -325,8 +450,10 @@ export function useAuth(): AuthContextType {
         isLoading: false,
         authReady: false,
         sessionExpired: false,
+        sessionExpiredReason: null,
         login: async () => false,
         logout: () => {},
+        logoutWithReason: () => {},
         refreshUser: async () => {},
         waitForAuthReady: async () => {}
       }

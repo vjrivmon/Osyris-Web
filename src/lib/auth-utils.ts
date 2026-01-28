@@ -5,6 +5,81 @@
 
 import { getApiUrl as getCentralApiUrl, apiEndpoint } from './api-utils'
 
+// ============================================================================
+// SESIÓN EXPIRADA - Error personalizado y sistema de callbacks globales
+// ============================================================================
+
+/**
+ * Razones por las que una sesión puede expirar
+ */
+export type SessionExpiredReason = 'inactivity' | 'token_expired' | 'token_invalid' | 'manual'
+
+/**
+ * Error personalizado para indicar que la sesión ha expirado
+ * Permite distinguir un 401 de otros errores HTTP
+ */
+export class SessionExpiredError extends Error {
+  public readonly reason: SessionExpiredReason
+  public readonly statusCode: number
+
+  constructor(reason: SessionExpiredReason = 'token_invalid', statusCode: number = 401) {
+    const messages: Record<SessionExpiredReason, string> = {
+      inactivity: 'Tu sesión se cerró por inactividad',
+      token_expired: 'Tu sesión ha expirado',
+      token_invalid: 'Tu sesión no es válida',
+      manual: 'Sesión cerrada'
+    }
+    super(messages[reason])
+    this.name = 'SessionExpiredError'
+    this.reason = reason
+    this.statusCode = statusCode
+  }
+}
+
+/**
+ * Tipo para el callback de logout global
+ */
+type LogoutCallback = (reason: SessionExpiredReason) => void
+
+/**
+ * Callbacks registrados para ser notificados cuando ocurre un 401
+ * Permite que AuthContext se registre y maneje el logout centralizadamente
+ */
+let globalLogoutCallbacks: LogoutCallback[] = []
+
+/**
+ * Registra un callback que será llamado cuando se detecte un 401
+ * Usado por AuthContext para manejar el logout de forma centralizada
+ */
+export const registerLogoutCallback = (callback: LogoutCallback): void => {
+  if (!globalLogoutCallbacks.includes(callback)) {
+    globalLogoutCallbacks.push(callback)
+    console.log('🔐 [auth-utils] Callback de logout registrado')
+  }
+}
+
+/**
+ * Elimina un callback de logout previamente registrado
+ */
+export const unregisterLogoutCallback = (callback: LogoutCallback): void => {
+  globalLogoutCallbacks = globalLogoutCallbacks.filter(cb => cb !== callback)
+  console.log('🔐 [auth-utils] Callback de logout desregistrado')
+}
+
+/**
+ * Notifica a todos los callbacks registrados que la sesión expiró
+ */
+const notifyLogoutCallbacks = (reason: SessionExpiredReason): void => {
+  console.log(`🔔 [auth-utils] Notificando ${globalLogoutCallbacks.length} callbacks de logout, razón: ${reason}`)
+  globalLogoutCallbacks.forEach(callback => {
+    try {
+      callback(reason)
+    } catch (err) {
+      console.error('[auth-utils] Error en callback de logout:', err)
+    }
+  })
+}
+
 export interface UserData {
   id: number
   nombre: string
@@ -299,4 +374,129 @@ export const makeAuthenticatedRequestRaw = async (
       ...options.headers
     }
   })
+}
+
+// ============================================================================
+// AUTHENTICATED FETCH - Interceptor centralizado de 401
+// ============================================================================
+
+/**
+ * Opciones para authenticatedFetch
+ */
+export interface AuthenticatedFetchOptions extends RequestInit {
+  /** Si es true, no dispara el logout automático en 401 (útil para login) */
+  skipAuthCheck?: boolean
+  /** Si es true, añade automáticamente el header Authorization */
+  addAuthHeader?: boolean
+}
+
+/**
+ * Wrapper de fetch que intercepta respuestas 401 y dispara logout global
+ *
+ * Ventajas:
+ * - Centraliza el manejo de 401 en un solo lugar
+ * - Automáticamente notifica a AuthContext para mostrar modal
+ * - Lanza SessionExpiredError para que el código que llama pueda manejarlo
+ * - NO usa cache cuando hay error de autenticación
+ *
+ * @param url - URL completa o endpoint relativo
+ * @param options - Opciones de fetch + opciones adicionales
+ * @returns Response - La respuesta del servidor
+ * @throws SessionExpiredError - Si el servidor devuelve 401
+ */
+export const authenticatedFetch = async (
+  url: string,
+  options: AuthenticatedFetchOptions = {}
+): Promise<Response> => {
+  const { skipAuthCheck = false, addAuthHeader = true, ...fetchOptions } = options
+
+  // Construir headers
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...fetchOptions.headers
+  }
+
+  // Añadir token de autorización si se solicita
+  if (addAuthHeader) {
+    const token = getAuthToken()
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
+    }
+  }
+
+  // Construir URL completa si es relativa
+  const fullUrl = url.startsWith('http') ? url : `${getApiUrl()}${url}`
+
+  try {
+    const response = await fetch(fullUrl, {
+      ...fetchOptions,
+      headers
+    })
+
+    // Interceptar 401 Unauthorized
+    if (response.status === 401 && !skipAuthCheck) {
+      console.warn('🔒 [authenticatedFetch] 401 recibido - sesión inválida o expirada')
+
+      // Notificar a todos los listeners (AuthContext) que la sesión expiró
+      notifyLogoutCallbacks('token_invalid')
+
+      // Lanzar error específico para que el código que llama pueda manejarlo
+      throw new SessionExpiredError('token_invalid', 401)
+    }
+
+    // 403 puede indicar token expirado en algunos backends
+    if (response.status === 403 && !skipAuthCheck) {
+      // Verificar si es realmente un problema de sesión o de permisos
+      try {
+        const clonedResponse = response.clone()
+        const errorBody = await clonedResponse.json()
+
+        // Si el mensaje indica expiración de token, tratar como 401
+        if (errorBody.message?.toLowerCase().includes('expired') ||
+            errorBody.message?.toLowerCase().includes('token') ||
+            errorBody.error?.toLowerCase().includes('unauthorized')) {
+          console.warn('🔒 [authenticatedFetch] 403 con mensaje de token - tratando como sesión expirada')
+          notifyLogoutCallbacks('token_expired')
+          throw new SessionExpiredError('token_expired', 403)
+        }
+      } catch (parseError) {
+        // Si no podemos parsear el body, dejar que continúe como 403 normal
+        if (parseError instanceof SessionExpiredError) {
+          throw parseError
+        }
+      }
+    }
+
+    return response
+  } catch (error) {
+    // Re-lanzar SessionExpiredError sin modificar
+    if (error instanceof SessionExpiredError) {
+      throw error
+    }
+
+    // Para errores de red, verificar si podría ser problema de autenticación
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('[authenticatedFetch] Error de red:', error)
+    }
+
+    throw error
+  }
+}
+
+/**
+ * Versión de authenticatedFetch que parsea JSON automáticamente
+ * Útil para la mayoría de casos de uso
+ */
+export const authenticatedFetchJson = async <T = unknown>(
+  url: string,
+  options: AuthenticatedFetchOptions = {}
+): Promise<T> => {
+  const response = await authenticatedFetch(url, options)
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`HTTP ${response.status}: ${errorText}`)
+  }
+
+  return response.json()
 }

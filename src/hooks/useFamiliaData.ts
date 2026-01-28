@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { getApiUrl } from '@/lib/api-utils'
+import { authenticatedFetch, SessionExpiredError } from '@/lib/auth-utils'
 
 interface ScoutHijo {
   id: number
@@ -66,7 +67,7 @@ export function useFamiliaData({
   refetchInterval = 5 * 60 * 1000, // 5 minutos
   cacheKey: baseCacheKey = 'familia-data'
 }: UseFamiliaDataOptions = {}): UseFamiliaDataReturn {
-  const { user, token, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { user, token, isAuthenticated, isLoading: authLoading, authReady } = useAuth()
   const [hijos, setHijos] = useState<ScoutHijo[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,9 +75,10 @@ export function useFamiliaData({
   // IMPORTANTE: Cache key incluye el ID del usuario para evitar mezcla de datos entre cuentas
   const cacheKey = user?.id ? `${baseCacheKey}-user-${user.id}` : baseCacheKey
 
-  const fetchHijos = useCallback(async () => {
-    console.log('🚀 [useFamiliaData] Iniciando fetchHijos...')
+  const fetchHijos = useCallback(async (retryCount: number = 0) => {
+    console.log('🚀 [useFamiliaData] Iniciando fetchHijos...' + (retryCount > 0 ? ` (reintento ${retryCount})` : ''))
     console.log('🚀 [useFamiliaData] authLoading:', authLoading)
+    console.log('🚀 [useFamiliaData] authReady:', authReady)
     console.log('🚀 [useFamiliaData] isAuthenticated:', isAuthenticated)
     console.log('🚀 [useFamiliaData] token:', token ? 'Existe (longitud: ' + token.length + ')' : 'NO existe')
     console.log('🚀 [useFamiliaData] user:', user)
@@ -156,16 +158,28 @@ export function useFamiliaData({
         console.log('📦 [useFamiliaData] No hay cache, obteniendo datos frescos')
       }
 
-      // Obtener desde API
+      // Obtener desde API usando authenticatedFetch (intercepta 401)
       const apiUrl = getApiUrl()
-      console.log('🌐 [useFamiliaData] Haciendo petición a:', `${apiUrl}/api/familia/hijos`)
+      console.log('🌐 [useFamiliaData] Haciendo peticion a:', `${apiUrl}/api/familia/hijos`)
 
-      const response = await fetch(`${apiUrl}/api/familia/hijos`, {
+      // Usamos authenticatedFetch para interceptar 401 automaticamente
+      // Si hay 401, lanzara SessionExpiredError y notificara a AuthContext
+      const response = await authenticatedFetch(`${apiUrl}/api/familia/hijos`, {
         headers: {
-          'Authorization': `Bearer ${effectiveToken}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${effectiveToken}`
         }
       })
+
+      // IMPORTANTE: Retry con backoff para errores 403 que pueden ser temporales
+      // (race condition despues del login donde el token aun no esta sincronizado)
+      // NOTA: 401 ya es manejado por authenticatedFetch y lanza SessionExpiredError
+      if (response.status === 403 && retryCount < 3) {
+        console.log(`⏳ [useFamiliaData] 403 recibido, reintentando (${retryCount + 1}/3)...`)
+        setLoading(false)
+        // Backoff exponencial: 500ms, 1000ms, 1500ms
+        await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)))
+        return fetchHijos(retryCount + 1)
+      }
 
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`)
@@ -231,22 +245,35 @@ export function useFamiliaData({
 
     } catch (err) {
       console.error('Error fetching hijos:', err)
-      
-      // Si hay error, intentar usar datos del cache aunque sea viejo
+
+      // IMPORTANTE: Si es error de sesion expirada, NO usar cache
+      // El modal de sesion expirada se mostrara automaticamente via AuthContext
+      if (err instanceof SessionExpiredError) {
+        console.log('🔒 [useFamiliaData] Sesion expirada - NO usar cache, limpiando datos')
+        // Limpiar cache para este usuario
+        localStorage.removeItem(cacheKey)
+        localStorage.removeItem(`${cacheKey}-timestamp`)
+        // NO establecer error ni hijos - el modal de sesion expirada se encargara
+        setHijos(null)
+        setError(null)
+        return // Salir sin hacer nada mas
+      }
+
+      // Para otros errores, intentar usar datos del cache aunque sea viejo
       const cached = localStorage.getItem(cacheKey)
       if (cached) {
         setHijos(JSON.parse(cached))
         setError('Usando datos guardados localmente')
       } else {
-        // Si no hay cache y hay error, mostrar array vacío
-        // NO usar datos mock - los hijos reales se vincularán después
+        // Si no hay cache y hay error, mostrar array vacio
+        // NO usar datos mock - los hijos reales se vincularan despues
         setError('No se pudieron cargar los datos de tus hijos')
         setHijos([])
       }
     } finally {
       setLoading(false)
     }
-  }, [authLoading, isAuthenticated, token, user, cacheKey, refetchInterval])
+  }, [authLoading, authReady, isAuthenticated, token, user, cacheKey, refetchInterval])
 
   const refetch = useCallback(async () => {
     await fetchHijos()
@@ -379,6 +406,7 @@ export function useFamiliaData({
   const loadingRef = useRef(false)
 
   // Efecto principal: manejar cambios de usuario y carga de datos
+  // IMPORTANTE: Esperamos a que authReady sea true para evitar race conditions post-login
   useEffect(() => {
     const currentUserId = user?.id || null
 
@@ -391,21 +419,30 @@ export function useFamiliaData({
 
     prevUserIdRef.current = currentUserId
 
+    // IMPORTANTE: No cargar hasta que authReady sea true
+    // Esto evita la race condition después del login
+    if (!authReady) {
+      console.log('⏳ [useFamiliaData] Esperando authReady...')
+      return
+    }
+
     // Si hay usuario autenticado y no estamos cargando, cargar datos
     if (!authLoading && isAuthenticated && token && user && !loadingRef.current) {
-      console.log('✅ [useFamiliaData] Usuario autenticado, cargando hijos para:', user.id)
+      console.log('✅ [useFamiliaData] authReady: true, cargando hijos para:', user.id)
       loadingRef.current = true
       fetchHijos().finally(() => {
         loadingRef.current = false
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated, token, user?.id])
+  }, [authReady, authLoading, isAuthenticated, token, user?.id])
 
   // Efecto para detectar login desde localStorage (cuando AuthContext tarda en actualizarse)
+  // NOTA: Este efecto es un fallback por si el efecto principal no detecta el login
   useEffect(() => {
-    // Solo ejecutar si no tenemos datos y no estamos cargando
-    if (hijos !== null || loading || loadingRef.current) return
+    // Solo ejecutar si authReady es true, no tenemos datos y no estamos cargando
+    // (si authReady es true y el efecto principal no cargó, este es el fallback)
+    if (!authReady || hijos !== null || loading || loadingRef.current) return
 
     const checkLocalStorage = () => {
       const storedToken = localStorage.getItem('token')
@@ -419,7 +456,7 @@ export function useFamiliaData({
             const now = new Date().getTime()
             const expiresAt = new Date(parsedUser.expiresAt).getTime()
             if (now < expiresAt) {
-              console.log('🔄 [useFamiliaData] Detectado login en localStorage, forzando carga para usuario:', parsedUser.id)
+              console.log('🔄 [useFamiliaData] Fallback: Detectado login en localStorage, forzando carga para usuario:', parsedUser.id)
               loadingRef.current = true
               fetchHijos().finally(() => {
                 loadingRef.current = false
@@ -449,7 +486,7 @@ export function useFamiliaData({
 
     return () => clearInterval(intervalId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hijos, loading])
+  }, [authReady, hijos, loading])
 
   // Auto-refetch
   useEffect(() => {
