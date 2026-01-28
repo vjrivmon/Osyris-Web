@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Users,
   UsersRound,
-  Settings,
   Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,7 +23,6 @@ const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/users', label: 'Usuarios', icon: Users },
   { href: '/admin/familiares', label: 'Familias', icon: UsersRound },
-  { href: '/admin/system', label: 'Sistema', icon: Settings },
 ]
 
 export function AdminMobileNav() {

@@ -1,236 +1,273 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { SearchBar } from "@/components/admin/search-bar"
-import { UserTable } from "@/components/admin/user-table"
-import { InvitacionesPanel } from "@/components/admin/invitaciones-panel"
-import { FamiliasResumenCard } from "@/components/admin/familias-resumen-card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Users,
-  RefreshCw,
-  Shield,
+  Heart,
+  GraduationCap,
+  UserPlus,
+  Link as LinkIcon,
+  ArrowRight,
+  Clock,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { getAuthToken, makeAuthenticatedRequest } from "@/lib/auth-utils"
+import { getAuthToken, makeAuthenticatedRequest, getCurrentUser } from "@/lib/auth-utils"
+import { InvitarFamiliasSimple } from "@/components/admin/invitar-familias-simple"
+import { VincularEducandoModal } from "@/components/admin/familiares/vincular-educando"
 
-interface User {
+interface DashboardStats {
+  scouters: number
+  familias: number
+  educandos: number
+}
+
+interface RecentActivity {
   id: number
-  email: string
   nombre: string
   apellidos: string
-  rol: string
-  estado: string
   seccion?: string
   ultimoAcceso?: string
-  fechaCreacion: string
-}
-
-interface ApiUser {
-  id: number
-  email: string
-  nombre: string
-  apellidos: string
-  rol: string
-  activo: boolean
-  seccion_id?: number
-  ultimo_acceso?: string
-  fecha_registro: string
-}
-
-// Mapeo de IDs de sección a nombres
-const SECCIONES_MAP: Record<number, string> = {
-  1: 'Castores',
-  2: 'Lobatos',
-  3: 'Tropa',
-  4: 'Pioneros',
-  5: 'Rutas',
 }
 
 export default function AdminDashboard() {
+  const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
-
-  // Estado para usuarios
-  const [users, setUsers] = useState<User[]>([])
-  const [usersLoading, setUsersLoading] = useState(false)
-  const [usersPagination, setUsersPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0
-  })
-
-  // Filtros de busqueda
-  const [searchFilters, setSearchFilters] = useState({
-    query: "",
-    rol: "",
-    seccion_id: ""
-  })
+  const [stats, setStats] = useState<DashboardStats>({ scouters: 0, familias: 0, educandos: 0 })
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
+  const [showInvitarModal, setShowInvitarModal] = useState(false)
+  const [showVincularModal, setShowVincularModal] = useState(false)
+  const [userName, setUserName] = useState("")
 
   useEffect(() => {
-    loadUsers()
+    loadDashboardData()
+    const user = getCurrentUser()
+    if (user?.nombre) {
+      setUserName(user.nombre)
+    }
   }, [])
 
-  // Cargar usuarios con filtros y paginacion
-  const loadUsers = async (filters = searchFilters, page = usersPagination.page) => {
-    setUsersLoading(true)
+  const loadDashboardData = async () => {
     try {
       const token = getAuthToken()
       if (!token) return
 
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: usersPagination.limit.toString(),
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== "")
-        )
-      })
+      // Cargar usuarios para stats y actividad reciente
+      const usersResponse = await makeAuthenticatedRequest('/api/admin/users?limit=50')
+      if (usersResponse?.data?.users) {
+        const users = usersResponse.data.users
 
-      const response = await makeAuthenticatedRequest(`/api/admin/users?${params}`)
-      if (response) {
-        const mappedUsers: User[] = response.data.users.map((apiUser: ApiUser) => ({
-          id: apiUser.id,
-          email: apiUser.email,
-          nombre: apiUser.nombre,
-          apellidos: apiUser.apellidos,
-          rol: apiUser.rol,
-          estado: apiUser.activo ? "activo" : "inactivo",
-          seccion: apiUser.seccion_id ? SECCIONES_MAP[apiUser.seccion_id] || `Sección ${apiUser.seccion_id}` : undefined,
-          ultimoAcceso: apiUser.ultimo_acceso,
-          fechaCreacion: apiUser.fecha_registro
+        // Contar scouters (todos los usuarios del sistema son scouters/kraal)
+        const scoutersCount = users.filter((u: any) => u.activo).length
+
+        // Actividad reciente: últimos 5 con acceso reciente
+        const recent = users
+          .filter((u: any) => u.ultimo_acceso)
+          .sort((a: any, b: any) => new Date(b.ultimo_acceso).getTime() - new Date(a.ultimo_acceso).getTime())
+          .slice(0, 5)
+          .map((u: any) => ({
+            id: u.id,
+            nombre: u.nombre,
+            apellidos: u.apellidos,
+            seccion: getSectionName(u.seccion_id),
+            ultimoAcceso: u.ultimo_acceso
+          }))
+
+        setRecentActivity(recent)
+        setStats(prev => ({ ...prev, scouters: scoutersCount }))
+      }
+
+      // Cargar stats de familias
+      const familiasResponse = await makeAuthenticatedRequest('/api/familiares/estadisticas')
+      if (familiasResponse?.data) {
+        setStats(prev => ({
+          ...prev,
+          familias: familiasResponse.data.totalFamilias || 0,
+          educandos: familiasResponse.data.educandosConFamilia || 0
         }))
-
-        setUsers(mappedUsers)
-        setUsersPagination(response.data.pagination)
       }
     } catch (error) {
-      console.error("Error loading users:", error)
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los usuarios",
-        variant: "destructive",
-      })
+      console.error("Error loading dashboard:", error)
     } finally {
-      setUsersLoading(false)
       setIsLoading(false)
     }
   }
 
-  // Manejar busqueda
-  const handleSearch = (filters: any) => {
-    setSearchFilters(filters)
-    setUsersPagination(prev => ({ ...prev, page: 1 }))
-    loadUsers(filters)
-  }
-
-  // Limpiar busqueda
-  const handleClearSearch = () => {
-    const clearedFilters = {
-      query: "",
-      rol: "",
-      seccion_id: ""
+  const getSectionName = (seccionId?: number): string => {
+    const secciones: Record<number, string> = {
+      1: 'Castores', 2: 'Lobatos', 3: 'Tropa', 4: 'Pioneros', 5: 'Rutas'
     }
-    setSearchFilters(clearedFilters)
-    setUsersPagination(prev => ({ ...prev, page: 1 }))
-    loadUsers(clearedFilters)
+    return seccionId ? secciones[seccionId] || '' : ''
   }
 
-  // Manejar actualizacion de usuario
-  const handleUserUpdate = (userId: number, updates: Partial<User>) => {
-    setUsers(prev => prev.map(user =>
-      user.id === userId ? { ...user, ...updates } : user
-    ))
+  const formatTimeAgo = (dateString?: string): string => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMins / 60)
+    const diffDays = Math.floor(diffHours / 24)
+
+    if (diffMins < 60) return `hace ${diffMins}min`
+    if (diffHours < 24) return `hace ${diffHours}h`
+    if (diffDays < 7) return `hace ${diffDays}d`
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
   }
 
-  // Manejar eliminacion de usuario
-  const handleUserDelete = (userId: number) => {
-    setUsers(prev => prev.filter(user => user.id !== userId))
-  }
-
-  // Manejar cambio de pagina
-  const handlePageChange = (page: number) => {
-    setUsersPagination(prev => ({ ...prev, page }))
-    loadUsers(searchFilters, page)
-  }
-
-  // Refrescar todo
-  const handleRefreshAll = () => {
-    loadUsers()
+  const handleRefresh = () => {
+    setIsLoading(true)
+    loadDashboardData()
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando panel...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl sm:text-3xl font-bold">Panel de Administración</h1>
-          </div>
-          <p className="text-muted-foreground mt-1">
-            Gestiona usuarios, invitaciones y familias del sistema
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleRefreshAll}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Actualizar
+    <div className="space-y-8 max-w-4xl mx-auto">
+      {/* Saludo simple */}
+      <div>
+        <h1 className="text-2xl font-semibold">
+          Hola{userName ? `, ${userName}` : ''}
+        </h1>
+        <p className="text-muted-foreground">
+          Grupo Scout Osyris
+        </p>
+      </div>
+
+      {/* Stats - 3 números clave */}
+      <div className="grid grid-cols-3 gap-4">
+        <Link href="/admin/users" className="group">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="p-4 sm:p-6 text-center">
+              <Users className="h-5 w-5 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
+              <p className="text-3xl sm:text-4xl font-bold">{stats.scouters}</p>
+              <p className="text-sm text-muted-foreground">Scouters</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/familiares" className="group">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="p-4 sm:p-6 text-center">
+              <Heart className="h-5 w-5 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
+              <p className="text-3xl sm:text-4xl font-bold">{stats.familias}</p>
+              <p className="text-sm text-muted-foreground">Familias</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/familiares" className="group">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="p-4 sm:p-6 text-center">
+              <GraduationCap className="h-5 w-5 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
+              <p className="text-3xl sm:text-4xl font-bold">{stats.educandos}</p>
+              <p className="text-sm text-muted-foreground">Educandos</p>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Acciones principales - Prominentes según Fitts's Law */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button
+          size="lg"
+          className="flex-1 h-14 text-base"
+          onClick={() => setShowInvitarModal(true)}
+        >
+          <UserPlus className="h-5 w-5 mr-2" />
+          Invitar Familia
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="flex-1 h-14 text-base"
+          onClick={() => setShowVincularModal(true)}
+        >
+          <LinkIcon className="h-5 w-5 mr-2" />
+          Vincular Educando
         </Button>
       </div>
 
-      {/* Grid principal: Invitaciones + Familias */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <InvitacionesPanel onRefresh={handleRefreshAll} />
-        <FamiliasResumenCard />
+      {/* Actividad reciente - Progressive Disclosure */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-medium flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            Actividad reciente
+          </h2>
+          <Link
+            href="/admin/users"
+            className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+          >
+            Ver todos <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {recentActivity.length > 0 ? (
+          <div className="space-y-2">
+            {recentActivity.map((user) => (
+              <div
+                key={user.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-sm font-medium text-primary">
+                      {user.nombre?.charAt(0)}{user.apellidos?.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">
+                      {user.nombre} {user.apellidos}
+                    </p>
+                    {user.seccion && (
+                      <p className="text-xs text-muted-foreground">{user.seccion}</p>
+                    )}
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {formatTimeAgo(user.ultimoAcceso)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground py-8">
+            No hay actividad reciente
+          </p>
+        )}
       </div>
 
-      {/* Gestión de Usuarios - Tabla completa */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              <div>
-                <CardTitle>Gestión de Usuarios</CardTitle>
-                <CardDescription>
-                  Administra todos los usuarios del sistema
-                </CardDescription>
-              </div>
-            </div>
-            <Badge variant="outline" className="w-fit">
-              {usersPagination.total} usuarios
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <SearchBar
-            onSearch={handleSearch}
-            onClear={handleClearSearch}
-            placeholder="Buscar usuarios por nombre o email..."
-          />
-          <UserTable
-            users={users}
-            onUserUpdate={handleUserUpdate}
-            onUserDelete={handleUserDelete}
-            loading={usersLoading}
-            pagination={usersPagination}
-            onPageChange={handlePageChange}
-          />
-        </CardContent>
-      </Card>
+      {/* Modales */}
+      <InvitarFamiliasSimple
+        open={showInvitarModal}
+        onOpenChange={setShowInvitarModal}
+        onSuccess={() => {
+          handleRefresh()
+        }}
+      />
+
+      <VincularEducandoModal
+        open={showVincularModal}
+        onOpenChange={setShowVincularModal}
+        onSuccess={() => {
+          handleRefresh()
+          toast({
+            title: "Vinculacion exitosa",
+            description: "El educando ha sido vinculado correctamente",
+          })
+        }}
+      />
     </div>
   )
 }
