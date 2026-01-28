@@ -57,16 +57,18 @@ export default function AdminDashboard() {
       if (!token) return
 
       // Cargar usuarios para stats y actividad reciente
-      const usersResponse = await makeAuthenticatedRequest('/api/admin/users?limit=50')
+      const usersResponse = await makeAuthenticatedRequest('/api/admin/users?limit=200')
       if (usersResponse?.data?.users) {
         const users = usersResponse.data.users
 
-        // Contar scouters (todos los usuarios del sistema son scouters/kraal)
-        const scoutersCount = users.filter((u: any) => u.activo).length
+        // Contar solo scouters (rol = 'scouter' o 'admin')
+        const scoutersCount = users.filter((u: any) =>
+          u.activo && (u.rol === 'scouter' || u.rol === 'admin')
+        ).length
 
-        // Actividad reciente: últimos 5 con acceso reciente
+        // Actividad reciente: últimos 5 con acceso reciente (solo scouters/admin)
         const recent = users
-          .filter((u: any) => u.ultimo_acceso)
+          .filter((u: any) => u.ultimo_acceso && (u.rol === 'scouter' || u.rol === 'admin'))
           .sort((a: any, b: any) => new Date(b.ultimo_acceso).getTime() - new Date(a.ultimo_acceso).getTime())
           .slice(0, 5)
           .map((u: any) => ({
@@ -81,13 +83,13 @@ export default function AdminDashboard() {
         setStats(prev => ({ ...prev, scouters: scoutersCount }))
       }
 
-      // Cargar stats de familias
-      const familiasResponse = await makeAuthenticatedRequest('/api/familiares/estadisticas')
-      if (familiasResponse?.data) {
+      // Cargar stats de familias (endpoint correcto: /api/admin/familiares/estadisticas)
+      const familiasResponse = await makeAuthenticatedRequest('/api/admin/familiares/estadisticas')
+      if (familiasResponse?.data?.estadisticas) {
         setStats(prev => ({
           ...prev,
-          familias: familiasResponse.data.totalFamilias || 0,
-          educandos: familiasResponse.data.educandosConFamilia || 0
+          familias: familiasResponse.data.estadisticas.familiasActivas || 0,
+          educandos: familiasResponse.data.estadisticas.educandosConFamilia || 0
         }))
       }
     } catch (error) {
