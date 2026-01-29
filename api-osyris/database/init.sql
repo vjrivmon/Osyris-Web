@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   email VARCHAR(100) UNIQUE NOT NULL,
   telefono VARCHAR(20),
   contraseña VARCHAR(255) NOT NULL,
-  rol VARCHAR(50) NOT NULL CHECK (rol IN ('admin', 'scouter', 'familia', 'educando')),
+  rol VARCHAR(50) NOT NULL CHECK (rol IN ('admin', 'scouter', 'familia', 'educando', 'comite')),
   seccion_id INTEGER REFERENCES secciones(id) ON DELETE SET NULL,
   activo BOOLEAN DEFAULT true,
   fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

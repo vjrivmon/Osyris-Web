@@ -6,7 +6,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { setAuthData, getCurrentUser, getApiUrlWithFallback } from "@/lib/auth-utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -90,9 +90,24 @@ const waitForAuthSync = (): Promise<void> => {
   })
 }
 
+/**
+ * Validar que la URL de redirect es una ruta interna segura
+ */
+function isValidInternalRedirect(path: string): boolean {
+  // Debe empezar con / y no contener protocolo ni doble barra
+  if (!path.startsWith('/')) return false
+  if (path.startsWith('//')) return false
+  if (path.includes('://')) return false
+  // No permitir caracteres peligrosos
+  if (path.includes('\\')) return false
+  return true
+}
+
 export default function LoginPage() {
   noStore()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectPath = searchParams.get('redirect')
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
@@ -110,16 +125,23 @@ export default function LoginPage() {
   useEffect(() => {
     const currentUser = getCurrentUser()
     if (currentUser && currentUser.rol) {
+      // Si hay redirect valido, usarlo
+      if (redirectPath && isValidInternalRedirect(redirectPath)) {
+        router.push(redirectPath)
+        return
+      }
       // Redireccionar según el rol
       if (currentUser.rol === "admin") {
         router.push("/admin")
       } else if (currentUser.rol === "familia") {
         router.push("/familia/dashboard")
+      } else if (currentUser.rol === "comite") {
+        router.push("/comite/dashboard")
       } else {
         router.push("/aula-virtual")
       }
     }
-  }, [router])
+  }, [router, redirectPath])
 
   // Función de login actualizada para usar API real con fallback automático
   const handleLogin = async (values: LoginValues) => {
@@ -161,21 +183,30 @@ export default function LoginPage() {
         await waitForAuthSync();
         console.log('✅ [Login] Autenticación sincronizada, redirigiendo...');
 
-        // Redireccionar según el rol
-        // IMPORTANTE: Usamos window.location.href para forzar recarga completa
-        // Con router.push(), el AuthProvider de la nueva página se inicializa
-        // ANTES de que localStorage tenga los datos, causando el bug de "No hay educandos"
-        const userRole = data.data.usuario.rol;
-
-        if (userRole === 'admin') {
-          // Admin va al panel de administración separado
-          window.location.href = '/admin';
-        } else if (userRole === 'familia') {
-          // Familiares van al dashboard familiar
-          window.location.href = '/familia/dashboard';
+        // Si hay un redirect valido, usarlo directamente
+        if (redirectPath && isValidInternalRedirect(redirectPath)) {
+          console.log('✅ [Login] Redirigiendo a:', redirectPath);
+          window.location.href = redirectPath;
         } else {
-          // Los demás van al aula virtual
-          window.location.href = '/aula-virtual';
+          // Redireccionar según el rol
+          // IMPORTANTE: Usamos window.location.href para forzar recarga completa
+          // Con router.push(), el AuthProvider de la nueva página se inicializa
+          // ANTES de que localStorage tenga los datos, causando el bug de "No hay educandos"
+          const userRole = data.data.usuario.rol;
+
+          if (userRole === 'admin') {
+            // Admin va al panel de administración separado
+            window.location.href = '/admin';
+          } else if (userRole === 'familia') {
+            // Familiares van al dashboard familiar
+            window.location.href = '/familia/dashboard';
+          } else if (userRole === 'comite') {
+            // Comite va al panel de cocina/comite
+            window.location.href = '/comite/dashboard';
+          } else {
+            // Los demás van al aula virtual
+            window.location.href = '/aula-virtual';
+          }
         }
       } else {
         setError(data.message || "Credenciales incorrectas. Por favor, inténtalo de nuevo.");

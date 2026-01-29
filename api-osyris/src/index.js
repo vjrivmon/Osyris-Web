@@ -52,6 +52,8 @@ const rondaRoutes = require('./routes/ronda.routes');
 const inscripcionesCampamentoRoutes = require('./routes/inscripciones-campamento.routes');
 // 📊 RUTAS DEL DASHBOARD SCOUTER
 const dashboardScouterRoutes = require('./routes/dashboard-scouter.routes');
+// 📊 RUTAS DEL DASHBOARD COMITE
+const dashboardComiteRoutes = require('./routes/dashboard-comite.routes');
 // 💬 MED-005: RUTAS DE MENSAJERIA SCOUTER-FAMILIA
 const mensajesScouterRoutes = require('./routes/mensajes-scouter.routes');
 // 🚀 FEATURE FLAGS
@@ -145,6 +147,8 @@ app.use('/api/ronda', rondaRoutes);
 app.use('/api/inscripciones-campamento', inscripcionesCampamentoRoutes);
 // 📊 DASHBOARD SCOUTER
 app.use('/api/dashboard-scouter', dashboardScouterRoutes);
+// 📊 DASHBOARD COMITE
+app.use('/api/dashboard-comite', dashboardComiteRoutes);
 // 💬 MED-005: MENSAJERIA SCOUTER-FAMILIA
 app.use('/api/mensajes-scouter', mensajesScouterRoutes);
 // 🚀 FEATURE FLAGS

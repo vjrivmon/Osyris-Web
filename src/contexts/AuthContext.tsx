@@ -23,7 +23,7 @@ interface User {
   nombre: string
   apellidos: string
   email: string
-  rol: 'admin' | 'editor' | 'coordinador' | 'scouter' | 'familia' | 'educando'
+  rol: 'admin' | 'editor' | 'coordinador' | 'scouter' | 'familia' | 'educando' | 'comite'
   seccion_id?: number
   seccion_nombre?: string
   activo: boolean

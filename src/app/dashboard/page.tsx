@@ -29,6 +29,12 @@ export default function DashboardPage() {
       return
     }
 
+    // Si es comite, redirigir al panel de comite
+    if (userData.rol === 'comite') {
+      router.replace('/comite/dashboard')
+      return
+    }
+
     setLoading(false)
   }, [router])
 
