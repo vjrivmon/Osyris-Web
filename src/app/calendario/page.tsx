@@ -1,26 +1,26 @@
-"use client"
+import type { Metadata } from "next"
+import CalendarioContent from "@/components/pages/calendario-content"
+import { JsonLd } from "@/components/seo/json-ld"
+import { SITE_URL, buildBreadcrumbs } from "@/lib/seo-constants"
 
-import { MainNav } from "@/components/main-nav"
-import { SiteFooter } from "@/components/site-footer"
-import { CalendarView } from "@/components/ui/calendar-view"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Info, Phone, Mail } from "lucide-react"
-
-// Calendario sin datos mock - se conectará con la API en el futuro
-const activities: any[] = []
+export const metadata: Metadata = {
+  title: "Calendario de Actividades",
+  description: "Calendario de actividades del Grupo Scout Osyris. Consulta las fechas de reuniones, acampadas, campamentos y eventos especiales.",
+  alternates: {
+    canonical: `${SITE_URL}/calendario`,
+  },
+  openGraph: {
+    title: "Calendario de Actividades | Grupo Scout Osyris",
+    description: "Calendario de actividades del Grupo Scout Osyris. Reuniones, acampadas y campamentos.",
+    url: `${SITE_URL}/calendario`,
+  },
+}
 
 export default function CalendarioPage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <MainNav />
-
-      <main className="flex-1 overflow-hidden">
-        <div className="h-full p-4">
-          <div className="h-full max-w-7xl mx-auto">
-            <CalendarView events={activities} className="h-full" />
-          </div>
-        </div>
-      </main>
-    </div>
+    <>
+      <JsonLd data={buildBreadcrumbs([{ name: 'Calendario', path: '/calendario' }])} />
+      <CalendarioContent />
+    </>
   )
 }

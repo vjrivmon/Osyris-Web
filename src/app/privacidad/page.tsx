@@ -12,10 +12,15 @@ import {
   Mail,
 } from "lucide-react"
 
+import { SITE_URL } from "@/lib/seo-constants"
+
 export const metadata = {
   title: "Política de Privacidad",
   description:
     "Política de privacidad del Grupo Scout Osyris. Conoce cómo protegemos y utilizamos tu información personal.",
+  alternates: {
+    canonical: `${SITE_URL}/privacidad`,
+  },
 }
 
 const sections = [
@@ -315,8 +320,13 @@ const sections = [
   },
 ]
 
+import { JsonLd } from "@/components/seo/json-ld"
+import { buildBreadcrumbs } from "@/lib/seo-constants"
+
 export default function PrivacidadPage() {
   return (
+    <>
+    <JsonLd data={buildBreadcrumbs([{ name: 'Privacidad', path: '/privacidad' }])} />
     <LegalPageTemplate
       title="Política de Privacidad"
       description="Conoce cómo el Grupo Scout Osyris protege y utiliza tu información personal."
@@ -324,5 +334,6 @@ export default function PrivacidadPage() {
       version="2.0"
       sections={sections}
     />
+    </>
   )
 }

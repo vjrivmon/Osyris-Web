@@ -101,12 +101,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Páginas de información
   const infoPages = [
     {
-      url: `${baseUrl}/faq`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    },
-    {
       url: `${baseUrl}/preguntas-frecuentes`,
       lastModified: currentDate,
       changeFrequency: 'monthly' as const,
@@ -114,6 +108,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/privacidad`,
+      lastModified: currentDate,
+      changeFrequency: 'yearly' as const,
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/cookies`,
       lastModified: currentDate,
       changeFrequency: 'yearly' as const,
       priority: 0.4,

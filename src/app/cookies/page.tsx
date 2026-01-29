@@ -9,10 +9,15 @@ import {
   Mail,
 } from "lucide-react"
 
+import { SITE_URL } from "@/lib/seo-constants"
+
 export const metadata = {
   title: "Política de Cookies",
   description:
     "Política de cookies del Grupo Scout Osyris. Conoce qué cookies utilizamos y cómo gestionarlas.",
+  alternates: {
+    canonical: `${SITE_URL}/cookies`,
+  },
 }
 
 // Tabla de cookies
@@ -343,8 +348,13 @@ const sections = [
   },
 ]
 
+import { JsonLd } from "@/components/seo/json-ld"
+import { buildBreadcrumbs } from "@/lib/seo-constants"
+
 export default function CookiesPage() {
   return (
+    <>
+    <JsonLd data={buildBreadcrumbs([{ name: 'Cookies', path: '/cookies' }])} />
     <LegalPageTemplate
       title="Política de Cookies"
       description="Información sobre las cookies que utilizamos y cómo gestionarlas."
@@ -352,5 +362,6 @@ export default function CookiesPage() {
       version="1.0"
       sections={sections}
     />
+    </>
   )
 }

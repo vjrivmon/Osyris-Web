@@ -13,10 +13,15 @@ import {
   Mail,
 } from "lucide-react"
 
+import { SITE_URL } from "@/lib/seo-constants"
+
 export const metadata = {
   title: "Términos de Servicio",
   description:
     "Términos de servicio del Grupo Scout Osyris. Conoce las condiciones de uso de nuestra plataforma.",
+  alternates: {
+    canonical: `${SITE_URL}/terminos`,
+  },
 }
 
 const sections = [
@@ -300,8 +305,13 @@ const sections = [
   },
 ]
 
+import { JsonLd } from "@/components/seo/json-ld"
+import { buildBreadcrumbs } from "@/lib/seo-constants"
+
 export default function TerminosPage() {
   return (
+    <>
+    <JsonLd data={buildBreadcrumbs([{ name: 'Términos de Servicio', path: '/terminos' }])} />
     <LegalPageTemplate
       title="Términos de Servicio"
       description="Condiciones de uso de la plataforma web del Grupo Scout Osyris."
@@ -309,5 +319,6 @@ export default function TerminosPage() {
       version="2.0"
       sections={sections}
     />
+    </>
   )
 }

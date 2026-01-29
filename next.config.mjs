@@ -59,6 +59,15 @@ const nextConfig = {
     minimumCacheTTL: 3600,
   },
   output: 'standalone', // Para Docker
+  async redirects() {
+    return [
+      {
+        source: '/faq',
+        destination: '/preguntas-frecuentes',
+        permanent: true,
+      },
+    ]
+  },
   // Reescribir rutas de uploads al backend
   async rewrites() {
     return [

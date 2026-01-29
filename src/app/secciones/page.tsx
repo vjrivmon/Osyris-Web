@@ -1,5 +1,21 @@
+import type { Metadata } from "next"
 import Image from "next/image"
 import { MainNav } from "@/components/main-nav"
+import { JsonLd } from "@/components/seo/json-ld"
+import { SITE_URL, buildBreadcrumbs } from "@/lib/seo-constants"
+
+export const metadata: Metadata = {
+  title: "Secciones Scout",
+  description: "Descubre las 5 secciones del Grupo Scout Osyris: Castores (5-7 años), Manada (7-10), Tropa (10-13), Pioneros (13-16) y Rutas (16-19). Metodología adaptada a cada edad.",
+  alternates: {
+    canonical: `${SITE_URL}/secciones`,
+  },
+  openGraph: {
+    title: "Secciones Scout | Grupo Scout Osyris",
+    description: "Descubre las 5 secciones del Grupo Scout Osyris adaptadas a cada etapa de desarrollo.",
+    url: `${SITE_URL}/secciones`,
+  },
+}
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -8,6 +24,8 @@ import { ScoutHeroBackground } from "@/components/scout-identity"
 
 export default function SeccionesPage() {
   return (
+    <>
+    <JsonLd data={buildBreadcrumbs([{ name: 'Secciones', path: '/secciones' }])} />
     <div className="flex flex-col min-h-screen">
       {/* MainNav ya incluye su propio <header> con sticky top-0 */}
       <MainNav />
@@ -118,6 +136,7 @@ export default function SeccionesPage() {
       </main>
       <SiteFooter />
     </div>
+    </>
   );
 }
 

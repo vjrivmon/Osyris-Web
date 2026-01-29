@@ -1,4 +1,20 @@
+import type { Metadata } from "next"
 import { MainNav } from "@/components/main-nav"
+import { JsonLd } from "@/components/seo/json-ld"
+import { SITE_URL, buildBreadcrumbs } from "@/lib/seo-constants"
+
+export const metadata: Metadata = {
+  title: "Preguntas Frecuentes",
+  description: "Preguntas frecuentes sobre el Grupo Scout Osyris. Inscripción, cuotas, actividades, campamentos, organización y más información para familias.",
+  alternates: {
+    canonical: `${SITE_URL}/preguntas-frecuentes`,
+  },
+  openGraph: {
+    title: "Preguntas Frecuentes | Grupo Scout Osyris",
+    description: "Respuestas a las preguntas más comunes sobre inscripción, actividades y funcionamiento del grupo scout.",
+    url: `${SITE_URL}/preguntas-frecuentes`,
+  },
+}
 import { SiteFooter } from "@/components/site-footer"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,7 +24,25 @@ import Link from "next/link"
 import { ArrowRight, Search } from "lucide-react"
 
 export default function PreguntasFrecuentesPage() {
+  const allFaqs = [...generalFaqs, ...inscripcionFaqs, ...actividadesFaqs, ...organizacionFaqs]
+
   return (
+    <>
+    <JsonLd data={buildBreadcrumbs([{ name: 'Preguntas Frecuentes', path: '/preguntas-frecuentes' }])} />
+    <JsonLd
+      data={{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: allFaqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer,
+          },
+        })),
+      }}
+    />
     <div className="flex flex-col min-h-screen">
       {/* MainNav ya incluye su propio <header> con sticky top-0 */}
       <MainNav />
@@ -146,6 +180,7 @@ export default function PreguntasFrecuentesPage() {
       </main>
       <SiteFooter />
     </div>
+    </>
   );
 }
 

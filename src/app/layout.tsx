@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { CookieBanner } from "@/components/cookies"
 import { GoogleAnalytics } from "@/components/analytics/google-analytics"
+import { JsonLd } from "@/components/seo/json-ld"
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo-constants"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -43,7 +45,7 @@ export const metadata: Metadata = {
   ],
   creator: "Grupo Scout Osyris",
   publisher: "Grupo Scout Osyris",
-  generator: "v0.dev",
+  generator: "Next.js",
   applicationName: "Osyris Scout Management",
   referrer: "origin-when-cross-origin",
   robots: {
@@ -103,6 +105,12 @@ export default function RootLayout({
 
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <JsonLd data={organizationJsonLd} />
+        <JsonLd data={websiteJsonLd} />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased transition-colors duration-300 no-backdrop-filter",
