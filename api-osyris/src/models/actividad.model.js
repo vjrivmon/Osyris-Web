@@ -1,4 +1,5 @@
 const { query } = require('../config/db.config');
+const crypto = require('crypto');
 
 /**
  * Formatear fecha a string YYYY-MM-DD sin problemas de timezone
@@ -231,13 +232,32 @@ const findAll = async (filters = {}) => {
       LEFT JOIN usuarios uc ON a.creado_por = uc.id
       LEFT JOIN (
         SELECT
-          ca.actividad_id,
-          COUNT(*) FILTER (WHERE ca.estado = 'confirmado') as total_confirmados,
-          COUNT(*) FILTER (WHERE ca.estado = 'no_asiste') as total_no_asisten,
-          COUNT(*) FILTER (WHERE ca.estado = 'pendiente') as total_pendientes
-        FROM confirmaciones_asistencia ca
-        ${seccionStatsFilter}
-        GROUP BY ca.actividad_id
+          actividad_id,
+          SUM(total_confirmados) as total_confirmados,
+          SUM(total_no_asisten) as total_no_asisten,
+          SUM(total_pendientes) as total_pendientes
+        FROM (
+          -- Confirmaciones de asistencia (reuniones de sábado, etc.)
+          SELECT
+            ca.actividad_id,
+            COUNT(*) FILTER (WHERE ca.estado = 'confirmado') as total_confirmados,
+            COUNT(*) FILTER (WHERE ca.estado = 'no_asiste') as total_no_asisten,
+            COUNT(*) FILTER (WHERE ca.estado = 'pendiente') as total_pendientes
+          FROM confirmaciones_asistencia ca
+          ${seccionStatsFilter}
+          GROUP BY ca.actividad_id
+          UNION ALL
+          -- Inscripciones de campamento
+          SELECT
+            ic.actividad_id,
+            COUNT(*) FILTER (WHERE ic.estado IN ('inscrito', 'pendiente')) as total_confirmados,
+            COUNT(*) FILTER (WHERE ic.estado = 'no_asiste') as total_no_asisten,
+            0 as total_pendientes
+          FROM inscripciones_campamento ic
+          ${seccionStatsFilter ? seccionStatsFilter.replace(/\bca\b/g, 'ic') : ''}
+          GROUP BY ic.actividad_id
+        ) combined
+        GROUP BY actividad_id
       ) conf ON a.id = conf.actividad_id
       WHERE 1=1
     `;
@@ -259,6 +279,7 @@ const findAll = async (filters = {}) => {
           OR LOWER(a.titulo) LIKE '%verano%'
         ))
         OR (a.tipo = 'campamento' AND LOWER(a.titulo) LIKE '%pascua%' AND $${paramIndex} IN (1, 2, 3))
+        OR (a.tipo = 'campamento' AND LOWER(a.titulo) LIKE '%casmatropolis%' AND $${paramIndex} IN (1, 2, 3))
       )`;
       params.push(filters.seccion_id);
       paramIndex++;
@@ -498,6 +519,13 @@ const create = async (actividadData) => {
 
     // query() returns { insertId, changes } for INSERT statements
     const actividadId = result.insertId || result[0]?.id;
+
+    // Auto-generar enlace_token para campamentos con inscripcion y reuniones de sabado
+    if (((actividadData.tipo === 'campamento') && actividadData.requiere_inscripcion) || actividadData.tipo === 'reunion_sabado') {
+      const token = generateEnlaceToken();
+      await query(`UPDATE actividades SET enlace_token = $1 WHERE id = $2`, [token, actividadId]);
+    }
+
     return await findById(actividadId);
   } catch (error) {
     throw error;
@@ -642,6 +670,7 @@ const findForEducando = async (educandoId) => {
           OR LOWER(a.titulo) LIKE '%verano%'
         ))
         OR (a.tipo = 'campamento' AND LOWER(a.titulo) LIKE '%pascua%' AND e.seccion_id IN (1, 2, 3))
+        OR (a.tipo = 'campamento' AND LOWER(a.titulo) LIKE '%casmatropolis%' AND e.seccion_id IN (1, 2, 3))
       )
         AND a.visibilidad IN ('todos', 'familias')
         AND (a.cancelado = false OR a.cancelado IS NULL)
@@ -653,6 +682,80 @@ const findForEducando = async (educandoId) => {
       ...a,
       tipo_config: TIPOS_EVENTO[a.tipo] || TIPOS_EVENTO.otro
     }));
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Generar un token unico de 12 caracteres para enlaces de inscripcion
+ */
+const generateEnlaceToken = () => {
+  return crypto.randomBytes(9).toString('base64url').slice(0, 12);
+};
+
+/**
+ * Buscar actividad por enlace_token (datos publicos basicos)
+ */
+const findByEnlaceToken = async (token) => {
+  try {
+    const actividades = await query(`
+      SELECT a.id, a.titulo, a.fecha_inicio, a.fecha_fin, a.tipo,
+             a.seccion_id, a.requiere_inscripcion, a.estado,
+             a.lugar, a.precio, a.cancelado,
+             s.nombre as seccion_nombre
+      FROM actividades a
+      LEFT JOIN secciones s ON a.seccion_id = s.id
+      WHERE a.enlace_token = $1
+    `, [token]);
+
+    if (actividades.length === 0) return null;
+
+    return transformarActividad(actividades[0]);
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Generar o recuperar enlace_token para una actividad
+ */
+const getOrCreateEnlaceToken = async (id) => {
+  try {
+    // Primero verificar si ya tiene token
+    const result = await query(`
+      SELECT enlace_token FROM actividades WHERE id = $1
+    `, [id]);
+
+    if (result.length === 0) return null;
+
+    if (result[0].enlace_token) {
+      return result[0].enlace_token;
+    }
+
+    // Generar nuevo token
+    const token = generateEnlaceToken();
+    await query(`
+      UPDATE actividades SET enlace_token = $1 WHERE id = $2
+    `, [token, id]);
+
+    return token;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Obtener el enlace_token existente de una actividad
+ */
+const getEnlaceToken = async (id) => {
+  try {
+    const result = await query(`
+      SELECT enlace_token FROM actividades WHERE id = $1
+    `, [id]);
+
+    if (result.length === 0) return null;
+    return result[0].enlace_token;
   } catch (error) {
     throw error;
   }
@@ -677,5 +780,8 @@ module.exports = {
   findByMes,
   findForEducando,
   getTiposEvento,
+  findByEnlaceToken,
+  getOrCreateEnlaceToken,
+  getEnlaceToken,
   TIPOS_EVENTO
 };

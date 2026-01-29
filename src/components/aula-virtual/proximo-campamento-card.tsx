@@ -1,9 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import {
   Tent,
   Calendar,
@@ -18,9 +26,15 @@ import {
   FileText,
   ExternalLink,
   Euro,
-  HelpCircle
+  HelpCircle,
+  Share2,
+  Copy,
+  Check,
+  MessageCircle,
+  Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getApiUrl } from '@/lib/api-utils'
 import type {
   ProximoCampamento,
   InscripcionCampamento,
@@ -43,6 +57,82 @@ export function ProximoCampamentoCard({
   className
 }: ProximoCampamentoCardProps) {
   const [activeFilter, setActiveFilter] = useState<'todos' | 'pendientes' | 'completados' | 'no_asisten' | 'sin_inscribir'>('todos')
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [shareLink, setShareLink] = useState<string | null>(null)
+  const [shareLoading, setShareLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = useCallback(async () => {
+    if (!data?.actividad.id) return
+
+    setShareDialogOpen(true)
+    setShareLoading(true)
+    setCopied(false)
+
+    try {
+      const token = localStorage.getItem('token')
+      // Primero intentar obtener token existente
+      let response = await fetch(`${getApiUrl()}/api/actividades/${data.actividad.id}/enlace`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      let result = await response.json()
+
+      if (result.success && result.data.enlace_token) {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+        setShareLink(`${baseUrl}/inscripcion/campamento/${result.data.enlace_token}`)
+      } else {
+        // Generar nuevo token
+        response = await fetch(`${getApiUrl()}/api/actividades/${data.actividad.id}/generar-enlace`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        result = await response.json()
+
+        if (result.success && result.data.enlace_token) {
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+          setShareLink(`${baseUrl}/inscripcion/campamento/${result.data.enlace_token}`)
+        }
+      }
+    } catch (err) {
+      console.error('Error obteniendo enlace de inscripcion:', err)
+    } finally {
+      setShareLoading(false)
+    }
+  }, [data?.actividad.id])
+
+  const handleCopy = useCallback(async () => {
+    if (!shareLink) return
+    try {
+      await navigator.clipboard.writeText(shareLink)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback para navegadores sin clipboard API
+      const textArea = document.createElement('textarea')
+      textArea.value = shareLink
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }, [shareLink])
+
+  const handleWhatsApp = useCallback(() => {
+    if (!shareLink || !data) return
+    const mensaje = `Hola familias! Ya podeis inscribir a vuestros hijos al ${data.actividad.titulo}. Clicad aqui: ${shareLink}`
+    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`
+    window.open(url, '_blank')
+  }, [shareLink, data])
 
   if (!data) {
     return (
@@ -108,11 +198,104 @@ export function ProximoCampamentoCard({
             <Tent className="h-5 w-5 text-emerald-600" />
             Proximo Campamento
           </CardTitle>
-          <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
-            {actividad.seccion_nombre || 'Todas las secciones'}
-          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShare}
+            className="gap-1.5 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-700 dark:hover:bg-emerald-900/30"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Compartir</span>
+          </Button>
         </div>
       </CardHeader>
+
+      {/* Dialog de compartir enlace */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5 text-emerald-600" />
+              Compartir enlace de inscripcion
+            </DialogTitle>
+            <DialogDescription>
+              Comparte este enlace con las familias para que inscriban a sus hijos en <strong>{actividad.titulo}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          {shareLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
+              <span className="ml-2 text-muted-foreground">Generando enlace...</span>
+            </div>
+          ) : shareLink ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Input
+                  readOnly
+                  value={shareLink}
+                  className="text-sm"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopy}
+                  className="shrink-0"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              {copied && (
+                <p className="text-sm text-green-600 font-medium">Enlace copiado al portapapeles</p>
+              )}
+
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={handleCopy}
+                  className="w-full gap-2"
+                  variant={copied ? "outline" : "default"}
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      Copiar enlace
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={handleWhatsApp}
+                  variant="outline"
+                  className="w-full gap-2 text-green-700 border-green-200 hover:bg-green-50 dark:text-green-300 dark:border-green-700 dark:hover:bg-green-900/30"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Compartir por WhatsApp
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Las familias que reciban este enlace podran inscribir a sus hijos directamente.
+                Si no tienen sesion iniciada, se les pedira que inicien sesion primero.
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-4 text-muted-foreground">
+              No se pudo generar el enlace. Intentalo de nuevo.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <CardContent className="space-y-4">
         {/* Info del campamento */}
