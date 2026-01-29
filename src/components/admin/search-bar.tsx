@@ -92,15 +92,15 @@ export function SearchBar({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {/* Main search input */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={placeholder}
             value={filters.query}
             onChange={(e) => handleInputChange("query", e.target.value)}
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 min-h-[44px]"
           />
           {filters.query && (
             <Button
@@ -115,9 +115,9 @@ export function SearchBar({
         </div>
 
         {/* Search button */}
-        <Button onClick={handleSearch} className="shrink-0">
-          <Search className="h-4 w-4 mr-2" />
-          Buscar
+        <Button onClick={handleSearch} className="shrink-0 min-h-[44px]">
+          <Search className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Buscar</span>
         </Button>
 
         {/* Clear filters button */}
@@ -125,21 +125,21 @@ export function SearchBar({
           <Button
             variant="outline"
             onClick={handleClear}
-            className="shrink-0"
+            className="shrink-0 min-h-[44px]"
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Limpiar
+            <RefreshCw className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Limpiar</span>
           </Button>
         )}
 
         {/* Advanced filters dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="shrink-0">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
+            <Button variant="outline" className="shrink-0 min-h-[44px]">
+              <Filter className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Filtros</span>
               {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 px-1 text-xs">
+                <Badge variant="secondary" className="ml-1 sm:ml-2 h-5 px-1 text-xs">
                   {activeFiltersCount}
                 </Badge>
               )}

@@ -188,18 +188,19 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
       <DialogTrigger asChild>
         {trigger || defaultTrigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Enviar Invitaciones Múltiples
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="sm:hidden">Invitar Usuarios</span>
+            <span className="hidden sm:inline">Enviar Invitaciones Múltiples</span>
           </DialogTitle>
-          <DialogDescription>
-            Pega una lista de correos electrónicos separados por saltos de línea, comas o espacios. Todos recibirán el mismo rol.
+          <DialogDescription className="text-xs sm:text-sm">
+            Pega correos separados por comas, líneas o espacios.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-3 sm:space-y-4 py-2 sm:py-4 overflow-y-auto flex-1 min-h-0">
           {/* Selector de Rol */}
           <div className="space-y-2">
             <Label htmlFor="rol">Rol para todos los usuarios *</Label>
@@ -268,26 +269,22 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
             </Label>
             <Textarea
               id="emails"
-              placeholder="ejemplo1@email.com&#10;ejemplo2@email.com&#10;ejemplo3@email.com"
+              placeholder="ejemplo1@email.com, ejemplo2@email.com..."
               value={emailsText}
               onChange={(e) => setEmailsText(e.target.value)}
               onBlur={parseEmails}
-              rows={8}
-              className="font-mono text-sm"
+              rows={3}
+              className="font-mono text-sm resize-none"
             />
-            <div className="flex justify-between items-center">
-              <p className="text-xs text-muted-foreground">
-                Puedes copiar y pegar desde Excel o cualquier fuente
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={parseEmails}
-              >
-                Procesar Emails
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={parseEmails}
+              className="w-full sm:w-auto min-h-[44px]"
+            >
+              Procesar Emails
+            </Button>
           </div>
 
           {/* Preview de emails procesados */}
@@ -312,11 +309,11 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
               </div>
 
               {/* Lista de emails */}
-              <div className="border rounded-md p-3 max-h-48 overflow-y-auto space-y-2">
+              <div className="border rounded-md p-2 sm:p-3 max-h-32 sm:max-h-48 overflow-y-auto space-y-1.5 sm:space-y-2">
                 {parsedEmails.map((item, index) => (
                   <div
                     key={index}
-                    className={`flex items-center justify-between p-2 rounded ${
+                    className={`flex items-center justify-between p-1.5 sm:p-2 rounded ${
                       item.valid ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
                     }`}
                   >
@@ -330,7 +327,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
                         {item.email}
                       </span>
                       {item.error && (
-                        <span className="text-xs text-red-600">({item.error})</span>
+                        <span className="hidden sm:inline text-xs text-red-600">({item.error})</span>
                       )}
                     </div>
                     <Button
@@ -359,12 +356,13 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-0 pt-2 border-t">
           <Button
             type="button"
             variant="outline"
             onClick={() => setOpen(false)}
             disabled={isLoading}
+            className="w-full sm:w-auto min-h-[44px]"
           >
             Cancelar
           </Button>
@@ -372,6 +370,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
             type="button"
             onClick={handleSubmit}
             disabled={isLoading || validEmailsCount === 0}
+            className="w-full sm:w-auto min-h-[44px]"
           >
             {isLoading ? (
               <>

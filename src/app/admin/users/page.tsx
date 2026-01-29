@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Users, UserPlus, ChevronLeft, ChevronRight } from "lucide-react"
+import { UserPlus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getApiUrl } from "@/lib/api-utils"
 
@@ -177,19 +175,6 @@ export default function AdminUsersPage() {
     }
   }
 
-  // Generar números de página con elipsis
-  const getPageNumbers = (current: number, total: number): (number | 'ellipsis')[] => {
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
-    const pages: (number | 'ellipsis')[] = [1]
-    if (current > 3) pages.push('ellipsis')
-    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
-      pages.push(i)
-    }
-    if (current < total - 2) pages.push('ellipsis')
-    if (total > 1) pages.push(total)
-    return pages
-  }
-
   // Cambiar de página
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }))
@@ -197,13 +182,13 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
-          <p className="text-muted-foreground">
-            Administra todos los usuarios del sistema Osyris
+          <h1 className="text-xl sm:text-3xl font-bold">Usuarios</h1>
+          <p className="text-sm text-muted-foreground">
+            Administra los usuarios del sistema
           </p>
         </div>
         <BulkInviteModal
@@ -211,7 +196,7 @@ export default function AdminUsersPage() {
             loadUsers(searchFilters, pagination.page)
           }}
           trigger={
-            <Button>
+            <Button className="w-full sm:w-auto min-h-[44px]">
               <UserPlus className="h-4 w-4 mr-2" />
               Invitar Usuarios
             </Button>
@@ -219,86 +204,23 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      {/* Lista de usuarios */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Lista de Usuarios
-            </span>
-            <Badge variant="outline">
-              {pagination.total} usuarios
-            </Badge>
-          </CardTitle>
-          <CardDescription>
-            Administra, edita y gestiona los permisos de los usuarios
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Barra de búsqueda */}
-          <SearchBar
-            onSearch={handleSearch}
-            onClear={handleClearSearch}
-            placeholder="Buscar usuarios por nombre, email o rol..."
-          />
+      {/* Búsqueda + Tabla + Paginación */}
+      <div className="space-y-4">
+        <SearchBar
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+          placeholder="Buscar usuarios por nombre, email o rol..."
+        />
 
-          {/* Tabla de usuarios */}
-          <UserTable
-            users={users}
-            onUserUpdate={handleUserUpdate}
-            onUserDelete={handleUserDelete}
-            loading={isLoading}
-          />
-
-          {/* Paginación */}
-          {pagination.totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-sm text-muted-foreground">
-                Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} de{' '}
-                {pagination.total} usuarios
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page === 1 || isLoading}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {getPageNumbers(pagination.page, pagination.totalPages).map((page, idx) =>
-                  page === 'ellipsis' ? (
-                    <span key={`e-${idx}`} className="px-1 text-muted-foreground">...</span>
-                  ) : (
-                    <Button
-                      key={page}
-                      variant={page === pagination.page ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handlePageChange(page as number)}
-                      disabled={isLoading}
-                      className="h-8 w-8 p-0"
-                    >
-                      {page}
-                    </Button>
-                  )
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page === pagination.totalPages || isLoading}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <UserTable
+          users={users}
+          onUserUpdate={handleUserUpdate}
+          onUserDelete={handleUserDelete}
+          loading={isLoading}
+          pagination={pagination}
+          onPageChange={handlePageChange}
+        />
+      </div>
     </div>
   )
 }
