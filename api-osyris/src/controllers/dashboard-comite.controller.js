@@ -72,7 +72,7 @@ const getCampamentoDetalle = async (req, res) => {
           COUNT(*) FILTER (WHERE ic.estado IN ('inscrito', 'pendiente')) as inscritos,
           COUNT(*) FILTER (WHERE ic.estado = 'no_asiste') as no_asisten
         FROM inscripciones_campamento ic
-        JOIN educandos e ON ic.educando_id = e.id
+        LEFT JOIN educandos e ON ic.educando_id = e.id
         LEFT JOIN secciones s ON e.seccion_id = s.id
         WHERE ic.actividad_id = $1
         GROUP BY s.id, s.nombre, s.color_principal, s.orden
@@ -143,44 +143,47 @@ const exportCSV = async (req, res) => {
       SELECT
         e.nombre,
         e.apellidos,
-        s.nombre as seccion,
+        COALESCE(s.nombre, 'Sin seccion') as seccion,
+        ic.estado,
         ic.alergias,
         ic.intolerancias,
         ic.dieta_especial,
         ic.medicacion,
         ic.observaciones_medicas
       FROM inscripciones_campamento ic
-      JOIN educandos e ON ic.educando_id = e.id
-      JOIN secciones s ON e.seccion_id = s.id
+      LEFT JOIN educandos e ON ic.educando_id = e.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
       WHERE ic.actividad_id = $1
         AND ic.estado IN ('inscrito', 'pendiente')
-      ORDER BY s.orden ASC, e.apellidos ASC, e.nombre ASC
+      ORDER BY s.orden ASC NULLS LAST, e.apellidos ASC, e.nombre ASC
     `, [id]);
 
-    // Generar CSV manualmente (sin dependencias extra)
+    // Generar CSV con separador ; para compatibilidad directa con Excel
+    const SEP = ';';
     const escapeCSV = (val) => {
       if (val == null || val === '') return '';
       const str = String(val);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      if (str.includes(SEP) || str.includes('"') || str.includes('\n')) {
         return '"' + str.replace(/"/g, '""') + '"';
       }
       return str;
     };
 
-    const headers = ['Nombre', 'Apellidos', 'Seccion', 'Alergias', 'Intolerancias', 'Dieta Especial', 'Medicacion', 'Observaciones Medicas'];
-    const csvLines = [headers.join(',')];
+    const headers = ['Nombre', 'Apellidos', 'Seccion', 'Estado', 'Alergias', 'Intolerancias', 'Dieta Especial', 'Medicacion', 'Observaciones Medicas'];
+    const csvLines = ['sep=' + SEP, headers.join(SEP)];
 
     for (const row of rows) {
       csvLines.push([
         escapeCSV(row.nombre),
         escapeCSV(row.apellidos),
         escapeCSV(row.seccion),
+        escapeCSV(row.estado),
         escapeCSV(row.alergias),
         escapeCSV(row.intolerancias),
         escapeCSV(row.dieta_especial),
         escapeCSV(row.medicacion),
         escapeCSV(row.observaciones_medicas)
-      ].join(','));
+      ].join(SEP));
     }
 
     const csvContent = '\uFEFF' + csvLines.join('\r\n'); // BOM for Excel UTF-8

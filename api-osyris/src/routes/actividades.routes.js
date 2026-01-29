@@ -412,7 +412,7 @@ router.post('/', verifyToken, checkRole(['admin', 'scouter']), async (req, res) 
  *     security:
  *       - bearerAuth: []
  */
-router.get('/:id/enlace', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.get('/:id/enlace', verifyToken, checkRole(['admin', 'scouter', 'comite']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const token = await ActividadModel.getEnlaceToken(id);
@@ -440,7 +440,7 @@ router.get('/:id/enlace', verifyToken, checkRole(['admin', 'scouter']), async (r
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:id/generar-enlace', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.post('/:id/generar-enlace', verifyToken, checkRole(['admin', 'scouter', 'comite']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 

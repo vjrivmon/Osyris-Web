@@ -59,7 +59,7 @@ const findByActividad = async (actividadId, filters = {}) => {
              u.email as familiar_email,
              u.telefono as familiar_telefono
       FROM inscripciones_campamento ic
-      JOIN educandos e ON ic.educando_id = e.id
+      LEFT JOIN educandos e ON ic.educando_id = e.id
       LEFT JOIN secciones s ON e.seccion_id = s.id
       LEFT JOIN usuarios u ON ic.familiar_id = u.id
       WHERE ic.actividad_id = $1
@@ -487,7 +487,7 @@ const getResumenDietas = async (actividadId) => {
         ic.observaciones_medicas,
         s.nombre as seccion_nombre
       FROM inscripciones_campamento ic
-      JOIN educandos e ON ic.educando_id = e.id
+      LEFT JOIN educandos e ON ic.educando_id = e.id
       LEFT JOIN secciones s ON e.seccion_id = s.id
       WHERE ic.actividad_id = $1
         AND ic.estado = 'inscrito'
