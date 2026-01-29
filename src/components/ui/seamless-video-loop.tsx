@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from 'react'
 
 interface SeamlessVideoLoopProps {
   src: string
+  poster?: string
   opacity?: number
   className?: string
 }
 
-export function SeamlessVideoLoop({ src, opacity = 0.6, className = '' }: SeamlessVideoLoopProps) {
+export function SeamlessVideoLoop({ src, poster, opacity = 0.6, className = '' }: SeamlessVideoLoopProps) {
   const video1Ref = useRef<HTMLVideoElement>(null)
   const video2Ref = useRef<HTMLVideoElement>(null)
   const [activeVideo, setActiveVideo] = useState<1 | 2>(1)
@@ -56,12 +57,11 @@ export function SeamlessVideoLoop({ src, opacity = 0.6, className = '' }: Seamle
         ref={video1Ref}
         muted
         playsInline
-        preload="auto"
-        className="absolute inset-0 w-full h-full object-cover"
+        preload="metadata"
+        poster={poster}
+        className="absolute inset-0 w-full h-full object-cover video-hero-style"
         style={{
           opacity: activeVideo === 1 ? opacity : 0,
-          transform: 'scale(1.05)',
-          filter: 'brightness(1.1)',
           transition: 'opacity 3s ease-in-out',
         }}
       >
@@ -71,12 +71,11 @@ export function SeamlessVideoLoop({ src, opacity = 0.6, className = '' }: Seamle
         ref={video2Ref}
         muted
         playsInline
-        preload="auto"
-        className="absolute inset-0 w-full h-full object-cover"
+        preload="none"
+        poster={poster}
+        className="absolute inset-0 w-full h-full object-cover video-hero-style"
         style={{
           opacity: activeVideo === 2 ? opacity : 0,
-          transform: 'scale(1.05)',
-          filter: 'brightness(1.1)',
           transition: 'opacity 3s ease-in-out',
         }}
       >

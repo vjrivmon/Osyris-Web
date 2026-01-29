@@ -27,9 +27,13 @@ export default function HomePageContent() {
       <MainNav />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-black overflow-hidden py-20 sm:py-28 md:py-36 lg:py-48">
+        <section
+          className="relative bg-black overflow-hidden py-20 sm:py-28 md:py-36 lg:py-48"
+          style={{ backgroundImage: 'url(/images/hero-poster.webp)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+        >
           <SeamlessVideoLoop
             src="/videos/hero-background.mp4"
+            poster="/images/hero-poster.webp"
             opacity={0.6}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/50 to-primary/30"></div>
@@ -70,6 +74,7 @@ export default function HomePageContent() {
         {/* Featured Section - Tarjetas con efecto parche scout */}
         <CanvasBackground pattern="grid" className="py-12 sm:py-16">
           <div className="container mx-auto px-4 sm:px-6">
+            <h2 className="sr-only">Nuestro compromiso scout</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {/* Tarjeta 1 - Aventura */}
               <ScoutPatchCard variant="default" showStitches={true}>
@@ -268,7 +273,8 @@ export default function HomePageContent() {
                     width={600}
                     height={500}
                     className="w-full h-full object-cover"
-                    priority
+                    loading="lazy"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </div>
 

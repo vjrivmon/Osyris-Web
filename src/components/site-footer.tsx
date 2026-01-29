@@ -16,18 +16,18 @@ export function SiteFooter() {
                 width={56}
                 height={56}
                 className="h-14 w-14 rounded-full border-2 border-white/30 shadow-lg"
-                priority
+                loading="lazy"
               />
               <div className="flex flex-col">
                 <h3 className="text-xl font-bold">Grupo Scout Osyris</h3>
-                <span className="text-xs text-primary-foreground/70">Desde 1981 en Valencia</span>
+                <span className="text-xs text-primary-foreground/80">Desde 1981 en Valencia</span>
               </div>
             </div>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">
               Educando en valores desde 1981. Formamos parte del Moviment Escolta de Valencia - Movimiento Scout Católico.
             </p>
             <div className="pt-2">
-              <p className="text-xs text-primary-foreground/60 italic mb-3">&ldquo;Siempre listos para servir&rdquo;</p>
+              <p className="text-xs text-primary-foreground/80 italic mb-3">&ldquo;Siempre listos para servir&rdquo;</p>
               <div className="flex space-x-3">
                 <Link
                   href="https://www.facebook.com/osyris.gruposcout/"
@@ -169,10 +169,10 @@ export function SiteFooter() {
           <div className="flex flex-col gap-4">
             {/* Fila principal: Copyright y Créditos */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-primary-foreground/60 text-center sm:text-left">
+              <p className="text-sm text-primary-foreground/80 text-center sm:text-left">
                 &copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.
               </p>
-              <p className="text-sm text-primary-foreground/60">
+              <p className="text-sm text-primary-foreground/80">
                 ⚜️ & 💻 Siempre listo para programar ·{" "}
                 <Link
                   href="https://www.vicenterivasmonferrer.dev"
@@ -186,7 +186,7 @@ export function SiteFooter() {
             </div>
 
             {/* Enlaces legales centrados */}
-            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-xs text-primary-foreground/50">
+            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-xs text-primary-foreground/75">
               <Link href="/privacidad" className="hover:text-secondary transition-colors">
                 Privacidad
               </Link>

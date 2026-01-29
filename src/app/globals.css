@@ -438,3 +438,9 @@ nav,
   background-color: hsl(var(--muted-foreground) / 0.5);
 }
 
+/* Hero video styling */
+.video-hero-style {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
