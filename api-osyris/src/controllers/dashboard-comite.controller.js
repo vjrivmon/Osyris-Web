@@ -62,15 +62,15 @@ const getCampamentoDetalle = async (req, res) => {
 
     // Desglose por seccion
     const porSeccion = await query(`
-      SELECT s.id as seccion_id, s.nombre, s.color_principal,
+      SELECT s.id as seccion_id, COALESCE(s.nombre, 'Sin sección') as nombre, s.color_principal,
         COUNT(*) FILTER (WHERE ic.estado IN ('inscrito', 'pendiente')) as inscritos,
         COUNT(*) FILTER (WHERE ic.estado = 'no_asiste') as no_asisten
       FROM inscripciones_campamento ic
       JOIN educandos e ON ic.educando_id = e.id
-      JOIN secciones s ON e.seccion_id = s.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
       WHERE ic.actividad_id = $1
       GROUP BY s.id, s.nombre, s.color_principal, s.orden
-      ORDER BY s.orden
+      ORDER BY s.orden NULLS LAST
     `, [id]);
 
     // Resumen de dietas (reutiliza modelo existente)

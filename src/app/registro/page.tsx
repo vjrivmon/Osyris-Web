@@ -193,6 +193,8 @@ function RegisterPageContent() {
           dashboardUrl = "/admin/dashboard"
         } else if (rol === "familia") {
           dashboardUrl = "/familia/dashboard"
+        } else if (rol === "comite") {
+          dashboardUrl = "/comite/dashboard"
         }
         // scouter y educando van a /aula-virtual
 

@@ -60,8 +60,8 @@ const findByActividad = async (actividadId, filters = {}) => {
              u.telefono as familiar_telefono
       FROM inscripciones_campamento ic
       JOIN educandos e ON ic.educando_id = e.id
-      JOIN secciones s ON e.seccion_id = s.id
-      JOIN usuarios u ON ic.familiar_id = u.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
+      LEFT JOIN usuarios u ON ic.familiar_id = u.id
       WHERE ic.actividad_id = $1
     `;
     const params = [actividadId];
@@ -88,7 +88,7 @@ const findByActividad = async (actividadId, filters = {}) => {
       paramIndex++;
     }
 
-    sql += ` ORDER BY s.orden ASC, e.apellidos ASC, e.nombre ASC`;
+    sql += ` ORDER BY s.orden ASC NULLS LAST, e.apellidos ASC, e.nombre ASC`;
 
     const inscripciones = await query(sql, params);
     return inscripciones;
@@ -488,7 +488,7 @@ const getResumenDietas = async (actividadId) => {
         s.nombre as seccion_nombre
       FROM inscripciones_campamento ic
       JOIN educandos e ON ic.educando_id = e.id
-      JOIN secciones s ON e.seccion_id = s.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
       WHERE ic.actividad_id = $1
         AND ic.estado = 'inscrito'
         AND (
@@ -497,7 +497,7 @@ const getResumenDietas = async (actividadId) => {
           ic.dieta_especial IS NOT NULL AND ic.dieta_especial != '' OR
           ic.medicacion IS NOT NULL AND ic.medicacion != ''
         )
-      ORDER BY s.orden ASC, e.apellidos ASC
+      ORDER BY s.orden ASC NULLS LAST, e.apellidos ASC
     `, [actividadId]);
 
     // Agrupar por tipo de restriccion
