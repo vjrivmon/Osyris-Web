@@ -46,7 +46,7 @@ interface FormData {
   nombre: string
   apellidos: string
   email: string
-  rol: "admin" | "scouter"
+  rol: "admin" | "scouter" | "comite"
   estado: "activo" | "inactivo"
   seccion_id?: number
 }
@@ -112,7 +112,7 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
         nombre: user.nombre || "",
         apellidos: user.apellidos || "",
         email: user.email || "",
-        rol: (user.rol as "admin" | "scouter") || "scouter",
+        rol: (user.rol as "admin" | "scouter" | "comite") || "scouter",
         estado: (user.estado as "activo" | "inactivo") || "activo",
         seccion_id: seccionId
       })
@@ -165,8 +165,8 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
       // Solo incluir seccion_id si es scouter
       if (formData.rol === "scouter" && formData.seccion_id) {
         adminData.seccion_id = formData.seccion_id
-      } else if (formData.rol === "admin") {
-        // Si es admin, quitar la sección
+      } else if (formData.rol === "admin" || formData.rol === "comite") {
+        // Si es admin o comite, quitar la sección
         adminData.seccion_id = null
       }
 
@@ -318,7 +318,7 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
                 <Label htmlFor="edit-rol">Rol *</Label>
                 <Select
                   value={formData.rol}
-                  onValueChange={(value: "admin" | "scouter") => handleInputChange("rol", value)}
+                  onValueChange={(value: "admin" | "scouter" | "comite") => handleInputChange("rol", value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -332,6 +332,11 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
                     <SelectItem value="scouter">
                       <div className="flex items-center gap-2">
                         <Badge variant="default" className="bg-green-600">Scouter</Badge>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="comite">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="bg-amber-600">Comite</Badge>
                       </div>
                     </SelectItem>
                   </SelectContent>

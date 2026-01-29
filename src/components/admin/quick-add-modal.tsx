@@ -29,7 +29,7 @@ interface NewInvitation {
   email: string
   nombre: string
   apellidos: string
-  rol: "admin" | "scouter"
+  rol: "admin" | "scouter" | "comite"
   seccion_id?: number
 }
 
@@ -234,6 +234,12 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
                     <div className="flex items-center gap-2">
                       <Badge variant="default" className="bg-green-600">Scouter</Badge>
                       <span>Monitor/Coordinador</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="comite">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default" className="bg-amber-600">Comite</Badge>
+                      <span>Cocina/Comite campamento</span>
                     </div>
                   </SelectItem>
                 </SelectContent>

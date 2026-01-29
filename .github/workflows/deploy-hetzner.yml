@@ -133,11 +133,11 @@ jobs:
           echo "📦 Extrayendo build pre-compilado..."
           rm -rf .next node_modules api-osyris/node_modules 2>/dev/null || true
           tar -xzf deploy.tar.gz
-          rm deploy.tar.gz
+          rm -f deploy.tar.gz
 
           echo "📦 Instalando dependencias..."
           npm ci --prefer-offline --no-audit --no-fund 2>/dev/null || npm install --legacy-peer-deps
-          cd api-osyris && npm ci --omit=dev --prefer-offline 2>/dev/null || npm install && cd ..
+          cd api-osyris && npm ci --prefer-offline 2>/dev/null || npm install && cd ..
 
           echo "⚙️ Configurando backend staging..."
           cat > api-osyris/.env << 'ENVFILE'
@@ -225,7 +225,7 @@ jobs:
 
           rm -rf .next node_modules api-osyris/node_modules 2>/dev/null || true
           tar -xzf deploy.tar.gz
-          rm deploy.tar.gz
+          rm -f deploy.tar.gz
 
           # Restaurar .env si existía
           if [ -f /tmp/osyris-backend.env ]; then
@@ -234,7 +234,7 @@ jobs:
 
           echo "📦 Instalando dependencias (sin build - ya viene compilado)..."
           npm ci --prefer-offline --no-audit --no-fund 2>/dev/null || npm install --legacy-peer-deps
-          cd api-osyris && npm ci --omit=dev --prefer-offline 2>/dev/null || npm install && cd ..
+          cd api-osyris && npm ci --prefer-offline 2>/dev/null || npm install && cd ..
 
           echo "🚀 Reiniciando servicios..."
           pm2 delete osyris-frontend osyris-backend 2>/dev/null || true

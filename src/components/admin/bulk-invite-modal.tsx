@@ -41,7 +41,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [emailsText, setEmailsText] = useState("")
-  const [selectedRole, setSelectedRole] = useState<"admin" | "scouter" | "familia">("scouter")
+  const [selectedRole, setSelectedRole] = useState<"admin" | "scouter" | "familia" | "comite">("scouter")
   const [selectedSection, setSelectedSection] = useState<string>("")
   const [parsedEmails, setParsedEmails] = useState<ParsedEmail[]>([])
   const [showPreview, setShowPreview] = useState(false)
@@ -227,6 +227,12 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
                   <div className="flex items-center gap-2">
                     <Badge variant="default" className="bg-blue-600">Familia</Badge>
                     <span>Padre/Madre/Tutor</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="comite">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" className="bg-amber-600">Comite</Badge>
+                    <span>Cocina/Comite campamento</span>
                   </div>
                 </SelectItem>
               </SelectContent>
