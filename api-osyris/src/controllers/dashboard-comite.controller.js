@@ -57,27 +57,44 @@ const getCampamentoDetalle = async (req, res) => {
 
     const actividad = actividades[0];
 
-    // Stats globales (reutiliza modelo existente)
-    const statsGlobal = await InscripcionModel.getEstadisticas(id);
+    // Cada sub-query en try/catch independiente para resiliencia
+    let statsGlobal = { total: 0, inscritos: 0, pendientes: 0, no_asisten: 0, lista_espera: 0, cancelados: 0, pagados: 0, sin_pagar: 0 };
+    try {
+      statsGlobal = await InscripcionModel.getEstadisticas(id);
+    } catch (err) {
+      console.error('Error getEstadisticas campamento', id, ':', err.message);
+    }
 
-    // Desglose por seccion
-    const porSeccion = await query(`
-      SELECT s.id as seccion_id, COALESCE(s.nombre, 'Sin sección') as nombre, s.color_principal,
-        COUNT(*) FILTER (WHERE ic.estado IN ('inscrito', 'pendiente')) as inscritos,
-        COUNT(*) FILTER (WHERE ic.estado = 'no_asiste') as no_asisten
-      FROM inscripciones_campamento ic
-      JOIN educandos e ON ic.educando_id = e.id
-      LEFT JOIN secciones s ON e.seccion_id = s.id
-      WHERE ic.actividad_id = $1
-      GROUP BY s.id, s.nombre, s.color_principal, s.orden
-      ORDER BY s.orden NULLS LAST
-    `, [id]);
+    let porSeccion = [];
+    try {
+      porSeccion = await query(`
+        SELECT s.id as seccion_id, COALESCE(s.nombre, 'Sin sección') as nombre, s.color_principal,
+          COUNT(*) FILTER (WHERE ic.estado IN ('inscrito', 'pendiente')) as inscritos,
+          COUNT(*) FILTER (WHERE ic.estado = 'no_asiste') as no_asisten
+        FROM inscripciones_campamento ic
+        JOIN educandos e ON ic.educando_id = e.id
+        LEFT JOIN secciones s ON e.seccion_id = s.id
+        WHERE ic.actividad_id = $1
+        GROUP BY s.id, s.nombre, s.color_principal, s.orden
+        ORDER BY s.orden NULLS LAST
+      `, [id]);
+    } catch (err) {
+      console.error('Error porSeccion campamento', id, ':', err.message);
+    }
 
-    // Resumen de dietas (reutiliza modelo existente)
-    const dietas = await InscripcionModel.getResumenDietas(id);
+    let dietas = { con_alergias: [], con_intolerancias: [], con_dieta_especial: [], con_medicacion: [], total_con_restricciones: 0 };
+    try {
+      dietas = await InscripcionModel.getResumenDietas(id);
+    } catch (err) {
+      console.error('Error getResumenDietas campamento', id, ':', err.message);
+    }
 
-    // Lista completa de inscripciones
-    const inscripciones = await InscripcionModel.findByActividad(id);
+    let inscripciones = [];
+    try {
+      inscripciones = await InscripcionModel.findByActividad(id);
+    } catch (err) {
+      console.error('Error findByActividad campamento', id, ':', err.message);
+    }
 
     res.json({
       success: true,
