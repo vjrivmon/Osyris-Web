@@ -181,10 +181,15 @@ router.get('/mes/:anio/:mes', verifyToken, async (req, res) => {
       visibilidad: req.query.visibilidad || 'familias'
     };
 
-    // Si el usuario es scouter y tiene sección asignada,
-    // filtrar las estadísticas de confirmación para mostrar solo su sección
+    // Si el usuario es scouter y tiene sección asignada:
+    // 1. Filtrar ACTIVIDADES para mostrar solo las de su sección + eventos comunes
+    // 2. Filtrar ESTADÍSTICAS de confirmación para mostrar solo su sección
     // Admin (super usuario) ve todas las secciones
     if (req.usuario && req.usuario.rol === 'scouter' && req.usuario.seccion_id) {
+      // Solo aplicar filtro de sección si no viene especificado en query params
+      if (!filters.seccion_id) {
+        filters.seccion_id = req.usuario.seccion_id;
+      }
       filters.seccion_stats_id = req.usuario.seccion_id;
     }
 
@@ -204,6 +209,67 @@ router.get('/mes/:anio/:mes', verifyToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error obteniendo actividades del mes',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/actividades/enlace/{token}:
+ *   get:
+ *     summary: Resolver enlace de inscripcion por token (publico)
+ *     tags: [Actividades]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token unico del enlace de inscripcion
+ *     responses:
+ *       200:
+ *         description: Datos basicos de la actividad
+ *       404:
+ *         description: Enlace no valido
+ */
+router.get('/enlace/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    if (!token || token.length > 12) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token no valido'
+      });
+    }
+
+    const actividad = await ActividadModel.findByEnlaceToken(token);
+
+    if (!actividad) {
+      return res.status(404).json({
+        success: false,
+        message: 'Enlace de inscripcion no encontrado o no valido'
+      });
+    }
+
+    // Verificar que la actividad no este cancelada
+    if (actividad.cancelado) {
+      return res.status(410).json({
+        success: false,
+        message: 'Esta actividad ha sido cancelada'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: actividad
+    });
+  } catch (error) {
+    console.error('Error resolviendo enlace de inscripcion:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resolviendo enlace',
       error: error.message
     });
   }
@@ -332,6 +398,72 @@ router.post('/', verifyToken, checkRole(['admin', 'scouter']), async (req, res) 
     res.status(500).json({
       success: false,
       message: 'Error creando actividad',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/actividades/{id}/enlace:
+ *   get:
+ *     summary: Obtener el enlace_token de una actividad
+ *     tags: [Actividades]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/:id/enlace', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const token = await ActividadModel.getEnlaceToken(id);
+
+    res.status(200).json({
+      success: true,
+      data: { enlace_token: token }
+    });
+  } catch (error) {
+    console.error('Error obteniendo enlace:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo enlace',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/actividades/{id}/generar-enlace:
+ *   post:
+ *     summary: Generar enlace de inscripcion para una actividad
+ *     tags: [Actividades]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/:id/generar-enlace', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    // Verificar que la actividad existe
+    const actividad = await ActividadModel.findById(id);
+    if (!actividad) {
+      return res.status(404).json({
+        success: false,
+        message: 'Actividad no encontrada'
+      });
+    }
+
+    const token = await ActividadModel.getOrCreateEnlaceToken(id);
+
+    res.status(200).json({
+      success: true,
+      data: { enlace_token: token }
+    });
+  } catch (error) {
+    console.error('Error generando enlace:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error generando enlace',
       error: error.message
     });
   }
