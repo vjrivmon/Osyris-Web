@@ -58,11 +58,14 @@ const getCampamentoDetalle = async (req, res) => {
     const actividad = actividades[0];
 
     // Cada sub-query en try/catch independiente para resiliencia
+    const _debug_errors = [];
+
     let statsGlobal = { total: 0, inscritos: 0, pendientes: 0, no_asisten: 0, lista_espera: 0, cancelados: 0, pagados: 0, sin_pagar: 0 };
     try {
       statsGlobal = await InscripcionModel.getEstadisticas(id);
     } catch (err) {
       console.error('Error getEstadisticas campamento', id, ':', err.message);
+      _debug_errors.push({ query: 'statsGlobal', error: err.message });
     }
 
     let porSeccion = [];
@@ -80,6 +83,7 @@ const getCampamentoDetalle = async (req, res) => {
       `, [id]);
     } catch (err) {
       console.error('Error porSeccion campamento', id, ':', err.message);
+      _debug_errors.push({ query: 'porSeccion', error: err.message });
     }
 
     let dietas = { con_alergias: [], con_intolerancias: [], con_dieta_especial: [], con_medicacion: [], total_con_restricciones: 0 };
@@ -87,6 +91,7 @@ const getCampamentoDetalle = async (req, res) => {
       dietas = await InscripcionModel.getResumenDietas(id);
     } catch (err) {
       console.error('Error getResumenDietas campamento', id, ':', err.message);
+      _debug_errors.push({ query: 'dietas', error: err.message });
     }
 
     let inscripciones = [];
@@ -94,6 +99,7 @@ const getCampamentoDetalle = async (req, res) => {
       inscripciones = await InscripcionModel.findByActividad(id);
     } catch (err) {
       console.error('Error findByActividad campamento', id, ':', err.message);
+      _debug_errors.push({ query: 'inscripciones', error: err.message });
     }
 
     res.json({
@@ -103,7 +109,8 @@ const getCampamentoDetalle = async (req, res) => {
         stats_global: statsGlobal,
         por_seccion: porSeccion,
         dietas,
-        inscripciones
+        inscripciones,
+        ..._debug_errors.length > 0 ? { _debug_errors } : {}
       }
     });
   } catch (error) {
@@ -138,6 +145,28 @@ const exportCSV = async (req, res) => {
 
     const titulo = actividades[0].titulo;
 
+    // Filtros opcionales
+    const { secciones, solo_restricciones } = req.query;
+    const params = [id];
+    let extraWhere = '';
+
+    if (secciones) {
+      const seccionIds = secciones.split(',').map(Number).filter(n => !isNaN(n) && n > 0);
+      if (seccionIds.length > 0) {
+        params.push(seccionIds);
+        extraWhere += ` AND e.seccion_id = ANY($${params.length})`;
+      }
+    }
+
+    if (solo_restricciones === 'true') {
+      extraWhere += ` AND (
+        (ic.alergias IS NOT NULL AND ic.alergias != '') OR
+        (ic.intolerancias IS NOT NULL AND ic.intolerancias != '') OR
+        (ic.dieta_especial IS NOT NULL AND ic.dieta_especial != '') OR
+        (ic.medicacion IS NOT NULL AND ic.medicacion != '')
+      )`;
+    }
+
     // Obtener inscritos con datos relevantes para cocina
     const rows = await query(`
       SELECT
@@ -155,8 +184,9 @@ const exportCSV = async (req, res) => {
       LEFT JOIN secciones s ON e.seccion_id = s.id
       WHERE ic.actividad_id = $1
         AND ic.estado IN ('inscrito', 'pendiente')
+        ${extraWhere}
       ORDER BY s.orden ASC NULLS LAST, e.apellidos ASC, e.nombre ASC
-    `, [id]);
+    `, params);
 
     // Generar CSV con separador ; para compatibilidad directa con Excel
     const SEP = ';';

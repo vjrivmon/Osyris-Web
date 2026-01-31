@@ -490,7 +490,7 @@ const getResumenDietas = async (actividadId) => {
       LEFT JOIN educandos e ON ic.educando_id = e.id
       LEFT JOIN secciones s ON e.seccion_id = s.id
       WHERE ic.actividad_id = $1
-        AND ic.estado = 'inscrito'
+        AND ic.estado IN ('inscrito', 'pendiente')
         AND (
           ic.alergias IS NOT NULL AND ic.alergias != '' OR
           ic.intolerancias IS NOT NULL AND ic.intolerancias != '' OR

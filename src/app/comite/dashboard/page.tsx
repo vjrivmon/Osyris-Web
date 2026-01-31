@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { ProtectedComiteRoute } from '@/components/auth/protected-comite-route'
 import { useDashboardComite, type CampamentoResumen, type SeccionStats } from '@/hooks/useDashboardComite'
 import { useAuth } from '@/contexts/AuthContext'
@@ -10,6 +10,17 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -28,7 +39,8 @@ import {
   MapPin,
   CalendarDays,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Filter
 } from 'lucide-react'
 
 function DashboardComiteContent() {
@@ -46,6 +58,9 @@ function DashboardComiteContent() {
 
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [dietasExpanded, setDietasExpanded] = useState(false)
+  const [csvModalOpen, setCsvModalOpen] = useState(false)
+  const [csvSelectedSecciones, setCsvSelectedSecciones] = useState<number[]>([])
+  const [csvSoloRestricciones, setCsvSoloRestricciones] = useState(false)
 
   useEffect(() => {
     fetchCampamentos()
@@ -73,6 +88,41 @@ function DashboardComiteContent() {
   const maxInscritos = detalle?.por_seccion
     ? Math.max(...detalle.por_seccion.map(s => Number(s.inscritos)), 1)
     : 1
+
+  const handleOpenCsvModal = () => {
+    if (detalle) {
+      setCsvSelectedSecciones(detalle.por_seccion.map(s => s.seccion_id))
+      setCsvSoloRestricciones(false)
+      setCsvModalOpen(true)
+    }
+  }
+
+  const csvResumen = useMemo(() => {
+    if (!detalle) return null
+    const seccionesSeleccionadas = detalle.por_seccion.filter(s => csvSelectedSecciones.includes(s.seccion_id))
+    const totalInscritos = seccionesSeleccionadas.reduce((sum, s) => sum + Number(s.inscritos), 0)
+    return {
+      totalInscritos,
+      numSecciones: seccionesSeleccionadas.length,
+      totalRestricciones: detalle.dietas.total_con_restricciones
+    }
+  }, [detalle, csvSelectedSecciones])
+
+  const handleToggleSeccion = (seccionId: number, checked: boolean) => {
+    setCsvSelectedSecciones(prev =>
+      checked ? [...prev, seccionId] : prev.filter(id => id !== seccionId)
+    )
+  }
+
+  const handleDownloadCsv = () => {
+    if (!selectedId) return
+    const allSelected = detalle && csvSelectedSecciones.length === detalle.por_seccion.length
+    exportCSV(selectedId, {
+      secciones: allSelected ? undefined : csvSelectedSecciones,
+      soloRestricciones: csvSoloRestricciones
+    })
+    setCsvModalOpen(false)
+  }
 
   return (
     <div className="space-y-6">
@@ -236,9 +286,16 @@ function DashboardComiteContent() {
                                 {sec.nombre}
                               </span>
                             </div>
-                            <span className="text-2xl font-bold text-gray-900">
-                              {sec.inscritos}
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl font-bold text-gray-900">
+                                {sec.inscritos}
+                              </span>
+                              {Number(sec.no_asisten) > 0 && (
+                                <span className="text-sm text-red-600 font-medium">
+                                  ({sec.no_asisten} no asisten)
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <Progress
                             value={(Number(sec.inscritos) / maxInscritos) * 100}
@@ -390,19 +447,103 @@ function DashboardComiteContent() {
                   )}
                 </section>
 
-                {/* Boton exportar */}
+                {/* Boton exportar con modal de preview */}
                 <section className="pb-8">
                   <Button
-                    onClick={() => exportCSV(selectedId)}
+                    onClick={handleOpenCsvModal}
                     size="lg"
                     className="w-full md:w-auto text-lg py-6 px-8 bg-green-700 hover:bg-green-800 text-white font-semibold"
                   >
                     <Download className="h-6 w-6 mr-3" />
-                    Descargar listado completo (CSV)
+                    Descargar listado (CSV)
                   </Button>
                   <p className="text-base text-gray-500 mt-2">
-                    Descarga un archivo compatible con Excel con todos los inscritos y sus datos alimentarios
+                    Configura filtros y descarga un archivo compatible con Excel
                   </p>
+
+                  <Dialog open={csvModalOpen} onOpenChange={setCsvModalOpen}>
+                    <DialogContent className="sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl">Exportar listado CSV</DialogTitle>
+                        <DialogDescription>
+                          Selecciona las secciones y filtros antes de descargar
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="space-y-5 py-2">
+                        {/* Resumen dinamico */}
+                        <div className="rounded-lg bg-green-50 border border-green-200 p-4">
+                          <p className="text-base font-medium text-green-900">
+                            {csvSoloRestricciones
+                              ? `Educandos con restricciones de ${csvResumen?.numSecciones ?? 0} secciones`
+                              : `${csvResumen?.totalInscritos ?? 0} educandos de ${csvResumen?.numSecciones ?? 0} secciones`
+                            }
+                          </p>
+                          {csvResumen && csvResumen.totalRestricciones > 0 && (
+                            <p className="text-sm text-green-700 mt-1">
+                              {csvResumen.totalRestricciones} con restricciones alimentarias
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Secciones */}
+                        <div>
+                          <p className="text-base font-semibold text-gray-900 mb-3">Secciones</p>
+                          <div className="space-y-2">
+                            {detalle?.por_seccion.map((sec) => (
+                              <div key={sec.seccion_id} className="flex items-center gap-3">
+                                <Checkbox
+                                  id={`sec-${sec.seccion_id}`}
+                                  checked={csvSelectedSecciones.includes(sec.seccion_id)}
+                                  onCheckedChange={(checked) => handleToggleSeccion(sec.seccion_id, !!checked)}
+                                />
+                                <div
+                                  className="w-3 h-3 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: sec.color_principal || '#9ca3af' }}
+                                />
+                                <Label htmlFor={`sec-${sec.seccion_id}`} className="text-base cursor-pointer flex-1">
+                                  {sec.nombre}
+                                </Label>
+                                <span className="text-sm text-gray-500 font-medium">{sec.inscritos}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Toggle restricciones */}
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="flex items-center gap-3">
+                            <Filter className="h-5 w-5 text-amber-600" />
+                            <Label htmlFor="solo-restricciones" className="text-base cursor-pointer">
+                              Solo con restricciones alimentarias
+                            </Label>
+                          </div>
+                          <Switch
+                            id="solo-restricciones"
+                            checked={csvSoloRestricciones}
+                            onCheckedChange={setCsvSoloRestricciones}
+                          />
+                        </div>
+                      </div>
+
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setCsvModalOpen(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          onClick={handleDownloadCsv}
+                          disabled={csvSelectedSecciones.length === 0}
+                          className="bg-green-700 hover:bg-green-800 text-white"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Descargar CSV
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </section>
               </>
             ) : null}

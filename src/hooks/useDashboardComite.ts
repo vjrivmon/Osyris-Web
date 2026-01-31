@@ -62,6 +62,12 @@ export interface CampamentoDetalle {
   por_seccion: SeccionStats[]
   dietas: ResumenDietas
   inscripciones: Array<Record<string, unknown>>
+  _debug_errors?: Array<{ query: string; error: string }>
+}
+
+export interface ExportCSVOptions {
+  secciones?: number[]
+  soloRestricciones?: boolean
 }
 
 export function useDashboardComite() {
@@ -124,6 +130,9 @@ export function useDashboardComite() {
       const result = await response.json()
       if (result.success) {
         setDetalle(result.data)
+        if (result.data._debug_errors?.length) {
+          console.warn('[Campamento] Sub-query errors:', result.data._debug_errors)
+        }
       } else {
         throw new Error(result.message || 'Error desconocido')
       }
@@ -135,10 +144,17 @@ export function useDashboardComite() {
     }
   }, [])
 
-  const exportCSV = useCallback((campamentoId: number) => {
+  const exportCSV = useCallback((campamentoId: number, options?: ExportCSVOptions) => {
     const token = localStorage.getItem('token')
-    const url = `${getApiUrl()}/api/dashboard-comite/campamento/${campamentoId}/export`
-    // Open in new window with auth header via fetch + blob
+    const params = new URLSearchParams()
+    if (options?.secciones?.length) {
+      params.set('secciones', options.secciones.join(','))
+    }
+    if (options?.soloRestricciones) {
+      params.set('solo_restricciones', 'true')
+    }
+    const qs = params.toString()
+    const url = `${getApiUrl()}/api/dashboard-comite/campamento/${campamentoId}/export${qs ? '?' + qs : ''}`
     fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
