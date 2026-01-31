@@ -194,13 +194,8 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
   // Navegación de meses
   const navegarMes = (direccion: 'anterior' | 'siguiente') => {
     setFechaActual(prev => {
-      const nuevaFecha = new Date(prev)
-      if (direccion === 'anterior') {
-        nuevaFecha.setMonth(prev.getMonth() - 1)
-      } else {
-        nuevaFecha.setMonth(prev.getMonth() + 1)
-      }
-      return nuevaFecha
+      const offset = direccion === 'anterior' ? -1 : 1
+      return new Date(prev.getFullYear(), prev.getMonth() + offset, 1)
     })
   }
 
