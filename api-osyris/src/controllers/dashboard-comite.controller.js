@@ -60,7 +60,7 @@ const getCampamentoDetalle = async (req, res) => {
     // Cada sub-query en try/catch independiente para resiliencia
     const _debug_errors = [];
 
-    let statsGlobal = { total: 0, inscritos: 0, pendientes: 0, no_asisten: 0, lista_espera: 0, cancelados: 0, pagados: 0, sin_pagar: 0 };
+    let statsGlobal = { total: 0, inscritos: 0, pendientes: 0, lista_espera: 0, cancelados: 0, pagados: 0, sin_pagar: 0 };
     try {
       statsGlobal = await InscripcionModel.getEstadisticas(id);
     } catch (err) {
@@ -72,8 +72,7 @@ const getCampamentoDetalle = async (req, res) => {
     try {
       porSeccion = await query(`
         SELECT s.id as seccion_id, COALESCE(s.nombre, 'Sin sección') as nombre, s.color_principal,
-          COUNT(*) FILTER (WHERE ic.estado IN ('inscrito', 'pendiente')) as inscritos,
-          COUNT(*) FILTER (WHERE ic.estado = 'no_asiste') as no_asisten
+          COUNT(*) FILTER (WHERE ic.estado IN ('inscrito', 'pendiente')) as inscritos
         FROM inscripciones_campamento ic
         LEFT JOIN educandos e ON ic.educando_id = e.id
         LEFT JOIN secciones s ON e.seccion_id = s.id

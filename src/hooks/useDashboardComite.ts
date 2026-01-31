@@ -17,14 +17,12 @@ export interface SeccionStats {
   nombre: string
   color_principal: string
   inscritos: number
-  no_asisten: number
 }
 
 export interface StatsGlobal {
   total: number
   inscritos: number
   pendientes: number
-  no_asisten: number
   lista_espera: number
   cancelados: number
   pagados: number

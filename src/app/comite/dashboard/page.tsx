@@ -31,7 +31,6 @@ import {
 } from '@/components/ui/table'
 import {
   Users,
-  UserX,
   Clock,
   Download,
   AlertTriangle,
@@ -230,7 +229,7 @@ function DashboardComiteContent() {
                   <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                     Resumen de asistencia
                   </h2>
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <Card className="border-2 border-green-200 bg-green-50">
                       <CardContent className="py-6 px-6 text-center">
                         <Users className="h-8 w-8 text-green-700 mx-auto mb-2" />
@@ -239,17 +238,6 @@ function DashboardComiteContent() {
                         </p>
                         <p className="text-lg text-green-700 mt-1 font-medium">
                           Total inscritos
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-2 border-red-200 bg-red-50">
-                      <CardContent className="py-6 px-6 text-center">
-                        <UserX className="h-8 w-8 text-red-700 mx-auto mb-2" />
-                        <p className="text-5xl font-bold text-red-800">
-                          {detalle.stats_global.no_asisten}
-                        </p>
-                        <p className="text-lg text-red-700 mt-1 font-medium">
-                          No asisten
                         </p>
                       </CardContent>
                     </Card>
@@ -286,16 +274,9 @@ function DashboardComiteContent() {
                                 {sec.nombre}
                               </span>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-2xl font-bold text-gray-900">
-                                {sec.inscritos}
-                              </span>
-                              {Number(sec.no_asisten) > 0 && (
-                                <span className="text-sm text-red-600 font-medium">
-                                  ({sec.no_asisten} no asisten)
-                                </span>
-                              )}
-                            </div>
+                            <span className="text-2xl font-bold text-gray-900">
+                              {sec.inscritos}
+                            </span>
                           </div>
                           <Progress
                             value={(Number(sec.inscritos) / maxInscritos) * 100}
