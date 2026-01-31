@@ -50,6 +50,7 @@ interface User {
   nombre: string
   apellidos: string
   rol: string
+  roles?: string[]
   estado: string
   seccion?: string
   ultimoAcceso?: string
@@ -107,29 +108,40 @@ export function UserTable({
   }
 
   const getRoleBadge = (rol: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      admin: "destructive",
-      scouter: "default",
-      usuario: "secondary"
+    const labels: Record<string, string> = {
+      admin: "Admin",
+      scouter: "Scouter",
+      familia: "Familia",
+      comite: "Comité",
+      educando: "Educando"
     }
 
     const colors: Record<string, string> = {
-      admin: "bg-red-600 hover:bg-red-700",
-      scouter: "bg-green-600 hover:bg-green-700",
-      usuario: "bg-gray-600 hover:bg-gray-700"
+      admin: "bg-red-600 hover:bg-red-700 text-white",
+      scouter: "bg-green-600 hover:bg-green-700 text-white",
+      familia: "bg-amber-600 hover:bg-amber-700 text-white",
+      comite: "bg-blue-600 hover:bg-blue-700 text-white",
+      educando: "bg-gray-600 hover:bg-gray-700 text-white"
     }
 
     return (
       <Badge
-        variant={variants[rol] || "secondary"}
-        className={cn(
-          "capitalize",
-          rol === "scouter" && colors.scouter,
-          rol === "admin" && colors.admin
-        )}
+        variant="secondary"
+        className={cn(colors[rol] || "bg-gray-500 text-white")}
       >
-        {rol}
+        {labels[rol] || rol}
       </Badge>
+    )
+  }
+
+  const getRoleBadges = (user: User) => {
+    const roles = user.roles && user.roles.length > 0 ? user.roles : [user.rol]
+    return (
+      <div className="flex flex-wrap gap-1">
+        {roles.map((rol) => (
+          <span key={rol}>{getRoleBadge(rol)}</span>
+        ))}
+      </div>
     )
   }
 
@@ -326,7 +338,7 @@ export function UserTable({
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{getRoleBadge(user.rol)}</TableCell>
+                    <TableCell>{getRoleBadges(user)}</TableCell>
                     <TableCell>{getStatusBadge(user.estado)}</TableCell>
                     <TableCell>
                       {user.seccion ? (
@@ -445,7 +457,7 @@ export function UserTable({
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    {getRoleBadge(user.rol)}
+                    {getRoleBadges(user)}
                     {getStatusBadge(user.estado)}
                   </div>
                 </div>

@@ -17,6 +17,7 @@ interface User {
   nombre: string
   apellidos: string
   rol: string
+  roles?: string[]
   estado: string
   seccion?: string
   ultimoAcceso?: string

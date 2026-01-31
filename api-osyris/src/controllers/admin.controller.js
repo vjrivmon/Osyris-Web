@@ -158,7 +158,7 @@ const adminController = {
       }
 
       if (rol) {
-        whereConditions.push(`u.rol = $${paramIndex}`);
+        whereConditions.push(`(u.rol = $${paramIndex} OR EXISTS (SELECT 1 FROM usuario_roles ur WHERE ur.usuario_id = u.id AND ur.rol = $${paramIndex}))`);
         params.push(rol);
         paramIndex++;
       }
@@ -186,12 +186,17 @@ const adminController = {
       const sortDirection = order === 'asc' ? 'ASC' : 'DESC';
       const nullsOrder = sortColumn === 'ultimo_acceso' ? 'NULLS LAST' : '';
 
-      // Query para obtener usuarios con JOIN a secciones
+      // Query para obtener usuarios con JOIN a secciones y roles múltiples
       const users = await db.query(`
         SELECT
           u.id, u.email, u.nombre, u.apellidos, u.rol, u.activo,
           u.seccion_id, s.nombre AS seccion,
-          u.ultimo_acceso, u.fecha_registro, u.telefono, u.direccion, u.fecha_nacimiento
+          u.ultimo_acceso, u.fecha_registro, u.telefono, u.direccion, u.fecha_nacimiento,
+          COALESCE(
+            (SELECT array_agg(ur.rol ORDER BY ur.es_principal DESC)
+             FROM usuario_roles ur WHERE ur.usuario_id = u.id),
+            ARRAY[u.rol]
+          ) AS roles
         FROM usuarios u
         LEFT JOIN secciones s ON u.seccion_id = s.id
         ${whereClause}
