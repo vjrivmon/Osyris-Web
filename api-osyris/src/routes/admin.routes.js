@@ -1121,63 +1121,86 @@ router.get('/familiares/documentos-pendientes', async (req, res) => {
  */
 router.post('/familiares/invitar', async (req, res) => {
   try {
-    const { query } = require('../config/db.config');
-    const bcrypt = require('bcryptjs');
+    const { query, addUserRole } = require('../config/db.config');
+    const crypto = require('crypto');
+    const { sendInvitationEmail } = require('../utils/email');
     const { email, nombre, apellidos, telefono, educandosIds, relationType, mensajePersonalizado } = req.body;
 
+    const relationMap = {
+      'PADRE': 'padre',
+      'MADRE': 'madre',
+      'TUTOR_LEGAL': 'tutor_legal',
+      'ABUELO': 'abuelo',
+      'OTRO': 'otro'
+    };
+    const relacion = relationMap[relationType] || 'otro';
+
     // Verificar si el email ya existe
-    const existente = await query(`SELECT id FROM usuarios WHERE email = $1`, [email]);
+    const existente = await query(`SELECT id, nombre, apellidos, rol, activo FROM usuarios WHERE email = $1`, [email]);
+
+    let userId;
+    let yaExistia = false;
+
     if (existente.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: 'Ya existe un usuario con este email'
-      });
+      // El usuario ya existe: añadir rol familia sin crear cuenta nueva
+      userId = existente[0].id;
+      yaExistia = true;
+
+      // Añadir rol 'familia' en usuario_roles (ON CONFLICT DO NOTHING si ya lo tiene)
+      await addUserRole(userId, 'familia');
+      console.log(`✅ Rol 'familia' añadido al usuario existente ${email} (id: ${userId})`);
+    } else {
+      // Usuario nuevo: crear con invitation_token para registro seguro
+      const invitationToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Expira en 7 dias
+
+      const userResult = await query(`
+        INSERT INTO usuarios (email, nombre, apellidos, telefono, rol, activo, invitation_token, invitation_expires_at, fecha_registro)
+        VALUES ($1, $2, $3, $4, 'familia', false, $5, $6, NOW())
+        RETURNING id
+      `, [email, nombre, apellidos, telefono || null, invitationToken, expiresAt]);
+
+      userId = userResult[0].id;
+
+      // Registrar rol en usuario_roles
+      await addUserRole(userId, 'familia', true);
+
+      // Enviar email de invitacion con enlace de registro
+      try {
+        await sendInvitationEmail(email, nombre, invitationToken, 'familia');
+        console.log(`✅ Email de invitacion enviado a ${email}`);
+      } catch (emailError) {
+        console.error(`⚠️ Error enviando email a ${email}:`, emailError.message);
+        console.log(`🔗 Enlace de registro: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/registro?token=${invitationToken}`);
+      }
     }
-
-    // Generar contraseña temporal
-    const tempPassword = Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
-    // Crear usuario
-    const userResult = await query(`
-      INSERT INTO usuarios (email, password, nombre, apellidos, telefono, rol, activo)
-      VALUES ($1, $2, $3, $4, $5, 'familia', true)
-      RETURNING id
-    `, [email, hashedPassword, nombre, apellidos, telefono || null]);
-
-    const userId = userResult[0].id;
 
     // Vincular educandos si se proporcionaron
     if (educandosIds && educandosIds.length > 0) {
-      const relationMap = {
-        'PADRE': 'padre',
-        'MADRE': 'madre',
-        'TUTOR_LEGAL': 'tutor_legal',
-        'ABUELO': 'abuelo',
-        'OTRO': 'otro'
-      };
-      const relacion = relationMap[relationType] || 'otro';
-
       for (const educandoId of educandosIds) {
+        // ON CONFLICT: si ya existe la vinculacion, no duplicar
         await query(`
           INSERT INTO familiares_educandos (familiar_id, educando_id, relacion, es_contacto_principal)
           VALUES ($1, $2, $3, false)
+          ON CONFLICT (familiar_id, educando_id) DO NOTHING
         `, [userId, educandoId, relacion]);
       }
     }
 
-    // TODO: Enviar email con credenciales
-    console.log(`📧 Email que se enviaría a ${email}:`);
-    console.log(`Contraseña temporal: ${tempPassword}`);
+    const mensaje = yaExistia
+      ? `El usuario ${email} ya existía. Se le ha añadido el rol de familia y vinculado los educandos seleccionados.`
+      : `Invitación enviada correctamente a ${email}`;
 
     res.status(201).json({
       success: true,
-      message: 'Familiar invitado correctamente',
+      message: mensaje,
       data: {
         id: userId,
         email,
-        nombre,
-        apellidos
+        nombre: yaExistia ? existente[0].nombre : nombre,
+        apellidos: yaExistia ? existente[0].apellidos : apellidos,
+        yaExistia
       }
     });
   } catch (error) {

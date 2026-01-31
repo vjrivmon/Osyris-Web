@@ -45,7 +45,7 @@ export function ProtectedFamiliaRoute({
         }
 
         // Verificar rol del usuario
-        const tieneRolFamilia = user.rol === 'familia'
+        const tieneRolFamilia = (user.roles || [user.rol]).includes('familia')
 
         if (!tieneRolFamilia) {
           console.log('🚫 Usuario no tiene rol de familia:', user.rol)
@@ -253,7 +253,7 @@ export function useFamiliaAuth() {
         return
       }
 
-      const tieneRolFamilia = user.rol === 'familia'
+      const tieneRolFamilia = (user.roles || [user.rol]).includes('familia')
       setIsFamilia(tieneRolFamilia)
 
       if (tieneRolFamilia) {

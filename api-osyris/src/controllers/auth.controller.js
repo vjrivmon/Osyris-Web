@@ -93,18 +93,25 @@ const login = async (req, res) => {
       console.warn('⚠️ No se pudo actualizar último acceso:', updateError.message);
     }
 
-    // Generar token JWT
+    // Obtener todos los roles del usuario (sistema multi-rol)
+    const rolesData = await db.getUserRoles(usuario.id);
+    const roles = rolesData.length > 0
+      ? rolesData.map(r => r.rol)
+      : [usuario.rol]; // Fallback si no hay filas en usuario_roles
+
+    // Generar token JWT con roles array
     const token = jwt.sign(
       {
         id: usuario.id,
         email: usuario.email,
-        rol: usuario.rol
+        rol: usuario.rol,
+        roles
       },
       process.env.JWT_SECRET || 'osyrisScoutGroup2024SecretKey',
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
 
-    console.log('✅ Login exitoso:', value.email);
+    console.log('✅ Login exitoso:', value.email, 'roles:', roles);
 
     res.status(200).json({
       success: true,
@@ -118,6 +125,7 @@ const login = async (req, res) => {
           apellidos: usuario.apellidos,
           telefono: usuario.telefono || '',
           rol: usuario.rol,
+          roles,
           foto_perfil: usuario.foto_perfil,
           seccion_id: usuario.seccion_id || null,
           activo: usuario.activo

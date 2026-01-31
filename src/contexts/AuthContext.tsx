@@ -24,6 +24,7 @@ interface User {
   apellidos: string
   email: string
   rol: 'admin' | 'editor' | 'coordinador' | 'scouter' | 'familia' | 'educando' | 'comite'
+  roles?: string[]
   seccion_id?: number
   seccion_nombre?: string
   activo: boolean
@@ -45,6 +46,9 @@ interface AuthContextType extends AuthState {
   logoutWithReason: (reason: SessionExpiredReason) => void
   refreshUser: () => Promise<void>
   waitForAuthReady: () => Promise<void>  // Espera hasta que authReady sea true
+  activeRole: string
+  availableRoles: string[]
+  switchRole: (role: string) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -63,6 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Estados para modales
   const [showExpiredModal, setShowExpiredModal] = useState(false)
   const [expiredModalReason, setExpiredModalReason] = useState<SessionExpiredReason>('token_invalid')
+
+  // Multi-role state
+  const [activeRole, setActiveRole] = useState<string>('')
+  const [availableRoles, setAvailableRoles] = useState<string[]>([])
 
   useEffect(() => {
     checkAuthStatus()
@@ -148,7 +156,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log(`✅ [AuthContext] Sesión actualizada, expira: ${newExpiresAt.toLocaleString()}`)
         }
 
-        console.log('✅ [AuthContext] Usuario cargado:', { id: user.id, email: user.email, rol: user.rol })
+        console.log('✅ [AuthContext] Usuario cargado:', { id: user.id, email: user.email, rol: user.rol, roles: user.roles })
+
+        // Restore multi-role state
+        const userRoles = user.roles || [user.rol]
+        setAvailableRoles(userRoles)
+        const savedActiveRole = localStorage.getItem('activeRole')
+        if (savedActiveRole && userRoles.includes(savedActiveRole)) {
+          setActiveRole(savedActiveRole)
+        } else {
+          setActiveRole(userRoles.includes('familia') ? 'familia' : userRoles[0] || user.rol)
+        }
 
         setAuthState({
           user,
@@ -226,7 +244,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('osyris_user', JSON.stringify(userWithSession)) // Para compatibilidad
         localStorage.setItem('userRole', usuario.rol)
 
-        console.log(`✅ [AuthContext] Login exitoso: ${usuario.email} (${usuario.rol})`)
+        // Set multi-role state
+        const userRoles: string[] = usuario.roles || [usuario.rol]
+        setAvailableRoles(userRoles)
+        const defaultRole = userRoles.includes('familia') ? 'familia' : userRoles[0] || usuario.rol
+        setActiveRole(defaultRole)
+        localStorage.setItem('activeRole', defaultRole)
+
+        console.log(`✅ [AuthContext] Login exitoso: ${usuario.email} roles: ${userRoles.join(',')} activeRole: ${defaultRole}`)
         console.log(`✅ [AuthContext] Sesión expira: ${expiresAt.toLocaleString()}`)
 
         // Actualizar estado con authReady: false primero
@@ -292,6 +317,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     console.log('👋 [AuthContext] Logging out, clearing all auth data')
     clearAuthData()
+    localStorage.removeItem('activeRole')
+    setActiveRole('')
+    setAvailableRoles([])
     setAuthState({
       user: null,
       token: null,
@@ -347,6 +375,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }, 2000)
     })
   }
+
+  // ============================================================================
+  // MULTI-ROLE - Cambiar rol activo
+  // ============================================================================
+
+  const switchRole = useCallback((role: string) => {
+    if (availableRoles.includes(role)) {
+      setActiveRole(role)
+      localStorage.setItem('activeRole', role)
+      console.log(`🔄 [AuthContext] Rol activo cambiado a: ${role}`)
+    }
+  }, [availableRoles])
 
   // ============================================================================
   // INACTIVITY TIMER - Cierre automatico por inactividad
@@ -410,7 +450,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         logoutWithReason,
         refreshUser,
-        waitForAuthReady
+        waitForAuthReady,
+        activeRole,
+        availableRoles,
+        switchRole
       }}
     >
       {children}
@@ -455,7 +498,10 @@ export function useAuth(): AuthContextType {
         logout: () => {},
         logoutWithReason: () => {},
         refreshUser: async () => {},
-        waitForAuthReady: async () => {}
+        waitForAuthReady: async () => {},
+        activeRole: '',
+        availableRoles: [],
+        switchRole: () => {}
       }
     }
     throw error

@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { ProtectedComiteRoute } from '@/components/auth/protected-comite-route'
 import { useDashboardComite, type CampamentoResumen, type SeccionStats } from '@/hooks/useDashboardComite'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -24,7 +23,6 @@ import {
   UserX,
   Clock,
   Download,
-  LogOut,
   AlertTriangle,
   Tent,
   MapPin,
@@ -34,8 +32,7 @@ import {
 } from 'lucide-react'
 
 function DashboardComiteContent() {
-  const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const {
     campamentos,
     detalle,
@@ -60,11 +57,6 @@ function DashboardComiteContent() {
     fetchDetalle(camp.id)
   }
 
-  const handleLogout = () => {
-    logout()
-    router.push('/login')
-  }
-
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('es-ES', {
       day: 'numeric',
@@ -83,35 +75,20 @@ function DashboardComiteContent() {
     : 1
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - stack vertical en movil para touch targets grandes */}
-      <header className="bg-white border-b-2 border-green-700 shadow-sm">
-        <div className="container mx-auto px-4 py-5 max-w-5xl">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Panel Comite y Cocina
-              </h1>
-              {user && (
-                <p className="text-lg text-gray-600 mt-1">
-                  {user.nombre} {user.apellidos}
-                </p>
-              )}
-            </div>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto text-base min-h-[48px] py-3 px-6 border-2 border-gray-300 hover:border-red-400 hover:text-red-700"
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Cerrar sesion
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="space-y-6">
+      {/* Saludo personalizado */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Gestión de Campamentos
+        </h1>
+        {user && (
+          <p className="text-lg text-muted-foreground mt-1">
+            Hola, {user.nombre} {user.apellidos}
+          </p>
+        )}
+      </div>
 
-      <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
+      <div className="space-y-6">
         {/* Error */}
         {error && (
           <Alert variant="destructive" className="text-lg">
@@ -431,7 +408,7 @@ function DashboardComiteContent() {
             ) : null}
           </>
         )}
-      </main>
+      </div>
     </div>
   )
 }

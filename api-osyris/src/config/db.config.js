@@ -141,6 +141,23 @@ async function getAllPages(filters = {}) {
   return result;
 }
 
+// Funciones helper para roles de usuario (sistema multi-rol)
+async function getUserRoles(usuarioId) {
+  const result = await query(
+    'SELECT rol, es_principal FROM usuario_roles WHERE usuario_id = $1 ORDER BY es_principal DESC',
+    [usuarioId]
+  );
+  return result;
+}
+
+async function addUserRole(usuarioId, rol, esPrincipal = false) {
+  const result = await query(
+    'INSERT INTO usuario_roles (usuario_id, rol, es_principal) VALUES ($1, $2, $3) ON CONFLICT (usuario_id, rol) DO NOTHING RETURNING *',
+    [usuarioId, rol, esPrincipal]
+  );
+  return result[0];
+}
+
 module.exports = {
   initializeDatabase,
   query,
@@ -151,5 +168,7 @@ module.exports = {
   getUserById,
   getUserByInvitationToken,
   updateUser,
-  getAllPages
+  getAllPages,
+  getUserRoles,
+  addUserRole
 };

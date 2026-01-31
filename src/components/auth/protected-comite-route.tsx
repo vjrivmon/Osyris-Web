@@ -23,7 +23,8 @@ export function ProtectedComiteRoute({ children }: ProtectedComiteRouteProps) {
       return
     }
 
-    if (user.rol === 'comite' || user.rol === 'admin') {
+    const userRoles = user.roles || [user.rol]
+    if (userRoles.includes('comite') || userRoles.includes('admin')) {
       setIsAuthorized(true)
     } else {
       router.replace('/dashboard')
@@ -38,7 +39,7 @@ export function ProtectedComiteRoute({ children }: ProtectedComiteRouteProps) {
             <Loader2 className="h-12 w-12 animate-spin text-green-700" />
             <h3 className="mt-4 text-lg font-semibold text-gray-900">Verificando acceso</h3>
             <p className="text-base text-gray-600 text-center mt-2">
-              Comprobando permisos del panel de comite...
+              Comprobando permisos del panel de comité...
             </p>
             <div className="mt-4 flex items-center space-x-2 text-sm text-gray-500">
               <Shield className="h-4 w-4" />

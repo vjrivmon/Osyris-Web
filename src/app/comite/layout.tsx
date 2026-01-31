@@ -7,7 +7,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Bell, CheckCircle, XCircle, FileText, Trash2, CheckCheck } from "lucide-react";
-import { MobileNavFamilia } from "@/components/familia/mobile-nav-familia";
 import { RoleSwitcher } from "@/components/shared/role-switcher";
 import {
   AlertDialog,
@@ -43,7 +42,7 @@ interface NotificacionFamilia {
   }
 }
 
-export default function FamiliaLayout({
+export default function ComiteLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -60,6 +59,7 @@ export default function FamiliaLayout({
     localStorage.removeItem("osyris_user");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("activeRole");
     router.push("/");
   };
 
@@ -90,7 +90,6 @@ export default function FamiliaLayout({
     };
 
     fetchNotificaciones();
-    // Refrescar cada 2 minutos
     const interval = setInterval(fetchNotificaciones, 2 * 60 * 1000);
     return () => clearInterval(interval);
   }, [API_URL]);
@@ -111,12 +110,12 @@ export default function FamiliaLayout({
       setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
       setContadorNoLeidas(prev => Math.max(0, prev - 1));
     } catch (err) {
-      console.error('Error marcando como leída:', err);
+      console.error('Error marcando como leida:', err);
     }
   };
 
   const eliminarNotificacion = async (id: number, e: React.MouseEvent) => {
-    e.stopPropagation(); // Evitar que se marque como leída al hacer clic
+    e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -129,7 +128,6 @@ export default function FamiliaLayout({
         }
       });
 
-      // Actualizar el contador si la notificación no estaba leída
       const notif = notificaciones.find(n => n.id === id);
       if (notif && !notif.leida) {
         setContadorNoLeidas(prev => Math.max(0, prev - 1));
@@ -137,7 +135,7 @@ export default function FamiliaLayout({
 
       setNotificaciones(prev => prev.filter(n => n.id !== id));
     } catch (err) {
-      console.error('Error eliminando notificación:', err);
+      console.error('Error eliminando notificacion:', err);
     }
   };
 
@@ -157,7 +155,7 @@ export default function FamiliaLayout({
       setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
       setContadorNoLeidas(0);
     } catch (err) {
-      console.error('Error marcando todas como leídas:', err);
+      console.error('Error marcando todas como leidas:', err);
     }
   };
 
@@ -166,7 +164,6 @@ export default function FamiliaLayout({
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // Eliminar todas las notificaciones leídas del servidor
       const notificacionesLeidas = notificaciones.filter(n => n.leida);
       for (const notif of notificacionesLeidas) {
         await fetch(`${API_URL}/api/notificaciones-familia/${notif.id}`, {
@@ -178,10 +175,9 @@ export default function FamiliaLayout({
         });
       }
 
-      // Mantener solo las no leídas
       setNotificaciones(prev => prev.filter(n => !n.leida));
     } catch (err) {
-      console.error('Error limpiando notificaciones leídas:', err);
+      console.error('Error limpiando notificaciones leidas:', err);
     }
   };
 
@@ -217,7 +213,7 @@ export default function FamiliaLayout({
               className="h-8 w-8 rounded-full border-2 border-primary"
               priority
             />
-            <h1 className="text-lg font-semibold">Portal Familias</h1>
+            <h1 className="text-lg font-semibold">Panel Comité</h1>
           </div>
 
           <div className="flex items-center gap-2">
@@ -244,7 +240,6 @@ export default function FamiliaLayout({
                     )}
                   </div>
                 </div>
-                {/* Acciones masivas */}
                 {notificaciones.length > 0 && (
                   <div className="p-2 border-b flex items-center justify-between gap-2 bg-muted/50">
                     {contadorNoLeidas > 0 && (
@@ -342,8 +337,15 @@ export default function FamiliaLayout({
               <span>Cerrar sesión</span>
             </button>
 
-            {/* Menu hamburguesa - derecha (solo movil) */}
-            <MobileNavFamilia />
+            {/* Logout button - Mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setShowLogoutDialog(true)}
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
 
             <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
               <AlertDialogContent>

@@ -130,13 +130,14 @@ export default function LoginPage() {
         router.push(redirectPath)
         return
       }
-      // Redireccionar según el rol
-      if (currentUser.rol === "admin") {
-        router.push("/admin")
-      } else if (currentUser.rol === "familia") {
+      // Redireccionar priorizando familia para usuarios duales
+      const roles: string[] = currentUser.roles || [currentUser.rol]
+      if (roles.includes('familia')) {
         router.push("/familia/dashboard")
-      } else if (currentUser.rol === "comite") {
+      } else if (roles.includes('comite')) {
         router.push("/comite/dashboard")
+      } else if (currentUser.rol === "admin") {
+        router.push("/admin")
       } else {
         router.push("/aula-virtual")
       }
@@ -174,6 +175,7 @@ export default function LoginPage() {
           apellidos: data.data.usuario.apellidos,
           email: data.data.usuario.email,
           rol: data.data.usuario.rol,
+          roles: data.data.usuario.roles,
           activo: data.data.usuario.activo,
           seccion_id: data.data.usuario.seccion_id || null
         });
@@ -188,23 +190,16 @@ export default function LoginPage() {
           console.log('✅ [Login] Redirigiendo a:', redirectPath);
           window.location.href = redirectPath;
         } else {
-          // Redireccionar según el rol
-          // IMPORTANTE: Usamos window.location.href para forzar recarga completa
-          // Con router.push(), el AuthProvider de la nueva página se inicializa
-          // ANTES de que localStorage tenga los datos, causando el bug de "No hay educandos"
-          const userRole = data.data.usuario.rol;
+          // Redireccionar priorizando familia para usuarios duales
+          const roles: string[] = data.data.usuario.roles || [data.data.usuario.rol];
 
-          if (userRole === 'admin') {
-            // Admin va al panel de administración separado
-            window.location.href = '/admin';
-          } else if (userRole === 'familia') {
-            // Familiares van al dashboard familiar
+          if (roles.includes('familia')) {
             window.location.href = '/familia/dashboard';
-          } else if (userRole === 'comite') {
-            // Comite va al panel de cocina/comite
+          } else if (roles.includes('comite')) {
             window.location.href = '/comite/dashboard';
+          } else if (roles.includes('admin')) {
+            window.location.href = '/admin';
           } else {
-            // Los demás van al aula virtual
             window.location.href = '/aula-virtual';
           }
         }

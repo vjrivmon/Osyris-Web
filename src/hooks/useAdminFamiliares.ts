@@ -174,16 +174,23 @@ export function useAdminFamiliares() {
       const data = await response.json()
 
       if (data.success) {
-        toast({
-          title: "Invitación enviada",
-          description: `Se ha enviado la invitación a ${invitacion.email} correctamente`,
-        })
+        if (data.data?.yaExistia) {
+          toast({
+            title: "Rol de familia asignado",
+            description: `${invitacion.email} ya tenía cuenta. Se le ha añadido acceso al portal de familias y vinculado los educandos.`,
+          })
+        } else {
+          toast({
+            title: "Invitación enviada",
+            description: `Se ha enviado un email de invitación a ${invitacion.email} para completar su registro.`,
+          })
+        }
         await cargarFamiliares()
         return true
       } else {
         toast({
-          title: "Error",
-          description: data.message || "No se pudo enviar la invitación",
+          title: "No se pudo completar la invitación",
+          description: data.message || "Ocurrió un error al procesar la invitación. Inténtalo de nuevo.",
           variant: "destructive"
         })
         return false

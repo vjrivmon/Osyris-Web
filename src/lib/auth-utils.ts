@@ -86,6 +86,7 @@ export interface UserData {
   apellidos: string
   email: string
   rol: string
+  roles?: string[]
   activo: boolean
   seccion_id?: number | null
   token?: string

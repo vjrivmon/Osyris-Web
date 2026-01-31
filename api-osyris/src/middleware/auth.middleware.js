@@ -66,7 +66,7 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// Middleware para verificar roles
+// Middleware para verificar roles (soporta multi-rol via JWT)
 const checkRole = (roles) => {
   return (req, res, next) => {
     if (!req.usuario) {
@@ -75,16 +75,18 @@ const checkRole = (roles) => {
         message: 'Error en la autenticación'
       });
     }
-    
-    const hasRole = roles.includes(req.usuario.rol);
-    
+
+    // Verificar contra array de roles del JWT, con fallback al rol único
+    const userRoles = req.tokenPayload?.roles || [req.usuario.rol];
+    const hasRole = roles.some(r => userRoles.includes(r));
+
     if (!hasRole) {
       return res.status(403).json({
         success: false,
         message: 'No tienes permiso para acceder a este recurso'
       });
     }
-    
+
     next();
   };
 };
