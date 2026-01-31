@@ -91,6 +91,31 @@ router.get('/campamento/:actividadId/detalle', verifyToken, checkRole(['admin', 
 
 /**
  * @swagger
+ * /api/dashboard-scouter/campamento/{actividadId}/inscripciones:
+ *   get:
+ *     summary: Obtener inscripciones de campamento para modal de asistencia
+ *     tags: [Dashboard Scouter]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: actividadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la actividad campamento
+ *     responses:
+ *       200:
+ *         description: Inscripciones formateadas para modal
+ *       401:
+ *         description: No autorizado
+ *       404:
+ *         description: Actividad no encontrada
+ */
+router.get('/campamento/:actividadId/inscripciones', verifyToken, checkRole(['admin', 'scouter']), dashboardController.getCampamentoInscripcionesForModal);
+
+/**
+ * @swagger
  * /api/dashboard-scouter/notificaciones:
  *   delete:
  *     summary: Limpiar todas las notificaciones del scouter

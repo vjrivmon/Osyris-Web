@@ -99,7 +99,7 @@ const getProximoCampamento = async (seccionId) => {
   let queryText = `
     SELECT a.id, a.titulo, a.fecha_inicio, a.fecha_fin, a.hora_inicio, a.hora_fin,
            a.lugar, a.precio, a.tipo, a.seccion_id, s.nombre as seccion_nombre,
-           a.circular_drive_id, a.circular_drive_url
+           a.circular_drive_id, a.circular_drive_url, a.enlace_token
     FROM actividades a
     LEFT JOIN secciones s ON a.seccion_id = s.id
     WHERE a.tipo = 'campamento'
@@ -565,9 +565,105 @@ const limpiarNotificaciones = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/dashboard-scouter/campamento/:actividadId/inscripciones
+ * Obtener inscripciones de campamento en formato compatible con el modal de asistencia
+ */
+const getCampamentoInscripcionesForModal = async (req, res) => {
+  try {
+    const userId = req.usuario.id;
+    const { actividadId } = req.params;
+
+    const userData = await getSeccionByUserId(userId);
+    if (!userData) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const seccionId = userData.seccion_id;
+    if (!seccionId && userData.rol !== 'admin') {
+      return res.status(403).json({ success: false, message: 'No tienes seccion asignada' });
+    }
+
+    const actividad = await ActividadModel.findById(actividadId);
+    if (!actividad) {
+      return res.status(404).json({ success: false, message: 'Actividad no encontrada' });
+    }
+
+    const effectiveSeccionId = seccionId || actividad.seccion_id || 2;
+
+    // Obtener inscripciones y educandos sin inscribir
+    const inscripciones = await getListaInscripciones(actividadId, effectiveSeccionId);
+    const sinInscribir = await getEducandosSinInscribir(actividadId, effectiveSeccionId);
+    const estadisticas = await getEstadisticasCampamento(actividadId, effectiveSeccionId);
+
+    // Formatear inscripciones al formato del modal (compatible con ConfirmacionDetalle)
+    const inscritos = inscripciones
+      .filter(i => i.estado === 'inscrito' || i.estado === 'pendiente')
+      .map(i => ({
+        id: i.id,
+        educando_id: i.educando_id,
+        educando_nombre: i.educando_nombre,
+        educando_apellidos: i.educando_apellidos,
+        estado: 'confirmado',
+        familiar_nombre: i.familiar_nombre,
+        familiar_apellidos: i.familiar_apellidos,
+        pagado: i.pagado,
+        circular_firmada: !!i.circular_firmada_drive_id,
+        justificante_pago: !!i.justificante_pago_drive_id,
+        fecha_inscripcion: i.created_at
+      }));
+
+    const noAsisten = inscripciones
+      .filter(i => i.estado === 'no_asiste')
+      .map(i => ({
+        id: i.id,
+        educando_id: i.educando_id,
+        educando_nombre: i.educando_nombre,
+        educando_apellidos: i.educando_apellidos,
+        estado: 'no_asiste',
+        familiar_nombre: i.familiar_nombre,
+        familiar_apellidos: i.familiar_apellidos
+      }));
+
+    const sinResponder = sinInscribir.map(e => ({
+      id: e.id,
+      educando_id: e.id,
+      educando_nombre: e.nombre,
+      educando_apellidos: e.apellidos,
+      estado: 'pendiente'
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        inscripciones: inscritos,
+        no_asisten: noAsisten,
+        sin_inscribir: sinResponder,
+        estadisticas: {
+          inscritos: estadisticas.inscritos,
+          noAsisten: estadisticas.noAsisten,
+          sinResponder: estadisticas.sinResponder,
+          pagados: estadisticas.pagados,
+          sinPagar: estadisticas.sinPagar,
+          total: estadisticas.total
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo inscripciones campamento para modal:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo inscripciones',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getDashboardSummary,
   getSabadoDetalle,
   getCampamentoDetalle,
+  getCampamentoInscripcionesForModal,
   limpiarNotificaciones
 };

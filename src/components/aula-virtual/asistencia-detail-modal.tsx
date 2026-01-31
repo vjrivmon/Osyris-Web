@@ -23,7 +23,10 @@ import {
   Clock,
   Users,
   MapPin,
-  Calendar
+  Calendar,
+  CreditCard,
+  FileText,
+  Receipt
 } from 'lucide-react'
 import { TipoEventoBadge } from '@/components/familia/calendario/tipo-evento-badge'
 import { TipoEvento } from '@/components/familia/calendario/tipos-evento'
@@ -39,6 +42,19 @@ interface ConfirmacionDetalle {
   confirmado_en?: string
   familiar_nombre?: string
   familiar_apellidos?: string
+  // Campos extra para campamentos
+  pagado?: boolean
+  circular_firmada?: boolean
+  justificante_pago?: boolean
+}
+
+interface CampamentoEstadisticas {
+  inscritos: number
+  noAsisten: number
+  sinResponder: number
+  pagados: number
+  sinPagar: number
+  total: number
 }
 
 interface AsistenciaDetailModalProps {
@@ -67,6 +83,7 @@ function formatDate(fecha: string): string {
 /**
  * Modal de asistencia detallada para el calendario del Aula Virtual.
  * Muestra la lista de educandos organizados por estado de confirmacion.
+ * Para campamentos, muestra inscripciones con info de pago y documentos.
  * Solo lectura - no permite modificar estados.
  */
 export function AsistenciaDetailModal({
@@ -77,12 +94,20 @@ export function AsistenciaDetailModal({
 }: AsistenciaDetailModalProps) {
   const [confirmaciones, setConfirmaciones] = useState<ConfirmacionDetalle[]>([])
   const [pendientesSinConfirmar, setPendientesSinConfirmar] = useState<ConfirmacionDetalle[]>([])
+  const [noAsistenList, setNoAsistenList] = useState<ConfirmacionDetalle[]>([])
+  const [campamentoStats, setCampamentoStats] = useState<CampamentoEstadisticas | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isCampamento = actividad?.tipo === 'campamento'
+
   useEffect(() => {
     if (open && actividad) {
-      fetchConfirmaciones()
+      if (isCampamento) {
+        fetchInscripcionesCampamento()
+      } else {
+        fetchConfirmaciones()
+      }
     }
   }, [open, actividad])
 
@@ -115,6 +140,8 @@ export function AsistenciaDetailModal({
       if (data.success) {
         setConfirmaciones(data.data.confirmaciones || [])
         setPendientesSinConfirmar(data.data.scouts_sin_confirmar || [])
+        setNoAsistenList([])
+        setCampamentoStats(null)
       }
     } catch (err) {
       console.error('Error fetching confirmaciones:', err)
@@ -124,12 +151,54 @@ export function AsistenciaDetailModal({
     }
   }
 
+  const fetchInscripcionesCampamento = async () => {
+    if (!actividad) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = getApiUrl()
+
+      const response = await fetch(
+        `${apiUrl}/api/dashboard-scouter/campamento/${actividad.id}/inscripciones`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Error al obtener inscripciones del campamento')
+      }
+
+      const data = await response.json()
+
+      if (data.success) {
+        setConfirmaciones(data.data.inscripciones || [])
+        setNoAsistenList(data.data.no_asisten || [])
+        setPendientesSinConfirmar(data.data.sin_inscribir || [])
+        setCampamentoStats(data.data.estadisticas || null)
+      }
+    } catch (err) {
+      console.error('Error fetching inscripciones campamento:', err)
+      setError('No se pudieron cargar las inscripciones')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Separar por estado
   const asisten = confirmaciones.filter(c => c.estado === 'confirmado')
-  const noAsisten = confirmaciones.filter(c => c.estado === 'no_asiste')
+  const noAsisten = isCampamento ? noAsistenList : confirmaciones.filter(c => c.estado === 'no_asiste')
   const pendientes = pendientesSinConfirmar
 
-  const total = asisten.length + noAsisten.length + pendientes.length
+  const total = isCampamento
+    ? (campamentoStats?.total || asisten.length + noAsisten.length + pendientes.length)
+    : asisten.length + noAsisten.length + pendientes.length
   const porcentajeAsisten = total > 0 ? (asisten.length / total) * 100 : 0
 
   if (!actividad) return null
@@ -181,7 +250,7 @@ export function AsistenciaDetailModal({
         <div className="px-1 py-4 flex-shrink-0 border-b">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Asistencia confirmada
+              {isCampamento ? 'Inscripciones' : 'Asistencia confirmada'}
             </span>
             <span className="text-sm font-semibold">
               {asisten.length}/{total} educandos
@@ -191,7 +260,7 @@ export function AsistenciaDetailModal({
           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-green-500" />
-              Asisten: {asisten.length}
+              {isCampamento ? 'Inscritos' : 'Asisten'}: {asisten.length}
             </span>
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-red-500" />
@@ -199,8 +268,14 @@ export function AsistenciaDetailModal({
             </span>
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-amber-500" />
-              Pendientes: {pendientes.length}
+              {isCampamento ? 'Sin responder' : 'Pendientes'}: {pendientes.length}
             </span>
+            {isCampamento && campamentoStats && (
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                Pagados: {campamentoStats.pagados}/{asisten.length}
+              </span>
+            )}
           </div>
         </div>
 
@@ -221,7 +296,12 @@ export function AsistenciaDetailModal({
           ) : error ? (
             <div className="p-8 text-center">
               <p className="text-red-500">{error}</p>
-              <Button variant="outline" size="sm" onClick={fetchConfirmaciones} className="mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={isCampamento ? fetchInscripcionesCampamento : fetchConfirmaciones}
+                className="mt-4"
+              >
                 Reintentar
               </Button>
             </div>
@@ -233,7 +313,7 @@ export function AsistenciaDetailModal({
                   className="data-[state=active]:text-green-600 data-[state=active]:bg-green-50 dark:data-[state=active]:bg-green-900/20"
                 >
                   <CheckCircle className="h-4 w-4 mr-1.5" />
-                  Asisten ({asisten.length})
+                  {isCampamento ? 'Inscritos' : 'Asisten'} ({asisten.length})
                 </TabsTrigger>
                 <TabsTrigger
                   value="no-asisten"
@@ -247,13 +327,13 @@ export function AsistenciaDetailModal({
                   className="data-[state=active]:text-amber-600 data-[state=active]:bg-amber-50 dark:data-[state=active]:bg-amber-900/20"
                 >
                   <Clock className="h-4 w-4 mr-1.5" />
-                  Pend. ({pendientes.length})
+                  {isCampamento ? 'Sin resp.' : 'Pend.'} ({pendientes.length})
                 </TabsTrigger>
               </TabsList>
 
               <div className="flex-1 min-h-0 overflow-y-auto mt-2 pb-2">
                 <TabsContent value="asisten" className="mt-0 data-[state=active]:block">
-                  <EducandoList educandos={asisten} estado="confirmado" />
+                  <EducandoList educandos={asisten} estado="confirmado" showCampamentoInfo={isCampamento} />
                 </TabsContent>
 
                 <TabsContent value="no-asisten" className="mt-0 data-[state=active]:block">
@@ -276,17 +356,20 @@ export function AsistenciaDetailModal({
 interface EducandoListProps {
   educandos: ConfirmacionDetalle[]
   estado: 'confirmado' | 'no_asiste' | 'pendiente'
+  showCampamentoInfo?: boolean
 }
 
-function EducandoList({ educandos, estado }: EducandoListProps) {
+function EducandoList({ educandos, estado, showCampamentoInfo }: EducandoListProps) {
   if (educandos.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground">
         <Users className="h-10 w-10 mx-auto mb-3 opacity-40" />
         <p className="text-sm">
-          {estado === 'confirmado' && 'Nadie ha confirmado asistencia todavia'}
+          {estado === 'confirmado' && !showCampamentoInfo && 'Nadie ha confirmado asistencia todavia'}
+          {estado === 'confirmado' && showCampamentoInfo && 'Nadie se ha inscrito todavia'}
           {estado === 'no_asiste' && 'Nadie ha indicado que no asistira'}
-          {estado === 'pendiente' && 'Todos han confirmado su asistencia'}
+          {estado === 'pendiente' && !showCampamentoInfo && 'Todos han confirmado su asistencia'}
+          {estado === 'pendiente' && showCampamentoInfo && 'Todos han respondido'}
         </p>
       </div>
     )
@@ -324,24 +407,56 @@ function EducandoList({ educandos, estado }: EducandoListProps) {
               )}
               {educando.familiar_nombre && estado !== 'pendiente' && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Confirmado por {educando.familiar_nombre}
+                  {showCampamentoInfo ? 'Inscrito por' : 'Confirmado por'} {educando.familiar_nombre}
                 </p>
               )}
             </div>
           </div>
-          <Badge
-            variant="outline"
-            className={cn(
-              'text-xs',
-              estado === 'confirmado' && 'border-green-300 text-green-700 bg-green-50',
-              estado === 'no_asiste' && 'border-red-300 text-red-700 bg-red-50',
-              estado === 'pendiente' && 'border-amber-300 text-amber-700 bg-amber-50'
+          <div className="flex items-center gap-2">
+            {/* Badges de campamento: pago, circular, justificante */}
+            {showCampamentoInfo && estado === 'confirmado' && (
+              <div className="flex items-center gap-1">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'text-xs gap-1',
+                    educando.pagado
+                      ? 'border-green-300 text-green-700 bg-green-50'
+                      : 'border-amber-300 text-amber-700 bg-amber-50'
+                  )}
+                >
+                  <CreditCard className="h-3 w-3" />
+                  {educando.pagado ? 'Pagado' : 'Sin pagar'}
+                </Badge>
+                {educando.circular_firmada && (
+                  <Badge variant="outline" className="text-xs gap-1 border-blue-300 text-blue-700 bg-blue-50">
+                    <FileText className="h-3 w-3" />
+                  </Badge>
+                )}
+                {educando.justificante_pago && (
+                  <Badge variant="outline" className="text-xs gap-1 border-purple-300 text-purple-700 bg-purple-50">
+                    <Receipt className="h-3 w-3" />
+                  </Badge>
+                )}
+              </div>
             )}
-          >
-            {estado === 'confirmado' && 'Asiste'}
-            {estado === 'no_asiste' && 'No asiste'}
-            {estado === 'pendiente' && 'Pendiente'}
-          </Badge>
+            {/* Badge de estado (solo para no-campamento o estados no-confirmado) */}
+            {(!showCampamentoInfo || estado !== 'confirmado') && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-xs',
+                  estado === 'confirmado' && 'border-green-300 text-green-700 bg-green-50',
+                  estado === 'no_asiste' && 'border-red-300 text-red-700 bg-red-50',
+                  estado === 'pendiente' && 'border-amber-300 text-amber-700 bg-amber-50'
+                )}
+              >
+                {estado === 'confirmado' && 'Asiste'}
+                {estado === 'no_asiste' && 'No asiste'}
+                {estado === 'pendiente' && 'Pendiente'}
+              </Badge>
+            )}
+          </div>
         </div>
       ))}
     </div>
