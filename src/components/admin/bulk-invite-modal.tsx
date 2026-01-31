@@ -137,9 +137,16 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
       })
 
       if (result.success) {
+        const infos = result.data.errors?.filter((e: any) => e.info) || []
+        const roleAddedCount = infos.length
+        const newInviteCount = result.data.successful - roleAddedCount
+        let description = ""
+        if (newInviteCount > 0) description += `${newInviteCount} invitación(es) enviada(s). `
+        if (roleAddedCount > 0) description += `${roleAddedCount} usuario(s) existente(s) actualizado(s) con nuevo rol. `
+        if (result.data.failed > 0) description += `${result.data.failed} fallaron.`
         toast({
-          title: "¡Invitaciones enviadas!",
-          description: `Se han enviado ${result.data.successful} invitaciones exitosamente.${result.data.failed > 0 ? ` ${result.data.failed} fallaron.` : ""}`,
+          title: "Invitaciones procesadas",
+          description: description.trim(),
         })
 
         // Reset form
@@ -232,8 +239,8 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
                 </SelectItem>
                 <SelectItem value="comite">
                   <div className="flex items-center gap-2">
-                    <Badge variant="default" className="bg-amber-600">Comite</Badge>
-                    <span>Cocina/Comite campamento</span>
+                    <Badge variant="default" className="bg-amber-600">Comité</Badge>
+                    <span>Cocina/Comité campamento</span>
                   </div>
                 </SelectItem>
               </SelectContent>

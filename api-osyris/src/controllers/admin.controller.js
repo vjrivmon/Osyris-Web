@@ -255,9 +255,16 @@ const adminController = {
       );
 
       if (existingUser.length > 0 && existingUser[0].activo) {
-        return res.status(409).json({
-          success: false,
-          message: 'El email ya está registrado como usuario activo'
+        // Usuario activo: añadir el nuevo rol en vez de bloquear
+        const userId = existingUser[0].id;
+        const added = await db.addUserRole(userId, rol, false);
+        const message = added
+          ? `El usuario ya existía. Se le ha añadido el rol '${rol}'.`
+          : `El usuario ya tiene el rol '${rol}' asignado.`;
+        return res.status(200).json({
+          success: true,
+          message,
+          data: { email, yaExistia: true, rolAdded: !!added }
         });
       }
 
@@ -344,13 +351,23 @@ const adminController = {
 
           // Verificar si el email ya está registrado
           const existingUser = await db.query(
-            'SELECT id FROM usuarios WHERE email = $1',
+            'SELECT id, nombre, rol FROM usuarios WHERE email = $1',
             [email]
           );
 
           if (existingUser.length > 0) {
-            results.failed++;
-            results.errors.push({ email, error: 'Email ya está registrado' });
+            // El usuario ya existe: añadir el nuevo rol sin duplicar
+            const userId = existingUser[0].id;
+            const added = await db.addUserRole(userId, rol, false);
+            if (added) {
+              console.log(`✅ Rol '${rol}' añadido a usuario existente ${email} (id: ${userId})`);
+              results.successful++;
+              results.errors.push({ email, info: `Ya existía como ${existingUser[0].rol}, se le añadió el rol ${rol}` });
+            } else {
+              console.log(`ℹ️ Usuario ${email} ya tenía el rol '${rol}'`);
+              results.failed++;
+              results.errors.push({ email, error: `Ya tiene el rol ${rol} asignado` });
+            }
             continue;
           }
 
@@ -360,12 +377,13 @@ const adminController = {
           expiresAt.setDate(expiresAt.getDate() + 7); // Expira en 7 días
 
           // Insertar usuario inactivo con token de invitación
-          await db.query(`
+          const newUserResult = await db.query(`
             INSERT INTO usuarios (
               email, nombre, apellidos, rol, seccion_id,
               activo, invitation_token, invitation_expires_at,
               contraseña
             ) VALUES ($1, $2, $3, $4, $5, false, $6, $7, $8)
+            RETURNING id
           `, [
             email,
             nombre,
@@ -376,6 +394,11 @@ const adminController = {
             expiresAt,
             'pending' // Contraseña temporal
           ]);
+
+          // Registrar rol en usuario_roles
+          if (newUserResult[0]) {
+            await db.addUserRole(newUserResult[0].id, rol, true);
+          }
 
           // Enviar email con el enlace de invitación
           try {
