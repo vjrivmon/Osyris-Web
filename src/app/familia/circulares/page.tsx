@@ -52,7 +52,7 @@ export default function CircularesFamiliarPage() {
               }}
               respuestaEstado={c.respuesta_estado}
               fechaFirma={c.fecha_firma}
-              onClick={() => router.push(`/familia/circulares/${c.id}?educandoId=${c.educando_id}`)}
+              onClick={() => router.push(`/familia/circulares/${c.actividad_id || c.id}?educandoId=${c.educando_id}`)}
             />
           ))}
         </div>
