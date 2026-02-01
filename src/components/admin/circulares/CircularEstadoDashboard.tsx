@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { CheckCircle2, Clock, AlertCircle, Search, FileText } from 'lucide-react'
+import { CheckCircle2, Clock, AlertCircle, Search, FileText, Send } from 'lucide-react'
 import { getApiUrl } from '@/lib/api-utils'
 import type { DashboardStats } from '@/types/circular-digital'
 
@@ -89,9 +89,33 @@ export function CircularEstadoDashboard({ actividadId }: CircularEstadoDashboard
                   <p className="font-semibold">{c.titulo}</p>
                   <p className="text-sm text-muted-foreground">{c.actividad_titulo}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Badge variant={c.estado === 'publicada' ? 'default' : 'secondary'}>{c.estado}</Badge>
                   <span className="text-sm text-muted-foreground">{c.total_respuestas || 0}/{c.total_inscritos || 0} firmadas</span>
+                  {c.estado === 'borrador' && (
+                    <Button
+                      size="sm"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        try {
+                          const res = await fetch(`${getApiUrl()}/api/admin/circulares/${c.id}/publicar`, {
+                            method: 'PUT',
+                            headers: getAuth()
+                          })
+                          const data = await res.json()
+                          if (data.success) {
+                            // Refresh list
+                            const listRes = await fetch(`${getApiUrl()}/api/admin/circulares`, { headers: getAuth() })
+                            const listData = await listRes.json()
+                            if (listData.success) setCirculares(listData.data || [])
+                          }
+                        } catch { /* */ }
+                      }}
+                      className="flex items-center gap-1"
+                    >
+                      <Send className="h-3 w-3" /> Publicar
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

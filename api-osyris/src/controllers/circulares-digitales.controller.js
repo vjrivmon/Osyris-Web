@@ -251,6 +251,20 @@ exports.editarCircular = async (req, res) => {
   }
 };
 
+exports.publicarCircular = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const circular = await CircularActividadModel.update(id, { estado: 'publicada' });
+    if (!circular) {
+      return res.status(404).json({ success: false, message: 'Circular no encontrada' });
+    }
+    res.json({ success: true, data: circular });
+  } catch (error) {
+    console.error('Error publicarCircular:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.listarCirculares = async (req, res) => {
   try {
     const circulares = await CircularActividadModel.findAll(req.query);

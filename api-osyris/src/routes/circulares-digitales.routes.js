@@ -23,6 +23,7 @@ router.get('/circular/:actividadId/estado/:educandoId', verifyToken, controller.
 router.get('/admin/circulares', verifyToken, checkRole(['admin', 'scouter']), controller.listarCirculares);
 router.post('/admin/circulares', verifyToken, checkRole(['admin', 'scouter']), controller.crearCircular);
 router.put('/admin/circulares/:id', verifyToken, checkRole(['admin', 'scouter']), controller.editarCircular);
+router.put('/admin/circulares/:id/publicar', verifyToken, checkRole(['admin', 'scouter']), controller.publicarCircular);
 router.get('/admin/circular/:actividadId/estado', verifyToken, checkRole(['admin', 'scouter']), controller.getDashboardEstado);
 router.get('/admin/plantillas-circular', verifyToken, checkRole(['admin', 'scouter']), controller.listarPlantillas);
 
