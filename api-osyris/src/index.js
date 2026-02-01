@@ -56,6 +56,8 @@ const dashboardScouterRoutes = require('./routes/dashboard-scouter.routes');
 const dashboardComiteRoutes = require('./routes/dashboard-comite.routes');
 // 💬 MED-005: RUTAS DE MENSAJERIA SCOUTER-FAMILIA
 const mensajesScouterRoutes = require('./routes/mensajes-scouter.routes');
+// 📋 CIRCULAR DIGITAL
+const circularesDigitalesRoutes = require('./routes/circulares-digitales.routes');
 // 🚀 FEATURE FLAGS
 // const featureFlagsRoutes = require('./routes/feature-flags.routes'); // ⚠️ DESHABILITADO: módulo incompleto
 // const previewRoutes = require('./routes/preview.routes'); // Temporarily disabled
@@ -151,6 +153,8 @@ app.use('/api/dashboard-scouter', dashboardScouterRoutes);
 app.use('/api/dashboard-comite', dashboardComiteRoutes);
 // 💬 MED-005: MENSAJERIA SCOUTER-FAMILIA
 app.use('/api/mensajes-scouter', mensajesScouterRoutes);
+// 📋 CIRCULAR DIGITAL
+app.use('/api', circularesDigitalesRoutes);
 // 🚀 FEATURE FLAGS
 // app.use('/api/feature-flags', featureFlagsRoutes); // ⚠️ DESHABILITADO: módulo incompleto
 // app.use('/api/preview', previewRoutes); // Temporarily disabled

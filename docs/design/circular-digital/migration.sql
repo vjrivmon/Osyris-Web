@@ -228,7 +228,7 @@ SELECT DISTINCT ON (e.id)
     COALESCE(ic.observaciones_medicas, e.notas_medicas, '')
 FROM educandos e
 LEFT JOIN inscripciones_campamento ic ON e.id = ic.educando_id
-ORDER BY e.id, ic.created_at DESC NULLS LAST
+ORDER BY e.id, ic.fecha_inscripcion DESC NULLS LAST
 ON CONFLICT (educando_id) DO NOTHING;
 
 -- Crear contacto de emergencia principal desde inscripciones más recientes
@@ -236,16 +236,16 @@ ON CONFLICT (educando_id) DO NOTHING;
 INSERT INTO contactos_emergencia (educando_id, nombre_completo, telefono, relacion, orden)
 SELECT DISTINCT ON (e.id)
     e.id,
-    COALESCE(ic.persona_emergencia, f.nombre || ' ' || f.apellidos),
-    COALESCE(ic.telefono_emergencia, f.telefono, ''),
+    COALESCE(ic.persona_emergencia, u.nombre || ' ' || u.apellidos),
+    COALESCE(ic.telefono_emergencia, u.telefono, ''),
     COALESCE(fe.relacion, 'tutor'),
     1
 FROM educandos e
 LEFT JOIN inscripciones_campamento ic ON e.id = ic.educando_id
 LEFT JOIN familiares_educandos fe ON e.id = fe.educando_id AND fe.es_contacto_principal = TRUE
-LEFT JOIN familiares f ON fe.familiar_id = f.id
-WHERE COALESCE(ic.persona_emergencia, f.nombre) IS NOT NULL
-ORDER BY e.id, ic.created_at DESC NULLS LAST
+LEFT JOIN usuarios u ON fe.familiar_id = u.id
+WHERE COALESCE(ic.persona_emergencia, u.nombre) IS NOT NULL
+ORDER BY e.id, ic.fecha_inscripcion DESC NULLS LAST
 ON CONFLICT (educando_id, orden) DO NOTHING;
 
 -- ============================================================================
