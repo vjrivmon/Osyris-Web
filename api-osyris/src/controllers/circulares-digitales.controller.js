@@ -340,7 +340,7 @@ exports.getCircularesFamiliar = async (req, res) => {
     const circulares = await query(`
       SELECT DISTINCT
         ca.id, ca.titulo, ca.texto_introductorio, ca.fecha_limite_firma, ca.estado as circular_estado,
-        a.titulo as actividad_titulo, a.fecha_inicio as actividad_fecha, a.lugar as actividad_lugar,
+        a.titulo as actividad_titulo, a.fecha_inicio as actividad_fecha, a.lugar as actividad_lugar, a.id as actividad_id,
         e.id as educando_id, e.nombre as educando_nombre, e.apellidos as educando_apellidos,
         s.nombre as seccion_nombre,
         cr.estado as respuesta_estado, cr.fecha_firma
@@ -351,7 +351,7 @@ exports.getCircularesFamiliar = async (req, res) => {
       JOIN secciones s ON e.seccion_id = s.id
       LEFT JOIN circular_respuesta cr ON cr.circular_actividad_id = ca.id
         AND cr.educando_id = e.id AND cr.estado NOT IN ('superseded','anulada')
-      WHERE ic.familiar_id = $1
+      WHERE (ic.familiar_id = $1 OR e.id IN (SELECT educando_id FROM familiares_educandos WHERE familiar_id = $1))
         AND ca.estado = 'publicada'
         AND ic.estado IN ('pendiente','inscrito')
       ORDER BY ca.fecha_limite_firma ASC NULLS LAST, a.fecha_inicio ASC
