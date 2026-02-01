@@ -11,9 +11,11 @@ import {
   UserPlus,
   ArrowRight,
   Clock,
+  Link as LinkIcon,
 } from "lucide-react"
 import { getAuthToken, makeAuthenticatedRequest, getCurrentUser } from "@/lib/auth-utils"
 import { BulkInviteModal } from "@/components/admin/bulk-invite-modal"
+import { VincularEducandoModal } from "@/components/admin/familiares/vincular-educando"
 
 interface DashboardStats {
   scouters: number
@@ -34,6 +36,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({ scouters: 0, familias: 0, educandos: 0 })
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [userName, setUserName] = useState("")
+  const [showVincularModal, setShowVincularModal] = useState(false)
 
   useEffect(() => {
     loadDashboardData()
@@ -171,16 +174,27 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      {/* Accion principal */}
-      <BulkInviteModal
-        onInvitesSent={handleRefresh}
-        trigger={
-          <Button size="lg" className="w-full h-14 text-base">
-            <UserPlus className="h-5 w-5 mr-2" />
-            Invitar Usuario
-          </Button>
-        }
-      />
+      {/* Acciones principales */}
+      <div className="grid grid-cols-2 gap-3">
+        <BulkInviteModal
+          onInvitesSent={handleRefresh}
+          trigger={
+            <Button size="lg" className="w-full h-14 text-base">
+              <UserPlus className="h-5 w-5 mr-2" />
+              Invitar Usuario
+            </Button>
+          }
+        />
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full h-14 text-base"
+          onClick={() => setShowVincularModal(true)}
+        >
+          <LinkIcon className="h-5 w-5 mr-2" />
+          Enlazar Educando
+        </Button>
+      </div>
 
       {/* Actividad reciente - Progressive Disclosure */}
       <div>
@@ -231,6 +245,15 @@ export default function AdminDashboard() {
           </p>
         )}
       </div>
+
+      {/* Modal de Vinculación */}
+      <VincularEducandoModal
+        open={showVincularModal}
+        onOpenChange={setShowVincularModal}
+        onSuccess={() => {
+          handleRefresh()
+        }}
+      />
 
     </div>
   )

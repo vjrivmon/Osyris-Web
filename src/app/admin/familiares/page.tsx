@@ -13,13 +13,16 @@ import {
   Search,
   GraduationCap,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Link
 } from 'lucide-react'
 import { useAdminFamiliares } from '@/hooks/useAdminFamiliares'
 import { InvitarFamiliasSimple } from '@/components/admin/invitar-familias-simple'
+import { VincularEducandoModal } from '@/components/admin/familiares/vincular-educando'
 
 export default function AdminFamiliaresPage() {
   const [showInvitarModal, setShowInvitarModal] = useState(false)
+  const [showVincularModal, setShowVincularModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
   const {
@@ -74,10 +77,16 @@ export default function AdminFamiliaresPage() {
             {pagination.total || 0} familias registradas
           </p>
         </div>
-        <Button onClick={() => setShowInvitarModal(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Invitar Familia
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={() => setShowInvitarModal(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Invitar Familia
+          </Button>
+          <Button onClick={() => setShowVincularModal(true)} variant="outline">
+            <Link className="h-4 w-4 mr-2" />
+            Enlazar Educando
+          </Button>
+        </div>
       </div>
 
       {/* Búsqueda */}
@@ -225,10 +234,19 @@ export default function AdminFamiliaresPage() {
         </CardContent>
       </Card>
 
-      {/* Modal */}
+      {/* Modal de Invitación */}
       <InvitarFamiliasSimple
         open={showInvitarModal}
         onOpenChange={setShowInvitarModal}
+        onSuccess={() => {
+          handleRefresh()
+        }}
+      />
+
+      {/* Modal de Vinculación */}
+      <VincularEducandoModal
+        open={showVincularModal}
+        onOpenChange={setShowVincularModal}
         onSuccess={() => {
           handleRefresh()
         }}
