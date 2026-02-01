@@ -33,6 +33,9 @@ export interface ActividadCalendario {
     lat: number
     lng: number
   }
+  // Horarios explícitos de la actividad (HH:MM)
+  hora_inicio?: string | null
+  hora_fin?: string | null
   // Detalles adicionales para campamentos
   campamento?: CampamentoDetalles
 }
@@ -214,7 +217,9 @@ export function useCalendarioFamilia({
                 materialNecesario: [],
                 confirmaciones: {},
                 // Mantener el tipo original del backend para diferenciacion visual correcta
-                tipo: act.tipo || 'actividad'
+                tipo: act.tipo || 'actividad',
+                hora_inicio: act.hora_inicio || null,
+                hora_fin: act.hora_fin || null
               }
 
               // Agregar datos de campamento si es de tipo campamento

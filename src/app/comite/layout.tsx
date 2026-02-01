@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Bell, CheckCircle, XCircle, FileText, Trash2, CheckCheck } from "lucide-react";
 import { RoleSwitcher } from "@/components/shared/role-switcher";
+import { MobileNavComite } from "@/components/comite/mobile-nav-comite";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -216,8 +217,11 @@ export default function ComiteLayout({
             <h1 className="text-lg font-semibold">Panel Comité</h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            <RoleSwitcher />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* RoleSwitcher - solo desktop (en movil esta en el menu hamburguesa) */}
+            <div className="hidden md:block">
+              <RoleSwitcher />
+            </div>
 
             {/* Notificaciones */}
             <Popover open={notificacionesOpen} onOpenChange={setNotificacionesOpen}>
@@ -231,7 +235,7 @@ export default function ComiteLayout({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-0" align="end">
+              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-0" align="center" sideOffset={8}>
                 <div className="p-3 border-b flex items-center justify-between">
                   <h4 className="font-semibold">Notificaciones</h4>
                   <div className="flex items-center gap-2">
@@ -337,15 +341,8 @@ export default function ComiteLayout({
               <span>Cerrar sesión</span>
             </button>
 
-            {/* Logout button - Mobile */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setShowLogoutDialog(true)}
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
+            {/* Menu hamburguesa - derecha (solo movil) */}
+            <MobileNavComite />
 
             <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
               <AlertDialogContent>

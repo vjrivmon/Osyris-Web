@@ -393,7 +393,7 @@ export function EventoDetailModal({ actividad, isOpen, onClose, hijoSeleccionado
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -452,13 +452,16 @@ export function EventoDetailModal({ actividad, isOpen, onClose, hijoSeleccionado
                   <div>
                     <p className="font-medium">Horario</p>
                     <p className="text-sm text-gray-600">
-                      {actividad.fechaInicio.toLocaleTimeString('es-ES', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })} - {actividad.fechaFin.toLocaleTimeString('es-ES', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      {actividad.hora_inicio
+                        ? `${actividad.hora_inicio.substring(0, 5)}${actividad.hora_fin ? ` - ${actividad.hora_fin.substring(0, 5)}` : ''}`
+                        : `${actividad.fechaInicio.toLocaleTimeString('es-ES', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })} - ${actividad.fechaFin.toLocaleTimeString('es-ES', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}`
+                      }
                     </p>
                   </div>
                 </div>

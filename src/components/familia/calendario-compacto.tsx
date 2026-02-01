@@ -14,14 +14,13 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  ArrowRight,
   Loader2,
   Tent
 } from "lucide-react"
 import { ActividadCalendario, ActividadCampamento, ScoutHijo } from "@/types/familia"
 import { cn } from "@/lib/utils"
-import Link from "next/link"
 import { getApiUrl } from "@/lib/api-utils"
+import { getTipoEventoConfig } from "./calendario/tipos-evento"
 import { useFamiliaData } from "@/hooks/useFamiliaData"
 import { useAuth } from "@/contexts/AuthContext"
 import { InscripcionCampamentoWizard } from "./calendario/inscripcion-campamento-wizard"
@@ -346,19 +345,6 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
     return proximas[0] || null
   }, [actividades])
 
-  // Actividades del día seleccionado
-  const actividadesDia = useMemo(() => {
-    if (!diaSeleccionado) return []
-    return actividades.filter(actividad => {
-      const fechaActividad = new Date(actividad.fecha)
-      return (
-        fechaActividad.getDate() === diaSeleccionado.getDate() &&
-        fechaActividad.getMonth() === diaSeleccionado.getMonth() &&
-        fechaActividad.getFullYear() === diaSeleccionado.getFullYear()
-      )
-    })
-  }, [actividades, diaSeleccionado])
-
   // Generar días del calendario (Lunes a Domingo)
   const diasCalendario = useMemo(() => {
     const primerDia = new Date(mesActual.getFullYear(), mesActual.getMonth(), 1)
@@ -382,26 +368,70 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
     return dias
   }, [mesActual])
 
-  // Verificar si un día tiene actividades (incluyendo rangos de campamentos)
-  const tieneActividades = (dia: Date) => {
-    return actividades.some(actividad => {
+  // Obtener actividades de un día (incluyendo rangos de campamentos)
+  const getActividadesDelDia = useCallback((dia: Date) => {
+    return actividades.filter(actividad => {
       const fechaInicio = new Date(actividad.fecha)
       const fechaFin = actividad.fechaFin ? new Date(actividad.fechaFin) : fechaInicio
-
-      // Normalizar fechas a medianoche para comparación
-      const diaComparar = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate())
-      const inicioComparar = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), fechaInicio.getDate())
-      const finComparar = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), fechaFin.getDate())
-
-      // Para campamentos, verificar si el día está dentro del rango
+      const d = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate())
+      const i = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), fechaInicio.getDate())
+      const f = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), fechaFin.getDate())
       if (actividad.tipo === 'campamento' || actividad.tipoOriginal === 'campamento') {
-        return diaComparar >= inicioComparar && diaComparar <= finComparar
+        return d >= i && d <= f
       }
-
-      // Para otros eventos, verificar solo el día de inicio
-      return diaComparar.getTime() === inicioComparar.getTime()
+      return d.getTime() === i.getTime()
     })
-  }
+  }, [actividades])
+
+  // Obtener posición de un día dentro de un campamento multi-día
+  // Retorna null si no hay campamento, o la posición con ajuste por fila del grid
+  const getCampamentoPosition = useCallback((dia: Date, indexEnGrid: number): null | 'solo' | 'inicio' | 'medio' | 'fin' => {
+    const d = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate())
+    for (const actividad of actividades) {
+      if (actividad.tipo !== 'campamento' && actividad.tipoOriginal !== 'campamento') continue
+      const fechaInicio = new Date(actividad.fecha)
+      const fechaFin = actividad.fechaFin ? new Date(actividad.fechaFin) : fechaInicio
+      const i = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), fechaInicio.getDate())
+      const f = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), fechaFin.getDate())
+      if (d < i || d > f) continue
+      // Es un día de campamento
+      if (i.getTime() === f.getTime()) return 'solo'
+      const esInicio = d.getTime() === i.getTime()
+      const esFin = d.getTime() === f.getTime()
+      // Ajuste por fila: lunes (col 0) siempre es inicio visual, domingo (col 6) siempre es fin visual
+      const colEnGrid = indexEnGrid % 7
+      const esInicioFila = colEnGrid === 0
+      const esFinFila = colEnGrid === 6
+      if (esInicio && esFin) return 'solo'
+      if ((esInicio || esInicioFila) && (esFin || esFinFila)) return 'solo'
+      if (esInicio || esInicioFila) return 'inicio'
+      if (esFin || esFinFila) return 'fin'
+      return 'medio'
+    }
+    return null
+  }, [actividades])
+
+  // Obtener tipos de evento activos en el mes (para la leyenda)
+  const tiposActivosMes = useMemo(() => {
+    const tiposSet = new Set<string>()
+    actividades.forEach(act => {
+      const fechaInicio = new Date(act.fecha)
+      const fechaFin = act.fechaFin ? new Date(act.fechaFin) : fechaInicio
+      // Verificar si la actividad cae en el mes actual
+      const mesInicio = new Date(mesActual.getFullYear(), mesActual.getMonth(), 1)
+      const mesFin = new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 0)
+      if (fechaInicio <= mesFin && fechaFin >= mesInicio) {
+        tiposSet.add(act.tipoOriginal || act.tipo)
+      }
+    })
+    return Array.from(tiposSet)
+  }, [actividades, mesActual])
+
+  // Actividades del día seleccionado (incluyendo campamentos multi-día)
+  const actividadesDia = useMemo(() => {
+    if (!diaSeleccionado) return []
+    return getActividadesDelDia(diaSeleccionado)
+  }, [diaSeleccionado, getActividadesDelDia])
 
   const mesAnterior = () => {
     setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() - 1, 1))
@@ -545,19 +575,18 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
     return (
       <div
         key={actividad.id}
-        className="p-3 rounded-lg border hover:shadow-sm transition-shadow relative"
+        className="p-3 rounded-lg border hover:shadow-sm transition-shadow"
       >
-        {/* Badge de confirmación en esquina superior derecha */}
-        {actividad.confirmacion && (
-          <div className="absolute top-2 right-2">
-            {getConfirmacionBadge(actividad.confirmacion)}
-          </div>
-        )}
-
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1 min-w-0 pr-20">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex-1 min-w-0">
             <h5 className="font-medium text-sm truncate">{actividad.titulo}</h5>
           </div>
+          {/* Badge de confirmación */}
+          {actividad.confirmacion && (
+            <div className="flex-shrink-0">
+              {getConfirmacionBadge(actividad.confirmacion)}
+            </div>
+          )}
         </div>
 
         <div className="space-y-1 text-xs text-muted-foreground">
@@ -773,8 +802,8 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
     <>
       <Card className={className}>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
               <CardTitle className="flex items-center space-x-2">
                 <CalendarIcon className="h-5 w-5" />
                 <span>Calendario</span>
@@ -784,15 +813,16 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
               </CardDescription>
             </div>
 
-            {/* Navegación de meses */}
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="icon" onClick={mesAnterior}>
+            {/* Navegación de meses - siempre inline */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={mesAnterior}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm font-medium min-w-[120px] text-center">
-                {mesActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+              <span className="text-xs sm:text-sm font-medium min-w-[70px] sm:min-w-[120px] text-center">
+                <span className="sm:hidden">{mesActual.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}</span>
+                <span className="hidden sm:inline">{mesActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
               </span>
-              <Button variant="outline" size="icon" onClick={mesSiguiente}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={mesSiguiente}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -802,6 +832,21 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
         <CardContent>
           {/* Mini calendario */}
           <div className="mb-4">
+            {/* Leyenda de tipos de evento */}
+            {tiposActivosMes.length > 0 && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-3">
+                {tiposActivosMes.map(tipo => {
+                  const config = getTipoEventoConfig(tipo)
+                  return (
+                    <div key={tipo} className="flex items-center gap-1.5">
+                      <div className={cn("w-2 h-2 rounded-full", config.dotColor)} />
+                      <span className="text-xs text-muted-foreground">{config.label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
             {/* Días de la semana (Lunes a Domingo) */}
             <div className="grid grid-cols-7 gap-1 mb-2">
               {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(dia => (
@@ -812,7 +857,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
             </div>
 
             {/* Días del mes */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-y-1 gap-x-0">
               {diasCalendario.map((dia, index) => {
                 if (!dia) {
                   return <div key={index} className="aspect-square" />
@@ -823,32 +868,71 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
                   dia.getMonth() === hoy.getMonth() &&
                   dia.getFullYear() === hoy.getFullYear()
 
-                const tieneEvento = tieneActividades(dia)
+                const eventosDelDia = getActividadesDelDia(dia)
+                const campPos = getCampamentoPosition(dia, index)
                 const esSeleccionado = diaSeleccionado &&
                   dia.getDate() === diaSeleccionado.getDate() &&
                   dia.getMonth() === diaSeleccionado.getMonth()
+
+                // Tipos únicos para los puntos (excluir campamento si tiene fondo)
+                const tiposUnicos = [...new Set(
+                  eventosDelDia
+                    .filter(e => {
+                      if (!campPos) return true // No hay campamento, mostrar todos
+                      return e.tipo !== 'campamento' && e.tipoOriginal !== 'campamento'
+                    })
+                    .map(e => e.tipoOriginal || e.tipo)
+                )].slice(0, 3)
+
+                // Clases de fondo y borde para campamento multi-día
+                const campBgClass = campPos && !esHoy ? cn(
+                  "bg-green-100 dark:bg-green-900/30 border border-green-600/40 dark:border-green-500/40",
+                  campPos === 'inicio' && "rounded-l-md rounded-r-none border-r-0",
+                  campPos === 'fin' && "rounded-r-md rounded-l-none border-l-0",
+                  campPos === 'medio' && "rounded-none border-l-0 border-r-0",
+                  campPos === 'solo' && "rounded-md"
+                ) : null
 
                 return (
                   <button
                     key={index}
                     onClick={() => setDiaSeleccionado(dia)}
                     className={cn(
-                      "aspect-square rounded-md text-sm flex flex-col items-center justify-center relative transition-all duration-200",
-                      "hover:bg-primary/30 hover:border hover:border-primary/50 hover:shadow-sm hover:scale-105",
-                      esHoy && "bg-primary text-primary-foreground font-bold",
-                      esSeleccionado && !esHoy && "ring-2 ring-primary bg-primary/10",
-                      !esHoy && !esSeleccionado && "text-foreground"
+                      "aspect-square text-sm flex flex-col items-center justify-center relative transition-all duration-200",
+                      "hover:bg-primary/30 hover:shadow-sm hover:scale-105",
+                      // Campamento background (sin rounded propio, lo pone campBgClass)
+                      campBgClass,
+                      // Si no hay campamento, redondear normal
+                      !campPos && "rounded-md",
+                      esHoy && "bg-primary text-primary-foreground font-bold rounded-md z-10",
+                      esSeleccionado && !esHoy && "ring-2 ring-primary bg-primary/10 rounded-md z-10",
+                      !esHoy && !esSeleccionado && !campPos && "text-foreground"
                     )}
                   >
                     <span className={cn(
                       "font-medium",
                       esHoy ? "text-primary-foreground" : "text-foreground"
                     )}>{dia.getDate()}</span>
-                    {tieneEvento && (
-                      <div className={cn(
-                        "w-1.5 h-1.5 rounded-full mt-0.5",
-                        esHoy ? "bg-primary-foreground" : "bg-primary"
-                      )} />
+                    {/* Puntos coloreados por tipo de evento */}
+                    {tiposUnicos.length > 0 && (
+                      <div className="flex gap-0.5 mt-0.5">
+                        {tiposUnicos.map(tipo => {
+                          const config = getTipoEventoConfig(tipo)
+                          return (
+                            <div
+                              key={tipo}
+                              className={cn(
+                                "w-1.5 h-1.5 rounded-full",
+                                esHoy ? "bg-primary-foreground" : config.dotColor
+                              )}
+                            />
+                          )
+                        })}
+                      </div>
+                    )}
+                    {/* Si es campamento sin otros eventos, no mostrar punto (el fondo basta) */}
+                    {campPos && tiposUnicos.length === 0 && !esHoy && (
+                      <div className="w-1.5 h-1.5 mt-0.5" /> // Spacer para mantener altura consistente
                     )}
                   </button>
                 )
@@ -872,31 +956,12 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
             </div>
           )}
 
-          {/* Próxima actividad (solo 1) */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-sm">Próxima Actividad</h4>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/familia/calendario">
-                  Ver todas
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </Link>
-              </Button>
+          {/* Próxima actividad */}
+          {!loading && proximaActividad && (
+            <div className="space-y-2">
+              {renderActividadCard(proximaActividad)}
             </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : !proximaActividad ? (
-              <div className="text-center py-6 text-muted-foreground">
-                <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No hay actividades programadas</p>
-              </div>
-            ) : (
-              renderActividadCard(proximaActividad)
-            )}
-          </div>
+          )}
         </CardContent>
       </Card>
 

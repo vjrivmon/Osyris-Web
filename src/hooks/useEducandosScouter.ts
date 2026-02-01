@@ -79,7 +79,7 @@ const defaultFilters: EducandoFilters = {
 }
 
 export function useEducandosScouter(): UseEducandosScouterReturn {
-  const { user, token } = useAuth()
+  const { user, token, authReady } = useAuth()
 
   const [educandos, setEducandos] = useState<EducandoConDocs[]>([])
   const [loading, setLoading] = useState(false)
@@ -520,8 +520,12 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
   }, [fetchEducandos])
 
   // Efecto para carga inicial (solo una vez cuando tenemos token y sección)
+  // IMPORTANTE: Esperamos a que authReady sea true para evitar race conditions post-login
   useEffect(() => {
-    if (!token || initialLoadDone.current) return
+    // No cargar hasta que la autenticación esté completamente sincronizada
+    if (!authReady || !token || initialLoadDone.current) return
+
+    console.log('✅ [useEducandosScouter] authReady: true, iniciando carga de educandos...')
 
     const seccionId = user?.seccion_id || resolvedSeccionId
     if (seccionId) {
@@ -531,7 +535,7 @@ export function useEducandosScouter(): UseEducandosScouterReturn {
       // Intentar resolver sección si no la tenemos
       fetchEducandos()
     }
-  }, [token, user?.seccion_id, resolvedSeccionId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [authReady, token, user?.seccion_id, resolvedSeccionId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Efecto separado para cuando cambian los filtros (después de carga inicial)
   useEffect(() => {

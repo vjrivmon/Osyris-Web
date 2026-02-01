@@ -89,7 +89,7 @@ export default function AulaVirtualDashboard() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Panel de Control</h1>
             {seccionNombre && (
-              <Badge className="bg-primary/10 text-primary border-primary/20">
+              <Badge className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700">
                 {seccionNombre}
               </Badge>
             )}

@@ -280,7 +280,7 @@ export function DocumentosListaCompacta({
         {documentosFaltantes > 0 && (
           <Alert variant="default" className="mb-6 border-red-200 bg-red-50/50 dark:border-red-500/50 dark:bg-red-900/30">
             <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            <AlertDescription className="text-sm text-red-700 dark:text-red-400">
+            <AlertDescription className="text-sm text-red-700 dark:text-red-400 break-words">
               {documentosFaltantes} documento{documentosFaltantes > 1 ? 's obligatorios' : ' obligatorio'} pendiente{documentosFaltantes > 1 ? 's' : ''} de subir
             </AlertDescription>
           </Alert>
@@ -340,70 +340,108 @@ export function DocumentosListaCompacta({
                 return (
                   <div
                     key={tipo}
-                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${estilos.border}`}
+                    className={`p-3 rounded-lg border transition-colors ${estilos.border}`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${estilos.iconBg}`}>
+                    {/* Fila 1: icono + nombre + botones a la derecha */}
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg flex-shrink-0 ${estilos.iconBg}`}>
                         {estilos.icon}
                       </div>
-                      <div>
-                        <p className="font-medium text-sm text-gray-700 dark:text-gray-300">{doc.nombre}{esObligatorio && '*'}</p>
-                        <p className={`text-xs font-medium flex items-center gap-1 ${estilos.text}`}>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm text-gray-700 dark:text-gray-300 truncate">
+                          {doc.nombre}{esObligatorio && '*'}
+                        </p>
+                        {/* Estado - debajo del nombre en mobile, al lado en desktop */}
+                        <p className={`text-xs font-medium flex items-center gap-1 mt-0.5 ${estilos.text}`}>
                           {estaSubido && <CheckCircle className="h-3 w-3" />}
                           {enRevision && <Clock className="h-3 w-3" />}
                           {!tienDocumento && <AlertTriangle className="h-3 w-3" />}
                           {estilos.label}
                         </p>
                         {enRevision && (
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             El kraal de sección está revisando el documento
                           </p>
                         )}
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      {/* Botón ver documento si está subido o en revisión */}
-                      {tienDocumento && doc.archivo?.webViewLink && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedDoc({ name: doc.archivo?.name || doc.nombre, webViewLink: doc.archivo?.webViewLink })
-                            setModalOpen(true)
-                          }}
-                          className={estaSubido ? "border-green-600 text-green-600 hover:bg-green-50 hover:border-green-700 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-900/30" : "border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/30"}
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          Ver
-                        </Button>
-                      )}
-
-                      {/* Botón RESUBIR documento - para documentos ya subidos/aprobados */}
-                      {estaSubido && onResubirDocumento && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
-                          onClick={() => onResubirDocumento(tipo as TipoDocumento, doc.archivo?.id ? parseInt(doc.archivo.id) : undefined)}
-                        >
-                          <Upload className="h-3 w-3 mr-1" />
-                          Subir
-                        </Button>
-                      )}
-
-                      {/* Botón subir - solo si no tiene documento */}
-                      {!tienDocumento && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onUploadDocumento?.(tipo as TipoDocumento)}
-                          className="border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
-                        >
-                          <Upload className="h-3 w-3 mr-1" />
-                          Subir
-                        </Button>
-                      )}
+                      {/* Botones: icon-only en mobile, con texto en desktop */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {tienDocumento && doc.archivo?.webViewLink && (
+                          <>
+                            {/* Mobile: icon-only */}
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              title="Ver documento"
+                              onClick={() => {
+                                setSelectedDoc({ name: doc.archivo?.name || doc.nombre, webViewLink: doc.archivo?.webViewLink })
+                                setModalOpen(true)
+                              }}
+                              className={`h-8 w-8 lg:hidden ${estaSubido ? "border-green-600 text-green-600 hover:bg-green-50 hover:border-green-700 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-900/30" : "border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/30"}`}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                            {/* Desktop: con texto */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedDoc({ name: doc.archivo?.name || doc.nombre, webViewLink: doc.archivo?.webViewLink })
+                                setModalOpen(true)
+                              }}
+                              className={`hidden lg:flex ${estaSubido ? "border-green-600 text-green-600 hover:bg-green-50 hover:border-green-700 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-900/30" : "border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/30"}`}
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              Ver
+                            </Button>
+                          </>
+                        )}
+                        {estaSubido && onResubirDocumento && (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              title="Subir nueva versión"
+                              className="h-8 w-8 lg:hidden border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                              onClick={() => onResubirDocumento(tipo as TipoDocumento, doc.archivo?.id ? parseInt(doc.archivo.id) : undefined)}
+                            >
+                              <Upload className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="hidden lg:flex border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                              onClick={() => onResubirDocumento(tipo as TipoDocumento, doc.archivo?.id ? parseInt(doc.archivo.id) : undefined)}
+                            >
+                              <Upload className="h-3 w-3 mr-1" />
+                              Subir
+                            </Button>
+                          </>
+                        )}
+                        {!tienDocumento && (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              title="Subir documento"
+                              onClick={() => onUploadDocumento?.(tipo as TipoDocumento)}
+                              className="h-8 w-8 lg:hidden border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                            >
+                              <Upload className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => onUploadDocumento?.(tipo as TipoDocumento)}
+                              className="hidden lg:flex border-indigo-700 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-800 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
+                            >
+                              <Upload className="h-3 w-3 mr-1" />
+                              Subir
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )

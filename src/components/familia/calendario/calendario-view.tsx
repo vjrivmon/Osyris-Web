@@ -265,18 +265,18 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold">Calendario de Actividades</h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             {vistaMode === 'mes'
-              ? `Mes: ${nombresMeses[fechaActual.getMonth()]} ${fechaActual.getFullYear()}`
+              ? `${nombresMeses[fechaActual.getMonth()]} ${fechaActual.getFullYear()}`
               : 'Próximas actividades'
             }
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between w-full sm:w-auto sm:justify-end gap-1.5 sm:gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -284,13 +284,13 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
           >
             {vistaMode === 'mes' ? (
               <>
-                <List className="h-4 w-4 mr-2" />
-                Vista Lista
+                <List className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Vista Lista</span>
               </>
             ) : (
               <>
-                <Grid3X3 className="h-4 w-4 mr-2" />
-                Vista Mes
+                <Grid3X3 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Vista Mes</span>
               </>
             )}
           </Button>
@@ -310,7 +310,8 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                 size="sm"
                 onClick={irMesActual}
               >
-                Mes Actual
+                <CalendarIcon className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Hoy</span>
               </Button>
 
               <Button
@@ -334,18 +335,18 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
       {/* Vista Mes */}
       {vistaMode === 'mes' && (
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             {/* Días de la semana */}
-            <div className="grid grid-cols-7 gap-2 mb-4">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 sm:mb-4">
               {nombresDias.map(dia => (
-                <div key={dia} className="text-center text-sm font-medium text-muted-foreground">
+                <div key={dia} className="text-center text-xs sm:text-sm font-medium text-muted-foreground">
                   {dia}
                 </div>
               ))}
             </div>
 
             {/* Días del mes */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {generarDiasMes.map((dia, index) => {
                 const esHoy = dia === new Date().getDate() &&
                              fechaActual.getMonth() === new Date().getMonth() &&
@@ -357,26 +358,48 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                   <div
                     key={index}
                     className={`
-                      min-h-[80px] p-2 border rounded-lg transition-all duration-200
-                      ${dia ? 'hover:bg-primary/10 hover:border-primary/40 hover:shadow-md hover:scale-105 cursor-pointer' : ''}
+                      min-h-[52px] sm:min-h-[80px] p-1 sm:p-2 border rounded-lg transition-all duration-200
+                      ${dia ? 'hover:bg-primary/10 hover:border-primary/40 hover:shadow-md cursor-pointer' : ''}
                       ${esHoy ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-700' : 'border-border'}
                     `}
                     onClick={() => {
-                      if (dia && actividadesDia.length > 0) {
-                        // En un futuro podríamos mostrar un resumen del día
+                      if (dia && actividadesDia.length === 1) {
+                        handleActividadClick(actividadesDia[0])
                       }
                     }}
                   >
                     {dia && (
                       <>
                         <div className={`
-                          text-sm font-medium mb-1
+                          text-xs sm:text-sm font-medium mb-0.5 sm:mb-1
                           ${esHoy ? 'text-blue-600 dark:text-blue-400' : 'text-foreground'}
                         `}>
                           {dia}
                         </div>
 
-                        <div className="space-y-1">
+                        {/* Mobile: dots de color */}
+                        <div className="flex flex-wrap gap-0.5 sm:hidden">
+                          {actividadesDia.slice(0, 4).map(actividad => {
+                            const tipoConfig = getTipoEventoConfig(actividad.tipo || 'reunion_sabado')
+                            return (
+                              <div
+                                key={actividad.id}
+                                className="h-1.5 w-1.5 rounded-full"
+                                style={{ backgroundColor: tipoConfig.hexColor }}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleActividadClick(actividad)
+                                }}
+                              />
+                            )
+                          })}
+                          {actividadesDia.length > 4 && (
+                            <span className="text-[8px] text-muted-foreground leading-none">+{actividadesDia.length - 4}</span>
+                          )}
+                        </div>
+
+                        {/* Desktop: cards de actividad con texto */}
+                        <div className="hidden sm:block space-y-1">
                           {actividadesDia.slice(0, 2).map(actividad => {
                             const tipoConfig = getTipoEventoConfig(actividad.tipo || 'reunion_sabado')
                             const TipoIcon = tipoConfig.icon
@@ -451,31 +474,45 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                 className="hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => handleActividadClick(actividad)}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <h3 className="text-lg font-semibold">{actividad.titulo}</h3>
-                        <Badge
-                          variant="outline"
-                          style={{
-                            borderColor: coloresSeccion[actividad.seccion as keyof typeof coloresSeccion],
-                            color: coloresSeccion[actividad.seccion as keyof typeof coloresSeccion]
-                          }}
-                        >
-                          {actividad.seccion}
-                        </Badge>
-                        <TipoEventoBadge tipo={actividad.tipo || 'reunion_sabado'} size="sm" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-start gap-2 mb-3">
+                        <h3 className="text-base sm:text-lg font-semibold">{actividad.titulo}</h3>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <ConfirmationBadge
+                            estado={
+                              actividad.scoutIds.length > 0 ?
+                                actividad.scoutIds.some(scoutId =>
+                                  actividad.confirmaciones[scoutId] === 'confirmado'
+                                ) ? 'confirmado' :
+                                actividad.scoutIds.some(scoutId =>
+                                  actividad.confirmaciones[scoutId] === 'no_asiste'
+                                ) ? 'no_asiste' : 'pendiente'
+                              : 'pendiente'
+                            }
+                          />
+                          <Badge
+                            variant="outline"
+                            style={{
+                              borderColor: coloresSeccion[actividad.seccion as keyof typeof coloresSeccion],
+                              color: coloresSeccion[actividad.seccion as keyof typeof coloresSeccion]
+                            }}
+                          >
+                            {actividad.seccion}
+                          </Badge>
+                          <TipoEventoBadge tipo={actividad.tipo || 'reunion_sabado'} size="sm" />
+                        </div>
                       </div>
 
-                      <p className="text-muted-foreground mb-4 line-clamp-2">
+                      <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">
                         {actividad.descripcion}
                       </p>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-sm">
                         <div className="flex items-center space-x-2">
-                          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                          <span>
+                          <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="truncate">
                             {actividad.fechaInicio.toLocaleDateString('es-ES', {
                               day: 'numeric',
                               month: 'short',
@@ -485,7 +522,7 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span>
                             {actividad.fechaInicio.toLocaleTimeString('es-ES', {
                               hour: '2-digit',
@@ -495,12 +532,12 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span className="truncate">{actividad.lugar}</span>
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span>{actividad.scoutIds.length} {actividad.scoutIds.length === 1 ? 'hijo' : 'hijos'}</span>
                         </div>
                       </div>
@@ -508,29 +545,14 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
                       {actividad.precio && (
                         <div className="mt-3 flex items-center space-x-2">
                           <span className="text-sm font-medium">Precio:</span>
-                          <span className="text-sm">€{actividad.precio}</span>
+                          <span className="text-sm">{actividad.precio}€</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="ml-4 flex flex-col items-end space-y-2">
-                      <ConfirmationBadge
-                        estado={
-                          actividad.scoutIds.length > 0 ?
-                            actividad.scoutIds.some(scoutId =>
-                              actividad.confirmaciones[scoutId] === 'confirmado'
-                            ) ? 'confirmado' :
-                            actividad.scoutIds.some(scoutId =>
-                              actividad.confirmaciones[scoutId] === 'no_asiste'
-                            ) ? 'no_asiste' : 'pendiente'
-                          : 'pendiente'
-                        }
-                      />
-
-                      <Button size="sm" variant="outline">
-                        Ver Detalles
-                      </Button>
-                    </div>
+                    <Button size="sm" variant="outline" className="w-full sm:w-auto shrink-0">
+                      Ver Detalles
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -568,40 +590,30 @@ function CalendarioViewSkeleton() {
   return (
     <div className="space-y-6">
       {/* Header Skeleton */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Skeleton className="h-8 w-64 mb-2" />
-          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-7 sm:h-8 w-48 sm:w-64 mb-2" />
+          <Skeleton className="h-4 w-36 sm:w-48" />
         </div>
         <div className="flex space-x-2">
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-16" />
-          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-9 sm:w-24" />
+          <Skeleton className="h-9 w-9" />
+          <Skeleton className="h-9 w-9 sm:w-16" />
+          <Skeleton className="h-9 w-9" />
         </div>
       </div>
 
-      {/* Filtros Skeleton */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex space-x-4">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-32" />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Calendario Skeleton */}
       <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-7 gap-2 mb-4">
-            {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(dia => (
-              <Skeleton key={dia} className="h-6 w-full" />
+        <CardContent className="p-3 sm:p-6">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 sm:mb-4">
+            {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(dia => (
+              <Skeleton key={dia} className="h-5 sm:h-6 w-full" />
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {Array.from({ length: 35 }, (_, i) => (
-              <Skeleton key={i} className="h-20 w-full" />
+              <Skeleton key={i} className="h-[52px] sm:h-20 w-full" />
             ))}
           </div>
         </CardContent>

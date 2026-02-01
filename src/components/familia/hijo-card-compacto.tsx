@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScoutHijo, ScoutUtils, DocumentoUtils } from "@/types/familia"
 import { cn } from "@/lib/utils"
-import { CheckCircle, AlertTriangle, Clock } from "lucide-react"
+import { CheckCircle, AlertTriangle, Clock, ChevronDown } from "lucide-react"
 
 interface HijoCardCompactoProps {
   hijo: ScoutHijo
@@ -82,14 +82,9 @@ export function HijoCardCompacto({
 
           {/* Información principal */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-1.5">
-              <h3 className="font-semibold text-sm truncate">
-                {hijo.nombre} {hijo.apellidos}
-              </h3>
-              {selected && (
-                <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-              )}
-            </div>
+            <h3 className="font-semibold text-sm truncate">
+              {hijo.nombre} {hijo.apellidos}
+            </h3>
 
             <div className="flex items-center space-x-1.5 text-xs text-muted-foreground mt-0.5">
               <span className="truncate">{hijo.seccion}</span>
@@ -98,13 +93,14 @@ export function HijoCardCompacto({
             </div>
           </div>
 
-          {/* Badge de estado de documentos - texto completo */}
+          {/* Badge de estado de documentos - responsive */}
           <div className="flex-shrink-0">
             {documentosCriticos > 0 ? (
               <Badge variant="outline" className="flex items-center space-x-1.5 border-red-200 bg-red-50/30 dark:border-red-500/50 dark:bg-red-500/20">
                 <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-400" />
                 <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-                  {documentosCriticos} {documentosCriticos === 1 ? 'documento pendiente' : 'documentos pendientes'}
+                  <span className="hidden sm:inline">{documentosCriticos} {documentosCriticos === 1 ? 'documento pendiente' : 'documentos pendientes'}</span>
+                  <span className="sm:hidden">{documentosCriticos} pend.</span>
                 </span>
               </Badge>
             ) : (
@@ -113,6 +109,12 @@ export function HijoCardCompacto({
               </Badge>
             )}
           </div>
+
+          {/* Chevron accordion indicator - solo mobile */}
+          <ChevronDown className={cn(
+            "h-4 w-4 text-muted-foreground transition-transform duration-200 flex-shrink-0 lg:hidden",
+            selected && "rotate-180"
+          )} />
         </div>
 
         {/* Barra de progreso minimalista - azul corporativo si hay documentos pendientes */}

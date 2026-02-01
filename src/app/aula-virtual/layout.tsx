@@ -132,10 +132,10 @@ export default function AulaVirtualLayout({
                 {/* Notificaciones */}
                 <Popover open={notificacionesOpen} onOpenChange={setNotificacionesOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative">
+                    <Button variant="ghost" size="icon" className="relative overflow-visible">
                       <Bell className="h-6 w-6" />
                       {(contadorNoLeidas > 0 || documentosPendientes.length > 0) && (
-                        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
                           {contadorNoLeidas + documentosPendientes.length}
                         </span>
                       )}

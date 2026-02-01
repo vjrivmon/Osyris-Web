@@ -220,8 +220,11 @@ export default function FamiliaLayout({
             <h1 className="text-lg font-semibold">Portal Familias</h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            <RoleSwitcher />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* RoleSwitcher - solo desktop (en movil esta en el menu hamburguesa) */}
+            <div className="hidden md:block">
+              <RoleSwitcher />
+            </div>
 
             {/* Notificaciones */}
             <Popover open={notificacionesOpen} onOpenChange={setNotificacionesOpen}>
@@ -235,7 +238,7 @@ export default function FamiliaLayout({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-0" align="end">
+              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-0" align="center" sideOffset={8}>
                 <div className="p-3 border-b flex items-center justify-between">
                   <h4 className="font-semibold">Notificaciones</h4>
                   <div className="flex items-center gap-2">
@@ -371,7 +374,7 @@ export default function FamiliaLayout({
         </div>
       </header>
 
-      <main className="container max-w-7xl mx-auto py-6 px-4">
+      <main className="container max-w-7xl mx-auto py-4 px-3 sm:py-6 sm:px-4">
         {children}
       </main>
     </div>

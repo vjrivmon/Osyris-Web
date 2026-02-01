@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, Home, ImageIcon, User, LogOut, ArrowLeftRight } from 'lucide-react'
+import { Menu, Home, Users, Calendar, FileText, LogOut, ArrowLeftRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -27,12 +27,14 @@ import { RoleSwitcher } from '@/components/shared/role-switcher'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navItems = [
-  { href: '/familia/dashboard', label: 'Inicio', icon: Home, exact: true },
-  { href: '/familia/galeria', label: 'Galeria', icon: ImageIcon },
-  { href: '/familia/perfil', label: 'Mi Perfil', icon: User },
+  { href: '/comite/dashboard', label: 'Dashboard', icon: Home, exact: true },
+  { href: '/admin/educandos', label: 'Educandos', icon: Users },
+  { href: '/admin/familiares', label: 'Familias', icon: Users },
+  { href: '/familia/calendario', label: 'Calendario', icon: Calendar },
+  { href: '/admin', label: 'Admin', icon: FileText },
 ]
 
-export function MobileNavFamilia() {
+export function MobileNavComite() {
   const [open, setOpen] = useState(false)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const pathname = usePathname()
@@ -43,6 +45,7 @@ export function MobileNavFamilia() {
     localStorage.removeItem('osyris_user')
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    localStorage.removeItem('activeRole')
     router.push('/')
   }
 
@@ -64,7 +67,7 @@ export function MobileNavFamilia() {
             height={32}
             className="h-8 w-8 rounded-full border-2 border-primary"
           />
-          <span className="text-lg font-semibold">Portal Familias</span>
+          <span className="text-lg font-semibold">Panel Comité</span>
         </SheetTitle>
         <nav className="flex flex-col gap-2">
           {navItems.map(item => {

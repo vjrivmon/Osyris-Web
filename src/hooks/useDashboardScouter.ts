@@ -19,6 +19,7 @@ export interface Actividad {
   seccion_nombre?: string
   circular_drive_id?: string
   circular_drive_url?: string
+  enlace_token?: string
 }
 
 export interface EstadisticasSabado {

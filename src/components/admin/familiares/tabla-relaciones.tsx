@@ -223,26 +223,26 @@ export function TablaRelaciones({ onRefresh, refreshTrigger = 0 }: TablaRelacion
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
+      <CardHeader className="pb-3 sm:pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
               Relaciones Activas
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               {relacionesFiltradas.length} de {relaciones.length} vinculaciones
             </CardDescription>
           </div>
-          <Button onClick={exportarCSV} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar CSV
+          <Button onClick={exportarCSV} variant="outline" size="sm" className="w-full sm:w-auto min-h-[44px]">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="sm:inline">Exportar CSV</span>
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <CardContent className="p-4 sm:p-6">
+        {/* Filtros - Responsive */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -297,91 +297,175 @@ export function TablaRelaciones({ onRefresh, refreshTrigger = 0 }: TablaRelacion
             </p>
           </div>
         ) : (
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Familiar</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Educando</TableHead>
-                  <TableHead>Sección</TableHead>
-                  <TableHead>Relación</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {relacionesFiltradas.map((relacion) => (
-                  <TableRow key={relacion.id}>
-                    <TableCell className="font-medium">
-                      {relacion.familiarNombre} {relacion.familiarApellidos}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {relacion.familiarEmail}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {relacion.educandoNombre} {relacion.educandoApellidos}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{relacion.educandoSeccion}</Badge>
-                    </TableCell>
-                    <TableCell>
+          <>
+            {/* Desktop Table */}
+            <div className="hidden lg:block border rounded-lg overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Familiar</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Educando</TableHead>
+                    <TableHead>Sección</TableHead>
+                    <TableHead>Relación</TableHead>
+                    <TableHead>Contacto</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {relacionesFiltradas.map((relacion) => (
+                    <TableRow key={relacion.id}>
+                      <TableCell className="font-medium">
+                        {relacion.familiarNombre} {relacion.familiarApellidos}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {relacion.familiarEmail}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {relacion.educandoNombre} {relacion.educandoApellidos}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{relacion.educandoSeccion}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getRelacionColor(relacion.relacion)}>
+                          {getRelacionLabel(relacion.relacion)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {relacion.esContactoPrincipal && (
+                          <Badge variant="default" className="gap-1">
+                            <Shield className="h-3 w-3" />
+                            Principal
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {new Date(relacion.fechaCreacion).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-10 w-10">
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Desvincular educando?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                ¿Estás seguro de que deseas desvincular a{' '}
+                                <strong>{relacion.educandoNombre} {relacion.educandoApellidos}</strong> de{' '}
+                                <strong>{relacion.familiarNombre} {relacion.familiarApellidos}</strong>?
+                                <br /><br />
+                                Esta acción eliminará el acceso del familiar a la información del educando.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => desvincular(
+                                  relacion.familiarId,
+                                  relacion.educandoId,
+                                  `${relacion.familiarNombre} ${relacion.familiarApellidos}`,
+                                  `${relacion.educandoNombre} ${relacion.educandoApellidos}`
+                                )}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Desvincular
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile/Tablet Cards */}
+            <div className="lg:hidden divide-y border rounded-lg">
+              {relacionesFiltradas.map((relacion) => (
+                <div key={relacion.id} className="p-4 space-y-3">
+                  {/* Header con familiar y educando */}
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-medium text-sm sm:text-base">
+                          {relacion.familiarNombre} {relacion.familiarApellidos}
+                        </div>
+                        <div className="text-xs sm:text-sm text-muted-foreground">
+                          {relacion.familiarEmail}
+                        </div>
+                      </div>
                       <Badge className={getRelacionColor(relacion.relacion)}>
                         {getRelacionLabel(relacion.relacion)}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {relacion.esContactoPrincipal && (
-                        <Badge variant="default" className="gap-1">
-                          <Shield className="h-3 w-3" />
-                          Principal
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {new Date(relacion.fechaCreacion).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>¿Desvincular educando?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              ¿Estás seguro de que deseas desvincular a{' '}
-                              <strong>{relacion.educandoNombre} {relacion.educandoApellidos}</strong> de{' '}
-                              <strong>{relacion.familiarNombre} {relacion.familiarApellidos}</strong>?
-                              <br /><br />
-                              Esta acción eliminará el acceso del familiar a la información del educando.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => desvincular(
-                                relacion.familiarId,
-                                relacion.educandoId,
-                                `${relacion.familiarNombre} ${relacion.familiarApellidos}`,
-                                `${relacion.educandoNombre} ${relacion.educandoApellidos}`
-                              )}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Desvincular
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm bg-muted/50 p-2 rounded">
+                      <span className="text-muted-foreground">Educando:</span>
+                      <span className="font-medium">{relacion.educandoNombre} {relacion.educandoApellidos}</span>
+                      <Badge variant="outline" className="ml-auto">{relacion.educandoSeccion}</Badge>
+                    </div>
+                  </div>
+
+                  {/* Info adicional */}
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    {relacion.esContactoPrincipal && (
+                      <Badge variant="default" className="gap-1">
+                        <Shield className="h-3 w-3" />
+                        Principal
+                      </Badge>
+                    )}
+                    <span className="text-muted-foreground text-xs">
+                      Desde: {new Date(relacion.fechaCreacion).toLocaleDateString()}
+                    </span>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex justify-end pt-2 border-t">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="min-h-[44px] text-red-600 border-red-200 hover:bg-red-50">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Desvincular
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Desvincular educando?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            ¿Estás seguro de que deseas desvincular a{' '}
+                            <strong>{relacion.educandoNombre} {relacion.educandoApellidos}</strong> de{' '}
+                            <strong>{relacion.familiarNombre} {relacion.familiarApellidos}</strong>?
+                            <br /><br />
+                            Esta acción eliminará el acceso del familiar a la información del educando.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => desvincular(
+                              relacion.familiarId,
+                              relacion.educandoId,
+                              `${relacion.familiarNombre} ${relacion.familiarApellidos}`,
+                              `${relacion.educandoNombre} ${relacion.educandoApellidos}`
+                            )}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Desvincular
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

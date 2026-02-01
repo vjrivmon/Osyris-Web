@@ -15,8 +15,8 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useFamiliaData } from "@/hooks/useFamiliaData"
 import { useGoogleDrive } from "@/hooks/useGoogleDrive"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { QuickActionsGroup } from "@/components/familia/quick-action-icon"
-import { HijosListaCompacta } from "@/components/familia/hijo-card-compacto"
+import { QuickActionIcon, QuickActionsGroup } from "@/components/familia/quick-action-icon"
+import { HijoCardCompacto, HijosListaCompacta } from "@/components/familia/hijo-card-compacto"
 import { DocumentosListaCompacta } from "@/components/familia/documentos-lista-compacta"
 import { CalendarioCompacto } from "@/components/familia/calendario-compacto"
 import { DocumentoUploadModal } from "@/components/familia/documento-upload-modal"
@@ -47,14 +47,9 @@ export default function FamiliaDashboardPage() {
     loading: driveLoading
   } = useGoogleDrive()
   const [userData, setUserData] = useState<any>(null)
-  // Inicializar con valor de sessionStorage si existe
-  const [hijoSeleccionado, setHijoSeleccionado] = useState<number | undefined>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('hijoSeleccionado')
-      return saved ? parseInt(saved, 10) : undefined
-    }
-    return undefined
-  })
+  const [hijoSeleccionado, setHijoSeleccionado] = useState<number | undefined>(undefined)
+  // Estado separado para el acordeón mobile (null = todos colapsados)
+  const [mobileExpandido, setMobileExpandido] = useState<number | undefined>(undefined)
   const [documentosCache, setDocumentosCache] = useState<DocumentosCache>({})
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [uploadTipoDocumento, setUploadTipoDocumento] = useState<TipoDocumento | null>(null)
@@ -113,34 +108,19 @@ export default function FamiliaDashboardPage() {
     fetchPlantillas()
   }, [fetchPlantillas])
 
-  // Guardar hijo seleccionado en sessionStorage cuando cambie
-  useEffect(() => {
-    if (hijoSeleccionado !== undefined) {
-      sessionStorage.setItem('hijoSeleccionado', hijoSeleccionado.toString())
-    }
-  }, [hijoSeleccionado])
-
-  // Seleccionar hijo: validar el guardado en sessionStorage o usar el primero
+  // Auto-seleccionar primer hijo para desktop (documentos panel necesita uno seleccionado)
+  // En mobile el acordeón maneja el estado colapsado sin selección
   useEffect(() => {
     if (hijos && hijos.length > 0) {
-      // Si ya tenemos un hijo seleccionado, validar que existe en la lista
       if (hijoSeleccionado) {
         const exists = hijos.find(h => h.id === hijoSeleccionado)
-        if (exists) return // El hijo seleccionado existe, no hacer nada
-      }
-
-      // Si no hay hijo seleccionado o no existe en la lista, intentar cargar de sessionStorage
-      const savedId = sessionStorage.getItem('hijoSeleccionado')
-      if (savedId) {
-        const savedHijo = hijos.find(h => h.id === parseInt(savedId, 10))
-        if (savedHijo) {
-          setHijoSeleccionado(savedHijo.id)
-          return
+        if (!exists) {
+          setHijoSeleccionado(hijos[0].id)
         }
+      } else {
+        // Auto-seleccionar el primero (desktop lo necesita)
+        setHijoSeleccionado(hijos[0].id)
       }
-
-      // Fallback: seleccionar el primer hijo
-      setHijoSeleccionado(hijos[0].id)
     }
   }, [hijos])
 
@@ -276,16 +256,6 @@ export default function FamiliaDashboardPage() {
     })
   }, [hijos, documentosCache])
 
-  // Acciones rápidas - solo galería
-  const accionesRapidas = [
-    {
-      icon: Camera,
-      label: 'Galería',
-      href: '/familia/galeria',
-      color: 'text-purple-600'
-    }
-  ]
-
   // Manejadores
   const handleUploadDocumento = (tipo: TipoDocumento) => {
     setUploadTipoDocumento(tipo)
@@ -382,53 +352,108 @@ export default function FamiliaDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header con saludo e iconos de acción */}
-      <div className="flex items-start justify-between gap-6 flex-wrap">
+    <div className="space-y-5 md:space-y-8">
+      {/* Header con saludo */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
             Hola, {userData?.nombre || user?.nombre || 'Familia'} 👋
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground">
             Bienvenido al portal de familias
           </p>
         </div>
 
-        {/* Iconos de acción rápida */}
-        <QuickActionsGroup actions={accionesRapidas} />
+        {/* Botón galería - icon-only en mobile, con texto en desktop */}
+        <Button variant="outline" size="icon" asChild className="lg:hidden flex-shrink-0">
+          <Link href="/familia/galeria" aria-label="Galería">
+            <Camera className="h-5 w-5 text-purple-600" />
+          </Link>
+        </Button>
+        <div className="hidden lg:flex">
+          <QuickActionsGroup
+            actions={[
+              { icon: Camera, label: 'Galería', href: '/familia/galeria', color: 'text-purple-600' }
+            ]}
+          />
+        </div>
       </div>
 
-      {/* MED-005: Mensajes del Monitor */}
+      {/* Mensajes del Monitor */}
       <MensajesMonitorCompacto maxMensajes={3} />
 
-      {/* Mis Hijos - Tarjetas compactas */}
-      <div className="space-y-5">
-        <h2 className="text-2xl font-semibold">Mis Hijos</h2>
-        <HijosListaCompacta
-          hijos={hijosConDocumentos}
-          hijoSeleccionado={hijoSeleccionado}
-          onSelectHijo={setHijoSeleccionado}
-        />
-      </div>
-
-      {/* Grid: Documentos + Calendario */}
-      <div className="grid gap-8 lg:grid-cols-2">
-        {/* Documentos del hijo seleccionado */}
-        <DocumentosListaCompacta
-          hijo={hijoActual}
-          estructuraEducando={estructuraEducandoActual}
-          plantillas={plantillas}
-          loading={driveLoading}
-          onUploadDocumento={handleUploadDocumento}
-          onResubirDocumento={handleResubirDocumento}
-          onDownloadPlantilla={downloadPlantilla}
-        />
-
-        {/* Calendario */}
+      {/* === LAYOUT MOBILE (< lg): Acordeón hijo+docs === */}
+      <div className="lg:hidden space-y-5">
+        {/* Calendario primero en mobile */}
         <CalendarioCompacto
           seccionId={hijoActual?.seccion_id}
           hijoSeleccionado={hijoSeleccionado}
         />
+
+        {/* Mis Hijos con docs inline (acordeón) */}
+        <div className="space-y-5">
+          <h2 className="text-xl font-semibold">Mis Hijos</h2>
+          <div className="space-y-3">
+            {hijosConDocumentos.map((hijo) => (
+              <div key={hijo.id}>
+                <HijoCardCompacto
+                  hijo={hijo}
+                  selected={mobileExpandido === hijo.id}
+                  onClick={() => {
+                    const newId = mobileExpandido === hijo.id ? undefined : hijo.id
+                    setMobileExpandido(newId)
+                    if (newId) setHijoSeleccionado(newId)
+                  }}
+                />
+                {/* Docs inline si este hijo está expandido */}
+                {mobileExpandido === hijo.id && (
+                  <div className="mt-2">
+                    <DocumentosListaCompacta
+                      hijo={hijo}
+                      estructuraEducando={estructuraEducandoActual}
+                      plantillas={plantillas}
+                      loading={driveLoading}
+                      onUploadDocumento={handleUploadDocumento}
+                      onResubirDocumento={handleResubirDocumento}
+                      onDownloadPlantilla={downloadPlantilla}
+                      compact
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* === LAYOUT DESKTOP (>= lg) === */}
+      <div className="hidden lg:block space-y-8">
+        {/* Mis Hijos primero en desktop */}
+        <div className="space-y-5">
+          <h2 className="text-2xl font-semibold">Mis Hijos</h2>
+          <HijosListaCompacta
+            hijos={hijosConDocumentos}
+            hijoSeleccionado={hijoSeleccionado}
+            onSelectHijo={setHijoSeleccionado}
+          />
+        </div>
+
+        {/* Grid 2 columnas: Documentos + Calendario */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <DocumentosListaCompacta
+            hijo={hijoActual}
+            estructuraEducando={estructuraEducandoActual}
+            plantillas={plantillas}
+            loading={driveLoading}
+            onUploadDocumento={handleUploadDocumento}
+            onResubirDocumento={handleResubirDocumento}
+            onDownloadPlantilla={downloadPlantilla}
+          />
+          <CalendarioCompacto
+            seccionId={hijoActual?.seccion_id}
+            hijoSeleccionado={hijoSeleccionado}
+          />
+        </div>
       </div>
 
       {/* Modal de subida de documentos */}

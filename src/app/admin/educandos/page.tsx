@@ -146,18 +146,19 @@ export default function EducandosPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestión de Educandos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">Gestión de Educandos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Administra los educandos del grupo scout
           </p>
         </div>
-        <Button onClick={() => router.push('/admin/educandos/nuevo')}>
+        <Button onClick={() => router.push('/admin/educandos/nuevo')} className="w-full sm:w-auto">
           <UserPlus className="mr-2 h-4 w-4" />
-          Nuevo Educando
+          <span className="hidden sm:inline">Nuevo Educando</span>
+          <span className="sm:hidden">Nuevo</span>
         </Button>
       </div>
 
@@ -226,15 +227,15 @@ export default function EducandosPage() {
 
       {/* Filtros */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
             Filtros
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
               <label className="text-sm font-medium">Buscar</label>
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -251,7 +252,7 @@ export default function EducandosPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Sección</label>
               <Select value={seccionFilter} onValueChange={setSeccionFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[44px]">
                   <SelectValue placeholder="Todas las secciones" />
                 </SelectTrigger>
                 <SelectContent>
@@ -268,7 +269,7 @@ export default function EducandosPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Estado</label>
               <Select value={activoFilter} onValueChange={setActivoFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[44px]">
                   <SelectValue placeholder="Todos los estados" />
                 </SelectTrigger>
                 <SelectContent>
@@ -282,7 +283,7 @@ export default function EducandosPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Género</label>
               <Select value={generoFilter} onValueChange={setGeneroFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[44px]">
                   <SelectValue placeholder="Todos los géneros" />
                 </SelectTrigger>
                 <SelectContent>
@@ -295,12 +296,12 @@ export default function EducandosPage() {
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleFilter} disabled={loading}>
+          <div className="flex flex-col sm:flex-row gap-2 mt-4">
+            <Button onClick={handleFilter} disabled={loading} className="w-full sm:w-auto min-h-[44px]">
               <Search className="mr-2 h-4 w-4" />
               Aplicar Filtros
             </Button>
-            <Button variant="outline" onClick={handleClearFilters}>
+            <Button variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto min-h-[44px]">
               <RefreshCw className="mr-2 h-4 w-4" />
               Limpiar
             </Button>
@@ -311,123 +312,244 @@ export default function EducandosPage() {
       {/* Tabla */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Educandos</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Lista de Educandos</CardTitle>
           <CardDescription>
             Total: {pagination.total} educandos
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>DNI</TableHead>
-                  <TableHead>Edad</TableHead>
-                  <TableHead>Sección</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="w-[70px]">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
+        <CardContent className="p-0 sm:p-6">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      Cargando...
-                    </TableCell>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>DNI</TableHead>
+                    <TableHead>Edad</TableHead>
+                    <TableHead>Sección</TableHead>
+                    <TableHead>Contacto</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="w-[70px]">Acciones</TableHead>
                   </TableRow>
-                ) : educandos.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      No se encontraron educandos
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  educandos.map((educando) => (
-                    <TableRow key={educando.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <div>{educando.nombre} {educando.apellidos}</div>
-                          {educando.alergias && (
-                            <span className="text-xs text-red-600">⚠️ Alergias</span>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        Cargando...
+                      </TableCell>
+                    </TableRow>
+                  ) : educandos.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        No se encontraron educandos
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    educandos.map((educando) => (
+                      <TableRow key={educando.id}>
+                        <TableCell className="font-medium">
+                          <div>
+                            <div>{educando.nombre} {educando.apellidos}</div>
+                            {educando.alergias && (
+                              <span className="text-xs text-red-600">⚠️ Alergias</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{educando.dni || '-'}</TableCell>
+                        <TableCell>{educando.edad || '-'} años</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn("border-2")}
+                            style={{ borderColor: educando.seccion_color || '#gray' }}
+                          >
+                            {educando.seccion_nombre || 'Sin sección'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {educando.telefono_movil || educando.telefono_casa || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {educando.activo ? (
+                            <Badge variant="default" className="bg-green-600">Activo</Badge>
+                          ) : (
+                            <Badge variant="secondary">Inactivo</Badge>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-10 w-10">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleView(educando.id)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Ver detalles
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEdit(educando.id)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {educando.activo ? (
+                                <DropdownMenuItem
+                                  onClick={() => setEducandoToDeactivate(educando.id)}
+                                  className="text-yellow-600"
+                                >
+                                  <UserX className="mr-2 h-4 w-4" />
+                                  Desactivar
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => handleReactivate(educando.id)}
+                                  className="text-green-600"
+                                >
+                                  <UserCheck className="mr-2 h-4 w-4" />
+                                  Reactivar
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => setEducandoToDelete(educando.id)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden">
+            {loading ? (
+              <div className="text-center py-8">Cargando...</div>
+            ) : educandos.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No se encontraron educandos
+              </div>
+            ) : (
+              <div className="divide-y">
+                {educandos.map((educando) => (
+                  <div key={educando.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-medium">
+                          {educando.nombre} {educando.apellidos}
                         </div>
-                      </TableCell>
-                      <TableCell>{educando.dni || '-'}</TableCell>
-                      <TableCell>{educando.edad || '-'} años</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn("border-2")}
-                          style={{ borderColor: educando.seccion_color || '#gray' }}
-                        >
-                          {educando.seccion_nombre || 'Sin sección'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {educando.telefono_movil || educando.telefono_casa || '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
+                        {educando.alergias && (
+                          <span className="text-xs text-red-600">⚠️ Alergias</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
                         {educando.activo ? (
                           <Badge variant="default" className="bg-green-600">Activo</Badge>
                         ) : (
                           <Badge variant="secondary">Inactivo</Badge>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleView(educando.id)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              Ver detalles
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEdit(educando.id)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {educando.activo ? (
-                              <DropdownMenuItem
-                                onClick={() => setEducandoToDeactivate(educando.id)}
-                                className="text-yellow-600"
-                              >
-                                <UserX className="mr-2 h-4 w-4" />
-                                Desactivar
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleReactivate(educando.id)}
-                                className="text-green-600"
-                              >
-                                <UserCheck className="mr-2 h-4 w-4" />
-                                Reactivar
-                              </DropdownMenuItem>
-                            )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Sección:</span>
+                        <Badge
+                          variant="outline"
+                          className={cn("ml-2 border-2")}
+                          style={{ borderColor: educando.seccion_color || '#gray' }}
+                        >
+                          {educando.seccion_nombre || 'Sin sección'}
+                        </Badge>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Edad:</span>
+                        <span className="ml-2">{educando.edad || '-'} años</span>
+                      </div>
+                      {educando.dni && (
+                        <div>
+                          <span className="text-muted-foreground">DNI:</span>
+                          <span className="ml-2">{educando.dni}</span>
+                        </div>
+                      )}
+                      {(educando.telefono_movil || educando.telefono_casa) && (
+                        <div>
+                          <span className="text-muted-foreground">Tel:</span>
+                          <span className="ml-2">{educando.telefono_movil || educando.telefono_casa}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleView(educando.id)}
+                        className="min-h-[44px]"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Ver
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(educando.id)}
+                        className="min-h-[44px]"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Editar
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="min-h-[44px]">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {educando.activo ? (
                             <DropdownMenuItem
-                              onClick={() => setEducandoToDelete(educando.id)}
-                              className="text-red-600"
+                              onClick={() => setEducandoToDeactivate(educando.id)}
+                              className="text-yellow-600"
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Eliminar
+                              <UserX className="mr-2 h-4 w-4" />
+                              Desactivar
                             </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => handleReactivate(educando.id)}
+                              className="text-green-600"
+                            >
+                              <UserCheck className="mr-2 h-4 w-4" />
+                              Reactivar
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => setEducandoToDelete(educando.id)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
