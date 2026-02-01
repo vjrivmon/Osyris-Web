@@ -186,6 +186,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
               initialData={perfilData as PerfilSaludData}
               initialContactos={[]}
               mode="wizard-step"
+              sections={['medicos']}
               onChange={(d) => setPerfilData(d)}
             />
           </div>
@@ -200,6 +201,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
                 initialData={{} as PerfilSaludData}
                 initialContactos={contactosData}
                 mode="wizard-step"
+                sections={['contactos']}
                 onChange={(_, c) => setContactosData(c)}
               />
             </CardContent>

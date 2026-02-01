@@ -15,6 +15,7 @@ interface PerfilSaludFormProps {
   initialContactos?: ContactoEmergencia[]
   mode: 'standalone' | 'wizard-step'
   readOnly?: boolean
+  sections?: ('medicos' | 'contactos')[]
   onSave?: (data: Partial<PerfilSaludData>, contactos: ContactoEmergencia[]) => void
   onChange?: (data: Partial<PerfilSaludData>, contactos: ContactoEmergencia[]) => void
 }
@@ -27,7 +28,9 @@ const DEFAULT_PERFIL: Partial<PerfilSaludData> = {
 
 const DEFAULT_CONTACTO: ContactoEmergencia = { nombre_completo: '', telefono: '', relacion: 'tutor', orden: 1 }
 
-export function PerfilSaludForm({ initialData, initialContactos, mode, readOnly, onSave, onChange }: PerfilSaludFormProps) {
+export function PerfilSaludForm({ initialData, initialContactos, mode, readOnly, sections, onSave, onChange }: PerfilSaludFormProps) {
+  const showMedicos = !sections || sections.includes('medicos')
+  const showContactos = !sections || sections.includes('contactos')
   const [data, setData] = useState<Partial<PerfilSaludData>>({ ...DEFAULT_PERFIL, ...initialData })
   const [contactos, setContactos] = useState<ContactoEmergencia[]>(
     initialContactos?.length ? initialContactos : [{ ...DEFAULT_CONTACTO }]
@@ -71,7 +74,7 @@ export function PerfilSaludForm({ initialData, initialContactos, mode, readOnly,
   return (
     <div className="space-y-4" data-testid="perfil-salud-form">
       {/* Datos médicos */}
-      <Card>
+      {showMedicos && <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Heart className="h-4 w-4 text-red-500" />
@@ -124,8 +127,10 @@ export function PerfilSaludForm({ initialData, initialContactos, mode, readOnly,
         </CardContent>
       </Card>
 
+      {showMedicos && </Card>}
+
       {/* Contactos de emergencia */}
-      <Card>
+      {showContactos && <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Phone className="h-4 w-4 text-blue-500" />
@@ -162,7 +167,7 @@ export function PerfilSaludForm({ initialData, initialContactos, mode, readOnly,
             </Button>
           )}
         </CardContent>
-      </Card>
+      </Card>}
 
       {mode === 'standalone' && !readOnly && (
         <Button onClick={() => onSave?.(data, contactos)} className="w-full">
