@@ -324,8 +324,8 @@ exports.getDashboardEstado = async (req, res) => {
       return res.json({ success: true, data: { inscritos: [], stats: { total: 0, firmadas: 0, pendientes: 0, error: 0 } } });
     }
 
-    // Todos los inscritos con estado de circular
-    const inscritos = await query(`
+    // Primero buscar inscritos en inscripciones_campamento
+    let inscritos = await query(`
       SELECT
         e.id as educando_id, e.nombre as educando_nombre, e.apellidos as educando_apellidos,
         s.nombre as seccion,
@@ -342,6 +342,27 @@ exports.getDashboardEstado = async (req, res) => {
       WHERE ic.actividad_id = $2 AND ic.estado IN ('pendiente','inscrito')
       ORDER BY s.orden, e.apellidos, e.nombre
     `, [circular.id, actividadId]);
+
+    // Si no hay inscritos (actividad general, no campamento), mostrar TODOS los educandos activos
+    if (inscritos.length === 0) {
+      inscritos = await query(`
+        SELECT DISTINCT
+          e.id as educando_id, e.nombre as educando_nombre, e.apellidos as educando_apellidos,
+          s.nombre as seccion,
+          u.nombre as familiar_nombre, u.email as familiar_email,
+          COALESCE(cr.estado, 'pendiente') as estado_circular,
+          cr.fecha_firma, cr.pdf_drive_id,
+          cr.pdf_local_path
+        FROM educandos e
+        JOIN secciones s ON e.seccion_id = s.id
+        JOIN familiares_educandos fe ON fe.educando_id = e.id
+        JOIN usuarios u ON fe.familiar_id = u.id
+        LEFT JOIN circular_respuesta cr ON cr.circular_actividad_id = $1
+          AND cr.educando_id = e.id AND cr.estado NOT IN ('superseded','anulada')
+        WHERE e.activo = true
+        ORDER BY s.nombre, e.apellidos, e.nombre
+      `, [circular.id]);
+    }
 
     const stats = await CircularRespuestaModel.getEstadisticas(circular.id);
 
@@ -564,8 +585,12 @@ exports.getCircularesFamiliar = async (req, res) => {
   try {
     const familiarId = req.usuario.id;
 
+    // Obtener circulares: tanto por inscripción como por ser educando del familiar
+    // UNION de dos fuentes:
+    // 1) Educandos inscritos en la actividad (campamentos)
+    // 2) Todos los educandos del familiar para circulares publicadas (actividades generales)
     const circulares = await query(`
-      SELECT DISTINCT
+      SELECT DISTINCT ON (ca.id, e.id)
         ca.id, ca.titulo, ca.texto_introductorio, ca.fecha_limite_firma, ca.estado as circular_estado,
         a.titulo as actividad_titulo, a.fecha_inicio as actividad_fecha, a.lugar as actividad_lugar, a.id as actividad_id,
         e.id as educando_id, e.nombre as educando_nombre, e.apellidos as educando_apellidos,
@@ -573,15 +598,13 @@ exports.getCircularesFamiliar = async (req, res) => {
         cr.estado as respuesta_estado, cr.fecha_firma
       FROM circular_actividad ca
       JOIN actividades a ON ca.actividad_id = a.id
-      JOIN inscripciones_campamento ic ON ic.actividad_id = a.id
-      JOIN educandos e ON ic.educando_id = e.id
+      JOIN familiares_educandos fe ON fe.familiar_id = $1
+      JOIN educandos e ON fe.educando_id = e.id
       JOIN secciones s ON e.seccion_id = s.id
       LEFT JOIN circular_respuesta cr ON cr.circular_actividad_id = ca.id
         AND cr.educando_id = e.id AND cr.estado NOT IN ('superseded','anulada')
-      WHERE (ic.familiar_id = $1 OR e.id IN (SELECT educando_id FROM familiares_educandos WHERE familiar_id = $1))
-        AND ca.estado = 'publicada'
-        AND ic.estado IN ('pendiente','inscrito')
-      ORDER BY ca.fecha_limite_firma ASC NULLS LAST, a.fecha_inicio ASC
+      WHERE ca.estado = 'publicada'
+      ORDER BY ca.id, e.id, cr.fecha_firma DESC NULLS LAST
     `, [familiarId]);
 
     res.json({ success: true, data: circulares });
