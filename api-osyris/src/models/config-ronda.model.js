@@ -5,7 +5,7 @@ const { query } = require('../config/db.config');
  */
 const getActiva = async () => {
   const rows = await query(
-    'SELECT * FROM config_ronda WHERE activa = TRUE ORDER BY created_at DESC LIMIT 1'
+    'SELECT * FROM configuracion_ronda WHERE activa = TRUE ORDER BY fecha_creacion DESC LIMIT 1'
   );
   return rows[0] || null;
 };
@@ -14,7 +14,7 @@ const getActiva = async () => {
  * Obtiene una config de ronda por ID.
  */
 const findById = async (id) => {
-  const rows = await query('SELECT * FROM config_ronda WHERE id = $1', [id]);
+  const rows = await query('SELECT * FROM configuracion_ronda WHERE id = $1', [id]);
   return rows[0] || null;
 };
 
@@ -22,7 +22,7 @@ const findById = async (id) => {
  * Lista todas las configs de ronda.
  */
 const findAll = async () => {
-  return await query('SELECT * FROM config_ronda ORDER BY created_at DESC');
+  return await query('SELECT * FROM configuracion_ronda ORDER BY fecha_creacion DESC');
 };
 
 /**
@@ -30,20 +30,25 @@ const findAll = async () => {
  */
 const crear = async (data) => {
   // Desactivar todas las anteriores
-  await query('UPDATE config_ronda SET activa = FALSE WHERE activa = TRUE');
+  await query('UPDATE configuracion_ronda SET activa = FALSE WHERE activa = TRUE');
 
   const rows = await query(`
-    INSERT INTO config_ronda (
+    INSERT INTO configuracion_ronda (
+      nombre, fecha_inicio, fecha_fin, eventos_plantilla,
       temporada,
       responsable_castores, numero_responsable_castores,
       responsable_manada, numero_responsable_manada,
       responsable_tropa, numero_responsable_tropa,
       responsable_pioneros, numero_responsable_pioneros,
       responsable_rutas, numero_responsable_rutas,
-      normas_generales, cuenta_bancaria, activa
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE)
+      normas_generales, cuenta_bancaria, activa, creado_por
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, TRUE, $18)
     RETURNING *
   `, [
+    data.temporada || 'Ronda ' + (data.temporada || ''),
+    data.fecha_inicio || new Date().toISOString().slice(0, 10),
+    data.fecha_fin || new Date(Date.now() + 365*86400000).toISOString().slice(0, 10),
+    JSON.stringify(data.eventos_plantilla || []),
     data.temporada,
     data.responsable_castores || '',
     data.numero_responsable_castores || '',
@@ -56,7 +61,8 @@ const crear = async (data) => {
     data.responsable_rutas || '',
     data.numero_responsable_rutas || '',
     data.normas_generales || '',
-    data.cuenta_bancaria || ''
+    data.cuenta_bancaria || '',
+    data.creado_por || 1
   ]);
   return rows[0];
 };
@@ -90,7 +96,7 @@ const actualizar = async (id, data) => {
   if (fields.length === 0) return await findById(id);
 
   values.push(id);
-  await query(`UPDATE config_ronda SET ${fields.join(', ')} WHERE id = $${idx}`, values);
+  await query(`UPDATE configuracion_ronda SET ${fields.join(', ')} WHERE id = $${idx}`, values);
   return await findById(id);
 };
 
