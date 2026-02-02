@@ -65,8 +65,8 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
     { label: 'Contactos', icon: Phone },
     { label: 'Autorizaciones', icon: FileText },
     { label: 'Resumen', icon: Check },
-    { label: 'Preview', icon: Eye },
     { label: 'Firma', icon: PenTool },
+    { label: 'Revisar', icon: Eye },
   ]
 
   // Load PDF preview when entering the preview step
@@ -422,17 +422,39 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
           </Card>
         )
 
-      case 6: // Preview PDF
+      case 6: // Firma
+        return (
+          <Card data-testid="step-firma">
+            <CardHeader><CardTitle className="flex items-center gap-2"><PenTool className="h-5 w-5" /> Firma Digital</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Firme en el recuadro inferior con el dedo o un stylus. La firma se incluirá en el PDF generado.
+              </p>
+              <FirmaDigitalCanvas onChange={setFirmaBase64} height={200} placeholder="Firme aquí con el dedo o stylus" />
+
+              <Button
+                onClick={() => { loadPreview(); setStep(7); }}
+                disabled={!firmaBase64 || !aceptaCondiciones}
+                className="w-full"
+                size="lg"
+              >
+                <Eye className="h-5 w-5 mr-2" /> Revisar documento
+              </Button>
+            </CardContent>
+          </Card>
+        )
+
+      case 7: // Revisar PDF y confirmar envío
         return (
           <Card data-testid="step-preview">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" /> Vista previa del documento
+                <Eye className="h-5 w-5" /> Revisa el documento antes de enviar
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Revisa que todos los datos del documento son correctos antes de firmar.
+                Comprueba que todos los datos son correctos. Si hay algún error, vuelve atrás para corregirlo.
               </p>
 
               {isLoadingPreview && (
@@ -460,6 +482,13 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
                 </div>
               )}
 
+              {submitError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{submitError}</AlertDescription>
+                </Alert>
+              )}
+
               {pdfPreviewBase64 && (
                 <div className="flex space-x-3">
                   <Button
@@ -472,47 +501,18 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
                   </Button>
                   <Button
                     className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => setStep(7)}
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    data-testid="btn-enviar-firma"
                   >
-                    <Check className="h-4 w-4 mr-2" />
-                    Todo correcto
+                    {isSubmitting ? (
+                      <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Enviando...</>
+                    ) : (
+                      <><Check className="h-5 w-5 mr-2" /> Confirmar y enviar</>
+                    )}
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        )
-
-      case 7: // Firma
-        return (
-          <Card data-testid="step-firma">
-            <CardHeader><CardTitle className="flex items-center gap-2"><PenTool className="h-5 w-5" /> Firma Digital</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Firme en el recuadro inferior con el dedo o un stylus. La firma se incluirá en el PDF generado.
-              </p>
-              <FirmaDigitalCanvas onChange={setFirmaBase64} height={200} placeholder="Firme aquí con el dedo o stylus" />
-
-              {submitError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{submitError}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button
-                onClick={handleSubmit}
-                disabled={!firmaBase64 || !aceptaCondiciones || isSubmitting}
-                className="w-full"
-                size="lg"
-                data-testid="btn-enviar-firma"
-              >
-                {isSubmitting ? (
-                  <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generando circular...</>
-                ) : (
-                  <><Check className="h-5 w-5 mr-2" /> Firmar y enviar</>
-                )}
-              </Button>
             </CardContent>
           </Card>
         )
@@ -521,20 +521,13 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
 
   const canNext = () => {
     if (step === 5) return aceptaCondiciones
-    if (step === 6) return false // preview has its own buttons
-    if (step === 7) return false // submit button handles this
+    if (step === 6) return false // firma step has its own button
+    if (step === 7) return false // review step has its own buttons
     return true
   }
 
   const handleNext = () => {
-    const nextStep = step + 1
-    // When entering preview step, load the PDF
-    if (nextStep === 6) {
-      setStep(nextStep)
-      loadPreview()
-      return
-    }
-    setStep(nextStep)
+    setStep(step + 1)
   }
 
   return (
