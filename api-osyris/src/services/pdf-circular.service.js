@@ -97,19 +97,10 @@ async function generarPDF({ respuesta, circular, educando, familiar, configRonda
   // Campos de año (cabecera y firma)
   const now = new Date();
   const currentYear = now.getFullYear().toString();
-  // año#0 y año#1 — tratamiento especial por el caracter #
-  try {
-    const yearField0 = form.getTextField('año#0');
-    yearField0.setText(currentYear);
-  } catch (err) {
-    console.warn('Campo año#0 no encontrado:', err.message);
-  }
-  try {
-    const yearField1 = form.getTextField('año#1');
-    yearField1.setText(currentYear);
-  } catch (err) {
-    console.warn('Campo año#1 no encontrado:', err.message);
-  }
+  // Campo "año" — puede ser simple o con sufijo #0/#1 según versión del template
+  setTextField(form, 'año', currentYear);
+  try { form.getTextField('año#0')?.setText(currentYear); } catch { /* no existe en este template */ }
+  try { form.getTextField('año#1')?.setText(currentYear); } catch { /* no existe en este template */ }
 
   // Fecha de firma
   const fechaFirma = respuesta.fecha_firma ? new Date(respuesta.fecha_firma) : now;
