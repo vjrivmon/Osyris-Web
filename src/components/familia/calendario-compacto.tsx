@@ -24,6 +24,8 @@ import { getTipoEventoConfig } from "./calendario/tipos-evento"
 import { useFamiliaData } from "@/hooks/useFamiliaData"
 import { useAuth } from "@/contexts/AuthContext"
 import { InscripcionCampamentoWizard } from "./calendario/inscripcion-campamento-wizard"
+import { FileText } from "lucide-react"
+import Link from "next/link"
 
 interface CalendarioCompactoProps {
   seccionId?: number
@@ -45,6 +47,9 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
   // Modal campamento
   const [campamentoModalOpen, setCampamentoModalOpen] = useState(false)
   const [actividadCampamento, setActividadCampamento] = useState<ActividadCalendario | null>(null)
+
+  // Circulares vinculadas a actividades
+  const [circularesMap, setCircularesMap] = useState<Map<number, { circularId: number, estado: string, titulo: string }>>(new Map())
 
   // Obtener hijos del usuario y sus secciones
   const { hijos, seccionesHijos } = useFamiliaData()
@@ -318,6 +323,46 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seccionId, hijoActual?.id]) // Re-ejecutar si cambia seccionId o el hijo actual
 
+  // Comprobar qué actividades tienen circular digital vinculada
+  useEffect(() => {
+    const checkCirculares = async () => {
+      if (actividades.length === 0 || !hijoActual) return
+
+      const apiUrl = getApiUrl()
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const newMap = new Map<number, { circularId: number, estado: string, titulo: string }>()
+
+      // Check each activity (in parallel, max 5 concurrent)
+      const checks = actividades.map(async (act) => {
+        try {
+          const res = await fetch(
+            `${apiUrl}/api/circulares/check-actividad/${act.id}?educandoId=${hijoActual.id}`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          )
+          if (res.ok) {
+            const data = await res.json()
+            if (data.data?.hasCircular) {
+              newMap.set(act.id, {
+                circularId: data.data.circularId,
+                estado: data.data.estado || 'pendiente',
+                titulo: data.data.titulo || ''
+              })
+            }
+          }
+        } catch (err) {
+          // silently skip
+        }
+      })
+
+      await Promise.all(checks)
+      setCircularesMap(newMap)
+    }
+
+    checkCirculares()
+  }, [actividades, hijoActual])
+
   // Obtener actividades del mes actual
   const actividadesMes = useMemo(() => {
     return actividades.filter(actividad => {
@@ -571,6 +616,8 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
   const renderActividadCard = (actividad: ActividadCalendario) => {
     const esCampamento = actividad.tipo === 'campamento' || actividad.tipoOriginal === 'campamento'
     const estaConfirmando = confirmandoId === actividad.id
+    const circularInfo = circularesMap.get(actividad.id)
+    const tieneCircular = !!circularInfo
 
     return (
       <div
@@ -581,12 +628,26 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
           <div className="flex-1 min-w-0">
             <h5 className="font-medium text-sm truncate">{actividad.titulo}</h5>
           </div>
-          {/* Badge de confirmación */}
-          {actividad.confirmacion && (
+          {/* Badge de confirmación o circular */}
+          {tieneCircular ? (
+            <div className="flex-shrink-0">
+              {circularInfo.estado === 'firmada' ? (
+                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Firmada
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                  <FileText className="h-3 w-3 mr-1" />
+                  Pendiente de firma
+                </Badge>
+              )}
+            </div>
+          ) : actividad.confirmacion ? (
             <div className="flex-shrink-0">
               {getConfirmacionBadge(actividad.confirmacion)}
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="space-y-1 text-xs text-muted-foreground">
@@ -615,7 +676,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
           )}
         </div>
 
-        {actividad.confirmacion === 'pendiente' && hijoActual && (
+        {actividad.confirmacion === 'pendiente' && hijoActual && !tieneCircular && (
           <div className="mt-3">
             {esCampamento ? (
               // Botón especial para campamentos
@@ -694,8 +755,32 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
           </div>
         )}
 
-        {/* Botón para cambiar asistencia ya confirmada/rechazada (NO campamentos) */}
-        {actividad.confirmacion && actividad.confirmacion !== 'pendiente' && hijoActual && !esCampamento && (
+        {/* Botón circular digital — si la actividad tiene circular vinculada */}
+        {tieneCircular && hijoActual && circularInfo.estado !== 'firmada' && (
+          <div className="mt-3">
+            <Link href={`/familia/circulares?actividad=${actividad.id}&educando=${hijoActual.id}`}>
+              <Button
+                size="sm"
+                className="w-full text-xs bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                <FileText className="h-3 w-3 mr-1" />
+                Firmar autorización
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {tieneCircular && circularInfo.estado === 'firmada' && (
+          <div className="mt-3">
+            <div className="text-xs text-green-600 text-center flex items-center justify-center gap-1">
+              <CheckCircle className="h-3 w-3" />
+              Autorización firmada
+            </div>
+          </div>
+        )}
+
+        {/* Botón para cambiar asistencia ya confirmada/rechazada (NO campamentos, sin circular) */}
+        {!tieneCircular && actividad.confirmacion && actividad.confirmacion !== 'pendiente' && hijoActual && !esCampamento && (
           <div className="mt-3">
             {actividad.confirmacion === 'confirmado' ? (
               mostrandoComentario === actividad.id ? (
