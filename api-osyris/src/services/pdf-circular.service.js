@@ -117,12 +117,12 @@ async function generarPDF({ respuesta, circular, educando, familiar, configRonda
   setTextField(form, 'mes_fecha_firma', meses[fechaFirma.getMonth()]);
 
   // Teléfono de contacto del familiar
-  setTextField(form, 'telefono_contacto', familiar?.telefono || '');
+  setTextField(form, 'telefono_contacto', familiar?.telefono || '', AUTH_FONT);
 
   // Medicamentos (de los datos médicos del snapshot)
   const dm = respuesta.datos_medicos_snapshot || {};
   const medicamentos = [dm.medicacion, dm.alergias].filter(Boolean).join('. ') || 'Ninguno';
-  setTextField(form, 'medicamentos', medicamentos);
+  setTextField(form, 'medicamentos', medicamentos, 6);
 
   // ==========================================
   // FIRMA (PDFButton con imagen)
