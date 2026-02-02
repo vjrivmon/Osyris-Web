@@ -38,6 +38,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
   const [contactosData, setContactosData] = useState<ContactoEmergencia[]>([])
   const [camposCustomResp, setCamposCustomResp] = useState<Record<string, unknown>>({})
   const [firmaBase64, setFirmaBase64] = useState<string | null>(null)
+  const [dniFamiliar, setDniFamiliar] = useState('')
   const [aceptaCondiciones, setAceptaCondiciones] = useState(false)
   const [actualizarPerfil, setActualizarPerfil] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -55,7 +56,10 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
     if (contactos.length > 0 && contactosData.length === 0) {
       setContactosData(contactos)
     }
-  }, [perfilSalud, contactos, perfilData, contactosData])
+    if (familiar?.dni && !dniFamiliar) {
+      setDniFamiliar(familiar.dni)
+    }
+  }, [perfilSalud, contactos, perfilData, contactosData, familiar, dniFamiliar])
   initData()
 
   const STEPS = [
@@ -87,7 +91,8 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
           body: JSON.stringify({
             firmaBase64: firmaBase64,
             datosMedicos: perfilData,
-            contactos: contactosData
+            contactos: contactosData,
+            dniFamiliar: dniFamiliar
           })
         }
       )
@@ -164,7 +169,8 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
         firmaBase64: firmaBase64!,
         firmaTipo: 'image',
         aceptaCondiciones: true,
-        actualizarPerfil
+        actualizarPerfil,
+        dniFamiliar
       })
       setResultado(result)
     } catch (err: any) {
@@ -397,9 +403,18 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
                   <p>Sección: {educando?.seccion_nombre}</p>
                 </div>
                 {familiar && (
-                  <div className="p-3 bg-muted rounded-lg">
+                  <div className="p-3 bg-muted rounded-lg space-y-2">
                     <p className="font-semibold">Tutor/a: {familiar.nombre} {familiar.apellidos}</p>
-                    {familiar.dni && <p>DNI: {familiar.dni}</p>}
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="dni-tutor" className="text-sm whitespace-nowrap">DNI:</Label>
+                      <Input
+                        id="dni-tutor"
+                        value={dniFamiliar}
+                        onChange={e => setDniFamiliar(e.target.value.toUpperCase())}
+                        placeholder="12345678A"
+                        className="max-w-[180px] h-8 text-sm"
+                      />
+                    </div>
                   </div>
                 )}
                 <div className="p-3 bg-muted rounded-lg">

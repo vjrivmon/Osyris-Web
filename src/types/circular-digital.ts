@@ -231,6 +231,7 @@ export interface DatosFirmaCircular {
   firmaTipo: 'image' | 'text';
   aceptaCondiciones: boolean;
   actualizarPerfil: boolean;
+  dniFamiliar?: string;
 }
 
 // --- Datos para crear circular (admin) ---

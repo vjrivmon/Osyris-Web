@@ -79,7 +79,7 @@ exports.getFormularioCircular = async (req, res) => {
 
     // Info familiar/tutor
     const familiarRows = await query(`
-      SELECT u.id, u.nombre, u.apellidos, u.dni, u.telefono
+      SELECT u.id, u.nombre, u.apellidos, u.telefono
       FROM usuarios u
       JOIN familiares_educandos fe ON u.id = fe.familiar_id
       WHERE fe.educando_id = $1 AND fe.es_contacto_principal = TRUE
@@ -107,7 +107,7 @@ exports.getFormularioCircular = async (req, res) => {
 exports.firmarCircular = async (req, res) => {
   try {
     const actividadId = parseInt(req.params.actividadId);
-    const { educandoId, datosMedicos, contactos, camposCustom, firmaBase64, firmaTipo, aceptaCondiciones, actualizarPerfil } = req.body;
+    const { educandoId, datosMedicos, contactos, camposCustom, firmaBase64, firmaTipo, aceptaCondiciones, actualizarPerfil, dniFamiliar } = req.body;
 
     if (!firmaBase64 || !aceptaCondiciones) {
       return res.status(400).json({ success: false, message: 'Firma y aceptación de condiciones requeridas' });
@@ -153,12 +153,16 @@ exports.firmarCircular = async (req, res) => {
     // Config ronda para el template PDF
     const configRonda = await ConfigRondaModel.getActiva();
 
-    // Info familiar completa (con DNI)
+    // Info familiar completa
     const familiarRows = await query(`
-      SELECT u.id, u.nombre, u.apellidos, u.dni, u.telefono
+      SELECT u.id, u.nombre, u.apellidos, u.telefono
       FROM usuarios u WHERE u.id = $1
     `, [req.usuario.id]);
     const familiarCompleto = familiarRows[0] || req.usuario;
+    // DNI viene del wizard (campo rellenado por el padre/madre)
+    if (dniFamiliar) {
+      familiarCompleto.dni = dniFamiliar;
+    }
 
     // Generar PDF
     try {
@@ -467,8 +471,8 @@ exports.previewPDF = async (req, res) => {
   try {
     const circularId = parseInt(req.params.circularId);
     const educandoId = parseInt(req.params.educandoId);
-    // Acepta POST con firma y datos médicos para preview realista
-    const { firmaBase64, datosMedicos, contactos } = req.body || {};
+    // Acepta POST con firma, datos médicos y DNI para preview realista
+    const { firmaBase64, datosMedicos, contactos, dniFamiliar } = req.body || {};
 
     const circular = await CircularActividadModel.findById(circularId);
     if (!circular) {
@@ -484,12 +488,16 @@ exports.previewPDF = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Educando no encontrado' });
     }
 
-    // Info familiar (incluyendo DNI)
+    // Info familiar
     const familiarRows = await query(`
-      SELECT u.id, u.nombre, u.apellidos, u.dni, u.telefono
+      SELECT u.id, u.nombre, u.apellidos, u.telefono
       FROM usuarios u WHERE u.id = $1
     `, [req.usuario.id]);
     const familiar = familiarRows[0] || req.usuario;
+    // DNI viene del wizard
+    if (dniFamiliar) {
+      familiar.dni = dniFamiliar;
+    }
 
     // Usar datos médicos del body si vienen (wizard actualizado), sino del perfil guardado
     const perfil = datosMedicos || await PerfilSaludModel.findByEducandoId(educandoId);
