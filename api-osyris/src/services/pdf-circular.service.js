@@ -9,9 +9,12 @@ const TEMPLATE_PATH = path.join(__dirname, '../../templates/circular-template.pd
  * Rellena un campo de texto del formulario PDF de forma segura.
  * Si el campo no existe, lo ignora silenciosamente.
  */
-function setTextField(form, fieldName, value) {
+function setTextField(form, fieldName, value, fontSize) {
   try {
     const field = form.getTextField(fieldName);
+    if (fontSize) {
+      field.setFontSize(fontSize);
+    }
     field.setText(value || '');
   } catch (err) {
     // Campo no encontrado en el template — ignorar
@@ -63,16 +66,17 @@ async function generarPDF({ respuesta, circular, educando, familiar, configRonda
   // CAMPOS CONFIG RONDA (contactos por sección)
   // ==========================================
   if (configRonda) {
-    setTextField(form, 'responsable_castores', configRonda.responsable_castores);
-    setTextField(form, 'numero_responsable_castores', configRonda.numero_responsable_castores);
-    setTextField(form, 'responsable_manada', configRonda.responsable_manada);
-    setTextField(form, 'numero_responsable_manada', configRonda.numero_responsable_manada);
-    setTextField(form, 'responsable_tropa', configRonda.responsable_tropa);
-    setTextField(form, 'numero_responsable_tropa', configRonda.numero_responsable_tropa);
-    setTextField(form, 'responsable_pioneros', configRonda.responsable_pioneros);
-    setTextField(form, 'numero_responsable_pioneros', configRonda.numero_responsable_pioneros);
-    setTextField(form, 'responsable_rutas', configRonda.responsable_rutas);
-    setTextField(form, 'numero_responsable_rutas', configRonda.numero_responsable_rutas);
+    const RESP_FONT = 8;
+    setTextField(form, 'responsable_castores', configRonda.responsable_castores, RESP_FONT);
+    setTextField(form, 'numero_responsable_castores', configRonda.numero_responsable_castores, RESP_FONT);
+    setTextField(form, 'responsable_manada', configRonda.responsable_manada, RESP_FONT);
+    setTextField(form, 'numero_responsable_manada', configRonda.numero_responsable_manada, RESP_FONT);
+    setTextField(form, 'responsable_tropa', configRonda.responsable_tropa, RESP_FONT);
+    setTextField(form, 'numero_responsable_tropa', configRonda.numero_responsable_tropa, RESP_FONT);
+    setTextField(form, 'responsable_pioneros', configRonda.responsable_pioneros, RESP_FONT);
+    setTextField(form, 'numero_responsable_pioneros', configRonda.numero_responsable_pioneros, RESP_FONT);
+    setTextField(form, 'responsable_rutas', configRonda.responsable_rutas, RESP_FONT);
+    setTextField(form, 'numero_responsable_rutas', configRonda.numero_responsable_rutas, RESP_FONT);
   }
 
   // ==========================================
@@ -83,16 +87,18 @@ async function generarPDF({ respuesta, circular, educando, familiar, configRonda
   const nombreEducando = educando ? `${educando.nombre || ''} ${educando.apellidos || ''}`.trim() : '';
   const seccion = educando?.seccion_nombre || '';
 
-  setTextField(form, 'nombre_tutor', nombreTutor);
-  setTextField(form, 'dni_tutor', dniTutor);
-  setTextField(form, 'nombre_educando', nombreEducando);
-  setTextField(form, 'seccion', seccion);
+  // Tamaño reducido (8pt) para que quepa en las cajas de la autorización
+  const AUTH_FONT = 8;
+  setTextField(form, 'nombre_tutor', nombreTutor, AUTH_FONT);
+  setTextField(form, 'dni_tutor', dniTutor, AUTH_FONT);
+  setTextField(form, 'nombre_educando', nombreEducando, AUTH_FONT);
+  setTextField(form, 'seccion', seccion, AUTH_FONT);
 
   // nombre_activididad (typo intencional — así está en el PDF template)
-  setTextField(form, 'nombre_activididad', circular.titulo || circular.actividad_titulo || '');
+  setTextField(form, 'nombre_activididad', circular.titulo || circular.actividad_titulo || '', AUTH_FONT);
 
   // fecha_abreviada_actividad
-  setTextField(form, 'fecha_abreviada_actividad', circular.fecha_actividad || '');
+  setTextField(form, 'fecha_abreviada_actividad', circular.fecha_actividad || '', AUTH_FONT);
 
   // Campos de año (cabecera y firma)
   const now = new Date();
