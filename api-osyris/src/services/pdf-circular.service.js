@@ -139,6 +139,10 @@ async function generarPDF({ respuesta, circular, educando, familiar, configRonda
     }
   }
 
+  // Forzar recalculo de apariencia con fuente embebida (necesario para que setFontSize aplique)
+  const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  form.updateFieldAppearances(helvetica);
+
   // Aplanar el formulario para que no sea editable
   form.flatten();
 
