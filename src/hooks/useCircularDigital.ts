@@ -3,6 +3,8 @@ import { getApiUrl } from '@/lib/api-utils'
 import type {
   CircularActividad,
   CampoCustomCircular,
+  ConfigRonda,
+  FamiliarInfo,
   PerfilSaludData,
   ContactoEmergencia,
   CircularRespuesta,
@@ -27,6 +29,8 @@ export function useCircularDigital(actividadId: number, educandoId: number) {
   const [perfilSalud, setPerfilSalud] = useState<PerfilSaludData | null>(null)
   const [contactos, setContactos] = useState<ContactoEmergencia[]>([])
   const [educando, setEducando] = useState<{ id: number; nombre: string; apellidos: string; fecha_nacimiento: string; seccion_nombre: string } | null>(null)
+  const [familiar, setFamiliar] = useState<FamiliarInfo | null>(null)
+  const [configRonda, setConfigRonda] = useState<ConfigRonda | null>(null)
   const [respuestaExistente, setRespuestaExistente] = useState<CircularRespuesta | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,6 +52,8 @@ export function useCircularDigital(actividadId: number, educandoId: number) {
         setPerfilSalud(d.perfilSalud)
         setContactos(d.contactos)
         setEducando(d.educando)
+        setFamiliar(d.familiar || null)
+        setConfigRonda(d.configRonda || null)
         setRespuestaExistente(d.respuestaExistente)
       } else {
         setError(data.message || 'Error cargando circular')
@@ -85,6 +91,8 @@ export function useCircularDigital(actividadId: number, educandoId: number) {
     perfilSalud,
     contactos,
     educando,
+    familiar,
+    configRonda,
     respuestaExistente,
     isLoading,
     error,

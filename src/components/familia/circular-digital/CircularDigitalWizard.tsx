@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
 import {
   ChevronLeft, ChevronRight, Check, CheckCircle2, Loader2, AlertCircle,
-  User, Heart, Phone, FileText, PenTool
+  User, Heart, Phone, FileText, PenTool, MapPin, Clock, Backpack, Euro
 } from 'lucide-react'
 import { useCircularDigital } from '@/hooks/useCircularDigital'
 import { PerfilSaludForm } from './PerfilSaludForm'
@@ -26,7 +27,10 @@ interface CircularDigitalWizardProps {
 }
 
 export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onCancel }: CircularDigitalWizardProps) {
-  const { circularConfig, camposCustom, perfilSalud, contactos, educando, respuestaExistente, isLoading, error: fetchError, firmar } = useCircularDigital(actividadId, educandoId)
+  const {
+    circularConfig, camposCustom, perfilSalud, contactos, educando, familiar, configRonda,
+    respuestaExistente, isLoading, error: fetchError, firmar
+  } = useCircularDigital(actividadId, educandoId)
 
   const [step, setStep] = useState(0)
   const [perfilData, setPerfilData] = useState<Partial<PerfilSaludData>>({})
@@ -51,6 +55,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
   initData()
 
   const STEPS = [
+    { label: 'Actividad', icon: FileText },
     { label: 'Educando', icon: User },
     { label: 'Salud', icon: Heart },
     { label: 'Contactos', icon: Phone },
@@ -162,7 +167,105 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
 
   const renderStep = () => {
     switch (step) {
-      case 0: // Datos educando (readonly)
+      case 0: // Info circular (nueva)
+        return (
+          <Card data-testid="step-circular-info">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                {circularConfig.titulo || circularConfig.actividad_titulo}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Info actividad con estética scout */}
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-3">
+                <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                  Grupo Scout Osyris
+                </Badge>
+
+                {circularConfig.fecha_actividad && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-amber-600" />
+                    <span className="font-medium">{circularConfig.fecha_actividad}</span>
+                  </div>
+                )}
+
+                {(circularConfig.lugar || circularConfig.actividad_lugar) && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-amber-600" />
+                    <span>{circularConfig.lugar || circularConfig.actividad_lugar}</span>
+                  </div>
+                )}
+
+                {circularConfig.hora_y_lugar_salida && (
+                  <div className="text-sm">
+                    <span className="font-medium text-green-700">Salida:</span> {circularConfig.hora_y_lugar_salida}
+                  </div>
+                )}
+
+                {circularConfig.hora_y_lugar_llegada && (
+                  <div className="text-sm">
+                    <span className="font-medium text-blue-700">Llegada:</span> {circularConfig.hora_y_lugar_llegada}
+                  </div>
+                )}
+              </div>
+
+              {circularConfig.que_llevar && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="font-medium text-sm flex items-center gap-1 mb-1">
+                    <Backpack className="h-4 w-4" /> Qué llevar:
+                  </p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">{circularConfig.que_llevar}</p>
+                </div>
+              )}
+
+              {circularConfig.precio_info_pago && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="font-medium text-sm flex items-center gap-1 mb-1">
+                    <Euro className="h-4 w-4" /> Precio:
+                  </p>
+                  <p className="text-sm text-muted-foreground">{circularConfig.precio_info_pago}</p>
+                </div>
+              )}
+
+              {circularConfig.info_familias && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200">
+                  <p className="text-sm">{circularConfig.info_familias}</p>
+                </div>
+              )}
+
+              {circularConfig.texto_introductorio && (
+                <p className="text-sm text-muted-foreground">{circularConfig.texto_introductorio}</p>
+              )}
+
+              {/* Contactos responsables de la ronda */}
+              {configRonda && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="font-medium text-sm mb-2">Contactos de responsables:</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-muted-foreground">
+                    {configRonda.responsable_castores && (
+                      <span>🦫 Castores: {configRonda.responsable_castores} — {configRonda.numero_responsable_castores}</span>
+                    )}
+                    {configRonda.responsable_manada && (
+                      <span>🐺 Manada: {configRonda.responsable_manada} — {configRonda.numero_responsable_manada}</span>
+                    )}
+                    {configRonda.responsable_tropa && (
+                      <span>⚜️ Tropa: {configRonda.responsable_tropa} — {configRonda.numero_responsable_tropa}</span>
+                    )}
+                    {configRonda.responsable_pioneros && (
+                      <span>🔥 Pioneros: {configRonda.responsable_pioneros} — {configRonda.numero_responsable_pioneros}</span>
+                    )}
+                    {configRonda.responsable_rutas && (
+                      <span>🏔️ Rutas: {configRonda.responsable_rutas} — {configRonda.numero_responsable_rutas}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+
+      case 1: // Datos educando (readonly)
         return (
           <Card data-testid="step-educando">
             <CardHeader><CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Datos del Educando</CardTitle></CardHeader>
@@ -174,12 +277,25 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
                   <div><Label className="text-xs text-muted-foreground">Fecha nacimiento</Label><p>{new Date(educando.fecha_nacimiento).toLocaleDateString('es-ES')}</p></div>
                 )}
               </div>
+
+              {/* Pre-rellenado de datos tutor */}
+              {familiar && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="font-medium text-sm mb-1">Datos del tutor/a (pre-rellenados):</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div><span className="text-muted-foreground">Nombre:</span> {familiar.nombre} {familiar.apellidos}</div>
+                    {familiar.dni && <div><span className="text-muted-foreground">DNI:</span> {familiar.dni}</div>}
+                    {familiar.telefono && <div><span className="text-muted-foreground">Teléfono:</span> {familiar.telefono}</div>}
+                  </div>
+                </div>
+              )}
+
               <Alert><AlertDescription>Estos datos no se pueden modificar desde aquí. Si hay algún error, contacta con el grupo.</AlertDescription></Alert>
             </CardContent>
           </Card>
         )
 
-      case 1: // Perfil salud
+      case 2: // Perfil salud
         return (
           <div data-testid="step-salud">
             <PerfilSaludForm
@@ -192,7 +308,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
           </div>
         )
 
-      case 2: // Contactos
+      case 3: // Contactos
         return (
           <Card data-testid="step-contactos">
             <CardHeader><CardTitle className="flex items-center gap-2"><Phone className="h-5 w-5" /> Contactos de Emergencia</CardTitle></CardHeader>
@@ -208,7 +324,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
           </Card>
         )
 
-      case 3: // Campos custom
+      case 4: // Campos custom
         return (
           <Card data-testid="step-autorizaciones">
             <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Autorizaciones Específicas</CardTitle></CardHeader>
@@ -225,16 +341,27 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
           </Card>
         )
 
-      case 4: // Resumen
+      case 5: // Resumen
         return (
           <Card data-testid="step-resumen">
             <CardHeader><CardTitle className="flex items-center gap-2"><Check className="h-5 w-5" /> Resumen</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3 text-sm">
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200">
+                  <p className="font-semibold">{circularConfig.titulo || circularConfig.actividad_titulo}</p>
+                  {circularConfig.fecha_actividad && <p className="text-muted-foreground">{circularConfig.fecha_actividad}</p>}
+                  {(circularConfig.lugar || circularConfig.actividad_lugar) && <p className="text-muted-foreground">{circularConfig.lugar || circularConfig.actividad_lugar}</p>}
+                </div>
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="font-semibold">Educando: {educando?.nombre} {educando?.apellidos}</p>
                   <p>Sección: {educando?.seccion_nombre}</p>
                 </div>
+                {familiar && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="font-semibold">Tutor/a: {familiar.nombre} {familiar.apellidos}</p>
+                    {familiar.dni && <p>DNI: {familiar.dni}</p>}
+                  </div>
+                )}
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="font-semibold">Datos médicos</p>
                   <p>Alergias: {perfilData.alergias || 'Ninguna'}</p>
@@ -266,7 +393,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
           </Card>
         )
 
-      case 5: // Firma
+      case 6: // Firma
         return (
           <Card data-testid="step-firma">
             <CardHeader><CardTitle className="flex items-center gap-2"><PenTool className="h-5 w-5" /> Firma Digital</CardTitle></CardHeader>
@@ -303,8 +430,8 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
   }
 
   const canNext = () => {
-    if (step === 4) return aceptaCondiciones
-    if (step === 5) return false // submit button handles this
+    if (step === 5) return aceptaCondiciones
+    if (step === 6) return false // submit button handles this
     return true
   }
 
@@ -333,7 +460,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
         <Button variant="outline" onClick={step === 0 ? onCancel : () => setStep(s => s - 1)}>
           <ChevronLeft className="h-4 w-4 mr-1" /> {step === 0 ? 'Cancelar' : 'Atrás'}
         </Button>
-        {step < 5 && (
+        {step < 6 && (
           <Button onClick={() => setStep(s => s + 1)} disabled={!canNext()}>
             Siguiente <ChevronRight className="h-4 w-4 ml-1" />
           </Button>

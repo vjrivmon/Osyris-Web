@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CircularCrearForm } from '@/components/admin/circulares/CircularCrearForm'
 import { CircularEstadoDashboard } from '@/components/admin/circulares/CircularEstadoDashboard'
-import { FileText, PlusCircle, BarChart3 } from 'lucide-react'
+import { ConfigRondaForm } from '@/components/admin/circulares/ConfigRondaForm'
+import { FileText, PlusCircle, BarChart3, Settings } from 'lucide-react'
 
 export default function AdminCircularesPage() {
   const [refreshKey, setRefreshKey] = useState(0)
@@ -24,6 +25,9 @@ export default function AdminCircularesPage() {
           <TabsTrigger value="crear" className="flex items-center gap-2">
             <PlusCircle className="h-4 w-4" /> Crear Circular
           </TabsTrigger>
+          <TabsTrigger value="config-ronda" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" /> Config Ronda
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-4">
@@ -32,6 +36,10 @@ export default function AdminCircularesPage() {
 
         <TabsContent value="crear" className="mt-4">
           <CircularCrearForm onCreated={() => setRefreshKey(k => k + 1)} />
+        </TabsContent>
+
+        <TabsContent value="config-ronda" className="mt-4">
+          <ConfigRondaForm />
         </TabsContent>
       </Tabs>
     </div>

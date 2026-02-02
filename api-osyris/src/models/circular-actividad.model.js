@@ -48,8 +48,12 @@ const findAll = async (filters = {}) => {
 
 const create = async (data) => {
   const rows = await query(`
-    INSERT INTO circular_actividad (actividad_id, plantilla_id, titulo, texto_introductorio, fecha_limite_firma, estado, configuracion, creado_por)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    INSERT INTO circular_actividad (
+      actividad_id, plantilla_id, titulo, texto_introductorio, fecha_limite_firma, estado, configuracion, creado_por,
+      numero_dia, destinatarios, fecha_actividad, lugar,
+      hora_y_lugar_salida, hora_y_lugar_llegada, que_llevar, precio_info_pago, info_familias
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
     RETURNING *
   `, [
     data.actividad_id,
@@ -59,7 +63,16 @@ const create = async (data) => {
     data.fecha_limite_firma || null,
     data.estado || 'borrador',
     JSON.stringify(data.configuracion || {}),
-    data.creado_por
+    data.creado_por,
+    data.numero_dia || '',
+    data.destinatarios || 'Familias del Grupo Scout Osyris',
+    data.fecha_actividad || '',
+    data.lugar || '',
+    data.hora_y_lugar_salida || '',
+    data.hora_y_lugar_llegada || '',
+    data.que_llevar || '',
+    data.precio_info_pago || '',
+    data.info_familias || ''
   ]);
   return rows[0];
 };
@@ -69,7 +82,11 @@ const update = async (id, data) => {
   const values = [];
   let idx = 1;
 
-  const updatable = ['titulo', 'texto_introductorio', 'fecha_limite_firma', 'estado', 'configuracion', 'plantilla_id'];
+  const updatable = [
+    'titulo', 'texto_introductorio', 'fecha_limite_firma', 'estado', 'configuracion', 'plantilla_id',
+    'numero_dia', 'destinatarios', 'fecha_actividad', 'lugar',
+    'hora_y_lugar_salida', 'hora_y_lugar_llegada', 'que_llevar', 'precio_info_pago', 'info_familias'
+  ];
   for (const f of updatable) {
     if (data[f] !== undefined) {
       fields.push(`${f} = $${idx}`);

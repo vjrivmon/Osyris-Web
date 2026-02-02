@@ -42,6 +42,27 @@ export interface PlantillaCircular {
   updated_at?: string;
 }
 
+// --- Config Ronda (contactos por sección, por temporada) ---
+export interface ConfigRonda {
+  id: number;
+  temporada: string;
+  responsable_castores: string;
+  numero_responsable_castores: string;
+  responsable_manada: string;
+  numero_responsable_manada: string;
+  responsable_tropa: string;
+  numero_responsable_tropa: string;
+  responsable_pioneros: string;
+  numero_responsable_pioneros: string;
+  responsable_rutas: string;
+  numero_responsable_rutas: string;
+  normas_generales: string;
+  cuenta_bancaria: string;
+  activa: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // --- Circular por Actividad ---
 export interface CircularActividad {
   id: number;
@@ -53,6 +74,16 @@ export interface CircularActividad {
   estado: 'borrador' | 'publicada' | 'cerrada' | 'cancelada';
   configuracion: Record<string, unknown>;
   creado_por: number;
+  // Campos template PDF
+  numero_dia: string;
+  destinatarios: string;
+  fecha_actividad: string;
+  lugar: string;
+  hora_y_lugar_salida: string;
+  hora_y_lugar_llegada: string;
+  que_llevar: string;
+  precio_info_pago: string;
+  info_familias: string;
   created_at?: string;
   updated_at?: string;
   // Campos join
@@ -97,11 +128,20 @@ export interface CircularRespuesta {
   updated_at?: string;
 }
 
+// --- Info Familiar (para pre-rellenar autorización) ---
+export interface FamiliarInfo {
+  id: number;
+  nombre: string;
+  apellidos: string;
+  dni?: string;
+  telefono?: string;
+}
+
 // --- Wizard Props y State ---
 export interface CircularDigitalWizardProps {
   actividadId: number;
   educandoId: number;
-  familiarId: number;
+  familiarId?: number;
   onComplete: (resultado: CircularResultado) => void;
   onCancel: () => void;
   embedded?: boolean;
@@ -176,6 +216,8 @@ export interface CircularFormularioResponse {
     fecha_nacimiento: string;
     seccion_nombre: string;
   };
+  familiar: FamiliarInfo | null;
+  configRonda: ConfigRonda | null;
   respuestaExistente: CircularRespuesta | null;
 }
 
@@ -189,4 +231,25 @@ export interface DatosFirmaCircular {
   firmaTipo: 'image' | 'text';
   aceptaCondiciones: boolean;
   actualizarPerfil: boolean;
+}
+
+// --- Datos para crear circular (admin) ---
+export interface CrearCircularData {
+  actividad_id: number;
+  titulo: string;
+  texto_introductorio?: string;
+  fecha_limite_firma?: string | null;
+  estado?: 'borrador' | 'publicada';
+  // Campos template PDF
+  numero_dia?: string;
+  destinatarios?: string;
+  fecha_actividad?: string;
+  lugar?: string;
+  hora_y_lugar_salida?: string;
+  hora_y_lugar_llegada?: string;
+  que_llevar?: string;
+  precio_info_pago?: string;
+  info_familias?: string;
+  // Campos custom
+  camposCustom?: CampoCustomCircular[];
 }

@@ -27,4 +27,11 @@ router.put('/admin/circulares/:id/publicar', verifyToken, checkRole(['admin', 's
 router.get('/admin/circular/:actividadId/estado', verifyToken, checkRole(['admin', 'scouter']), controller.getDashboardEstado);
 router.get('/admin/plantillas-circular', verifyToken, checkRole(['admin', 'scouter']), controller.listarPlantillas);
 
+// =============================================
+// ADMIN: Config ronda
+// =============================================
+router.get('/config-ronda/activa', verifyToken, controller.getConfigRondaActiva);
+router.post('/admin/config-ronda', verifyToken, checkRole(['admin', 'scouter']), controller.crearConfigRonda);
+router.put('/admin/config-ronda/:id', verifyToken, checkRole(['admin', 'scouter']), controller.actualizarConfigRonda);
+
 module.exports = router;

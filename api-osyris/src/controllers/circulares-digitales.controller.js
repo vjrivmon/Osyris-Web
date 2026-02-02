@@ -2,6 +2,7 @@ const PerfilSaludModel = require('../models/perfil-salud.model');
 const CircularActividadModel = require('../models/circular-actividad.model');
 const CircularCampoModel = require('../models/circular-campo.model');
 const CircularRespuestaModel = require('../models/circular-respuesta.model');
+const ConfigRondaModel = require('../models/config-ronda.model');
 const pdfService = require('../services/pdf-circular.service');
 const { query } = require('../config/db.config');
 
@@ -67,6 +68,7 @@ exports.getFormularioCircular = async (req, res) => {
     const camposCustom = await CircularCampoModel.findByCircularId(circular.id);
     const perfil = await PerfilSaludModel.findByEducandoId(educandoId);
     const contactos = await PerfilSaludModel.getContactos(educandoId);
+    const configRonda = await ConfigRondaModel.getActiva();
 
     // Info educando
     const educandoRows = await query(`
@@ -75,12 +77,22 @@ exports.getFormularioCircular = async (req, res) => {
     `, [educandoId]);
     const educando = educandoRows[0] || null;
 
+    // Info familiar/tutor
+    const familiarRows = await query(`
+      SELECT u.id, u.nombre, u.apellidos, u.dni, u.telefono
+      FROM usuarios u
+      JOIN familiares_educandos fe ON u.id = fe.familiar_id
+      WHERE fe.educando_id = $1 AND fe.es_contacto_principal = TRUE
+      LIMIT 1
+    `, [educandoId]);
+    const familiar = familiarRows[0] || null;
+
     // Respuesta existente
     const respuestaExistente = await CircularRespuestaModel.findByCircularAndEducando(circular.id, educandoId);
 
     res.json({
       success: true,
-      data: { circular, camposCustom, perfilSalud: perfil, contactos, educando, respuestaExistente }
+      data: { circular, camposCustom, perfilSalud: perfil, contactos, educando, familiar, configRonda, respuestaExistente }
     });
   } catch (error) {
     console.error('Error getFormularioCircular:', error);
@@ -138,13 +150,24 @@ exports.firmarCircular = async (req, res) => {
     `, [educandoId]);
     const educando = educandoRows[0];
 
+    // Config ronda para el template PDF
+    const configRonda = await ConfigRondaModel.getActiva();
+
+    // Info familiar completa (con DNI)
+    const familiarRows = await query(`
+      SELECT u.id, u.nombre, u.apellidos, u.dni, u.telefono
+      FROM usuarios u WHERE u.id = $1
+    `, [req.usuario.id]);
+    const familiarCompleto = familiarRows[0] || req.usuario;
+
     // Generar PDF
     try {
       const { pdfBytes, hash } = await pdfService.generarPDF({
         respuesta,
         circular,
         educando,
-        familiar: req.usuario
+        familiar: familiarCompleto,
+        configRonda
       });
 
       const filename = `Circular_${circular.id}_${educando.nombre}_${educando.apellidos}_v${respuesta.version}.pdf`.replace(/\s/g, '_');
@@ -325,6 +348,44 @@ exports.listarPlantillas = async (req, res) => {
     const plantillas = await query('SELECT id, nombre, descripcion, tipo, campos_estandar, activa FROM plantillas_circular WHERE activa = true ORDER BY nombre');
     res.json({ success: true, data: plantillas });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// =============================================
+// CONFIG RONDA
+// =============================================
+
+exports.getConfigRondaActiva = async (req, res) => {
+  try {
+    const config = await ConfigRondaModel.getActiva();
+    res.json({ success: true, data: config });
+  } catch (error) {
+    console.error('Error getConfigRondaActiva:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.crearConfigRonda = async (req, res) => {
+  try {
+    const config = await ConfigRondaModel.crear(req.body);
+    res.status(201).json({ success: true, data: config });
+  } catch (error) {
+    console.error('Error crearConfigRonda:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.actualizarConfigRonda = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const config = await ConfigRondaModel.actualizar(id, req.body);
+    if (!config) {
+      return res.status(404).json({ success: false, message: 'Config de ronda no encontrada' });
+    }
+    res.json({ success: true, data: config });
+  } catch (error) {
+    console.error('Error actualizarConfigRonda:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

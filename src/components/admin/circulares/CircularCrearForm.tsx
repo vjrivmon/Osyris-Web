@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Plus, Trash2, Save, Send } from 'lucide-react'
+import { Plus, Trash2, Save, Send, MapPin, Clock, Backpack, Euro, Users } from 'lucide-react'
 import { getApiUrl } from '@/lib/api-utils'
 
 interface CampoCustom {
@@ -30,6 +30,18 @@ export function CircularCrearForm({ onCreated }: CircularCrearFormProps) {
   const [titulo, setTitulo] = useState('')
   const [textoIntro, setTextoIntro] = useState('')
   const [fechaLimite, setFechaLimite] = useState('')
+
+  // Campos del template PDF
+  const [numeroDia, setNumeroDia] = useState('')
+  const [destinatarios, setDestinatarios] = useState('Familias del Grupo Scout Osyris')
+  const [fechaActividad, setFechaActividad] = useState('')
+  const [lugar, setLugar] = useState('')
+  const [horaYLugarSalida, setHoraYLugarSalida] = useState('')
+  const [horaYLugarLlegada, setHoraYLugarLlegada] = useState('')
+  const [queLlevar, setQueLlevar] = useState('')
+  const [precioInfoPago, setPrecioInfoPago] = useState('')
+  const [infoFamilias, setInfoFamilias] = useState('')
+
   const [camposCustom, setCamposCustom] = useState<CampoCustom[]>([])
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -73,6 +85,16 @@ export function CircularCrearForm({ onCreated }: CircularCrearFormProps) {
           texto_introductorio: textoIntro,
           fecha_limite_firma: fechaLimite || null,
           estado: publicar ? 'publicada' : 'borrador',
+          // Campos template PDF
+          numero_dia: numeroDia,
+          destinatarios,
+          fecha_actividad: fechaActividad,
+          lugar,
+          hora_y_lugar_salida: horaYLugarSalida,
+          hora_y_lugar_llegada: horaYLugarLlegada,
+          que_llevar: queLlevar,
+          precio_info_pago: precioInfoPago,
+          info_familias: infoFamilias,
           camposCustom
         })
       })
@@ -85,6 +107,22 @@ export function CircularCrearForm({ onCreated }: CircularCrearFormProps) {
     setLoading(false)
   }
 
+  const resetForm = () => {
+    setSuccess(false)
+    setTitulo('')
+    setTextoIntro('')
+    setNumeroDia('')
+    setDestinatarios('Familias del Grupo Scout Osyris')
+    setFechaActividad('')
+    setLugar('')
+    setHoraYLugarSalida('')
+    setHoraYLugarLlegada('')
+    setQueLlevar('')
+    setPrecioInfoPago('')
+    setInfoFamilias('')
+    setCamposCustom([])
+  }
+
   if (success) {
     return (
       <div className="text-center py-8 space-y-4" data-testid="circular-creada">
@@ -92,15 +130,16 @@ export function CircularCrearForm({ onCreated }: CircularCrearFormProps) {
           <Save className="h-8 w-8 text-green-600" />
         </div>
         <h3 className="text-lg font-semibold text-green-700">Circular creada correctamente</h3>
-        <Button variant="outline" onClick={() => { setSuccess(false); setTitulo(''); setTextoIntro(''); setCamposCustom([]) }}>Crear otra</Button>
+        <Button variant="outline" onClick={resetForm}>Crear otra</Button>
       </div>
     )
   }
 
   return (
     <div className="space-y-4" data-testid="circular-crear-form">
+      {/* INFO GENERAL */}
       <Card>
-        <CardHeader><CardTitle>Crear Circular Digital</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Información General</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Actividad</Label>
@@ -114,13 +153,30 @@ export function CircularCrearForm({ onCreated }: CircularCrearFormProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Título de la circular</Label>
-            <Input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Circular Campamento Navidad 2026" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Título / Nombre de actividad</Label>
+              <Input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Ej: Campamento de Navidad 2026" />
+            </div>
+            <div className="space-y-2">
+              <Label>Número de día</Label>
+              <Input value={numeroDia} onChange={e => setNumeroDia(e.target.value)} placeholder="Ej: 7 o 7-8" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Destinatarios</Label>
+              <Input value={destinatarios} onChange={e => setDestinatarios(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Fecha actividad (texto para circular)</Label>
+              <Input value={fechaActividad} onChange={e => setFechaActividad(e.target.value)} placeholder="Ej: SÁBADO 7 - DOMINGO 8 DE FEBRERO" />
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Texto introductorio</Label>
+            <Label>Texto introductorio / Instrucciones familias</Label>
             <Textarea value={textoIntro} onChange={e => setTextoIntro(e.target.value)} placeholder="Instrucciones para las familias..." rows={3} />
           </div>
 
@@ -131,6 +187,50 @@ export function CircularCrearForm({ onCreated }: CircularCrearFormProps) {
         </CardContent>
       </Card>
 
+      {/* LOGÍSTICA */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" /> Logística</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Lugar</Label>
+            <Input value={lugar} onChange={e => setLugar(e.target.value)} placeholder="Ej: Albergue Sierra de Guadarrama" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1"><Clock className="h-3 w-3" /> Hora y lugar de salida</Label>
+              <Textarea value={horaYLugarSalida} onChange={e => setHoraYLugarSalida(e.target.value)} placeholder="Ej: A las 10:00h en la sede del grupo" rows={2} />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1"><Clock className="h-3 w-3" /> Hora y lugar de llegada</Label>
+              <Textarea value={horaYLugarLlegada} onChange={e => setHoraYLugarLlegada(e.target.value)} placeholder="Ej: A las 18:00h en la sede del grupo" rows={2} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1"><Backpack className="h-3 w-3" /> Qué llevar</Label>
+            <Textarea value={queLlevar} onChange={e => setQueLlevar(e.target.value)} placeholder="Ej: Saco de dormir, esterilla, ropa de abrigo..." rows={3} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* PRECIO E INFO FAMILIAS */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Euro className="h-5 w-5" /> Precio e Info Familias</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Precio e información de pago</Label>
+            <Textarea value={precioInfoPago} onChange={e => setPrecioInfoPago(e.target.value)} placeholder="Ej: 15€ por educando. Transferencia a ES12 3456 ..." rows={2} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Información adicional para familias</Label>
+            <Textarea value={infoFamilias} onChange={e => setInfoFamilias(e.target.value)} placeholder="Información extra para las familias..." rows={3} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* CAMPOS PERSONALIZADOS */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
