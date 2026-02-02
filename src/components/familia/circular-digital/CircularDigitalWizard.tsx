@@ -130,7 +130,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
         <p className="text-muted-foreground">El PDF se ha generado automáticamente.</p>
         {resultado.pdfUrl && (
           <Button variant="outline" asChild>
-            <a href={resultado.pdfUrl} target="_blank" rel="noopener noreferrer">Ver PDF</a>
+            <a href={`${getApiUrl()}${resultado.pdfUrl}`} target="_blank" rel="noopener noreferrer">Ver PDF</a>
           </Button>
         )}
         <Button onClick={() => onComplete(resultado)}>Continuar</Button>
