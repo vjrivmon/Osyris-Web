@@ -412,12 +412,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
                 </Label>
               </div>
 
-              <div className="flex items-center space-x-3">
-                <Checkbox checked={actualizarPerfil} onCheckedChange={v => setActualizarPerfil(v === true)} id="actualizar" />
-                <Label htmlFor="actualizar" className="text-sm cursor-pointer">
-                  Actualizar mi perfil de salud con estos datos para futuras actividades
-                </Label>
-              </div>
+              {/* actualizarPerfil siempre true — se actualiza automáticamente */}
             </CardContent>
           </Card>
         )
