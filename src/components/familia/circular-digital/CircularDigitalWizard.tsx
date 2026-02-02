@@ -78,7 +78,18 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
       const token = localStorage.getItem('familia_token') || localStorage.getItem('token')
       const res = await fetch(
         `${getApiUrl()}/api/circular/${circularConfig.id}/preview/${educandoId}`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            firmaBase64: firmaBase64,
+            datosMedicos: perfilData,
+            contactos: contactosData
+          })
+        }
       )
       const data = await res.json()
       if (data.success) {
@@ -91,7 +102,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
     } finally {
       setIsLoadingPreview(false)
     }
-  }, [circularConfig, educandoId])
+  }, [circularConfig, educandoId, firmaBase64, perfilData, contactosData])
 
   // Ya firmada
   if (respuestaExistente && !resultado) {

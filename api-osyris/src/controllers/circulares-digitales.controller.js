@@ -467,6 +467,8 @@ exports.previewPDF = async (req, res) => {
   try {
     const circularId = parseInt(req.params.circularId);
     const educandoId = parseInt(req.params.educandoId);
+    // Acepta POST con firma y datos médicos para preview realista
+    const { firmaBase64, datosMedicos, contactos } = req.body || {};
 
     const circular = await CircularActividadModel.findById(circularId);
     if (!circular) {
@@ -482,31 +484,31 @@ exports.previewPDF = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Educando no encontrado' });
     }
 
-    // Info familiar
+    // Info familiar (incluyendo DNI)
     const familiarRows = await query(`
       SELECT u.id, u.nombre, u.apellidos, u.dni, u.telefono
       FROM usuarios u WHERE u.id = $1
     `, [req.usuario.id]);
     const familiar = familiarRows[0] || req.usuario;
 
-    // Perfil salud para datos médicos
-    const perfil = await PerfilSaludModel.findByEducandoId(educandoId);
+    // Usar datos médicos del body si vienen (wizard actualizado), sino del perfil guardado
+    const perfil = datosMedicos || await PerfilSaludModel.findByEducandoId(educandoId);
+    const contactosEmergencia = contactos || [];
     const configRonda = await ConfigRondaModel.getActiva();
 
-    // Crear respuesta "fake" para el preview (sin firma real)
-    const fakeRespuesta = {
+    const previewRespuesta = {
       fecha_firma: new Date(),
       version: 1,
       datos_medicos_snapshot: perfil || {},
-      contactos_emergencia_snapshot: [],
+      contactos_emergencia_snapshot: contactosEmergencia,
       campos_custom_respuestas: {},
-      firma_base64: null,
-      firma_tipo: null,
+      firma_base64: firmaBase64 || null,
+      firma_tipo: firmaBase64 ? 'image' : null,
       ip_firma: 'preview'
     };
 
     const { pdfBytes } = await pdfService.generarPDF({
-      respuesta: fakeRespuesta,
+      respuesta: previewRespuesta,
       circular,
       educando,
       familiar,
