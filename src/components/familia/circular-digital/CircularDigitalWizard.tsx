@@ -128,12 +128,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
         <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
         <h3 className="text-xl font-semibold text-green-700">¡Circular firmada con éxito!</h3>
         <p className="text-muted-foreground">El PDF se ha generado automáticamente.</p>
-        {resultado.pdfUrl && (
-          <Button variant="outline" asChild>
-            <a href={`${getApiUrl()}${resultado.pdfUrl}`} target="_blank" rel="noopener noreferrer">Ver PDF</a>
-          </Button>
-        )}
-        <Button onClick={() => onComplete(resultado)}>Continuar</Button>
+        <Button onClick={() => onComplete(resultado)} size="lg">Continuar</Button>
       </div>
     )
   }
