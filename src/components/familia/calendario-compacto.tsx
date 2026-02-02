@@ -629,19 +629,19 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
             <h5 className="font-medium text-sm truncate">{actividad.titulo}</h5>
           </div>
           {/* Badge de confirmación o circular */}
-          {tieneCircular ? (
+          {tieneCircular && circularInfo.estado === 'firmada' ? (
             <div className="flex-shrink-0">
-              {circularInfo.estado === 'firmada' ? (
-                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Firmada
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
-                  <FileText className="h-3 w-3 mr-1" />
-                  Pendiente de firma
-                </Badge>
-              )}
+              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Firmada
+              </Badge>
+            </div>
+          ) : tieneCircular && actividad.confirmacion === 'confirmado' && circularInfo.estado !== 'firmada' ? (
+            <div className="flex-shrink-0">
+              <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                <FileText className="h-3 w-3 mr-1" />
+                Pendiente de firma
+              </Badge>
             </div>
           ) : actividad.confirmacion ? (
             <div className="flex-shrink-0">
@@ -676,7 +676,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
           )}
         </div>
 
-        {actividad.confirmacion === 'pendiente' && hijoActual && !tieneCircular && (
+        {actividad.confirmacion === 'pendiente' && hijoActual && (
           <div className="mt-3">
             {esCampamento ? (
               // Botón especial para campamentos
@@ -755,8 +755,8 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
           </div>
         )}
 
-        {/* Botón circular digital — si la actividad tiene circular vinculada */}
-        {tieneCircular && hijoActual && circularInfo.estado !== 'firmada' && (
+        {/* Botón circular digital — solo si ya confirmó asistencia y tiene circular */}
+        {tieneCircular && hijoActual && actividad.confirmacion === 'confirmado' && circularInfo.estado !== 'firmada' && (
           <div className="mt-3">
             <Link href={`/familia/circulares?actividad=${actividad.id}&educando=${hijoActual.id}`}>
               <Button
@@ -779,7 +779,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
           </div>
         )}
 
-        {/* Botón para cambiar asistencia ya confirmada/rechazada (NO campamentos, sin circular) */}
+        {/* Botón para cambiar asistencia ya confirmada/rechazada (NO campamentos, sin circular o circular ya firmada) */}
         {!tieneCircular && actividad.confirmacion && actividad.confirmacion !== 'pendiente' && hijoActual && !esCampamento && (
           <div className="mt-3">
             {actividad.confirmacion === 'confirmado' ? (
