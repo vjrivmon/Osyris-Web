@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { CheckCircle2, Clock, AlertCircle, Search, FileText, Send } from 'lucide-react'
+import { CheckCircle2, Clock, AlertCircle, Search, FileText, Send, Eye, Download, X, Phone, Heart, User } from 'lucide-react'
 import { getApiUrl } from '@/lib/api-utils'
 import type { DashboardStats } from '@/types/circular-digital'
 
@@ -20,6 +20,8 @@ export function CircularEstadoDashboard({ actividadId }: CircularEstadoDashboard
   const [stats, setStats] = useState<DashboardStats>({ total: 0, firmadas: 0, pendientes: 0, error: 0 })
   const [busqueda, setBusqueda] = useState('')
   const [loading, setLoading] = useState(true)
+  const [detalleModal, setDetalleModal] = useState<any>(null)
+  const [loadingDetalle, setLoadingDetalle] = useState(false)
 
   const getAuth = () => {
     const token = localStorage.getItem('token')
@@ -63,6 +65,19 @@ export function CircularEstadoDashboard({ actividadId }: CircularEstadoDashboard
     } catch { /* */ }
     setLoading(false)
   }, [])
+
+  const verDetalle = async (educandoId: number) => {
+    if (!selectedCircular) return
+    setLoadingDetalle(true)
+    try {
+      const res = await fetch(`${getApiUrl()}/api/admin/circular/${selectedCircular.id}/respuesta/${educandoId}`, { headers: getAuth() })
+      const data = await res.json()
+      if (data.success) {
+        setDetalleModal(data.data)
+      }
+    } catch { /* */ }
+    setLoadingDetalle(false)
+  }
 
   const filteredInscritos = inscritos.filter(i => {
     if (!busqueda) return true
@@ -179,6 +194,7 @@ export function CircularEstadoDashboard({ actividadId }: CircularEstadoDashboard
               <th className="text-left p-3">Familiar</th>
               <th className="text-center p-3">Estado</th>
               <th className="text-center p-3">Fecha firma</th>
+              <th className="text-center p-3">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -199,6 +215,13 @@ export function CircularEstadoDashboard({ actividadId }: CircularEstadoDashboard
                 <td className="p-3 text-center text-xs">
                   {i.fecha_firma ? new Date(i.fecha_firma).toLocaleDateString('es-ES') : '-'}
                 </td>
+                <td className="p-3 text-center">
+                  {(i.estado_circular === 'archivada' || i.estado_circular === 'firmada' || i.estado_circular === 'pdf_generado') && (
+                    <Button size="sm" variant="outline" onClick={() => verDetalle(i.educando_id)} disabled={loadingDetalle}>
+                      <Eye className="h-3 w-3 mr-1" /> Ver
+                    </Button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -207,6 +230,136 @@ export function CircularEstadoDashboard({ actividadId }: CircularEstadoDashboard
           <p className="text-center py-8 text-muted-foreground">No hay inscritos que mostrar.</p>
         )}
       </div>
+
+      {/* Modal Detalle Respuesta */}
+      {detalleModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetalleModal(null)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between rounded-t-xl">
+              <div>
+                <h3 className="text-lg font-bold">
+                  {detalleModal.educando?.nombre} {detalleModal.educando?.apellidos}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {detalleModal.educando?.seccion_nombre} — Firmada el {new Date(detalleModal.respuesta.fecha_firma).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setDetalleModal(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Familiar que firmó */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><User className="h-4 w-4" /> Tutor/a que firmó</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm space-y-1">
+                  <p><strong>{detalleModal.familiar?.nombre} {detalleModal.familiar?.apellidos}</strong></p>
+                  <p>DNI: {detalleModal.familiar?.dni || 'No registrado'}</p>
+                  <p>Teléfono: {detalleModal.familiar?.telefono || '-'}</p>
+                  <p>Email: {detalleModal.familiar?.email || '-'}</p>
+                </CardContent>
+              </Card>
+
+              {/* Datos médicos */}
+              {detalleModal.respuesta.datos_medicos_snapshot && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2"><Heart className="h-4 w-4" /> Datos médicos (snapshot)</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    {(() => {
+                      const dm = typeof detalleModal.respuesta.datos_medicos_snapshot === 'string'
+                        ? JSON.parse(detalleModal.respuesta.datos_medicos_snapshot)
+                        : detalleModal.respuesta.datos_medicos_snapshot;
+                      return (
+                        <div className="grid grid-cols-2 gap-2">
+                          {dm.alergias && (<div><span className="text-muted-foreground">Alergias:</span> {dm.alergias}</div>)}
+                          {dm.intolerancias && (<div><span className="text-muted-foreground">Intolerancias:</span> {dm.intolerancias}</div>)}
+                          {dm.medicacion && (<div><span className="text-muted-foreground">Medicación:</span> {dm.medicacion}</div>)}
+                          {dm.grupo_sanguineo && (<div><span className="text-muted-foreground">Grupo sanguíneo:</span> {dm.grupo_sanguineo}</div>)}
+                          {dm.tarjeta_sanitaria && (<div><span className="text-muted-foreground">SIP:</span> {dm.tarjeta_sanitaria}</div>)}
+                          {dm.enfermedades_cronicas && (<div><span className="text-muted-foreground">Enfermedades crónicas:</span> {dm.enfermedades_cronicas}</div>)}
+                          {dm.observaciones_medicas && (<div className="col-span-2"><span className="text-muted-foreground">Observaciones:</span> {dm.observaciones_medicas}</div>)}
+                          <div><span className="text-muted-foreground">Puede hacer deporte:</span> {dm.puede_hacer_deporte ? '✅ Sí' : '❌ No'}</div>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Contactos emergencia */}
+              {detalleModal.respuesta.contactos_emergencia_snapshot && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2"><Phone className="h-4 w-4" /> Contactos de emergencia</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    {(() => {
+                      const contactos = typeof detalleModal.respuesta.contactos_emergencia_snapshot === 'string'
+                        ? JSON.parse(detalleModal.respuesta.contactos_emergencia_snapshot)
+                        : detalleModal.respuesta.contactos_emergencia_snapshot;
+                      return (
+                        <div className="space-y-2">
+                          {Array.isArray(contactos) && contactos.map((c: any, i: number) => (
+                            <div key={i} className="flex items-center gap-3 p-2 bg-muted/50 rounded">
+                              <span className="font-medium">{i + 1}.</span>
+                              <span>{c.nombre_completo || c.nombre}</span>
+                              <span className="text-muted-foreground">({c.relacion})</span>
+                              <span className="ml-auto font-mono">{c.telefono}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Firma */}
+              {detalleModal.respuesta.firma_base64 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">✍️ Firma</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex justify-center">
+                    <img
+                      src={detalleModal.respuesta.firma_base64}
+                      alt="Firma del tutor"
+                      className="max-h-32 border rounded bg-white p-2"
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Descargar PDF */}
+              {detalleModal.respuesta.pdf_local_path && (
+                <div className="flex justify-center pt-2">
+                  <Button
+                    onClick={() => {
+                      const pdfPath = detalleModal.respuesta.pdf_local_path;
+                      const fileName = pdfPath.split('/').pop();
+                      window.open(`${getApiUrl()}/uploads/circulares/${fileName}`, '_blank');
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" /> Descargar PDF firmado
+                  </Button>
+                </div>
+              )}
+
+              {/* Metadata */}
+              <p className="text-xs text-muted-foreground text-center">
+                IP: {detalleModal.respuesta.ip_firma} · Versión: {detalleModal.respuesta.version}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

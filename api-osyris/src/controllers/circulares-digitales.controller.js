@@ -394,6 +394,62 @@ exports.actualizarConfigRonda = async (req, res) => {
 // FAMILIAR: Lista circulares pendientes
 // =============================================
 
+// =============================================
+// ADMIN: VER DETALLE DE RESPUESTA FIRMADA
+// =============================================
+
+exports.getDetalleRespuesta = async (req, res) => {
+  try {
+    const circularId = parseInt(req.params.circularId);
+    const educandoId = parseInt(req.params.educandoId);
+
+    const respuesta = await CircularRespuestaModel.findByCircularAndEducando(circularId, educandoId);
+    if (!respuesta) {
+      return res.status(404).json({ success: false, message: 'No hay respuesta para este educando' });
+    }
+
+    // Info educando
+    const educandoRows = await query(`
+      SELECT e.id, e.nombre, e.apellidos, e.fecha_nacimiento, s.nombre as seccion_nombre
+      FROM educandos e JOIN secciones s ON e.seccion_id = s.id WHERE e.id = $1
+    `, [educandoId]);
+
+    // Info familiar que firmó
+    const familiarRows = await query(`
+      SELECT u.id, u.nombre, u.apellidos, u.dni, u.telefono, u.email
+      FROM usuarios u WHERE u.id = $1
+    `, [respuesta.familiar_id]);
+
+    // Circular info
+    const circular = await CircularActividadModel.findById(circularId);
+
+    res.json({
+      success: true,
+      data: {
+        respuesta: {
+          id: respuesta.id,
+          estado: respuesta.estado,
+          version: respuesta.version,
+          fecha_firma: respuesta.fecha_firma,
+          datos_medicos_snapshot: respuesta.datos_medicos_snapshot,
+          contactos_emergencia_snapshot: respuesta.contactos_emergencia_snapshot,
+          campos_custom_respuestas: respuesta.campos_custom_respuestas,
+          firma_base64: respuesta.firma_base64,
+          pdf_local_path: respuesta.pdf_local_path,
+          pdf_drive_id: respuesta.pdf_drive_id,
+          ip_firma: respuesta.ip_firma
+        },
+        educando: educandoRows[0] || null,
+        familiar: familiarRows[0] || null,
+        circular: circular
+      }
+    });
+  } catch (error) {
+    console.error('Error getDetalleRespuesta:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.getCircularesFamiliar = async (req, res) => {
   try {
     const familiarId = req.usuario.id;
