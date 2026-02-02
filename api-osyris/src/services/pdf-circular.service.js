@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const TEMPLATE_PATH = path.join(__dirname, '../templates/circular-template.pdf');
+const TEMPLATE_PATH = path.join(__dirname, '../../templates/circular-template.pdf');
 
 /**
  * Rellena un campo de texto del formulario PDF de forma segura.
