@@ -104,17 +104,17 @@ async function generarPDF({ respuesta, circular, educando, familiar, configRonda
   const now = new Date();
   const currentYear = now.getFullYear().toString();
   // Campo "año" — puede ser simple o con sufijo #0/#1 según versión del template
-  setTextField(form, 'año', currentYear);
+  setTextField(form, 'año', currentYear, AUTH_FONT);
   try { form.getTextField('año#0')?.setText(currentYear); } catch { /* no existe en este template */ }
   try { form.getTextField('año#1')?.setText(currentYear); } catch { /* no existe en este template */ }
 
   // Fecha de firma
   const fechaFirma = respuesta.fecha_firma ? new Date(respuesta.fecha_firma) : now;
-  setTextField(form, 'dia_fecha_firma', fechaFirma.getDate().toString());
+  setTextField(form, 'dia_fecha_firma', fechaFirma.getDate().toString(), AUTH_FONT);
 
   const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
     'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-  setTextField(form, 'mes_fecha_firma', meses[fechaFirma.getMonth()]);
+  setTextField(form, 'mes_fecha_firma', meses[fechaFirma.getMonth()], AUTH_FONT);
 
   // Teléfono de contacto del familiar
   setTextField(form, 'telefono_contacto', familiar?.telefono || '', AUTH_FONT);
