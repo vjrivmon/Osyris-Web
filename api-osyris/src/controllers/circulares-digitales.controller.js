@@ -179,11 +179,24 @@ exports.firmarCircular = async (req, res) => {
         pdf_local_path: driveResult.localPath
       });
 
-      // Vincular con inscripción si existe
-      await query(`
-        UPDATE inscripciones_campamento SET circular_respuesta_id = $1, circular_firmada_drive_id = $2, circular_firmada_url = $3
-        WHERE actividad_id = $4 AND educando_id = $5
-      `, [respuesta.id, driveResult.fileId, driveResult.webViewLink, actividadId, educandoId]);
+      // Vincular con inscripción si existe, o crear una si no hay (actividades no-campamento)
+      const existingInsc = await query(
+        `SELECT id FROM inscripciones_campamento WHERE actividad_id = $1 AND educando_id = $2`,
+        [actividadId, educandoId]
+      );
+
+      if (existingInsc.length > 0) {
+        await query(`
+          UPDATE inscripciones_campamento SET circular_respuesta_id = $1, circular_firmada_drive_id = $2, circular_firmada_url = $3
+          WHERE actividad_id = $4 AND educando_id = $5
+        `, [respuesta.id, driveResult.fileId, driveResult.webViewLink, actividadId, educandoId]);
+      } else {
+        // Auto-crear inscripción para que el dashboard admin la cuente
+        await query(`
+          INSERT INTO inscripciones_campamento (actividad_id, educando_id, familiar_id, estado, circular_respuesta_id, circular_firmada_drive_id, circular_firmada_url, fecha_inscripcion)
+          VALUES ($1, $2, $3, 'inscrito', $4, $5, $6, NOW())
+        `, [actividadId, educandoId, req.usuario.id, respuesta.id, driveResult.fileId, driveResult.webViewLink]);
+      }
 
       // Auditoría
       await query(`
@@ -386,6 +399,103 @@ exports.actualizarConfigRonda = async (req, res) => {
     res.json({ success: true, data: config });
   } catch (error) {
     console.error('Error actualizarConfigRonda:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// =============================================
+// CHECK ACTIVIDAD: ¿tiene circular vinculada?
+// =============================================
+
+exports.checkActividad = async (req, res) => {
+  try {
+    const actividadId = parseInt(req.params.actividadId);
+    const educandoId = req.query.educandoId ? parseInt(req.query.educandoId) : null;
+
+    const circular = await CircularActividadModel.findByActividadId(actividadId);
+    if (!circular || circular.estado !== 'publicada') {
+      return res.json({ success: true, data: { hasCircular: false } });
+    }
+
+    let estado = null;
+    if (educandoId) {
+      const respuesta = await CircularRespuestaModel.findByCircularAndEducando(circular.id, educandoId);
+      estado = respuesta?.estado || 'pendiente';
+    }
+
+    res.json({
+      success: true,
+      data: {
+        hasCircular: true,
+        circularId: circular.id,
+        estado,
+        titulo: circular.titulo
+      }
+    });
+  } catch (error) {
+    console.error('Error checkActividad:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// =============================================
+// PREVIEW PDF: genera PDF con datos pre-rellenados (sin firma, sin guardar)
+// =============================================
+
+exports.previewPDF = async (req, res) => {
+  try {
+    const circularId = parseInt(req.params.circularId);
+    const educandoId = parseInt(req.params.educandoId);
+
+    const circular = await CircularActividadModel.findById(circularId);
+    if (!circular) {
+      return res.status(404).json({ success: false, message: 'Circular no encontrada' });
+    }
+
+    // Info educando
+    const educandoRows = await query(`
+      SELECT e.*, s.nombre as seccion_nombre FROM educandos e JOIN secciones s ON e.seccion_id = s.id WHERE e.id = $1
+    `, [educandoId]);
+    const educando = educandoRows[0];
+    if (!educando) {
+      return res.status(404).json({ success: false, message: 'Educando no encontrado' });
+    }
+
+    // Info familiar
+    const familiarRows = await query(`
+      SELECT u.id, u.nombre, u.apellidos, u.dni, u.telefono
+      FROM usuarios u WHERE u.id = $1
+    `, [req.usuario.id]);
+    const familiar = familiarRows[0] || req.usuario;
+
+    // Perfil salud para datos médicos
+    const perfil = await PerfilSaludModel.findByEducandoId(educandoId);
+    const configRonda = await ConfigRondaModel.getActiva();
+
+    // Crear respuesta "fake" para el preview (sin firma real)
+    const fakeRespuesta = {
+      fecha_firma: new Date(),
+      version: 1,
+      datos_medicos_snapshot: perfil || {},
+      contactos_emergencia_snapshot: [],
+      campos_custom_respuestas: {},
+      firma_base64: null,
+      firma_tipo: null,
+      ip_firma: 'preview'
+    };
+
+    const { pdfBytes } = await pdfService.generarPDF({
+      respuesta: fakeRespuesta,
+      circular,
+      educando,
+      familiar,
+      configRonda
+    });
+
+    const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
+    res.json({ success: true, data: { pdfBase64 } });
+  } catch (error) {
+    console.error('Error previewPDF:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

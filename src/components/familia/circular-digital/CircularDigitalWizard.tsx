@@ -12,9 +12,10 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import {
   ChevronLeft, ChevronRight, Check, CheckCircle2, Loader2, AlertCircle,
-  User, Heart, Phone, FileText, PenTool, MapPin, Clock, Backpack, Euro
+  User, Heart, Phone, FileText, PenTool, MapPin, Clock, Backpack, Euro, Eye, AlertTriangle
 } from 'lucide-react'
 import { useCircularDigital } from '@/hooks/useCircularDigital'
+import { getApiUrl } from '@/lib/api-utils'
 import { PerfilSaludForm } from './PerfilSaludForm'
 import { FirmaDigitalCanvas } from './FirmaDigitalCanvas'
 import type { PerfilSaludData, ContactoEmergencia, CampoCustomCircular, CircularResultado } from '@/types/circular-digital'
@@ -42,6 +43,9 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [resultado, setResultado] = useState<CircularResultado | null>(null)
+  const [pdfPreviewBase64, setPdfPreviewBase64] = useState<string | null>(null)
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
 
   // Init data from fetched profile
   const initData = useCallback(() => {
@@ -61,8 +65,33 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
     { label: 'Contactos', icon: Phone },
     { label: 'Autorizaciones', icon: FileText },
     { label: 'Resumen', icon: Check },
+    { label: 'Preview', icon: Eye },
     { label: 'Firma', icon: PenTool },
   ]
+
+  // Load PDF preview when entering the preview step
+  const loadPreview = useCallback(async () => {
+    if (!circularConfig) return
+    setIsLoadingPreview(true)
+    setPreviewError(null)
+    try {
+      const token = localStorage.getItem('familia_token') || localStorage.getItem('token')
+      const res = await fetch(
+        `${getApiUrl()}/api/circular/${circularConfig.id}/preview/${educandoId}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      )
+      const data = await res.json()
+      if (data.success) {
+        setPdfPreviewBase64(data.data.pdfBase64)
+      } else {
+        setPreviewError(data.message || 'Error generando preview')
+      }
+    } catch {
+      setPreviewError('Error de conexión al generar preview')
+    } finally {
+      setIsLoadingPreview(false)
+    }
+  }, [circularConfig, educandoId])
 
   // Ya firmada
   if (respuestaExistente && !resultado) {
@@ -393,7 +422,68 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
           </Card>
         )
 
-      case 6: // Firma
+      case 6: // Preview PDF
+        return (
+          <Card data-testid="step-preview">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" /> Vista previa del documento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Revisa que todos los datos del documento son correctos antes de firmar.
+              </p>
+
+              {isLoadingPreview && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-3">Generando vista previa...</span>
+                </div>
+              )}
+
+              {previewError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{previewError}</AlertDescription>
+                </Alert>
+              )}
+
+              {pdfPreviewBase64 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <iframe
+                    src={`data:application/pdf;base64,${pdfPreviewBase64}`}
+                    className="w-full"
+                    style={{ height: '500px' }}
+                    title="Vista previa circular"
+                  />
+                </div>
+              )}
+
+              {pdfPreviewBase64 && (
+                <div className="flex space-x-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                    onClick={() => setStep(5)}
+                  >
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Hay algún error
+                  </Button>
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    onClick={() => setStep(7)}
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Todo correcto
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+
+      case 7: // Firma
         return (
           <Card data-testid="step-firma">
             <CardHeader><CardTitle className="flex items-center gap-2"><PenTool className="h-5 w-5" /> Firma Digital</CardTitle></CardHeader>
@@ -431,8 +521,20 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
 
   const canNext = () => {
     if (step === 5) return aceptaCondiciones
-    if (step === 6) return false // submit button handles this
+    if (step === 6) return false // preview has its own buttons
+    if (step === 7) return false // submit button handles this
     return true
+  }
+
+  const handleNext = () => {
+    const nextStep = step + 1
+    // When entering preview step, load the PDF
+    if (nextStep === 6) {
+      setStep(nextStep)
+      loadPreview()
+      return
+    }
+    setStep(nextStep)
   }
 
   return (
@@ -455,17 +557,19 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
 
       {renderStep()}
 
-      {/* Nav buttons */}
-      <div className="flex justify-between pt-2">
-        <Button variant="outline" onClick={step === 0 ? onCancel : () => setStep(s => s - 1)}>
-          <ChevronLeft className="h-4 w-4 mr-1" /> {step === 0 ? 'Cancelar' : 'Atrás'}
-        </Button>
-        {step < 6 && (
-          <Button onClick={() => setStep(s => s + 1)} disabled={!canNext()}>
-            Siguiente <ChevronRight className="h-4 w-4 ml-1" />
+      {/* Nav buttons (hidden on preview step — it has its own buttons) */}
+      {step !== 6 && (
+        <div className="flex justify-between pt-2">
+          <Button variant="outline" onClick={step === 0 ? onCancel : () => setStep(s => s - 1)}>
+            <ChevronLeft className="h-4 w-4 mr-1" /> {step === 0 ? 'Cancelar' : 'Atrás'}
           </Button>
-        )}
-      </div>
+          {step < 7 && (
+            <Button onClick={handleNext} disabled={!canNext()}>
+              Siguiente <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

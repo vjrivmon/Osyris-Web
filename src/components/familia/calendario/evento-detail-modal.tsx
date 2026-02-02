@@ -26,12 +26,15 @@ import {
   AlertTriangle,
   Info,
   FileText,
-  Eye
+  Eye,
+  PenTool
 } from 'lucide-react'
 import { useCalendarioFamilia, ActividadCalendario } from '@/hooks/useCalendarioFamilia'
 import { ConfirmationBadge } from './confirmation-badge'
 import { useFamiliaData } from '@/hooks/useFamiliaData'
 import { useInscripcionCampamento } from '@/hooks/useInscripcionCampamento'
+import { getApiUrl } from '@/lib/api-utils'
+import { CircularDigitalWizard } from '@/components/familia/circular-digital/CircularDigitalWizard'
 
 interface EventoDetailModalProps {
   actividad: ActividadCalendario
@@ -139,6 +142,40 @@ function DocumentosEnviadosSection({
   )
 }
 
+// Hook para detectar si una actividad tiene circular vinculada
+function useCircularCheck(actividadId: string | number, educandoId: number) {
+  const [circularInfo, setCircularInfo] = useState<{
+    hasCircular: boolean
+    circularId?: number
+    estado?: string
+    titulo?: string
+  } | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const checkCircular = async () => {
+      try {
+        const token = localStorage.getItem('familia_token') || localStorage.getItem('token')
+        const res = await fetch(
+          `${getApiUrl()}/api/circulares/check-actividad/${actividadId}?educandoId=${educandoId}`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        )
+        const data = await res.json()
+        if (data.success) {
+          setCircularInfo(data.data)
+        }
+      } catch {
+        // Silently fail — no circular detection
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkCircular()
+  }, [actividadId, educandoId])
+
+  return { circularInfo, loading }
+}
+
 // Componente para el contenido de confirmación de un hijo
 function HijoConfirmacionContent({
   hijo,
@@ -162,6 +199,28 @@ function HijoConfirmacionContent({
   const isConfirmed = confirmacionActual === 'confirmado'
   const isRejected = confirmacionActual === 'no_asiste'
 
+  // Detectar si la actividad tiene circular vinculada
+  const { circularInfo, loading: circularLoading } = useCircularCheck(actividad.id, hijo.id)
+  const [showWizard, setShowWizard] = useState(false)
+
+  const hasCircular = circularInfo?.hasCircular === true
+  const circularFirmada = hasCircular && circularInfo?.estado &&
+    ['firmada', 'pdf_generado', 'archivada'].includes(circularInfo.estado)
+
+  // Si el wizard está abierto, mostrar solo el wizard
+  if (showWizard && hasCircular) {
+    return (
+      <div className="space-y-4">
+        <CircularDigitalWizard
+          actividadId={typeof actividad.id === 'string' ? parseInt(actividad.id) : actividad.id}
+          educandoId={hijo.id}
+          onComplete={() => setShowWizard(false)}
+          onCancel={() => setShowWizard(false)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* Header del hijo */}
@@ -178,13 +237,57 @@ function HijoConfirmacionContent({
             <p className="text-sm text-gray-600">{hijo.seccion}</p>
           </div>
         </div>
-        <ConfirmationBadge
-          estado={isConfirmed ? 'confirmado' : isRejected ? 'no_asiste' : 'pendiente'}
-        />
+        {hasCircular ? (
+          circularFirmada ? (
+            <Badge className="bg-green-100 text-green-800 border-green-300">
+              ✅ Autorización firmada
+            </Badge>
+          ) : (
+            <Badge className="bg-amber-100 text-amber-800 border-amber-300">
+              📋 Pendiente de firma
+            </Badge>
+          )
+        ) : (
+          <ConfirmationBadge
+            estado={isConfirmed ? 'confirmado' : isRejected ? 'no_asiste' : 'pendiente'}
+          />
+        )}
       </div>
 
-      {/* Formulario de confirmación */}
-      {!isConfirmed && !isRejected && (
+      {/* Sección de autorización digital si tiene circular */}
+      {!circularLoading && hasCircular && (
+        <div className="space-y-3">
+          {circularFirmada ? (
+            <Alert className="border-green-200 bg-green-50">
+              <AlertDescription className="text-green-800">
+                ✅ La autorización para esta actividad ya ha sido firmada digitalmente.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="p-4 border-2 border-amber-300 bg-amber-50 rounded-lg space-y-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-amber-600" />
+                <p className="font-medium text-amber-800">
+                  Esta actividad requiere autorización digital
+                </p>
+              </div>
+              <p className="text-sm text-amber-700">
+                Debes firmar la circular de autorización para que {hijo.nombre} pueda participar.
+              </p>
+              <Button
+                onClick={() => setShowWizard(true)}
+                className="w-full bg-amber-600 hover:bg-amber-700"
+              >
+                <PenTool className="h-4 w-4 mr-2" />
+                Firmar autorización
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Formulario de confirmación normal (solo si NO tiene circular) */}
+      {!hasCircular && !isConfirmed && !isRejected && (
         <div className="space-y-4 p-4 border rounded-lg">
           <div>
             <Label htmlFor={`comentarios-${hijo.id}`}>Comentarios (opcional)</Label>
@@ -220,8 +323,8 @@ function HijoConfirmacionContent({
         </div>
       )}
 
-      {/* Estado confirmado/rechazado */}
-      {(isConfirmed || isRejected) && (
+      {/* Estado confirmado/rechazado (solo si NO tiene circular) */}
+      {!hasCircular && (isConfirmed || isRejected) && (
         <div className="space-y-4">
           <Alert className={isConfirmed ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
             <AlertDescription className={isConfirmed ? 'text-green-800' : 'text-red-800'}>

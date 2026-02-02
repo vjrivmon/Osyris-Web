@@ -12,7 +12,9 @@ router.put('/perfil-salud/educando/:educandoId', verifyToken, controller.updateP
 // =============================================
 // FAMILIAR: Circulares
 // =============================================
+router.get('/circulares/check-actividad/:actividadId', verifyToken, controller.checkActividad);
 router.get('/circulares/mis-circulares', verifyToken, controller.getCircularesFamiliar);
+router.get('/circular/:circularId/preview/:educandoId', verifyToken, controller.previewPDF);
 router.get('/circular/:actividadId/formulario', verifyToken, controller.getFormularioCircular);
 router.post('/circular/:actividadId/firmar', verifyToken, controller.firmarCircular);
 router.get('/circular/:actividadId/estado/:educandoId', verifyToken, controller.getEstadoCircular);
