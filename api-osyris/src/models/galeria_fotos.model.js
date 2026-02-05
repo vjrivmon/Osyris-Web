@@ -82,9 +82,9 @@ const findByFamiliarId = async (familiarId, options = {}) => {
         gp.fotografiado_ids IS NULL OR
         ?::text = ANY(string_to_array(array_to_string(gp.fotografiado_ids, ','), ',')::text[]) OR
         EXISTS (
-          SELECT 1 FROM familiares_scouts fs
-          WHERE fs.familiar_id = ?
-          AND fs.scout_id = ANY(gp.fotografiado_ids)
+          SELECT 1 FROM familiares_educandos fe
+          WHERE fe.familiar_id = ?
+          AND fe.educando_id = ANY(gp.fotografiado_ids)
         )
       )
     `;
@@ -153,8 +153,8 @@ const findByScoutId = async (scoutId, familiarId = null, options = {}) => {
     // Si se proporciona familiar_id, verificar que tenga acceso al scout
     if (familiarId) {
       query_str += ` AND EXISTS (
-        SELECT 1 FROM familiares_scouts fs
-        WHERE fs.familiar_id = ? AND fs.scout_id = ?
+        SELECT 1 FROM familiares_educandos fe
+        WHERE fe.familiar_id = ? AND fe.educando_id = ?
       )`;
       queryParams.push(familiarId, scoutId);
     }
@@ -197,9 +197,9 @@ const getAlbumesByFamiliarId = async (familiarId) => {
         gp.fotografiado_ids IS NULL OR
         $1::text = ANY(string_to_array(array_to_string(gp.fotografiado_ids, ','), ',')::text[]) OR
         EXISTS (
-          SELECT 1 FROM familiares_scouts fs
-          WHERE fs.familiar_id = $2
-          AND fs.scout_id = ANY(gp.fotografiado_ids)
+          SELECT 1 FROM familiares_educandos fe
+          WHERE fe.familiar_id = $2
+          AND fe.educando_id = ANY(gp.fotografiado_ids)
         )
       )
       GROUP BY gp.album_id, gp.nombre_album, a.titulo, a.fecha_inicio
@@ -221,12 +221,12 @@ const findById = async (id, familiarId = null) => {
              u.nombre as subido_por_nombre, u.apellidos as subido_por_apellidos,
              array(
                SELECT json_build_object(
-                 'id', us.id,
-                 'nombre', us.nombre,
-                 'apellidos', us.apellidos
+                 'id', ed.id,
+                 'nombre', ed.nombre,
+                 'apellidos', ed.apellidos
                )
-               FROM unnest(gp.fotografiado_ids) as scout_id
-               JOIN usuarios us ON us.id = scout_id
+               FROM unnest(gp.fotografiado_ids) as educando_id
+               JOIN educandos ed ON ed.id = educando_id
              ) as fotografiados
       FROM galeria_fotos_privada gp
       LEFT JOIN actividades a ON gp.evento_id = a.id
@@ -242,9 +242,9 @@ const findById = async (id, familiarId = null) => {
           gp.fotografiado_ids IS NULL OR
           ?::text = ANY(string_to_array(array_to_string(gp.fotografiado_ids, ','), ',')::text[]) OR
           EXISTS (
-            SELECT 1 FROM familiares_scouts fs
-            WHERE fs.familiar_id = ?
-            AND fs.scout_id = ANY(gp.fotografiado_ids)
+            SELECT 1 FROM familiares_educandos fe
+            WHERE fe.familiar_id = ?
+            AND fe.educando_id = ANY(gp.fotografiado_ids)
           )
         )
       )`;
@@ -387,9 +387,9 @@ const findByEventoId = async (eventoId, familiarId = null) => {
         gp.fotografiado_ids IS NULL OR
         ?::text = ANY(string_to_array(array_to_string(gp.fotografiado_ids, ','), ',')::text[]) OR
         EXISTS (
-          SELECT 1 FROM familiares_scouts fs
-          WHERE fs.familiar_id = ?
-          AND fs.scout_id = ANY(gp.fotografiado_ids)
+          SELECT 1 FROM familiares_educandos fe
+          WHERE fe.familiar_id = ?
+          AND fe.educando_id = ANY(gp.fotografiado_ids)
         )
       )`;
       queryParams.push(familiarId, familiarId);
@@ -416,9 +416,9 @@ const getEtiquetasPopulares = async (familiarId, limit = 20) => {
         gp.fotografiado_ids IS NULL OR
         ?::text = ANY(string_to_array(array_to_string(gp.fotografiado_ids, ','), ',')::text[]) OR
         EXISTS (
-          SELECT 1 FROM familiares_scouts fs
-          WHERE fs.familiar_id = ?
-          AND fs.scout_id = ANY(gp.fotografiado_ids)
+          SELECT 1 FROM familiares_educandos fe
+          WHERE fe.familiar_id = ?
+          AND fe.educando_id = ANY(gp.fotografiado_ids)
         )
       )
       GROUP BY etiqueta

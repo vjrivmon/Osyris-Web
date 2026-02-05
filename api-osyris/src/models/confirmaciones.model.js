@@ -376,10 +376,10 @@ const getActividadesPendientesConfirmacion = async (familiarId, dias = 30) => {
         COUNT(CASE WHEN ca.asistira = true THEN 1 END) as confirmados_asistencia,
         COUNT(CASE WHEN ca.id IS NULL THEN 1 END) as sin_confirmar
       FROM actividades a
-      JOIN usuarios u ON u.seccion_id = a.seccion_id
-      JOIN familiares_scouts fs ON u.id = fs.educando_id
-      LEFT JOIN confirmaciones_asistencia ca ON a.id = ca.actividad_id AND u.id = ca.educando_id
-      WHERE fs.familiar_id = $1
+      JOIN educandos e ON e.seccion_id = a.seccion_id
+      JOIN familiares_educandos fe ON e.id = fe.educando_id
+      LEFT JOIN confirmaciones_asistencia ca ON a.id = ca.actividad_id AND e.id = ca.educando_id
+      WHERE fe.familiar_id = $1
       AND a.fecha_inicio BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 day' * $2
       AND a.estado IN ('planificada', 'confirmada')
       AND a.inscripcion_abierta = true
