@@ -379,6 +379,8 @@ export interface ActividadCampamento {
   confirmaciones: { [scoutId: string]: 'confirmado' | 'pendiente' | 'no_asiste' }
   // Detalles del campamento
   campamento?: CampamentoDetalles
+  // Issue #7: Fecha límite de inscripción
+  fecha_limite_inscripcion?: string
 }
 
 /**
