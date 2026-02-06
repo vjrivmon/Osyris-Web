@@ -54,14 +54,18 @@ const findByActividad = async (actividadId, filters = {}) => {
              e.notas_medicas as educando_notas_medicas_ficha,
              s.nombre as seccion_nombre,
              s.color_principal as seccion_color,
+             s.id as seccion_id,
              u.nombre as familiar_nombre,
              u.apellidos as familiar_apellidos,
              u.email as familiar_email,
-             u.telefono as familiar_telefono
+             u.telefono as familiar_telefono,
+             uv.nombre as verificador_nombre,
+             uv.apellidos as verificador_apellidos
       FROM inscripciones_campamento ic
       LEFT JOIN educandos e ON ic.educando_id = e.id
       LEFT JOIN secciones s ON e.seccion_id = s.id
       LEFT JOIN usuarios u ON ic.familiar_id = u.id
+      LEFT JOIN usuarios uv ON ic.circular_verificada_por = uv.id
       WHERE ic.actividad_id = $1
     `;
     const params = [actividadId];
@@ -330,6 +334,10 @@ const update = async (id, inscripcionData) => {
 
     if (inscripcionData.circular_firmada_drive_id) {
       fields.push(`fecha_subida_circular = CURRENT_TIMESTAMP`);
+      // Issue #5: Resetear verificación al re-subir circular
+      fields.push(`circular_verificada = false`);
+      fields.push(`circular_verificada_por = NULL`);
+      fields.push(`circular_verificada_fecha = NULL`);
     }
 
     if (inscripcionData.justificante_pago_drive_id) {
@@ -537,6 +545,126 @@ const prellenarDatosSalud = async (educandoId) => {
   }
 };
 
+/**
+ * Verificar una circular (marcar como verificada por scouter)
+ */
+const verificarCircular = async (inscripcionId, scouterId) => {
+  try {
+    await query(`
+      UPDATE inscripciones_campamento
+      SET circular_verificada = true,
+          circular_verificada_por = $2,
+          circular_verificada_fecha = CURRENT_TIMESTAMP
+      WHERE id = $1
+    `, [inscripcionId, scouterId]);
+
+    return await findById(inscripcionId);
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Resetear verificación de circular (cuando se re-sube)
+ */
+const resetVerificacionCircular = async (inscripcionId) => {
+  try {
+    await query(`
+      UPDATE inscripciones_campamento
+      SET circular_verificada = false,
+          circular_verificada_por = NULL,
+          circular_verificada_fecha = NULL
+      WHERE id = $1
+    `, [inscripcionId]);
+
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Obtener circulares pendientes de verificación (para panel de scouters)
+ * Filtra por sección si se proporciona
+ */
+const getCircularesPendientesVerificacion = async (actividadId, seccionId = null) => {
+  try {
+    let sql = `
+      SELECT ic.id,
+             ic.actividad_id,
+             ic.educando_id,
+             ic.circular_firmada_drive_id,
+             ic.circular_firmada_url,
+             ic.fecha_subida_circular,
+             ic.circular_verificada,
+             ic.circular_verificada_por,
+             ic.circular_verificada_fecha,
+             ic.pagado,
+             ic.estado,
+             e.nombre as educando_nombre,
+             e.apellidos as educando_apellidos,
+             s.nombre as seccion_nombre,
+             s.id as seccion_id,
+             s.color_principal as seccion_color,
+             u.nombre as familiar_nombre,
+             u.apellidos as familiar_apellidos,
+             uv.nombre as verificador_nombre,
+             uv.apellidos as verificador_apellidos
+      FROM inscripciones_campamento ic
+      JOIN educandos e ON ic.educando_id = e.id
+      JOIN secciones s ON e.seccion_id = s.id
+      LEFT JOIN usuarios u ON ic.familiar_id = u.id
+      LEFT JOIN usuarios uv ON ic.circular_verificada_por = uv.id
+      WHERE ic.actividad_id = $1
+        AND ic.circular_firmada_drive_id IS NOT NULL
+        AND ic.estado IN ('inscrito', 'pendiente')
+    `;
+    const params = [actividadId];
+
+    if (seccionId) {
+      sql += ` AND s.id = $2`;
+      params.push(seccionId);
+    }
+
+    sql += ` ORDER BY ic.circular_verificada ASC, ic.fecha_subida_circular DESC`;
+
+    const circulares = await query(sql, params);
+    return circulares;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Obtener estadísticas de verificación de circulares
+ */
+const getEstadisticasVerificacion = async (actividadId, seccionId = null) => {
+  try {
+    let sql = `
+      SELECT
+        COUNT(*) FILTER (WHERE ic.circular_firmada_drive_id IS NOT NULL) as total_subidas,
+        COUNT(*) FILTER (WHERE ic.circular_verificada = true) as verificadas,
+        COUNT(*) FILTER (WHERE ic.circular_firmada_drive_id IS NOT NULL AND (ic.circular_verificada = false OR ic.circular_verificada IS NULL)) as pendientes_verificar,
+        COUNT(*) FILTER (WHERE ic.circular_firmada_drive_id IS NULL AND ic.estado IN ('inscrito', 'pendiente')) as sin_subir
+      FROM inscripciones_campamento ic
+      JOIN educandos e ON ic.educando_id = e.id
+      WHERE ic.actividad_id = $1
+        AND ic.estado IN ('inscrito', 'pendiente')
+    `;
+    const params = [actividadId];
+
+    if (seccionId) {
+      sql += ` AND e.seccion_id = $2`;
+      params.push(seccionId);
+    }
+
+    const stats = await query(sql, params);
+    return stats[0];
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   findByActividad,
   findByEducando,
@@ -553,5 +681,9 @@ module.exports = {
   remove,
   getEstadisticas,
   getResumenDietas,
-  prellenarDatosSalud
+  prellenarDatosSalud,
+  verificarCircular,
+  resetVerificacionCircular,
+  getCircularesPendientesVerificacion,
+  getEstadisticasVerificacion
 };
