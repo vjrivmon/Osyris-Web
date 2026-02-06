@@ -48,7 +48,9 @@ const inscribirCampamento = async (req, res) => {
       telefono_emergencia,
       persona_emergencia,
       // Observaciones
-      observaciones
+      observaciones,
+      // Issue #7: Flag para forzar inscripción fuera de plazo (solo admin/scouter)
+      forzar_inscripcion
     } = req.body;
 
     const familiar_id = req.usuario?.id || req.user?.id;
@@ -75,6 +77,33 @@ const inscribirCampamento = async (req, res) => {
         success: false,
         message: 'La actividad no es un campamento'
       });
+    }
+
+    // Issue #7: Validar fecha límite de inscripción
+    if (actividad.fecha_limite_inscripcion) {
+      const fechaLimite = new Date(actividad.fecha_limite_inscripcion);
+      const ahora = new Date();
+      
+      // Ajustar a timezone Europe/Madrid para comparación justa
+      const fechaLimiteMadrid = new Date(fechaLimite.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
+      const ahoraMadrid = new Date(ahora.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
+      
+      if (ahoraMadrid > fechaLimiteMadrid) {
+        // Verificar si tiene permisos para forzar inscripción
+        const userRole = req.usuario?.rol || req.user?.rol;
+        const puedeForZar = ['admin', 'scouter'].includes(userRole);
+        
+        if (!puedeForZar || !forzar_inscripcion) {
+          return res.status(400).json({
+            success: false,
+            message: 'El plazo de inscripción ha finalizado',
+            fechaLimite: actividad.fecha_limite_inscripcion,
+            puedeForZar: puedeForZar
+          });
+        }
+        // Si llega aquí, es admin/scouter con forzar_inscripcion = true
+        console.log(`[Inscripción forzada] Usuario ${familiar_id} (${userRole}) inscribió al educando ${educando_id} fuera de plazo`);
+      }
     }
 
     // Detectar tipo de campamento

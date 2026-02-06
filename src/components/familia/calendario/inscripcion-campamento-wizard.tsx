@@ -112,6 +112,10 @@ export function InscripcionCampamentoWizard({
   const [loadingCirculares, setLoadingCirculares] = useState(false)
   const [circularDescargada, setCircularDescargada] = useState(false)
 
+  // Issue #7: Estado para fecha límite de inscripción
+  const [plazoExpirado, setPlazoExpirado] = useState(false)
+  const [tiempoRestante, setTiempoRestante] = useState<{ dias: number; horas: number } | null>(null)
+
   // Datos del formulario
   const [formData, setFormData] = useState<Partial<DatosInscripcionCampamento>>({
     email_familiar: familiarData?.email || '',
@@ -249,6 +253,36 @@ export function InscripcionCampamentoWizard({
       isInitialLoadRef.current = true
     }
   }, [isOpen])
+
+  // Issue #7: Verificar fecha límite de inscripción
+  useEffect(() => {
+    if (!actividad?.fecha_limite_inscripcion) {
+      setPlazoExpirado(false)
+      setTiempoRestante(null)
+      return
+    }
+
+    const verificarPlazo = () => {
+      const fechaLimite = new Date(actividad.fecha_limite_inscripcion!)
+      const ahora = new Date()
+      const diferencia = fechaLimite.getTime() - ahora.getTime()
+
+      if (diferencia <= 0) {
+        setPlazoExpirado(true)
+        setTiempoRestante(null)
+      } else {
+        setPlazoExpirado(false)
+        const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24))
+        const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        setTiempoRestante({ dias, horas })
+      }
+    }
+
+    verificarPlazo()
+    // Actualizar cada minuto
+    const interval = setInterval(verificarPlazo, 60000)
+    return () => clearInterval(interval)
+  }, [actividad?.fecha_limite_inscripcion])
 
   // Prellenar datos del familiar cuando estén disponibles
   // IMPORTANTE: useState solo usa el valor inicial en el primer render
@@ -492,6 +526,48 @@ export function InscripcionCampamentoWizard({
         </p>
       </div>
 
+      {/* Issue #7: Mostrar estado de fecha límite */}
+      {plazoExpirado && (
+        <Alert variant="destructive" className="mx-auto max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="ml-2">
+            <strong>El plazo de inscripción ha finalizado.</strong>
+            <br />
+            <span className="text-sm">
+              La fecha límite era el {new Date(actividad.fecha_limite_inscripcion!).toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!plazoExpirado && tiempoRestante && (tiempoRestante.dias < 2 || (tiempoRestante.dias === 0 && tiempoRestante.horas > 0)) && (
+        <Alert className="mx-auto max-w-md border-amber-300 bg-amber-50 dark:bg-amber-900/20">
+          <Clock className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="ml-2 text-amber-800 dark:text-amber-300">
+            <strong>¡Inscríbete pronto!</strong> Quedan{' '}
+            {tiempoRestante.dias > 0 && `${tiempoRestante.dias} día${tiempoRestante.dias > 1 ? 's' : ''} y `}
+            {tiempoRestante.horas} hora{tiempoRestante.horas !== 1 ? 's' : ''} para inscribirse.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!plazoExpirado && actividad.fecha_limite_inscripcion && tiempoRestante && tiempoRestante.dias >= 2 && (
+        <p className="text-center text-sm text-muted-foreground">
+          <Clock className="h-3 w-3 inline mr-1" />
+          Inscríbete antes del {new Date(actividad.fecha_limite_inscripcion).toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long'
+          })}
+        </p>
+      )}
+
       <div className="text-center py-6">
         <p className="text-lg mb-6">
           ¿Asistira <strong>{educando.nombre}</strong> al campamento?
@@ -503,9 +579,11 @@ export function InscripcionCampamentoWizard({
             variant={asistira === true ? 'default' : 'outline'}
             className="w-32 h-24 flex flex-col gap-2"
             onClick={() => handleAsistenciaSeleccion(true)}
+            disabled={plazoExpirado}
+            title={plazoExpirado ? 'El plazo de inscripción ha finalizado' : undefined}
           >
             <Check className="h-8 w-8" />
-            <span className="text-lg">Si</span>
+            <span className="text-lg">Sí</span>
           </Button>
 
           <Button
