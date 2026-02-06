@@ -13,6 +13,7 @@ import {
 import { ArrowLeft, FileCheck, Loader2, AlertCircle, Tent } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
+import { getApiUrl } from "@/lib/api-utils"
 import { VerificacionCircularesCard } from "@/components/aula-virtual/verificacion-circulares-card"
 
 interface Campamento {
@@ -31,15 +32,14 @@ export default function VerificacionCircularesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL
-
   // Cargar lista de campamentos
   useEffect(() => {
     const fetchCampamentos = async () => {
       if (!token) return
 
       try {
-        const res = await fetch(`${API_URL}/actividades?tipo=campamento&proximos=true`, {
+        const apiUrl = getApiUrl()
+        const res = await fetch(`${apiUrl}/api/actividades?tipo=campamento&proximos=true`, {
           headers: { Authorization: `Bearer ${token}` }
         })
 
@@ -61,7 +61,7 @@ export default function VerificacionCircularesPage() {
     }
 
     fetchCampamentos()
-  }, [token, API_URL])
+  }, [token])
 
   const selectedCampamentoData = campamentos.find(c => c.id === selectedCampamento)
 

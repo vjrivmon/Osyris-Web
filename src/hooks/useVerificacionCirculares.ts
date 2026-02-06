@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { getApiUrl } from '@/lib/api-utils'
 
 interface Circular {
   id: number
@@ -49,8 +50,6 @@ export function useVerificacionCirculares(actividadId: number, seccionId?: numbe
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL
-
   const fetchData = useCallback(async () => {
     if (!actividadId || !token) return
 
@@ -58,14 +57,15 @@ export function useVerificacionCirculares(actividadId: number, seccionId?: numbe
     setError(null)
 
     try {
+      const apiUrl = getApiUrl()
       const params = new URLSearchParams()
       if (seccionId) params.append('seccion_id', String(seccionId))
 
       const [circularesRes, statsRes] = await Promise.all([
-        fetch(`${API_URL}/inscripciones-campamento/actividad/${actividadId}/circulares-pendientes?${params}`, {
+        fetch(`${apiUrl}/api/inscripciones-campamento/actividad/${actividadId}/circulares-pendientes?${params}`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch(`${API_URL}/inscripciones-campamento/actividad/${actividadId}/estadisticas-verificacion?${params}`, {
+        fetch(`${apiUrl}/api/inscripciones-campamento/actividad/${actividadId}/estadisticas-verificacion?${params}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ])
@@ -86,7 +86,7 @@ export function useVerificacionCirculares(actividadId: number, seccionId?: numbe
     } finally {
       setLoading(false)
     }
-  }, [actividadId, seccionId, token, API_URL])
+  }, [actividadId, seccionId, token])
 
   useEffect(() => {
     fetchData()
@@ -96,7 +96,8 @@ export function useVerificacionCirculares(actividadId: number, seccionId?: numbe
     if (!token) return
 
     try {
-      const res = await fetch(`${API_URL}/inscripciones-campamento/${inscripcionId}/verificar-circular`, {
+      const apiUrl = getApiUrl()
+      const res = await fetch(`${apiUrl}/api/inscripciones-campamento/${inscripcionId}/verificar-circular`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
