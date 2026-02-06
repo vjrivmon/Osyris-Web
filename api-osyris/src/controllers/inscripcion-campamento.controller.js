@@ -752,6 +752,112 @@ const getDatosSaludEducando = async (req, res) => {
 };
 
 /**
+ * Verificar circular de inscripción (scouters)
+ * PATCH /api/inscripciones-campamento/:id/verificar-circular
+ */
+const verificarCircularController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const scouterId = req.usuario?.id || req.user?.id;
+
+    if (!scouterId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
+
+    // Verificar que la inscripción existe y tiene circular subida
+    const inscripcion = await inscripcionModel.findById(id);
+    if (!inscripcion) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inscripción no encontrada'
+      });
+    }
+
+    if (!inscripcion.circular_firmada_drive_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Esta inscripción no tiene circular subida'
+      });
+    }
+
+    // Verificar la circular
+    const inscripcionActualizada = await inscripcionModel.verificarCircular(id, scouterId);
+
+    res.json({
+      success: true,
+      message: 'Circular verificada correctamente',
+      data: inscripcionActualizada
+    });
+  } catch (error) {
+    console.error('Error en verificarCircular:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al verificar circular',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Obtener circulares pendientes de verificación (scouters)
+ * GET /api/inscripciones-campamento/:actividadId/circulares-pendientes
+ */
+const getCircularesPendientesController = async (req, res) => {
+  try {
+    const { actividadId } = req.params;
+    const { seccion_id } = req.query;
+
+    const circulares = await inscripcionModel.getCircularesPendientesVerificacion(
+      actividadId,
+      seccion_id || null
+    );
+
+    res.json({
+      success: true,
+      data: circulares
+    });
+  } catch (error) {
+    console.error('Error en getCircularesPendientes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener circulares pendientes',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Obtener estadísticas de verificación de circulares
+ * GET /api/inscripciones-campamento/:actividadId/estadisticas-verificacion
+ */
+const getEstadisticasVerificacionController = async (req, res) => {
+  try {
+    const { actividadId } = req.params;
+    const { seccion_id } = req.query;
+
+    const stats = await inscripcionModel.getEstadisticasVerificacion(
+      actividadId,
+      seccion_id || null
+    );
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error en getEstadisticasVerificacion:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener estadísticas de verificación',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Detectar tipo de campamento desde titulo
  */
 const detectarTipoCampamento = (titulo) => {
@@ -788,5 +894,9 @@ module.exports = {
   getEstadisticasCampamento,
   actualizarInscripcion: actualizarInscripcionController,
   confirmarPago,
-  getDatosSaludEducando
+  getDatosSaludEducando,
+  // Issue #5: Verificación de circulares
+  verificarCircular: verificarCircularController,
+  getCircularesPendientes: getCircularesPendientesController,
+  getEstadisticasVerificacion: getEstadisticasVerificacionController
 };

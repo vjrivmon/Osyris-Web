@@ -640,4 +640,81 @@ router.get('/verificar/:actividadId/:educandoId', verifyToken, async (req, res) 
   }
 });
 
+// ========================================
+// ISSUE #5: VERIFICACIÓN DE CIRCULARES
+// ========================================
+
+/**
+ * @swagger
+ * /api/inscripciones-campamento/actividad/{actividadId}/circulares-pendientes:
+ *   get:
+ *     summary: Obtener circulares pendientes de verificación (solo Kraal)
+ *     tags: [InscripcionesCampamento]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: actividadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: seccion_id
+ *         schema:
+ *           type: integer
+ *         description: Filtrar por sección
+ */
+router.get('/actividad/:actividadId/circulares-pendientes',
+  verifyToken,
+  checkRole(['admin', 'scouter']),
+  inscripcionController.getCircularesPendientes
+);
+
+/**
+ * @swagger
+ * /api/inscripciones-campamento/actividad/{actividadId}/estadisticas-verificacion:
+ *   get:
+ *     summary: Obtener estadísticas de verificación de circulares (solo Kraal)
+ *     tags: [InscripcionesCampamento]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: actividadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: seccion_id
+ *         schema:
+ *           type: integer
+ */
+router.get('/actividad/:actividadId/estadisticas-verificacion',
+  verifyToken,
+  checkRole(['admin', 'scouter']),
+  inscripcionController.getEstadisticasVerificacion
+);
+
+/**
+ * @swagger
+ * /api/inscripciones-campamento/{id}/verificar-circular:
+ *   patch:
+ *     summary: Verificar circular de una inscripción (solo Kraal)
+ *     tags: [InscripcionesCampamento]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la inscripción
+ */
+router.patch('/:id/verificar-circular',
+  verifyToken,
+  checkRole(['admin', 'scouter']),
+  inscripcionController.verificarCircular
+);
+
 module.exports = router;
