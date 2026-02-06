@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, Home, FileText, Unlock, Calendar, MessageSquare, Users, LogOut, Settings } from 'lucide-react'
+import { Menu, Home, Calendar, Users, LogOut, Settings, ClipboardCheck, FileCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -23,15 +23,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
-import { useSolicitudesDesbloqueo } from '@/hooks/useSolicitudesDesbloqueo'
+import { useEventoHoy } from '@/hooks/useEventoHoy'
 
-const navItems = [
+// Tabs permanentes
+const tabsPermanentes = [
   { href: '/aula-virtual', label: 'Inicio', icon: Home, exact: true },
   { href: '/aula-virtual/educandos', label: 'Educandos', icon: Users },
   { href: '/aula-virtual/calendario', label: 'Calendario', icon: Calendar },
-  { href: '/aula-virtual/documentos', label: 'Documentos', icon: FileText },
-  { href: '/aula-virtual/solicitudes-desbloqueo', label: 'Solicitudes', icon: Unlock, showBadge: true },
-  { href: '/aula-virtual/comunicaciones', label: 'Mensajes', icon: MessageSquare },
 ]
 
 export function MobileNav() {
@@ -39,12 +37,32 @@ export function MobileNav() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const { pendientes } = useSolicitudesDesbloqueo()
+  const { hayEventoHoy, evento } = useEventoHoy()
 
   const handleLogout = () => {
     localStorage.removeItem('osyris_user')
     router.push('/')
   }
+
+  // Construir tabs contextuales si hay evento hoy
+  const tabsContextuales = hayEventoHoy && evento ? [
+    { 
+      href: `/aula-virtual/asistencia/${evento.id}`, 
+      label: `🏕️ Asistencia - ${evento.titulo}`, 
+      icon: ClipboardCheck,
+      isContextual: true,
+      exact: false
+    },
+    { 
+      href: `/aula-virtual/verificacion-circulares?actividad=${evento.id}`, 
+      label: `✓ Circulares - ${evento.titulo}`, 
+      icon: FileCheck,
+      isContextual: true,
+      exact: false
+    },
+  ] : []
+
+  const allTabs = [...tabsPermanentes, ...tabsContextuales]
 
   return (
     <>
@@ -67,12 +85,12 @@ export function MobileNav() {
           <span className="text-lg font-semibold">Aula Virtual</span>
         </SheetTitle>
         <nav className="flex flex-col gap-2">
-          {navItems.map(item => {
+          {allTabs.map(item => {
             const isActive = item.exact
               ? pathname === item.href
-              : pathname === item.href || pathname.startsWith(item.href + '/')
+              : pathname === item.href || pathname.startsWith(item.href.split('?')[0] + '/')
 
-            const showBadge = item.showBadge && pendientes > 0
+            const isContextual = 'isContextual' in item && item.isContextual
 
             return (
               <Link
@@ -83,15 +101,17 @@ export function MobileNav() {
                   'flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    : isContextual
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                 )}
               >
                 <div className="flex items-center gap-3">
                   <item.icon className="h-5 w-5" />
                   {item.label}
                 </div>
-                {showBadge && (
-                  <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
+                {isContextual && (
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 )}
               </Link>
             )

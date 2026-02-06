@@ -3,28 +3,45 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { useSolicitudesDesbloqueo } from '@/hooks/useSolicitudesDesbloqueo'
+import { useEventoHoy } from '@/hooks/useEventoHoy'
 import {
   Home,
-  FileText,
   Calendar,
-  MessageSquare,
-  Unlock,
   Users,
+  ClipboardCheck,
+  FileCheck,
 } from 'lucide-react'
 
-const navItems = [
+// Tabs permanentes (siempre visibles)
+const tabsPermanentes = [
   { href: '/aula-virtual', label: 'Inicio', icon: Home, exact: true },
   { href: '/aula-virtual/educandos', label: 'Educandos', icon: Users },
   { href: '/aula-virtual/calendario', label: 'Calendario', icon: Calendar },
-  { href: '/aula-virtual/documentos', label: 'Documentos', icon: FileText },
-  { href: '/aula-virtual/solicitudes-desbloqueo', label: 'Solicitudes', icon: Unlock, showBadge: true },
-  { href: '/aula-virtual/comunicaciones', label: 'Mensajes', icon: MessageSquare },
 ]
 
 export function NavTabs() {
   const pathname = usePathname()
-  const { pendientes } = useSolicitudesDesbloqueo()
+  const { hayEventoHoy, evento } = useEventoHoy()
+
+  // Construir tabs contextuales si hay evento hoy
+  const tabsContextuales = hayEventoHoy && evento ? [
+    { 
+      href: `/aula-virtual/asistencia/${evento.id}`, 
+      label: 'Asistencia', 
+      icon: ClipboardCheck,
+      badge: evento.titulo,
+      exact: false
+    },
+    { 
+      href: `/aula-virtual/verificacion-circulares?actividad=${evento.id}`, 
+      label: 'Circulares', 
+      icon: FileCheck,
+      badge: evento.titulo,
+      exact: false
+    },
+  ] : []
+
+  const allTabs = [...tabsPermanentes, ...tabsContextuales]
 
   return (
     <nav
@@ -32,12 +49,12 @@ export function NavTabs() {
       role="navigation"
       aria-label="Navegación principal"
     >
-      {navItems.map(item => {
+      {allTabs.map(item => {
         const isActive = item.exact
           ? pathname === item.href
-          : pathname === item.href || pathname.startsWith(item.href + '/')
+          : pathname === item.href || pathname.startsWith(item.href.split('?')[0] + '/')
 
-        const showBadge = item.showBadge && pendientes > 0
+        const isContextual = 'badge' in item
 
         return (
           <Link
@@ -49,14 +66,16 @@ export function NavTabs() {
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               isActive
                 ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground'
+                : isContextual
+                  ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                  : 'text-muted-foreground'
             )}
             aria-current={isActive ? 'page' : undefined}
           >
             <div className="relative">
               <item.icon className="h-4 w-4" aria-hidden="true" />
-              {showBadge && (
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+              {isContextual && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               )}
             </div>
             <span className="hidden lg:inline">{item.label}</span>
