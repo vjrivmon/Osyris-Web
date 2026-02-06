@@ -52,6 +52,8 @@ const rondaRoutes = require('./routes/ronda.routes');
 const inscripcionesCampamentoRoutes = require('./routes/inscripciones-campamento.routes');
 // 📊 RUTAS DEL DASHBOARD SCOUTER
 const dashboardScouterRoutes = require('./routes/dashboard-scouter.routes');
+// 📋 RUTAS DE ASISTENCIA IN-SITU (Issue #6)
+const asistenciaActividadRoutes = require('./routes/asistencia-actividad.routes');
 // 📊 RUTAS DEL DASHBOARD COMITE
 const dashboardComiteRoutes = require('./routes/dashboard-comite.routes');
 // 💬 MED-005: RUTAS DE MENSAJERIA SCOUTER-FAMILIA
@@ -147,6 +149,8 @@ app.use('/api/ronda', rondaRoutes);
 app.use('/api/inscripciones-campamento', inscripcionesCampamentoRoutes);
 // 📊 DASHBOARD SCOUTER
 app.use('/api/dashboard-scouter', dashboardScouterRoutes);
+// 📋 ASISTENCIA IN-SITU (Issue #6)
+app.use('/api/asistencia', asistenciaActividadRoutes);
 // 📊 DASHBOARD COMITE
 app.use('/api/dashboard-comite', dashboardComiteRoutes);
 // 💬 MED-005: MENSAJERIA SCOUTER-FAMILIA
