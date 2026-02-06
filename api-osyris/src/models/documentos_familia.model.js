@@ -70,8 +70,8 @@ const { query } = require('../config/db.config');
  *         aprobado: true
  */
 
-// Función para obtener todos los documentos de un scout
-const findByScoutId = async (scoutId, familiarId = null) => {
+// Función para obtener todos los documentos de un educando
+const findByEducandoId = async (educandoId, familiarId = null) => {
   try {
     let query_str = `
       SELECT df.*,
@@ -80,21 +80,21 @@ const findByScoutId = async (scoutId, familiarId = null) => {
       FROM documentos_familia df
       JOIN usuarios u ON df.familiar_id = u.id
       LEFT JOIN usuarios ua ON df.aprobado_por = ua.id
-      WHERE df.scout_id = ?
+      WHERE df.educando_id = $1
     `;
-    const queryParams = [scoutId];
+    const queryParams = [educandoId];
 
     // Si se proporciona familiar_id, verificar que tenga acceso
     if (familiarId) {
       query_str += ` AND (
-        df.familiar_id = ? OR
+        df.familiar_id = $2 OR
         df.visible_para_familiares = true OR
         EXISTS (
-          SELECT 1 FROM familiares_scouts fs
-          WHERE fs.familiar_id = ? AND fs.scout_id = ?
+          SELECT 1 FROM familiares_educandos fe
+          WHERE fe.familiar_id = $3 AND fe.educando_id = $4
         )
       )`;
-      queryParams.push(familiarId, familiarId, scoutId);
+      queryParams.push(familiarId, familiarId, educandoId);
     }
 
     query_str += ' ORDER BY df.fecha_subida DESC';
@@ -111,14 +111,14 @@ const findByFamiliarId = async (familiarId) => {
   try {
     const documentos = await query(`
       SELECT df.*,
-             u.nombre as scout_nombre, u.apellidos as scout_apellidos,
+             e.nombre as scout_nombre, e.apellidos as scout_apellidos,
              s.nombre as seccion_nombre,
              ua.nombre as aprobador_nombre, ua.apellidos as aprobador_apellidos
       FROM documentos_familia df
-      JOIN usuarios u ON df.scout_id = u.id
-      LEFT JOIN secciones s ON u.seccion_id = s.id
+      LEFT JOIN educandos e ON df.educando_id = e.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
       LEFT JOIN usuarios ua ON df.aprobado_por = ua.id
-      WHERE df.familiar_id = ?
+      WHERE df.familiar_id = $1
       ORDER BY df.fecha_subida DESC
     `, [familiarId]);
     return documentos;
@@ -162,21 +162,21 @@ const getDocumentosPorVencer = async (dias = 30, familiarId = null) => {
   try {
     let query_str = `
       SELECT df.*,
-             u.nombre as scout_nombre, u.apellidos as scout_apellidos,
+             e.nombre as scout_nombre, e.apellidos as scout_apellidos,
              uf.nombre as familiar_nombre, uf.apellidos as familiar_apellidos,
              s.nombre as seccion_nombre
       FROM documentos_familia df
-      JOIN usuarios u ON df.scout_id = u.id
+      LEFT JOIN educandos e ON df.educando_id = e.id
       JOIN usuarios uf ON df.familiar_id = uf.id
-      LEFT JOIN secciones s ON u.seccion_id = s.id
+      LEFT JOIN secciones s ON e.seccion_id = s.id
       WHERE df.fecha_vencimiento IS NOT NULL
-      AND df.fecha_vencimiento BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '? days'
+      AND df.fecha_vencimiento BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 day' * $1
       AND df.estado IN ('vigente', 'por_vencer')
     `;
     const queryParams = [dias];
 
     if (familiarId) {
-      query_str += ' AND df.familiar_id = ?';
+      query_str += ' AND df.familiar_id = $2';
       queryParams.push(familiarId);
     }
 
@@ -478,7 +478,8 @@ const findByEstadoRevision = async (estadoRevision) => {
 };
 
 module.exports = {
-  findByScoutId,
+  findByEducandoId,
+  findByScoutId: findByEducandoId, // Alias para backwards compatibility
   findByFamiliarId,
   findByEstado,
   findByEstadoRevision,
