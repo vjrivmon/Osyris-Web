@@ -39,6 +39,8 @@ const findBySeccionId = async (seccionId, options = {}) => {
   try {
     let sql = `
       SELECT ns.*,
+             COALESCE(ns.urgente, FALSE) as urgente,
+             COALESCE(ns.mostrar_modal, FALSE) as mostrar_modal,
              e.nombre as educando_nombre_real,
              e.apellidos as educando_apellidos,
              s.nombre as seccion_nombre
@@ -122,6 +124,8 @@ const findAll = async (options = {}) => {
   try {
     let sql = `
       SELECT ns.*,
+             COALESCE(ns.urgente, FALSE) as urgente,
+             COALESCE(ns.mostrar_modal, FALSE) as mostrar_modal,
              e.nombre as educando_nombre_real,
              e.apellidos as educando_apellidos,
              s.nombre as seccion_nombre

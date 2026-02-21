@@ -75,6 +75,8 @@ const findByFamiliarId = async (familiarId, options = {}) => {
   try {
     let query_str = `
       SELECT nf.*,
+             COALESCE(nf.urgente, FALSE) as urgente,
+             COALESCE(nf.mostrar_modal, FALSE) as mostrar_modal,
              e.nombre as scout_nombre, e.apellidos as scout_apellidos,
              s.nombre as seccion_nombre, s.color_principal as seccion_color
       FROM notificaciones_familia nf

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, User, Bell, CheckCircle, XCircle, FileText, Trash2, CheckCheck } from "lucide-react";
 import { MobileNavFamilia } from "@/components/familia/mobile-nav-familia";
 import { RoleSwitcher } from "@/components/shared/role-switcher";
+import { NotificacionesUrgentesModal, type NotificacionUrgente } from "@/components/notificaciones/NotificacionesUrgentesModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +53,8 @@ export default function FamiliaLayout({
   const [notificacionesOpen, setNotificacionesOpen] = useState(false);
   const [notificaciones, setNotificaciones] = useState<NotificacionFamilia[]>([]);
   const [contadorNoLeidas, setContadorNoLeidas] = useState(0);
+  const [urgentesModalOpen, setUrgentesModalOpen] = useState(false);
+  const [notificacionesUrgentes, setNotificacionesUrgentes] = useState<NotificacionUrgente[]>([]);
   const router = useRouter();
 
   const API_URL = getApiUrl();
@@ -93,6 +96,37 @@ export default function FamiliaLayout({
     // Refrescar cada 2 minutos
     const interval = setInterval(fetchNotificaciones, 2 * 60 * 1000);
     return () => clearInterval(interval);
+  }, [API_URL]);
+
+  // Cargar notificaciones urgentes y mostrar modal si las hay
+  useEffect(() => {
+    const fetchUrgentes = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch(`${API_URL}/api/notificaciones-familia?solo_no_leidas=true`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const urgentes = (data.data || []).filter((n: NotificacionFamilia & { urgente?: boolean }) => n.urgente);
+          setNotificacionesUrgentes(urgentes);
+
+          if (urgentes.length > 0 && !sessionStorage.getItem('notif_modal_shown')) {
+            setUrgentesModalOpen(true);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching urgentes:', err);
+      }
+    };
+
+    fetchUrgentes();
   }, [API_URL]);
 
   const marcarComoLeida = async (id: number) => {
@@ -185,6 +219,30 @@ export default function FamiliaLayout({
     }
   };
 
+  const handleUrgentesClose = async () => {
+    setUrgentesModalOpen(false);
+    sessionStorage.setItem('notif_modal_shown', '1');
+
+    // Marcar urgentes como leídas
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    for (const notif of notificacionesUrgentes) {
+      try {
+        await fetch(`${API_URL}/api/notificaciones-familia/${notif.id}/leida`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+      } catch { /* silently continue */ }
+    }
+
+    // Actualizar estado local
+    const urgIds = new Set(notificacionesUrgentes.map(n => n.id));
+    setNotificaciones(prev => prev.map(n => urgIds.has(n.id) ? { ...n, leida: true } : n));
+    setContadorNoLeidas(prev => Math.max(0, prev - notificacionesUrgentes.length));
+    setNotificacionesUrgentes([]);
+  };
+
   const getNotificacionIcon = (notif: NotificacionFamilia) => {
     if (notif.metadata?.tipo === 'documento_aprobado') {
       return <CheckCircle className="h-4 w-4 text-green-600" />;
@@ -232,7 +290,7 @@ export default function FamiliaLayout({
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-6 w-6" />
                   {contadorNoLeidas > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                    <span className={`absolute -top-1 -right-1 rounded-full bg-red-500 text-white text-xs flex items-center justify-center ${notificacionesUrgentes.length > 0 ? 'h-6 w-6 animate-pulse ring-2 ring-red-300' : 'h-5 w-5'}`}>
                       {contadorNoLeidas > 9 ? '9+' : contadorNoLeidas}
                     </span>
                   )}
@@ -377,6 +435,12 @@ export default function FamiliaLayout({
       <main className="container max-w-7xl mx-auto py-4 px-3 sm:py-6 sm:px-4">
         {children}
       </main>
+
+      <NotificacionesUrgentesModal
+        isOpen={urgentesModalOpen}
+        notificaciones={notificacionesUrgentes}
+        onClose={handleUrgentesClose}
+      />
     </div>
   );
 }

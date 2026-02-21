@@ -9,6 +9,7 @@ const documentosFamiliaModel = require('../models/documentos_familia.model');
 const documentosHistorialModel = require('../models/documentos_historial.model');
 const notificacionModel = require('../models/notificaciones_familia.model');
 const notificacionScouterModel = require('../models/notificaciones_scouter.model');
+const notificacionesService = require('../services/notificaciones.service');
 
 /**
  * Lista las plantillas disponibles para descargar
@@ -483,13 +484,23 @@ const aprobarDocumento = async (req, res) => {
       console.error('Error eliminando notificación scouter:', removeError);
     }
 
-    // Notificar a la familia
+    // Notificar a la familia (usa servicio centralizado para urgencia)
     try {
       await notificacionModel.crearNotificacionDocumentoAprobado({
         documentoId,
         familiarId: documento.familiar_id,
         tipoDocumento: documento.titulo
       });
+      // Marcar urgencia según config
+      const { es_urgente } = await notificacionesService.getConfigUrgencia('documento_aprobado');
+      if (es_urgente) {
+        const { query: dbQuery } = require('../config/db.config');
+        await dbQuery(
+          `UPDATE notificaciones_familia SET urgente = TRUE, mostrar_modal = TRUE
+           WHERE familiar_id = $1 AND metadata->>'documento_id' = $2 AND urgente IS NOT TRUE`,
+          [documento.familiar_id, documentoId.toString()]
+        );
+      }
     } catch (notifError) {
       console.error('Error creando notificación:', notifError);
     }
@@ -646,6 +657,16 @@ const rechazarDocumento = async (req, res) => {
           tipoDocumento: documento.titulo,
           motivo
         });
+      }
+      // Marcar urgencia según config
+      const { es_urgente } = await notificacionesService.getConfigUrgencia('documento_rechazado');
+      if (es_urgente) {
+        const { query: dbQuery } = require('../config/db.config');
+        await dbQuery(
+          `UPDATE notificaciones_familia SET urgente = TRUE, mostrar_modal = TRUE
+           WHERE familiar_id = $1 AND metadata->>'documento_id' = $2 AND urgente IS NOT TRUE`,
+          [documento.familiar_id, documentoId.toString()]
+        );
       }
     } catch (notifError) {
       console.error('Error creando notificación:', notifError);

@@ -11,6 +11,7 @@ const educandoModel = require('../models/educando.model');
 const familiarEducandoModel = require('../models/familiar_educando.model');
 const notificacionScouterModel = require('../models/notificaciones_scouter.model');
 const notificacionFamiliaModel = require('../models/notificaciones_familia.model');
+const notificacionesService = require('../services/notificaciones.service');
 
 /**
  * Crea una nueva solicitud de desbloqueo
