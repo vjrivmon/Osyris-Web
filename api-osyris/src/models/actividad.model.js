@@ -266,12 +266,14 @@ const findAll = async (filters = {}) => {
 
     // Filtro por seccion
     // Las reuniones de sabado y campamentos comunes se muestran a TODAS las familias
+    // Actividades con is_global=true se muestran a todos
     // Campamentos comunes: Navidad, Aniversario, Verano (todas las secciones)
     // Campamento Pascua: Solo Castores (1), Manada (2), Tropa (3)
     if (filters.seccion_id) {
       sql += ` AND (
         a.seccion_id = $${paramIndex}
         OR a.seccion_id IS NULL
+        OR a.is_global = true
         OR a.tipo = 'reunion_sabado'
         OR (a.tipo = 'campamento' AND (
           LOWER(a.titulo) LIKE '%navidad%'
@@ -474,8 +476,9 @@ const create = async (actividadData) => {
         lugar_regreso, hora_regreso, numero_cuenta,
         concepto_pago, recordatorios_predefinidos,
         recordatorios_personalizados, circular_drive_id,
-        circular_drive_url, circular_nombre, sheets_inscripciones_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36)
+        circular_drive_url, circular_nombre, sheets_inscripciones_id,
+        is_global
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37)
       RETURNING id
     `, [
       actividadData.titulo,
@@ -514,7 +517,8 @@ const create = async (actividadData) => {
       actividadData.circular_drive_id || null,
       actividadData.circular_drive_url || null,
       actividadData.circular_nombre || null,
-      actividadData.sheets_inscripciones_id || null
+      actividadData.sheets_inscripciones_id || null,
+      actividadData.is_global || false
     ]);
 
     // query() returns { insertId, changes } for INSERT statements
@@ -548,7 +552,7 @@ const update = async (id, actividadData) => {
       'requiere_confirmacion', 'requiere_inscripcion',
       'fecha_limite_inscripcion', 'cupo_maximo', 'precio',
       'material_necesario', 'observaciones', 'estado',
-      'cancelado', 'motivo_cancelacion',
+      'cancelado', 'motivo_cancelacion', 'is_global',
       // Campamento fields
       'lugar_salida', 'hora_salida', 'mapa_salida_url',
       'lugar_regreso', 'hora_regreso', 'numero_cuenta',
@@ -663,6 +667,7 @@ const findForEducando = async (educandoId) => {
       WHERE (
         a.seccion_id = e.seccion_id
         OR a.seccion_id IS NULL
+        OR a.is_global = true
         OR a.tipo = 'reunion_sabado'
         OR (a.tipo = 'campamento' AND (
           LOWER(a.titulo) LIKE '%navidad%'
@@ -762,6 +767,33 @@ const getEnlaceToken = async (id) => {
 };
 
 /**
+ * Obtener actividades de una sección + globales para exportación iCal
+ */
+const findBySeccionForICal = async (seccionId) => {
+  try {
+    const actividades = await query(`
+      SELECT a.id, a.titulo, a.descripcion, a.fecha_inicio, a.fecha_fin,
+             a.hora_inicio, a.hora_fin, a.lugar, a.tipo,
+             s.nombre as seccion_nombre
+      FROM actividades a
+      LEFT JOIN secciones s ON a.seccion_id = s.id
+      WHERE (
+        a.seccion_id = $1
+        OR a.is_global = true
+        OR a.seccion_id IS NULL
+        OR a.tipo = 'reunion_sabado'
+      )
+        AND (a.cancelado = false OR a.cancelado IS NULL)
+      ORDER BY a.fecha_inicio ASC
+    `, [seccionId]);
+
+    return actividades.map(a => transformarActividad(a));
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
  * Obtener configuracion de tipos de evento
  */
 const getTiposEvento = () => {
@@ -779,6 +811,7 @@ module.exports = {
   remove,
   findByMes,
   findForEducando,
+  findBySeccionForICal,
   getTiposEvento,
   findByEnlaceToken,
   getOrCreateEnlaceToken,

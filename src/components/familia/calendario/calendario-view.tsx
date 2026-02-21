@@ -14,7 +14,10 @@ import {
   Users,
   Grid3X3,
   List,
-  AlertCircle
+  AlertCircle,
+  Link2,
+  Copy,
+  Check
 } from 'lucide-react'
 import { useCalendarioFamilia, ActividadCalendario } from '@/hooks/useCalendarioFamilia'
 import { useFamiliaData } from '@/hooks/useFamiliaData'
@@ -57,6 +60,11 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
   // Estados para wizard de campamento
   const [campamentoWizardOpen, setCampamentoWizardOpen] = useState(false)
   const [selectedCampamento, setSelectedCampamento] = useState<ActividadCampamento | null>(null)
+
+  // Estado para suscripción iCal
+  const [icalUrl, setIcalUrl] = useState<string | null>(null)
+  const [icalCopied, setIcalCopied] = useState(false)
+  const [showIcalInfo, setShowIcalInfo] = useState(false)
 
   // Educandos participantes en el campamento seleccionado
   // Ordenados por seccion_id para mostrar primero las secciones menores (Castores < Manada < Tropa < Pioneros < Rutas)
@@ -325,6 +333,73 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
           )}
         </div>
       </div>
+
+      {/* Botón de suscripción iCal (solo kraal/admin) */}
+      {user && (user.rol === 'admin' || user.rol === 'scouter') && user.seccion_id && (
+        <Card className="border-dashed">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Link2 className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Exportar a Google Calendar</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {showIcalInfo
+                      ? 'Abre Google Calendar \u2192 Otros calendarios \u2192 Desde URL \u2192 Pega este enlace'
+                      : 'Suscr\u00edbete al calendario de tu secci\u00f3n desde cualquier app'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {!icalUrl ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const { getApiUrl } = await import('@/lib/api-utils')
+                        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+                        const resp = await fetch(`${getApiUrl()}/api/calendario/${user.seccion_id}/token`, {
+                          headers: { Authorization: `Bearer ${token}` }
+                        })
+                        const data = await resp.json()
+                        if (data.success) {
+                          const fullUrl = `${getApiUrl()}${data.data.url}`
+                          setIcalUrl(fullUrl)
+                          setShowIcalInfo(true)
+                        }
+                      } catch (e) {
+                        console.error('Error obteniendo URL iCal:', e)
+                      }
+                    }}
+                  >
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    Obtener enlace iCal
+                  </Button>
+                ) : (
+                  <>
+                    <code className="hidden sm:block text-xs bg-muted px-2 py-1 rounded max-w-[200px] truncate">
+                      {icalUrl}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(icalUrl)
+                        setIcalCopied(true)
+                        setTimeout(() => setIcalCopied(false), 2000)
+                      }}
+                    >
+                      {icalCopied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                      {icalCopied ? 'Copiado' : 'Copiar'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filtros */}
       <ActivityFilter

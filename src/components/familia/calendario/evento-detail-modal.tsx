@@ -26,11 +26,13 @@ import {
   AlertTriangle,
   Info,
   FileText,
-  Eye
+  Eye,
+  Loader2
 } from 'lucide-react'
 import { useCalendarioFamilia, ActividadCalendario } from '@/hooks/useCalendarioFamilia'
 import { ConfirmationBadge } from './confirmation-badge'
 import { useFamiliaData } from '@/hooks/useFamiliaData'
+import { useAuth } from '@/contexts/AuthContext'
 import { useInscripcionCampamento } from '@/hooks/useInscripcionCampamento'
 
 interface EventoDetailModalProps {
@@ -282,9 +284,107 @@ function HijoConfirmacionContent({
   )
 }
 
+// Componente de documentación para kraal (semáforo de educandos)
+function DocumentacionKraalSection({ actividadId }: { actividadId: string | number }) {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const { getApiUrl } = await import('@/lib/api-utils')
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        const resp = await fetch(`${getApiUrl()}/api/actividades/${actividadId}/documentos-estado`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const result = await resp.json()
+        if (result.success) {
+          setData(result.data)
+        }
+      } catch (e) {
+        console.error('Error cargando documentación:', e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchDocs()
+  }, [actividadId])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!data || data.requeridos.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <FileText className="h-10 w-10 mx-auto mb-3 opacity-50" />
+        <p className="text-sm">No hay documentos requeridos para esta actividad</p>
+      </div>
+    )
+  }
+
+  const semaforoColor = (estado: string) => {
+    switch (estado) {
+      case 'verde': return 'bg-green-500'
+      case 'amarillo': return 'bg-yellow-500'
+      default: return 'bg-red-500'
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Resumen */}
+      <div className="flex gap-4 text-sm">
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-green-500" />
+          <span>{data.resumen.completos} completos</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-yellow-500" />
+          <span>{data.resumen.parciales} parciales</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-red-500" />
+          <span>{data.resumen.sin_documentos} sin docs</span>
+        </div>
+      </div>
+
+      {/* Lista de educandos */}
+      <div className="space-y-2">
+        {data.semaforo.map((edu: any) => (
+          <div key={edu.educando_id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <span className={`w-3 h-3 rounded-full shrink-0 ${semaforoColor(edu.estado)}`} />
+            <span className="text-sm font-medium flex-1">{edu.educando_nombre}</span>
+            <div className="flex gap-1">
+              {edu.documentos.map((doc: any, idx: number) => (
+                <span
+                  key={idx}
+                  className={`text-xs px-2 py-0.5 rounded ${
+                    doc.estado === 'aprobado' || doc.estado === 'subido'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                  title={`${doc.tipo_documento}: ${doc.estado}`}
+                >
+                  {doc.tipo_documento.substring(0, 8)}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function EventoDetailModal({ actividad, isOpen, onClose, hijoSeleccionado }: EventoDetailModalProps) {
   const { hijos } = useFamiliaData()
   const { confirmarAsistencia } = useCalendarioFamilia()
+  const { user } = useAuth()
 
   const [confirmaciones, setConfirmaciones] = useState<Record<string, 'confirmado' | 'no_asiste'>>({})
   const [comentarios, setComentarios] = useState<Record<string, string>>({})
@@ -642,6 +742,17 @@ export function EventoDetailModal({ actividad, isOpen, onClose, hijoSeleccionado
                 </div>
               </div>
             </div>
+
+            {/* Documentación (solo kraal/admin) */}
+            {user && (user.rol === 'admin' || user.rol === 'scouter') && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium mb-3 flex items-center text-sm">
+                  <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                  Documentación
+                </h4>
+                <DocumentacionKraalSection actividadId={actividad.id} />
+              </div>
+            )}
 
             {/* Información importante para actividades próximas */}
             {(diasRestantes.text === 'Hoy' || diasRestantes.text === 'Mañana' ||

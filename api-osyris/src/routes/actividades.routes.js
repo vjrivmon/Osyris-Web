@@ -358,6 +358,11 @@ router.post('/', verifyToken, checkRole(['admin', 'scouter']), async (req, res) 
       creado_por: req.usuario.id
     };
 
+    // Solo admin puede marcar eventos como globales
+    if (req.usuario.rol !== 'admin' && actividadData.is_global) {
+      actividadData.is_global = false;
+    }
+
     // HIGH-004: Si el usuario es scouter, forzar seccion_id a su propia seccion
     // Solo admin puede crear eventos para cualquier seccion
     if (req.usuario.rol === 'scouter') {
@@ -489,6 +494,11 @@ router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res
         success: false,
         message: 'Actividad no encontrada'
       });
+    }
+
+    // Solo admin puede marcar eventos como globales
+    if (req.usuario.rol !== 'admin' && req.body.is_global !== undefined) {
+      delete req.body.is_global;
     }
 
     // HIGH-004: Si el usuario es scouter, verificar que solo edite actividades de su seccion
@@ -1010,6 +1020,149 @@ router.post('/:id/crear-sheets', verifyToken, checkRole(['admin', 'scouter']), a
     res.status(500).json({
       success: false,
       message: 'Error creando hoja de inscripciones',
+      error: error.message
+    });
+  }
+});
+
+// ========================================
+// RUTAS DE DOCUMENTOS REQUERIDOS POR EVENTO
+// ========================================
+
+/**
+ * POST /api/actividades/:id/documentos-requeridos
+ * Crear un requisito de documentación para una actividad (kraal/admin)
+ */
+router.post('/:id/documentos-requeridos', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+  try {
+    const actividadId = parseInt(req.params.id);
+    const { tipo_documento, descripcion, obligatorio } = req.body;
+
+    if (!tipo_documento) {
+      return res.status(400).json({
+        success: false,
+        message: 'El tipo de documento es obligatorio'
+      });
+    }
+
+    // Verificar que la actividad existe
+    const actividad = await ActividadModel.findById(actividadId);
+    if (!actividad) {
+      return res.status(404).json({ success: false, message: 'Actividad no encontrada' });
+    }
+
+    const { query: dbQuery } = require('../config/db.config');
+    const result = await dbQuery(
+      `INSERT INTO documentos_requeridos_evento (actividad_id, tipo_documento, descripcion, obligatorio)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [actividadId, tipo_documento, descripcion || null, obligatorio !== false]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Requisito de documentación creado',
+      data: result[0]
+    });
+  } catch (error) {
+    console.error('Error creando requisito de documentación:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creando requisito',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/actividades/:id/documentos-estado
+ * Obtener estado de documentación de educandos para una actividad (kraal/admin)
+ */
+router.get('/:id/documentos-estado', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+  try {
+    const actividadId = parseInt(req.params.id);
+    const { query: dbQuery } = require('../config/db.config');
+
+    // Obtener documentos requeridos
+    const requeridos = await dbQuery(
+      'SELECT * FROM documentos_requeridos_evento WHERE actividad_id = $1 ORDER BY id',
+      [actividadId]
+    );
+
+    // Obtener documentos entregados por educando
+    const entregados = await dbQuery(
+      `SELECT def.*, e.nombre as educando_nombre, e.apellidos as educando_apellidos
+       FROM documentos_evento_familia def
+       JOIN educandos e ON def.educando_id = e.id
+       WHERE def.actividad_id = $1
+       ORDER BY e.nombre, def.tipo_documento`,
+      [actividadId]
+    );
+
+    // Obtener todos los educandos de la sección de la actividad
+    const actividad = await ActividadModel.findById(actividadId);
+    let educandos = [];
+    if (actividad && actividad.seccion_id) {
+      educandos = await dbQuery(
+        'SELECT id, nombre, apellidos FROM educandos WHERE seccion_id = $1 AND activo = true ORDER BY nombre',
+        [actividad.seccion_id]
+      );
+    }
+
+    // Construir semáforo por educando
+    const semaforo = educandos.map(edu => {
+      const docsEntregados = entregados.filter(d => d.educando_id === edu.id);
+      const docsCompletos = requeridos.filter(req => {
+        const entregado = docsEntregados.find(d => d.tipo_documento === req.tipo_documento);
+        return entregado && (entregado.estado === 'subido' || entregado.estado === 'aprobado');
+      });
+
+      const obligatorios = requeridos.filter(r => r.obligatorio);
+      const obligatoriosCompletos = obligatorios.filter(req => {
+        const entregado = docsEntregados.find(d => d.tipo_documento === req.tipo_documento);
+        return entregado && (entregado.estado === 'subido' || entregado.estado === 'aprobado');
+      });
+
+      let estado = 'rojo'; // Sin documentos
+      if (obligatoriosCompletos.length === obligatorios.length && obligatorios.length > 0) {
+        estado = 'verde'; // Todo completo
+      } else if (docsCompletos.length > 0) {
+        estado = 'amarillo'; // Parcial
+      }
+
+      return {
+        educando_id: edu.id,
+        educando_nombre: `${edu.nombre} ${edu.apellidos}`,
+        estado,
+        documentos: requeridos.map(req => {
+          const entregado = docsEntregados.find(d => d.tipo_documento === req.tipo_documento);
+          return {
+            tipo_documento: req.tipo_documento,
+            obligatorio: req.obligatorio,
+            estado: entregado ? entregado.estado : 'pendiente',
+            archivo_url: entregado ? entregado.archivo_url : null
+          };
+        })
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        requeridos,
+        semaforo,
+        resumen: {
+          total_educandos: educandos.length,
+          completos: semaforo.filter(s => s.estado === 'verde').length,
+          parciales: semaforo.filter(s => s.estado === 'amarillo').length,
+          sin_documentos: semaforo.filter(s => s.estado === 'rojo').length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error obteniendo estado de documentación:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo estado de documentación',
       error: error.message
     });
   }

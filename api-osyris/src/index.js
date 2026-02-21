@@ -50,6 +50,8 @@ const contactoRoutes = require('./routes/contacto.routes');
 // 📅 RUTAS DEL SISTEMA DE CALENDARIO
 const rondaRoutes = require('./routes/ronda.routes');
 const inscripcionesCampamentoRoutes = require('./routes/inscripciones-campamento.routes');
+// 📅 RUTAS DE EXPORTACIÓN iCAL
+const calendarioRoutes = require('./routes/calendario.routes');
 // 📊 RUTAS DEL DASHBOARD SCOUTER
 const dashboardScouterRoutes = require('./routes/dashboard-scouter.routes');
 // 📋 RUTAS DE ASISTENCIA IN-SITU (Issue #6)
@@ -147,6 +149,8 @@ app.use('/api/contacto', contactoRoutes);
 // 📅 RUTAS DEL SISTEMA DE CALENDARIO
 app.use('/api/ronda', rondaRoutes);
 app.use('/api/inscripciones-campamento', inscripcionesCampamentoRoutes);
+// 📅 EXPORTACIÓN iCAL
+app.use('/api/calendario', calendarioRoutes);
 // 📊 DASHBOARD SCOUTER
 app.use('/api/dashboard-scouter', dashboardScouterRoutes);
 // 📋 ASISTENCIA IN-SITU (Issue #6)
