@@ -12,12 +12,12 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import {
   ChevronLeft, ChevronRight, Check, CheckCircle2, Loader2, AlertCircle,
-  User, Heart, Phone, FileText, PenTool, MapPin, Clock, Backpack, Euro, Eye, AlertTriangle
+  User, Heart, Phone, FileText, Download, MapPin, Clock, Backpack, Euro, Eye, AlertTriangle
 } from 'lucide-react'
 import { useCircularDigital } from '@/hooks/useCircularDigital'
 import { getApiUrl } from '@/lib/api-utils'
 import { PerfilSaludForm } from './PerfilSaludForm'
-import { FirmaDigitalCanvas } from './FirmaDigitalCanvas'
+// FirmaDigitalCanvas removed — physical/digital signing replaces in-app drawing
 import type { PerfilSaludData, ContactoEmergencia, CampoCustomCircular, CircularResultado } from '@/types/circular-digital'
 
 interface CircularDigitalWizardProps {
@@ -69,7 +69,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
     { label: 'Contactos', icon: Phone },
     { label: 'Autorizaciones', icon: FileText },
     { label: 'Resumen', icon: Check },
-    { label: 'Firma', icon: PenTool },
+    { label: 'Firma', icon: Download },
     { label: 'Revisar', icon: Eye },
   ]
 
@@ -161,7 +161,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
         datosMedicos: perfilData,
         contactos: contactosData,
         camposCustom: camposCustomResp,
-        firmaBase64: firmaBase64!,
+        firmaBase64: firmaBase64 || '',
         firmaTipo: 'image',
         aceptaCondiciones: true,
         actualizarPerfil,
@@ -438,23 +438,22 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
           </Card>
         )
 
-      case 6: // Firma
+      case 6: // Firma — download & sign physically
         return (
           <Card data-testid="step-firma">
-            <CardHeader><CardTitle className="flex items-center gap-2"><PenTool className="h-5 w-5" /> Firma Digital</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" /> Firma del documento</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Firme en el recuadro inferior con el dedo o un stylus. La firma se incluirá en el PDF generado.
+                El documento se generará en el siguiente paso. Podrás descargarlo, firmarlo a mano o con firma digital, y subirlo completado.
               </p>
-              <FirmaDigitalCanvas onChange={setFirmaBase64} height={200} placeholder="Firme aquí con el dedo o stylus" />
 
               <Button
                 onClick={() => { loadPreview(); setStep(7); }}
-                disabled={!firmaBase64 || !aceptaCondiciones}
+                disabled={!aceptaCondiciones}
                 className="w-full"
                 size="lg"
               >
-                <Eye className="h-5 w-5 mr-2" /> Revisar documento
+                <Eye className="h-5 w-5 mr-2" /> Generar y revisar documento
               </Button>
             </CardContent>
           </Card>
@@ -537,7 +536,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
 
   const canNext = () => {
     if (step === 5) return aceptaCondiciones
-    if (step === 6) return false // firma step has its own button
+    if (step === 6) return false // firma step has its own button (generate & review)
     if (step === 7) return false // review step has its own buttons
     return true
   }

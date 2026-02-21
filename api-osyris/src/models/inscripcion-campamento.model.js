@@ -308,7 +308,8 @@ const update = async (id, inscripcionData) => {
       'email_familiar', 'telefono_familiar', 'nombre_familiar',
       'circular_firmada_drive_id', 'circular_firmada_url',
       'justificante_pago_drive_id', 'justificante_pago_url',
-      'circular_enviada_seccion', 'justificante_enviado_tesoreria'
+      'circular_enviada_seccion', 'justificante_enviado_tesoreria',
+      'circular_firmada_estado'
     ];
 
     for (const field of updatableFields) {

@@ -536,6 +536,62 @@ router.post('/:id/circular-firmada', verifyToken, upload.single('file'), inscrip
 
 /**
  * @swagger
+ * /api/inscripciones-campamento/{id}/documento-firmado:
+ *   post:
+ *     summary: Subir documento firmado (circular) — marca como pendiente_validacion
+ *     tags: [InscripcionesCampamento]
+ *     security:
+ *       - bearerAuth: []
+ *     consumes:
+ *       - multipart/form-data
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: formData
+ *         name: file
+ *         type: file
+ *         required: true
+ *         description: Documento firmado (PDF o imagen)
+ */
+router.post('/:id/documento-firmado', verifyToken, upload.single('file'), async (req, res) => {
+  try {
+    // Delegate to the existing circular-firmada controller
+    // but also update circular_firmada_estado after success
+    const id = parseInt(req.params.id);
+
+    // Call the existing controller (it sends its own response)
+    // We intercept by overriding res.json to also update the estado
+    const originalJson = res.json.bind(res);
+    res.json = async function(data) {
+      if (data && data.success) {
+        // After successful upload, also mark as pendiente_validacion
+        try {
+          await InscripcionModel.update(id, {
+            circular_firmada_estado: 'pendiente_validacion'
+          });
+        } catch (updateErr) {
+          console.error('Error updating circular_firmada_estado:', updateErr);
+        }
+      }
+      return originalJson(data);
+    };
+
+    return inscripcionController.subirCircularFirmada(req, res);
+  } catch (error) {
+    console.error('Error en documento-firmado:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al subir documento firmado',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
  * /api/inscripciones-campamento/{id}/justificante-pago:
  *   post:
  *     summary: Subir justificante de pago
