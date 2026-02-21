@@ -2,6 +2,24 @@ const { query } = require('../config/db.config');
 const NotificacionFamilia = require('../models/notificaciones_familia.model');
 const Joi = require('joi');
 
+/**
+ * Escapa caracteres HTML peligrosos para prevenir XSS en emails.
+ * El contenido del newsletter es texto plano del kraal — no debe
+ * interpretarse como HTML dentro de la plantilla del email.
+ * @param {string} str
+ * @returns {string}
+ */
+const escapeHtml = (str) => {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+};
+
 // Esquema de validación para envío de newsletter
 const newsletterSchema = Joi.object({
   titulo: Joi.string().min(1).max(255).required(),
@@ -121,8 +139,8 @@ const enviarNewsletter = async (req, res) => {
               to: familia.email,
               subject: `[Grupo Scout Osyris] ${titulo}`,
               html: `
-                <div class="greeting">Hola ${familia.nombre}</div>
-                <p class="text">${contenido.replace(/\n/g, '<br>')}</p>
+                <div class="greeting">Hola ${escapeHtml(familia.nombre)}</div>
+                <p class="text">${escapeHtml(contenido).replace(/\n/g, '<br>')}</p>
               `,
               text: `Hola ${familia.nombre},\n\n${contenido}\n\n---\nGrupo Scout Osyris`
             });
