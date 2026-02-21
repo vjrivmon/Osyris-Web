@@ -17,7 +17,7 @@ const RondaModel = require('../models/ronda.model');
  *     summary: Obtener todas las rondas
  *     tags: [Ronda]
  */
-router.get('/', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.get('/', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const rondas = await RondaModel.findAll();
     res.status(200).json({
@@ -72,7 +72,7 @@ router.get('/activa', async (req, res) => {
  *     summary: Obtener una ronda por ID
  *     tags: [Ronda]
  */
-router.get('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.get('/:id', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const ronda = await RondaModel.findById(id);
@@ -105,7 +105,7 @@ router.get('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res
  *     summary: Obtener resumen de eventos de una ronda
  *     tags: [Ronda]
  */
-router.get('/:id/resumen', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.get('/:id/resumen', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const resumen = await RondaModel.getResumenEventos(id);
@@ -140,7 +140,7 @@ router.get('/:id/resumen', verifyToken, checkRole(['admin', 'scouter']), async (
  *     security:
  *       - bearerAuth: []
  */
-router.post('/', verifyToken, checkRole(['admin']), async (req, res) => {
+router.post('/', verifyToken, checkRole(['superadmin']), async (req, res) => {
   try {
     const rondaData = {
       ...req.body,
@@ -188,7 +188,7 @@ router.post('/', verifyToken, checkRole(['admin']), async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.put('/:id', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const rondaActualizada = await RondaModel.update(id, req.body);
@@ -217,7 +217,7 @@ router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:id/activar', verifyToken, checkRole(['admin']), async (req, res) => {
+router.post('/:id/activar', verifyToken, checkRole(['superadmin']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const rondaActivada = await RondaModel.activar(id);
@@ -246,7 +246,7 @@ router.post('/:id/activar', verifyToken, checkRole(['admin']), async (req, res) 
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:id/generar-actividades', verifyToken, checkRole(['admin']), async (req, res) => {
+router.post('/:id/generar-actividades', verifyToken, checkRole(['superadmin']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const count = await RondaModel.generarActividades(id);
@@ -275,7 +275,7 @@ router.post('/:id/generar-actividades', verifyToken, checkRole(['admin']), async
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:id/clonar', verifyToken, checkRole(['admin']), async (req, res) => {
+router.post('/:id/clonar', verifyToken, checkRole(['superadmin']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { nombre, fecha_inicio, fecha_fin } = req.body;
@@ -313,7 +313,7 @@ router.post('/:id/clonar', verifyToken, checkRole(['admin']), async (req, res) =
  *     security:
  *       - bearerAuth: []
  */
-router.delete('/:id', verifyToken, checkRole(['admin']), async (req, res) => {
+router.delete('/:id', verifyToken, checkRole(['superadmin']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     await RondaModel.remove(id);

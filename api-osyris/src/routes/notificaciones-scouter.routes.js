@@ -3,9 +3,9 @@ const router = express.Router();
 const notificacionesController = require('../controllers/notificaciones-scouter.controller');
 const { verifyToken, checkRole } = require('../middleware/auth.middleware');
 
-// Todas las rutas requieren autenticación y rol scouter/admin
+// Todas las rutas requieren autenticación y rol kraal/superadmin
 router.use(verifyToken);
-router.use(checkRole(['scouter', 'admin']));
+router.use(checkRole(['kraal', 'superadmin']));
 
 // GET /api/notificaciones-scouter - Obtener notificaciones del scouter
 router.get('/', notificacionesController.getNotificaciones);

@@ -37,7 +37,7 @@ const dashboardController = require('../controllers/dashboard-scouter.controller
  *       500:
  *         description: Error del servidor
  */
-router.get('/summary', verifyToken, checkRole(['admin', 'scouter']), dashboardController.getDashboardSummary);
+router.get('/summary', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), dashboardController.getDashboardSummary);
 
 /**
  * @swagger
@@ -62,7 +62,7 @@ router.get('/summary', verifyToken, checkRole(['admin', 'scouter']), dashboardCo
  *       404:
  *         description: Actividad no encontrada
  */
-router.get('/sabado/:actividadId/detalle', verifyToken, checkRole(['admin', 'scouter']), dashboardController.getSabadoDetalle);
+router.get('/sabado/:actividadId/detalle', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), dashboardController.getSabadoDetalle);
 
 /**
  * @swagger
@@ -87,7 +87,7 @@ router.get('/sabado/:actividadId/detalle', verifyToken, checkRole(['admin', 'sco
  *       404:
  *         description: Actividad no encontrada
  */
-router.get('/campamento/:actividadId/detalle', verifyToken, checkRole(['admin', 'scouter']), dashboardController.getCampamentoDetalle);
+router.get('/campamento/:actividadId/detalle', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), dashboardController.getCampamentoDetalle);
 
 /**
  * @swagger
@@ -112,7 +112,7 @@ router.get('/campamento/:actividadId/detalle', verifyToken, checkRole(['admin', 
  *       404:
  *         description: Actividad no encontrada
  */
-router.get('/campamento/:actividadId/inscripciones', verifyToken, checkRole(['admin', 'scouter']), dashboardController.getCampamentoInscripcionesForModal);
+router.get('/campamento/:actividadId/inscripciones', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), dashboardController.getCampamentoInscripcionesForModal);
 
 /**
  * @swagger
@@ -128,6 +128,6 @@ router.get('/campamento/:actividadId/inscripciones', verifyToken, checkRole(['ad
  *       401:
  *         description: No autorizado
  */
-router.delete('/notificaciones', verifyToken, checkRole(['admin', 'scouter']), dashboardController.limpiarNotificaciones);
+router.delete('/notificaciones', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), dashboardController.limpiarNotificaciones);
 
 module.exports = router;

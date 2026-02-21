@@ -21,6 +21,30 @@ async function initializeDatabase() {
     console.log('✅ Conexión a PostgreSQL establecida correctamente');
     console.log(`📁 Base de datos: ${process.env.DB_NAME}`);
     client.release();
+
+    // === IAM: Migración idempotente de roles ===
+    await pool.query(`UPDATE usuarios SET rol = 'superadmin' WHERE rol = 'admin'`);
+    await pool.query(`UPDATE usuarios SET rol = 'kraal' WHERE rol IN ('scouter', 'editor')`);
+    await pool.query(`UPDATE usuarios SET rol = 'jefe_seccion' WHERE rol = 'coordinador'`);
+    await pool.query(`UPDATE usuario_roles SET rol = 'superadmin' WHERE rol = 'admin'`);
+    await pool.query(`UPDATE usuario_roles SET rol = 'kraal' WHERE rol IN ('scouter', 'editor')`);
+    await pool.query(`UPDATE usuario_roles SET rol = 'jefe_seccion' WHERE rol = 'coordinador'`);
+    console.log('✅ IAM: Migración de roles completada');
+
+    // === IAM: Tabla permisos_usuario ===
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS permisos_usuario (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+        permiso TEXT NOT NULL,
+        seccion_id INTEGER,
+        otorgado_por INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(usuario_id, permiso, seccion_id)
+      )
+    `);
+    console.log('✅ IAM: Tabla permisos_usuario verificada');
+
     return pool;
   } catch (err) {
     console.error('❌ Error al conectar con PostgreSQL:', err);
@@ -158,6 +182,15 @@ async function addUserRole(usuarioId, rol, esPrincipal = false) {
   return result[0];
 }
 
+// Funciones helper para permisos de usuario (sistema IAM)
+async function getUserPermisos(usuarioId) {
+  const result = await query(
+    'SELECT * FROM permisos_usuario WHERE usuario_id = $1 ORDER BY created_at DESC',
+    [usuarioId]
+  );
+  return result;
+}
+
 module.exports = {
   initializeDatabase,
   query,
@@ -170,5 +203,6 @@ module.exports = {
   updateUser,
   getAllPages,
   getUserRoles,
-  addUserRole
+  addUserRole,
+  getUserPermisos
 };

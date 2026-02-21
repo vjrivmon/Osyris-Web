@@ -37,7 +37,7 @@ const asistenciaController = require('../controllers/asistencia-actividad.contro
  */
 router.get('/:actividadId',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   asistenciaController.getAsistencia
 );
 
@@ -52,7 +52,7 @@ router.get('/:actividadId',
  */
 router.get('/:actividadId/estadisticas',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   asistenciaController.getEstadisticas
 );
 
@@ -76,7 +76,7 @@ router.get('/:actividadId/estadisticas',
  */
 router.patch('/:actividadId/educando/:educandoId/llegada',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   asistenciaController.marcarLlegada
 );
 
@@ -100,7 +100,7 @@ router.patch('/:actividadId/educando/:educandoId/llegada',
  */
 router.patch('/:actividadId/educando/:educandoId/sip',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   asistenciaController.marcarSIP
 );
 
@@ -115,7 +115,7 @@ router.patch('/:actividadId/educando/:educandoId/sip',
  */
 router.patch('/:actividadId/educando/:educandoId/observaciones',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   asistenciaController.actualizarObservaciones
 );
 
@@ -130,7 +130,7 @@ router.patch('/:actividadId/educando/:educandoId/observaciones',
  */
 router.patch('/:actividadId/educando/:educandoId/no-asiste',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   asistenciaController.marcarNoAsiste
 );
 

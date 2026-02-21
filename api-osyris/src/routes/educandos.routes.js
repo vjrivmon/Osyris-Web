@@ -60,7 +60,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.get('/', verifyToken, checkRole(['admin', 'scouter']), educandoController.getAllEducandos);
+router.get('/', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.getAllEducandos);
 
 /**
  * @swagger
@@ -89,7 +89,7 @@ router.get('/', verifyToken, checkRole(['admin', 'scouter']), educandoController
  *       500:
  *         description: Error del servidor
  */
-router.get('/search', verifyToken, checkRole(['admin', 'scouter']), educandoController.searchEducandos);
+router.get('/search', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.searchEducandos);
 
 /**
  * @swagger
@@ -109,7 +109,7 @@ router.get('/search', verifyToken, checkRole(['admin', 'scouter']), educandoCont
  *       500:
  *         description: Error del servidor
  */
-router.get('/estadisticas', verifyToken, checkRole(['admin']), educandoController.getEstadisticas);
+router.get('/estadisticas', verifyToken, checkRole(['superadmin']), educandoController.getEstadisticas);
 
 /**
  * @swagger
@@ -138,7 +138,7 @@ router.get('/estadisticas', verifyToken, checkRole(['admin']), educandoControlle
  *       500:
  *         description: Error del servidor
  */
-router.get('/seccion/:seccionId', verifyToken, checkRole(['admin', 'scouter']), educandoController.getEducandosBySeccion);
+router.get('/seccion/:seccionId', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.getEducandosBySeccion);
 
 /**
  * @swagger
@@ -165,7 +165,7 @@ router.get('/seccion/:seccionId', verifyToken, checkRole(['admin', 'scouter']), 
  *       500:
  *         description: Error del servidor
  */
-router.get('/seccion/:seccionId/completo', verifyToken, checkRole(['admin', 'scouter']), educandoController.getEducandosBySeccionCompleto);
+router.get('/seccion/:seccionId/completo', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.getEducandosBySeccionCompleto);
 
 /**
  * @swagger
@@ -225,7 +225,7 @@ router.get('/:id', verifyToken, educandoController.getEducandoById);
  *       500:
  *         description: Error del servidor
  */
-router.get('/:id/documentacion', verifyToken, checkRole(['admin', 'scouter']), educandoController.getEducandoDocumentacion);
+router.get('/:id/documentacion', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.getEducandoDocumentacion);
 
 /**
  * @swagger
@@ -254,7 +254,7 @@ router.get('/:id/documentacion', verifyToken, checkRole(['admin', 'scouter']), e
  *       500:
  *         description: Error del servidor
  */
-router.post('/:id/notificar-documentacion', verifyToken, checkRole(['admin', 'scouter']), educandoController.notificarDocumentacionFaltante);
+router.post('/:id/notificar-documentacion', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.notificarDocumentacionFaltante);
 
 /**
  * @swagger
@@ -284,7 +284,7 @@ router.post('/:id/notificar-documentacion', verifyToken, checkRole(['admin', 'sc
  *       500:
  *         description: Error del servidor
  */
-router.post('/', verifyToken, checkRole(['admin', 'scouter']), educandoController.createEducando);
+router.post('/', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.createEducando);
 
 /**
  * @swagger
@@ -321,7 +321,7 @@ router.post('/', verifyToken, checkRole(['admin', 'scouter']), educandoControlle
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), educandoController.updateEducando);
+router.put('/:id', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.updateEducando);
 
 /**
  * @swagger
@@ -352,7 +352,7 @@ router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), educandoControl
  *       500:
  *         description: Error del servidor
  */
-router.patch('/:id/deactivate', verifyToken, checkRole(['admin', 'scouter']), educandoController.deactivateEducando);
+router.patch('/:id/deactivate', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.deactivateEducando);
 
 /**
  * @swagger
@@ -383,7 +383,7 @@ router.patch('/:id/deactivate', verifyToken, checkRole(['admin', 'scouter']), ed
  *       500:
  *         description: Error del servidor
  */
-router.patch('/:id/reactivate', verifyToken, checkRole(['admin', 'scouter']), educandoController.reactivateEducando);
+router.patch('/:id/reactivate', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), educandoController.reactivateEducando);
 
 /**
  * @swagger
@@ -414,6 +414,6 @@ router.patch('/:id/reactivate', verifyToken, checkRole(['admin', 'scouter']), ed
  *       500:
  *         description: Error del servidor
  */
-router.delete('/:id', verifyToken, checkRole(['admin']), educandoController.deleteEducando);
+router.delete('/:id', verifyToken, checkRole(['superadmin']), educandoController.deleteEducando);
 
 module.exports = router;

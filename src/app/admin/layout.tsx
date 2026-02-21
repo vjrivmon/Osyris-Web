@@ -40,7 +40,7 @@ export default function AdminLayout({
   }
 
   return (
-    <ProtectedRoute requiredRole="admin">
+    <ProtectedRoute allowedRoles={['superadmin', 'kraal', 'jefe_seccion']}>
       <div className="min-h-screen bg-background">
         {/* Header horizontal */}
         <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">

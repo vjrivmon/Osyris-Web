@@ -40,7 +40,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.get('/scouts', verifyToken, checkRole(['familia', 'admin', 'scouter']), familiarController.getScoutsByFamiliar);
+router.get('/scouts', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), familiarController.getScoutsByFamiliar);
 
 /**
  * @swagger
@@ -81,7 +81,7 @@ router.get('/scouts', verifyToken, checkRole(['familia', 'admin', 'scouter']), f
  *       500:
  *         description: Error del servidor
  */
-router.get('/scouts/:scoutId', verifyToken, checkRole(['admin', 'scouter']), familiarController.getFamiliaresByScout);
+router.get('/scouts/:scoutId', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), familiarController.getFamiliaresByScout);
 
 /**
  * @swagger
@@ -165,7 +165,7 @@ router.get('/relaciones/:id', verifyToken, familiarController.getRelacionById);
  *       500:
  *         description: Error del servidor
  */
-router.post('/relaciones', verifyToken, checkRole(['admin', 'scouter']), familiarController.createRelacion);
+router.post('/relaciones', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), familiarController.createRelacion);
 
 /**
  * @swagger
@@ -263,7 +263,7 @@ router.put('/relaciones/:id', verifyToken, familiarController.updateRelacion);
  *       500:
  *         description: Error del servidor
  */
-router.delete('/relaciones/:id', verifyToken, checkRole(['admin', 'scouter']), familiarController.deleteRelacion);
+router.delete('/relaciones/:id', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), familiarController.deleteRelacion);
 
 /**
  * @swagger

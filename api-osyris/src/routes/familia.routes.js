@@ -26,7 +26,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.get('/dashboard', verifyToken, checkRole(['familia', 'admin']), familiaController.getDashboardData);
+router.get('/dashboard', verifyToken, checkRole(['familia', 'superadmin']), familiaController.getDashboardData);
 
 /**
  * @swagger
@@ -44,7 +44,7 @@ router.get('/dashboard', verifyToken, checkRole(['familia', 'admin']), familiaCo
  *       500:
  *         description: Error del servidor
  */
-router.get('/hijos', verifyToken, checkRole(['familia', 'admin']), familiaController.getEducandosVinculados);
+router.get('/hijos', verifyToken, checkRole(['familia', 'superadmin']), familiaController.getEducandosVinculados);
 
 /**
  * @swagger
@@ -75,7 +75,7 @@ router.get('/hijos', verifyToken, checkRole(['familia', 'admin']), familiaContro
  *       500:
  *         description: Error del servidor
  */
-router.get('/educando/:educandoId', verifyToken, checkRole(['familia', 'admin']), familiaController.getEducandoById);
+router.get('/educando/:educandoId', verifyToken, checkRole(['familia', 'superadmin']), familiaController.getEducandoById);
 
 /**
  * @swagger
@@ -104,7 +104,7 @@ router.get('/educando/:educandoId', verifyToken, checkRole(['familia', 'admin'])
  *       500:
  *         description: Error del servidor
  */
-router.get('/educando/:educandoId/familiares', verifyToken, checkRole(['admin', 'scouter']), familiaController.getFamiliaresByEducando);
+router.get('/educando/:educandoId/familiares', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), familiaController.getFamiliaresByEducando);
 
 /**
  * @swagger
@@ -131,7 +131,7 @@ router.get('/educando/:educandoId/familiares', verifyToken, checkRole(['admin', 
  *       500:
  *         description: Error del servidor
  */
-router.get('/verificar-acceso/:educandoId', verifyToken, checkRole(['familia', 'admin']), familiaController.verificarAcceso);
+router.get('/verificar-acceso/:educandoId', verifyToken, checkRole(['familia', 'superadmin']), familiaController.verificarAcceso);
 
 /**
  * @swagger
@@ -179,7 +179,7 @@ router.get('/verificar-acceso/:educandoId', verifyToken, checkRole(['familia', '
  *       500:
  *         description: Error del servidor
  */
-router.post('/vincular', verifyToken, checkRole(['admin']), familiaController.vincularEducando);
+router.post('/vincular', verifyToken, checkRole(['superadmin']), familiaController.vincularEducando);
 
 /**
  * @swagger
@@ -210,7 +210,7 @@ router.post('/vincular', verifyToken, checkRole(['admin']), familiaController.vi
  *       500:
  *         description: Error del servidor
  */
-router.delete('/desvincular/:relacionId', verifyToken, checkRole(['admin']), familiaController.desvincularEducando);
+router.delete('/desvincular/:relacionId', verifyToken, checkRole(['superadmin']), familiaController.desvincularEducando);
 
 /**
  * @swagger
@@ -235,7 +235,7 @@ router.delete('/desvincular/:relacionId', verifyToken, checkRole(['admin']), fam
  *       500:
  *         description: Error del servidor
  */
-router.get('/actividades/proximas', verifyToken, checkRole(['familia', 'admin']), familiaController.getProximasActividades);
+router.get('/actividades/proximas', verifyToken, checkRole(['familia', 'superadmin']), familiaController.getProximasActividades);
 
 /**
  * @swagger
@@ -260,6 +260,6 @@ router.get('/actividades/proximas', verifyToken, checkRole(['familia', 'admin'])
  *       500:
  *         description: Error del servidor
  */
-router.get('/actividades/:familiaId', verifyToken, checkRole(['familia', 'admin']), familiaController.getActividadesFamilia);
+router.get('/actividades/:familiaId', verifyToken, checkRole(['familia', 'superadmin']), familiaController.getActividadesFamilia);
 
 module.exports = router;

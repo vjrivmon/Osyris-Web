@@ -22,7 +22,7 @@ const dashboardComiteController = require('../controllers/dashboard-comite.contr
  *       200:
  *         description: Lista de campamentos
  */
-router.get('/campamentos', verifyToken, checkRole(['admin', 'comite']), dashboardComiteController.getCampamentos);
+router.get('/campamentos', verifyToken, checkRole(['superadmin', 'comite']), dashboardComiteController.getCampamentos);
 
 /**
  * @swagger
@@ -39,7 +39,7 @@ router.get('/campamentos', verifyToken, checkRole(['admin', 'comite']), dashboar
  *         schema:
  *           type: integer
  */
-router.get('/campamento/:id', verifyToken, checkRole(['admin', 'comite']), dashboardComiteController.getCampamentoDetalle);
+router.get('/campamento/:id', verifyToken, checkRole(['superadmin', 'comite']), dashboardComiteController.getCampamentoDetalle);
 
 /**
  * @swagger
@@ -56,6 +56,6 @@ router.get('/campamento/:id', verifyToken, checkRole(['admin', 'comite']), dashb
  *         schema:
  *           type: integer
  */
-router.get('/campamento/:id/export', verifyToken, checkRole(['admin', 'comite']), dashboardComiteController.exportCSV);
+router.get('/campamento/:id/export', verifyToken, checkRole(['superadmin', 'comite']), dashboardComiteController.exportCSV);
 
 module.exports = router;

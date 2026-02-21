@@ -44,7 +44,7 @@ const upload = multer({
  *     security:
  *       - bearerAuth: []
  */
-router.get('/actividad/:actividadId', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.get('/actividad/:actividadId', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const actividadId = parseInt(req.params.actividadId);
     const filters = {
@@ -105,7 +105,7 @@ router.get('/actividad/:actividadId/estadisticas', verifyToken, async (req, res)
  *     security:
  *       - bearerAuth: []
  */
-router.get('/actividad/:actividadId/dietas', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.get('/actividad/:actividadId/dietas', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const actividadId = parseInt(req.params.actividadId);
     const resumen = await InscripcionModel.getResumenDietas(actividadId);
@@ -449,7 +449,7 @@ router.post('/:id/cancelar', verifyToken, async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:id/pago', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.post('/:id/pago', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { metodo_pago, referencia } = req.body;
@@ -480,7 +480,7 @@ router.post('/:id/pago', verifyToken, checkRole(['admin', 'scouter']), async (re
  *     security:
  *       - bearerAuth: []
  */
-router.delete('/:id', verifyToken, checkRole(['admin']), async (req, res) => {
+router.delete('/:id', verifyToken, checkRole(['superadmin']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const eliminado = await InscripcionModel.remove(id);
@@ -666,7 +666,7 @@ router.get('/verificar/:actividadId/:educandoId', verifyToken, async (req, res) 
  */
 router.get('/actividad/:actividadId/circulares-pendientes',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   inscripcionController.getCircularesPendientes
 );
 
@@ -691,7 +691,7 @@ router.get('/actividad/:actividadId/circulares-pendientes',
  */
 router.get('/actividad/:actividadId/estadisticas-verificacion',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   inscripcionController.getEstadisticasVerificacion
 );
 
@@ -713,7 +713,7 @@ router.get('/actividad/:actividadId/estadisticas-verificacion',
  */
 router.patch('/:id/verificar-circular',
   verifyToken,
-  checkRole(['admin', 'scouter']),
+  checkRole(['superadmin', 'kraal', 'jefe_seccion']),
   inscripcionController.verificarCircular
 );
 

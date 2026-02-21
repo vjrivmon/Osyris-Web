@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'admin' | 'scouter' | 'coordinador' | 'padre' | 'educando' | 'familia';
+  requiredRole?: 'superadmin' | 'kraal' | 'jefe_seccion' | 'familia' | 'educando' | 'comite';
+  allowedRoles?: string[];
   redirectTo?: string;
 }
 
@@ -79,14 +80,43 @@ function AccessDenied() {
  * IMPORTANTE: Este componente usa AuthContext para sincronizarse con el estado
  * de autenticacion. NO lee localStorage directamente para evitar race conditions
  * despues del login.
+ *
+ * Soporta:
+ * - requiredRole: rol exacto requerido (legacy, compatibilidad)
+ * - allowedRoles: array de roles permitidos (nuevo sistema IAM)
+ * - superadmin siempre tiene acceso total
  */
 export function ProtectedRoute({
   children,
   requiredRole,
+  allowedRoles,
   redirectTo = '/login'
 }: ProtectedRouteProps) {
   const { user, token, isLoading, authReady, isAuthenticated, sessionExpired } = useAuth();
   const router = useRouter();
+
+  // Verificar si el usuario tiene acceso
+  const hasAccess = (): boolean => {
+    if (!user) return false;
+
+    const userRoles = user.roles || [user.rol];
+
+    // superadmin siempre tiene acceso total
+    if (userRoles.includes('superadmin')) return true;
+
+    // Si se especifican allowedRoles, verificar contra ellos
+    if (allowedRoles && allowedRoles.length > 0) {
+      return allowedRoles.some(role => userRoles.includes(role));
+    }
+
+    // Fallback a requiredRole (compatibilidad)
+    if (requiredRole) {
+      return userRoles.includes(requiredRole);
+    }
+
+    // Sin restriccion de rol
+    return true;
+  };
 
   useEffect(() => {
     // Esperar a que auth este listo antes de tomar decisiones
@@ -102,12 +132,12 @@ export function ProtectedRoute({
       return;
     }
 
-    // Si hay rol requerido y no coincide
-    if (requiredRole && user?.rol !== requiredRole) {
-      console.log(`[ProtectedRoute] Rol requerido: ${requiredRole}, rol actual: ${user?.rol}`);
+    // Si no tiene acceso
+    if (!hasAccess()) {
+      console.log(`[ProtectedRoute] Acceso denegado. Rol: ${user?.rol}, Roles: ${user?.roles}`);
       router.push(redirectTo);
     }
-  }, [authReady, isAuthenticated, token, user?.rol, requiredRole, router, redirectTo]);
+  }, [authReady, isAuthenticated, token, user?.rol, requiredRole, allowedRoles, router, redirectTo]);
 
   // Mostrar loading mientras auth no esta listo
   if (!authReady || isLoading) {
@@ -124,8 +154,8 @@ export function ProtectedRoute({
     return <LoadingScreen message="Redirigiendo a login..." />;
   }
 
-  // Si hay rol requerido y no coincide, mostrar acceso denegado
-  if (requiredRole && user?.rol !== requiredRole) {
+  // Si no tiene acceso, mostrar acceso denegado
+  if (!hasAccess()) {
     return <AccessDenied />;
   }
 

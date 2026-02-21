@@ -74,7 +74,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.get('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), notificacionesFamiliaController.getNotificacionesByFamiliar);
+router.get('/', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.getNotificacionesByFamiliar);
 
 /**
  * @swagger
@@ -132,7 +132,7 @@ router.get('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), notific
  *       500:
  *         description: Error del servidor
  */
-router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'admin', 'scouter']), notificacionesFamiliaController.getNotificacionesByScout);
+router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.getNotificacionesByScout);
 
 /**
  * @swagger
@@ -173,7 +173,7 @@ router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'admin', 'scou
  *       500:
  *         description: Error del servidor
  */
-router.get('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), notificacionesFamiliaController.getNotificacionById);
+router.get('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.getNotificacionById);
 
 /**
  * @swagger
@@ -251,7 +251,7 @@ router.get('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), noti
  *       500:
  *         description: Error del servidor
  */
-router.post('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), notificacionesFamiliaController.createNotificacion);
+router.post('/', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.createNotificacion);
 
 /**
  * @swagger
@@ -333,7 +333,7 @@ router.post('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), notifi
  *       500:
  *         description: Error del servidor
  */
-router.post('/masivas', verifyToken, checkRole(['admin', 'scouter']), notificacionesFamiliaController.createNotificacionesMasivas);
+router.post('/masivas', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.createNotificacionesMasivas);
 
 /**
  * @swagger
@@ -377,7 +377,7 @@ router.post('/masivas', verifyToken, checkRole(['admin', 'scouter']), notificaci
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id/leida', verifyToken, checkRole(['familia', 'admin', 'scouter']), notificacionesFamiliaController.marcarComoLeida);
+router.put('/:id/leida', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.marcarComoLeida);
 
 /**
  * @swagger
@@ -417,7 +417,7 @@ router.put('/:id/leida', verifyToken, checkRole(['familia', 'admin', 'scouter'])
  *       500:
  *         description: Error del servidor
  */
-router.put('/marcar-todas-leidas', verifyToken, checkRole(['familia', 'admin', 'scouter']), notificacionesFamiliaController.marcarTodasComoLeidas);
+router.put('/marcar-todas-leidas', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.marcarTodasComoLeidas);
 
 /**
  * @swagger
@@ -459,7 +459,7 @@ router.put('/marcar-todas-leidas', verifyToken, checkRole(['familia', 'admin', '
  *       500:
  *         description: Error del servidor
  */
-router.delete('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), notificacionesFamiliaController.deleteNotificacion);
+router.delete('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.deleteNotificacion);
 
 /**
  * @swagger
@@ -499,7 +499,7 @@ router.delete('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), n
  *       500:
  *         description: Error del servidor
  */
-router.get('/no-leidas', verifyToken, checkRole(['familia', 'admin', 'scouter']), notificacionesFamiliaController.getContadorNoLeidas);
+router.get('/no-leidas', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.getContadorNoLeidas);
 
 /**
  * @swagger
@@ -586,6 +586,6 @@ router.get('/no-leidas', verifyToken, checkRole(['familia', 'admin', 'scouter'])
  *       500:
  *         description: Error del servidor
  */
-router.post('/secciones/:seccionId', verifyToken, checkRole(['admin', 'scouter']), notificacionesFamiliaController.enviarAFamiliaresSeccion);
+router.post('/secciones/:seccionId', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), notificacionesFamiliaController.enviarAFamiliaresSeccion);
 
 module.exports = router;

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const documentosFamiliaController = require('../controllers/documentos_familia.controller');
-const { verifyToken, checkRole } = require('../middleware/auth.middleware');
+const { verifyToken, checkRole, checkPermiso } = require('../middleware/auth.middleware');
 
 /**
  * @swagger
@@ -57,7 +57,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.get('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), documentosFamiliaController.getDocumentosByFamiliar);
+router.get('/', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), documentosFamiliaController.getDocumentosByFamiliar);
 
 /**
  * @swagger
@@ -98,7 +98,7 @@ router.get('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), documen
  *       500:
  *         description: Error del servidor
  */
-router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'admin', 'scouter']), documentosFamiliaController.getDocumentosByScout);
+router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), documentosFamiliaController.getDocumentosByScout);
 
 /**
  * @swagger
@@ -139,7 +139,7 @@ router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'admin', 'scou
  *       500:
  *         description: Error del servidor
  */
-router.get('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), documentosFamiliaController.getDocumentoById);
+router.get('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), documentosFamiliaController.getDocumentoById);
 
 /**
  * @swagger
@@ -217,7 +217,7 @@ router.get('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), docu
  *       500:
  *         description: Error del servidor
  */
-router.post('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), documentosFamiliaController.createDocumento);
+router.post('/', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), documentosFamiliaController.createDocumento);
 
 /**
  * @swagger
@@ -282,7 +282,7 @@ router.post('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), docume
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), documentosFamiliaController.updateDocumento);
+router.put('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), documentosFamiliaController.updateDocumento);
 
 /**
  * @swagger
@@ -324,7 +324,7 @@ router.put('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), docu
  *       500:
  *         description: Error del servidor
  */
-router.delete('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), documentosFamiliaController.deleteDocumento);
+router.delete('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), documentosFamiliaController.deleteDocumento);
 
 /**
  * @swagger
@@ -368,7 +368,7 @@ router.delete('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), d
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id/aprobar', verifyToken, checkRole(['admin', 'scouter']), documentosFamiliaController.aprobarDocumento);
+router.put('/:id/aprobar', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), checkPermiso('aprobar_documentos'), documentosFamiliaController.aprobarDocumento);
 
 /**
  * @swagger
@@ -412,7 +412,7 @@ router.put('/:id/aprobar', verifyToken, checkRole(['admin', 'scouter']), documen
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id/rechazar', verifyToken, checkRole(['admin', 'scouter']), documentosFamiliaController.rechazarDocumento);
+router.put('/:id/rechazar', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), checkPermiso('aprobar_documentos'), documentosFamiliaController.rechazarDocumento);
 
 /**
  * @swagger
@@ -451,7 +451,7 @@ router.put('/:id/rechazar', verifyToken, checkRole(['admin', 'scouter']), docume
  *       500:
  *         description: Error del servidor
  */
-router.get('/por-vencer', verifyToken, checkRole(['familia', 'admin', 'scouter']), documentosFamiliaController.getDocumentosPorVencer);
+router.get('/por-vencer', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), documentosFamiliaController.getDocumentosPorVencer);
 
 /**
  * @swagger
@@ -483,6 +483,6 @@ router.get('/por-vencer', verifyToken, checkRole(['familia', 'admin', 'scouter']
  *       500:
  *         description: Error del servidor
  */
-router.get('/pendientes', verifyToken, checkRole(['admin', 'scouter']), documentosFamiliaController.getDocumentosPendientes);
+router.get('/pendientes', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), documentosFamiliaController.getDocumentosPendientes);
 
 module.exports = router;

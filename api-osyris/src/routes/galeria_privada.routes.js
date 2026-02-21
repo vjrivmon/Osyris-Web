@@ -80,7 +80,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.get('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeriaFotosController.getFotosByFamiliar);
+router.get('/', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.getFotosByFamiliar);
 
 /**
  * @swagger
@@ -132,7 +132,7 @@ router.get('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeria
  *       500:
  *         description: Error del servidor
  */
-router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeriaFotosController.getFotosByScout);
+router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.getFotosByScout);
 
 /**
  * @swagger
@@ -179,7 +179,7 @@ router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'admin', 'scou
  *       500:
  *         description: Error del servidor
  */
-router.get('/albumes', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeriaFotosController.getAlbumesByFamiliar);
+router.get('/albumes', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.getAlbumesByFamiliar);
 
 /**
  * @swagger
@@ -220,7 +220,7 @@ router.get('/albumes', verifyToken, checkRole(['familia', 'admin', 'scouter']), 
  *       500:
  *         description: Error del servidor
  */
-router.get('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeriaFotosController.getFotoById);
+router.get('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.getFotoById);
 
 /**
  * @swagger
@@ -303,7 +303,7 @@ router.get('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), gale
  *       500:
  *         description: Error del servidor
  */
-router.post('/', verifyToken, checkRole(['admin', 'scouter']), galeriaFotosController.createFoto);
+router.post('/', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.createFoto);
 
 /**
  * @swagger
@@ -369,7 +369,7 @@ router.post('/', verifyToken, checkRole(['admin', 'scouter']), galeriaFotosContr
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), galeriaFotosController.updateFoto);
+router.put('/:id', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.updateFoto);
 
 /**
  * @swagger
@@ -411,7 +411,7 @@ router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), galeriaFotosCon
  *       500:
  *         description: Error del servidor
  */
-router.delete('/:id', verifyToken, checkRole(['admin', 'scouter']), galeriaFotosController.deleteFoto);
+router.delete('/:id', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.deleteFoto);
 
 /**
  * @swagger
@@ -454,7 +454,7 @@ router.delete('/:id', verifyToken, checkRole(['admin', 'scouter']), galeriaFotos
  *       500:
  *         description: Error del servidor
  */
-router.delete('/albumes/:albumId', verifyToken, checkRole(['admin', 'scouter']), galeriaFotosController.deleteAlbum);
+router.delete('/albumes/:albumId', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.deleteAlbum);
 
 /**
  * @swagger
@@ -495,7 +495,7 @@ router.delete('/albumes/:albumId', verifyToken, checkRole(['admin', 'scouter']),
  *       500:
  *         description: Error del servidor
  */
-router.get('/eventos/:eventoId', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeriaFotosController.getFotosByEvento);
+router.get('/eventos/:eventoId', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.getFotosByEvento);
 
 /**
  * @swagger
@@ -539,7 +539,7 @@ router.get('/eventos/:eventoId', verifyToken, checkRole(['familia', 'admin', 'sc
  *       500:
  *         description: Error del servidor
  */
-router.get('/etiquetas-populares', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeriaFotosController.getEtiquetasPopulares);
+router.get('/etiquetas-populares', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.getEtiquetasPopulares);
 
 /**
  * @swagger
@@ -579,7 +579,7 @@ router.get('/etiquetas-populares', verifyToken, checkRole(['familia', 'admin', '
  *       500:
  *         description: Error del servidor
  */
-router.get('/:id/archivo', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeriaFotosController.serveArchivo);
+router.get('/:id/archivo', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.serveArchivo);
 
 /**
  * @swagger
@@ -619,6 +619,6 @@ router.get('/:id/archivo', verifyToken, checkRole(['familia', 'admin', 'scouter'
  *       500:
  *         description: Error del servidor
  */
-router.get('/:id/thumbnail', verifyToken, checkRole(['familia', 'admin', 'scouter']), galeriaFotosController.getThumbnail);
+router.get('/:id/thumbnail', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), galeriaFotosController.getThumbnail);
 
 module.exports = router;

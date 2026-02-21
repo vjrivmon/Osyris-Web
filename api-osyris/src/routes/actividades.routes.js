@@ -185,7 +185,7 @@ router.get('/mes/:anio/:mes', verifyToken, async (req, res) => {
     // 1. Filtrar ACTIVIDADES para mostrar solo las de su sección + eventos comunes
     // 2. Filtrar ESTADÍSTICAS de confirmación para mostrar solo su sección
     // Admin (super usuario) ve todas las secciones
-    if (req.usuario && req.usuario.rol === 'scouter' && req.usuario.seccion_id) {
+    if (req.usuario && req.usuario.rol === 'kraal' && req.usuario.seccion_id) {
       // Solo aplicar filtro de sección si no viene especificado en query params
       if (!filters.seccion_id) {
         filters.seccion_id = req.usuario.seccion_id;
@@ -351,7 +351,7 @@ router.get('/:id', async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.post('/', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const actividadData = {
       ...req.body,
@@ -360,7 +360,7 @@ router.post('/', verifyToken, checkRole(['admin', 'scouter']), async (req, res) 
 
     // HIGH-004: Si el usuario es scouter, forzar seccion_id a su propia seccion
     // Solo admin puede crear eventos para cualquier seccion
-    if (req.usuario.rol === 'scouter') {
+    if (req.usuario.rol === 'kraal') {
       if (!req.usuario.seccion_id) {
         return res.status(403).json({
           success: false,
@@ -412,7 +412,7 @@ router.post('/', verifyToken, checkRole(['admin', 'scouter']), async (req, res) 
  *     security:
  *       - bearerAuth: []
  */
-router.get('/:id/enlace', verifyToken, checkRole(['admin', 'scouter', 'comite']), async (req, res) => {
+router.get('/:id/enlace', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion', 'comite']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const token = await ActividadModel.getEnlaceToken(id);
@@ -440,7 +440,7 @@ router.get('/:id/enlace', verifyToken, checkRole(['admin', 'scouter', 'comite'])
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:id/generar-enlace', verifyToken, checkRole(['admin', 'scouter', 'comite']), async (req, res) => {
+router.post('/:id/generar-enlace', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion', 'comite']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -478,7 +478,7 @@ router.post('/:id/generar-enlace', verifyToken, checkRole(['admin', 'scouter', '
  *     security:
  *       - bearerAuth: []
  */
-router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.put('/:id', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -493,7 +493,7 @@ router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res
 
     // HIGH-004: Si el usuario es scouter, verificar que solo edite actividades de su seccion
     // y no permitir cambiar la seccion
-    if (req.usuario.rol === 'scouter') {
+    if (req.usuario.rol === 'kraal') {
       if (!req.usuario.seccion_id) {
         return res.status(403).json({
           success: false,
@@ -541,13 +541,13 @@ router.put('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:id/cancelar', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.post('/:id/cancelar', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { motivo } = req.body;
 
     // HIGH-004: Si el usuario es scouter, verificar que solo cancele actividades de su seccion
-    if (req.usuario.rol === 'scouter') {
+    if (req.usuario.rol === 'kraal') {
       const actividadExistente = await ActividadModel.findById(id);
       if (!actividadExistente) {
         return res.status(404).json({
@@ -590,12 +590,12 @@ router.post('/:id/cancelar', verifyToken, checkRole(['admin', 'scouter']), async
  *     security:
  *       - bearerAuth: []
  */
-router.delete('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.delete('/:id', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
     // HIGH-004: Si el usuario es scouter, verificar que solo elimine actividades de su seccion
-    if (req.usuario.rol === 'scouter') {
+    if (req.usuario.rol === 'kraal') {
       const actividadExistente = await ActividadModel.findById(id);
       if (!actividadExistente) {
         return res.status(404).json({
@@ -645,7 +645,7 @@ router.delete('/:id', verifyToken, checkRole(['admin', 'scouter']), async (req, 
 router.get('/:id/confirmaciones', verifyToken, async (req, res) => {
   try {
     const actividadId = parseInt(req.params.id);
-    const isKraal = req.usuario.rol === 'admin' || req.usuario.rol === 'scouter';
+    const isKraal = ['superadmin', 'kraal', 'jefe_seccion'].includes(req.usuario.rol);
 
     // Obtener estadisticas
     const stats = await ConfirmacionesModel.getEstadisticasActividad(actividadId);
@@ -778,7 +778,7 @@ router.get('/campamento/cuenta-bancaria', (req, res) => {
  *     consumes:
  *       - multipart/form-data
  */
-router.post('/:id/circular', verifyToken, checkRole(['admin', 'scouter']), uploadCircular.single('file'), async (req, res) => {
+router.post('/:id/circular', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), uploadCircular.single('file'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -897,7 +897,7 @@ router.get('/:id/circular', async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.delete('/:id/circular', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.delete('/:id/circular', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -949,7 +949,7 @@ router.delete('/:id/circular', verifyToken, checkRole(['admin', 'scouter']), asy
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:id/crear-sheets', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+router.post('/:id/crear-sheets', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 

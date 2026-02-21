@@ -40,7 +40,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.get('/', verifyToken, checkRole(['admin', 'monitor']), usuarioController.getAll);
+router.get('/', verifyToken, checkRole(['superadmin', 'kraal']), usuarioController.getAll);
 
 /**
  * @swagger
@@ -125,7 +125,7 @@ router.get('/:id', verifyToken, usuarioController.getById);
  *       500:
  *         description: Error del servidor
  */
-router.post('/', verifyToken, checkRole(['admin']), usuarioController.create);
+router.post('/', verifyToken, checkRole(['superadmin']), usuarioController.create);
 
 /**
  * @swagger
@@ -245,6 +245,6 @@ router.put('/:id', verifyToken, usuarioController.update);
  *       500:
  *         description: Error del servidor
  */
-router.delete('/:id', verifyToken, checkRole(['admin']), usuarioController.remove);
+router.delete('/:id', verifyToken, checkRole(['superadmin']), usuarioController.remove);
 
 module.exports = router; 

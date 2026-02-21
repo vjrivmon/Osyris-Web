@@ -58,7 +58,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.post('/seccion', verifyToken, checkRole(['admin', 'scouter']), mensajesScouterController.enviarMensajeASeccion);
+router.post('/seccion', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), mensajesScouterController.enviarMensajeASeccion);
 
 /**
  * @swagger
@@ -107,7 +107,7 @@ router.post('/seccion', verifyToken, checkRole(['admin', 'scouter']), mensajesSc
  *       500:
  *         description: Error del servidor
  */
-router.post('/educando', verifyToken, checkRole(['admin', 'scouter']), mensajesScouterController.enviarMensajeAEducando);
+router.post('/educando', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), mensajesScouterController.enviarMensajeAEducando);
 
 /**
  * @swagger
@@ -159,7 +159,7 @@ router.post('/educando', verifyToken, checkRole(['admin', 'scouter']), mensajesS
  *       500:
  *         description: Error del servidor
  */
-router.post('/educandos', verifyToken, checkRole(['admin', 'scouter']), mensajesScouterController.enviarMensajeAEducandosSeleccionados);
+router.post('/educandos', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), mensajesScouterController.enviarMensajeAEducandosSeleccionados);
 
 /**
  * @swagger
@@ -190,6 +190,6 @@ router.post('/educandos', verifyToken, checkRole(['admin', 'scouter']), mensajes
  *       500:
  *         description: Error del servidor
  */
-router.get('/historial', verifyToken, checkRole(['admin', 'scouter']), mensajesScouterController.obtenerHistorialMensajes);
+router.get('/historial', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), mensajesScouterController.obtenerHistorialMensajes);
 
 module.exports = router;

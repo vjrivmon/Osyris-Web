@@ -74,7 +74,7 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *       500:
  *         description: Error del servidor
  */
-router.get('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirmacionesController.getConfirmacionesByFamiliar);
+router.get('/', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.getConfirmacionesByFamiliar);
 
 /**
  * @swagger
@@ -130,7 +130,7 @@ router.get('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirm
  *       500:
  *         description: Error del servidor
  */
-router.get('/actividades/:actividadId', verifyToken, checkRole(['admin', 'scouter']), confirmacionesController.getConfirmacionesByActividad);
+router.get('/actividades/:actividadId', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.getConfirmacionesByActividad);
 
 /**
  * @swagger
@@ -189,7 +189,7 @@ router.get('/actividades/:actividadId', verifyToken, checkRole(['admin', 'scoute
  *       500:
  *         description: Error del servidor
  */
-router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirmacionesController.getConfirmacionesByScout);
+router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.getConfirmacionesByScout);
 
 /**
  * @swagger
@@ -230,7 +230,7 @@ router.get('/scouts/:scoutId', verifyToken, checkRole(['familia', 'admin', 'scou
  *       500:
  *         description: Error del servidor
  */
-router.get('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirmacionesController.getConfirmacionById);
+router.get('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.getConfirmacionById);
 
 /**
  * @swagger
@@ -288,7 +288,7 @@ router.get('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), conf
  *       500:
  *         description: Error del servidor
  */
-router.post('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirmacionesController.createOrUpdateConfirmacion);
+router.post('/', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.createOrUpdateConfirmacion);
 
 /**
  * @swagger
@@ -345,7 +345,7 @@ router.post('/', verifyToken, checkRole(['familia', 'admin', 'scouter']), confir
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirmacionesController.updateConfirmacion);
+router.put('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.updateConfirmacion);
 
 /**
  * @swagger
@@ -387,7 +387,7 @@ router.put('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), conf
  *       500:
  *         description: Error del servidor
  */
-router.delete('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirmacionesController.deleteConfirmacion);
+router.delete('/:id', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.deleteConfirmacion);
 
 /**
  * @swagger
@@ -450,7 +450,7 @@ router.delete('/:id', verifyToken, checkRole(['familia', 'admin', 'scouter']), c
  *       500:
  *         description: Error del servidor
  */
-router.get('/actividades/:actividadId/estadisticas', verifyToken, checkRole(['admin', 'scouter']), confirmacionesController.getEstadisticasActividad);
+router.get('/actividades/:actividadId/estadisticas', verifyToken, checkRole(['superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.getEstadisticasActividad);
 
 /**
  * @swagger
@@ -510,7 +510,7 @@ router.get('/actividades/:actividadId/estadisticas', verifyToken, checkRole(['ad
  *       500:
  *         description: Error del servidor
  */
-router.get('/pendientes', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirmacionesController.getActividadesPendientes);
+router.get('/pendientes', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.getActividadesPendientes);
 
 /**
  * @swagger
@@ -559,6 +559,6 @@ router.get('/pendientes', verifyToken, checkRole(['familia', 'admin', 'scouter']
  *       500:
  *         description: Error del servidor
  */
-router.get('/rango-fechas', verifyToken, checkRole(['familia', 'admin', 'scouter']), confirmacionesController.getConfirmacionesByRangoFechas);
+router.get('/rango-fechas', verifyToken, checkRole(['familia', 'superadmin', 'kraal', 'jefe_seccion']), confirmacionesController.getConfirmacionesByRangoFechas);
 
 module.exports = router;

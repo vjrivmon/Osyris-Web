@@ -110,7 +110,7 @@ router.get('/:id', seccionController.getById);
  *       500:
  *         description: Error del servidor
  */
-router.post('/', verifyToken, checkRole(['admin']), seccionController.create);
+router.post('/', verifyToken, checkRole(['superadmin']), seccionController.create);
 
 /**
  * @swagger
@@ -171,7 +171,7 @@ router.post('/', verifyToken, checkRole(['admin']), seccionController.create);
  *       500:
  *         description: Error del servidor
  */
-router.put('/:id', verifyToken, checkRole(['admin']), seccionController.update);
+router.put('/:id', verifyToken, checkRole(['superadmin']), seccionController.update);
 
 /**
  * @swagger
@@ -213,6 +213,6 @@ router.put('/:id', verifyToken, checkRole(['admin']), seccionController.update);
  *       500:
  *         description: Error del servidor
  */
-router.delete('/:id', verifyToken, checkRole(['admin']), seccionController.remove);
+router.delete('/:id', verifyToken, checkRole(['superadmin']), seccionController.remove);
 
 module.exports = router; 
