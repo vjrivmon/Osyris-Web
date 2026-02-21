@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const seccionController = require('../controllers/seccion.controller');
 const { verifyToken, checkRole } = require('../middleware/auth.middleware');
+const RangosSecciones = require('../models/rangos_secciones.model');
+
+// Inicializar tabla rangos_secciones al cargar las rutas (idempotente)
+RangosSecciones.initTable().catch(err =>
+  console.error('Error inicializando rangos_secciones:', err.message)
+);
 
 /**
  * @swagger
@@ -35,6 +41,82 @@ const { verifyToken, checkRole } = require('../middleware/auth.middleware');
  *         description: Error del servidor
  */
 router.get('/', seccionController.getAll);
+
+// ─── Rangos de secciones ───────────────────────────────────────────
+
+/**
+ * GET /api/secciones/rangos - Obtener todos los rangos de edad por sección
+ */
+router.get('/rangos', async (req, res) => {
+  try {
+    const rangos = await RangosSecciones.findAll();
+    res.json({ success: true, data: rangos });
+  } catch (error) {
+    console.error('Error obteniendo rangos:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * PUT /api/secciones/rangos/:id - Actualizar rango (solo admin/super_admin)
+ */
+router.put('/rangos/:id', verifyToken, checkRole(['admin', 'super_admin']), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ success: false, message: 'ID inválido' });
+    }
+
+    const existing = await RangosSecciones.findById(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Rango no encontrado' });
+    }
+
+    const { edad_min, edad_max, activo } = req.body;
+    if (edad_min !== undefined && edad_max !== undefined && edad_min > edad_max) {
+      return res.status(400).json({ success: false, message: 'edad_min no puede ser mayor que edad_max' });
+    }
+
+    const updated = await RangosSecciones.update(id, { edad_min, edad_max, activo });
+    res.json({ success: true, data: updated, message: 'Rango actualizado correctamente' });
+  } catch (error) {
+    console.error('Error actualizando rango:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * GET /api/secciones/calcular-seccion/:educando_id - Calcular sección de un educando
+ */
+router.get('/calcular-seccion/:educando_id', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+  try {
+    const educandoId = parseInt(req.params.educando_id);
+    if (isNaN(educandoId)) {
+      return res.status(400).json({ success: false, message: 'ID de educando inválido' });
+    }
+
+    const resultado = await RangosSecciones.calcularSeccion(educandoId);
+    res.json({ success: true, data: resultado });
+  } catch (error) {
+    console.error('Error calculando sección:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * GET /api/secciones/calcular-todos - Calcular secciones de todos los educandos activos
+ */
+router.get('/calcular-todos', verifyToken, checkRole(['admin', 'scouter']), async (req, res) => {
+  try {
+    const resultado = await RangosSecciones.calcularTodos();
+    res.json({ success: true, data: resultado });
+  } catch (error) {
+    console.error('Error calculando secciones:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ─── CRUD de secciones ─────────────────────────────────────────────
 
 /**
  * @swagger
