@@ -14,16 +14,32 @@ import {
   GraduationCap,
   ChevronLeft,
   ChevronRight,
-  Link
+  Link,
+  CreditCard,
+  ChevronDown,
+  Loader2,
 } from 'lucide-react'
 import { useAdminFamiliares } from '@/hooks/useAdminFamiliares'
 import { InvitarFamiliasSimple } from '@/components/admin/invitar-familias-simple'
 import { VincularEducandoModal } from '@/components/admin/familiares/vincular-educando'
+import { getApiUrl } from '@/lib/api-utils'
+
+interface HistorialIbanEntry {
+  id: number
+  iban_anterior: string | null
+  iban_nuevo: string
+  cambiado_por_nombre: string | null
+  cambiado_por_apellidos: string | null
+  created_at: string
+}
 
 export default function AdminFamiliaresPage() {
   const [showInvitarModal, setShowInvitarModal] = useState(false)
   const [showVincularModal, setShowVincularModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [expandedIban, setExpandedIban] = useState<number | null>(null)
+  const [ibanHistorial, setIbanHistorial] = useState<HistorialIbanEntry[]>([])
+  const [loadingIban, setLoadingIban] = useState(false)
 
   const {
     loading,
@@ -34,6 +50,32 @@ export default function AdminFamiliaresPage() {
 
   const handleRefresh = () => {
     cargarFamiliares(1)
+  }
+
+  const toggleIbanHistorial = async (familiarId: number) => {
+    if (expandedIban === familiarId) {
+      setExpandedIban(null)
+      return
+    }
+    setExpandedIban(familiarId)
+    setLoadingIban(true)
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = getApiUrl()
+      const res = await fetch(`${apiUrl}/api/familia/${familiarId}/historial-iban`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        setIbanHistorial(data.data)
+      } else {
+        setIbanHistorial([])
+      }
+    } catch {
+      setIbanHistorial([])
+    } finally {
+      setLoadingIban(false)
+    }
   }
 
   // Filtrar familiares por búsqueda (client-side sobre la página actual)
@@ -162,6 +204,69 @@ export default function AdminFamiliaresPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Boton historial IBAN */}
+                  <div className="mt-3 pt-3 border-t">
+                    <button
+                      onClick={() => toggleIbanHistorial(familiar.id)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <CreditCard className="h-3 w-3" />
+                      Historial IBAN
+                      <ChevronDown className={`h-3 w-3 transition-transform ${expandedIban === familiar.id ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {expandedIban === familiar.id && (
+                      <div className="mt-2">
+                        {loadingIban ? (
+                          <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            Cargando...
+                          </div>
+                        ) : ibanHistorial.length > 0 ? (
+                          <div className="rounded border overflow-hidden">
+                            <table className="w-full text-xs">
+                              <thead className="bg-muted">
+                                <tr>
+                                  <th className="px-2 py-1.5 text-left font-medium">Fecha</th>
+                                  <th className="px-2 py-1.5 text-left font-medium">IBAN anterior</th>
+                                  <th className="px-2 py-1.5 text-left font-medium">IBAN nuevo</th>
+                                  <th className="px-2 py-1.5 text-left font-medium">Cambiado por</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {ibanHistorial.map(entry => (
+                                  <tr key={entry.id} className="border-t">
+                                    <td className="px-2 py-1.5">
+                                      {new Date(entry.created_at).toLocaleDateString('es-ES', {
+                                        day: '2-digit', month: '2-digit', year: 'numeric',
+                                        hour: '2-digit', minute: '2-digit'
+                                      })}
+                                    </td>
+                                    <td className="px-2 py-1.5 font-mono">
+                                      {entry.iban_anterior || '-'}
+                                    </td>
+                                    <td className="px-2 py-1.5 font-mono">
+                                      {entry.iban_nuevo}
+                                    </td>
+                                    <td className="px-2 py-1.5">
+                                      {entry.cambiado_por_nombre
+                                        ? `${entry.cambiado_por_nombre} ${entry.cambiado_por_apellidos || ''}`
+                                        : '-'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground py-2">
+                            Sin cambios de IBAN registrados
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

@@ -7,12 +7,14 @@ import {
   LayoutDashboard,
   Users,
   UsersRound,
+  Newspaper,
 } from 'lucide-react'
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/users', label: 'Usuarios', icon: Users },
   { href: '/admin/familiares', label: 'Familias', icon: UsersRound },
+  { href: '/admin/newsletter', label: 'Newsletter', icon: Newspaper },
 ]
 
 export function AdminNavTabs() {

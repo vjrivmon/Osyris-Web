@@ -2,6 +2,8 @@ const FamiliarEducando = require('../models/familiar_educando.model');
 const Educando = require('../models/educando.model');
 const Actividad = require('../models/actividad.model');
 const Joi = require('joi');
+const { query } = require('../config/db.config');
+const NotificacionFamilia = require('../models/notificaciones_familia.model');
 
 // Esquema de validación para vincular educando
 const vincularEducandoSchema = Joi.object({
@@ -551,6 +553,170 @@ const getProximasActividades = async (req, res) => {
   }
 };
 
+// ==========================================
+// IBAN - Datos bancarios
+// ==========================================
+
+// Validación IBAN español: ES + 22 dígitos
+const ibanSchema = Joi.object({
+  iban: Joi.string().pattern(/^ES\d{22}$/).required().messages({
+    'string.pattern.base': 'El IBAN debe tener formato ES seguido de 22 dígitos',
+    'any.required': 'El IBAN es obligatorio'
+  })
+});
+
+/**
+ * PUT /api/familia/iban
+ * Guardar/actualizar IBAN del familiar autenticado
+ */
+const updateIban = async (req, res) => {
+  try {
+    const familiarId = req.usuario.id;
+
+    const { error, value } = ibanSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    const { iban } = value;
+
+    // Obtener IBAN anterior
+    const usuarios = await query('SELECT iban FROM usuarios WHERE id = $1', [familiarId]);
+    const ibanAnterior = usuarios.length > 0 ? usuarios[0].iban : null;
+
+    // Si es el mismo, no hacer nada
+    if (ibanAnterior === iban) {
+      return res.status(200).json({
+        success: true,
+        message: 'El IBAN no ha cambiado',
+        data: { iban }
+      });
+    }
+
+    // Actualizar IBAN en usuarios
+    await query('UPDATE usuarios SET iban = $1 WHERE id = $2', [iban, familiarId]);
+
+    // Guardar en historial
+    await query(
+      `INSERT INTO historial_iban (familia_id, iban_anterior, iban_nuevo, cambiado_por_usuario_id)
+       VALUES ($1, $2, $3, $4)`,
+      [familiarId, ibanAnterior, iban, familiarId]
+    );
+
+    // Notificar al kraal (admin/scouter) via notificaciones in-app
+    // Obtener educandos vinculados para saber a qué scouters notificar
+    const educandos = await FamiliarEducando.findEducandosByFamiliar(familiarId);
+    if (educandos.length > 0) {
+      // Obtener scouters/admins
+      const scouters = await query(
+        `SELECT DISTINCT u.id FROM usuarios u
+         WHERE u.rol IN ('admin', 'scouter') AND u.activo = true`
+      );
+
+      // Crear notificación para cada admin/scouter con el primer educando como referencia
+      const primerEducando = educandos[0];
+      for (const scouter of scouters) {
+        try {
+          await NotificacionFamilia.create({
+            familiar_id: scouter.id,
+            educando_id: primerEducando.educando_id || primerEducando.id,
+            titulo: 'IBAN actualizado',
+            mensaje: `${req.usuario.nombre} ${req.usuario.apellidos} ha actualizado su IBAN.`,
+            tipo: 'informativo',
+            prioridad: 'normal',
+            categoria: 'iban_actualizado',
+            enlace_accion: '/admin/familiares',
+            metadata: {
+              tipo: 'iban_actualizado',
+              familia_id: familiarId,
+              familia_nombre: `${req.usuario.nombre} ${req.usuario.apellidos}`
+            }
+          });
+        } catch (notifError) {
+          console.error('Error creando notificación IBAN para scouter:', notifError);
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'IBAN actualizado correctamente',
+      data: { iban }
+    });
+  } catch (error) {
+    console.error('Error actualizando IBAN:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar el IBAN',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/familia/iban
+ * Obtener IBAN del familiar autenticado
+ */
+const getIban = async (req, res) => {
+  try {
+    const familiarId = req.usuario.id;
+    const usuarios = await query('SELECT iban FROM usuarios WHERE id = $1', [familiarId]);
+
+    res.status(200).json({
+      success: true,
+      data: { iban: usuarios.length > 0 ? usuarios[0].iban : null }
+    });
+  } catch (error) {
+    console.error('Error obteniendo IBAN:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener el IBAN',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/familia/:id/historial-iban
+ * Obtener historial de cambios de IBAN (solo kraal/superadmin)
+ */
+const getHistorialIban = async (req, res) => {
+  try {
+    const familiaId = parseInt(req.params.id);
+
+    if (isNaN(familiaId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de familia inválido'
+      });
+    }
+
+    const historial = await query(
+      `SELECT h.*, u.nombre as cambiado_por_nombre, u.apellidos as cambiado_por_apellidos
+       FROM historial_iban h
+       LEFT JOIN usuarios u ON h.cambiado_por_usuario_id = u.id
+       WHERE h.familia_id = $1
+       ORDER BY h.created_at DESC`,
+      [familiaId]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: historial
+    });
+  } catch (error) {
+    console.error('Error obteniendo historial IBAN:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener el historial de IBAN',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getEducandosVinculados,
   getEducandoById,
@@ -560,5 +726,8 @@ module.exports = {
   verificarAcceso,
   getFamiliaresByEducando,
   getActividadesFamilia,
-  getProximasActividades
+  getProximasActividades,
+  updateIban,
+  getIban,
+  getHistorialIban
 };

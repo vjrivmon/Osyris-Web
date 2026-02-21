@@ -262,4 +262,77 @@ router.get('/actividades/proximas', verifyToken, checkRole(['familia', 'admin'])
  */
 router.get('/actividades/:familiaId', verifyToken, checkRole(['familia', 'admin']), familiaController.getActividadesFamilia);
 
+// ==========================================
+// IBAN - Datos bancarios
+// ==========================================
+
+/**
+ * @swagger
+ * /api/familia/iban:
+ *   get:
+ *     summary: Obtener IBAN del familiar autenticado
+ *     tags: [Familia]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: IBAN obtenido
+ *       401:
+ *         description: No autenticado
+ */
+router.get('/iban', verifyToken, checkRole(['familia', 'admin']), familiaController.getIban);
+
+/**
+ * @swagger
+ * /api/familia/iban:
+ *   put:
+ *     summary: Actualizar IBAN del familiar autenticado
+ *     tags: [Familia]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - iban
+ *             properties:
+ *               iban:
+ *                 type: string
+ *                 description: IBAN español (ES + 22 dígitos)
+ *     responses:
+ *       200:
+ *         description: IBAN actualizado
+ *       400:
+ *         description: IBAN inválido
+ *       401:
+ *         description: No autenticado
+ */
+router.put('/iban', verifyToken, checkRole(['familia', 'admin']), familiaController.updateIban);
+
+/**
+ * @swagger
+ * /api/familia/{id}/historial-iban:
+ *   get:
+ *     summary: Obtener historial de cambios de IBAN de una familia (solo kraal/admin)
+ *     tags: [Familia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del familiar
+ *     responses:
+ *       200:
+ *         description: Historial de IBAN
+ *       403:
+ *         description: Sin permisos
+ */
+router.get('/:id/historial-iban', verifyToken, checkRole(['admin', 'scouter']), familiaController.getHistorialIban);
+
 module.exports = router;

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Save, Key, User as UserIcon, Edit, X, Bell, ArrowLeft } from "lucide-react"
+import { Loader2, Save, Key, User as UserIcon, Edit, X, Bell, ArrowLeft, CreditCard } from "lucide-react"
 import { getApiUrl } from "@/lib/api-utils"
 import Link from "next/link"
 
@@ -34,6 +34,12 @@ export default function PerfilFamiliaPage() {
   })
 
   const [showPasswordForm, setShowPasswordForm] = useState(false)
+
+  const [ibanData, setIbanData] = useState("")
+  const [ibanOriginal, setIbanOriginal] = useState("")
+  const [isEditingIban, setIsEditingIban] = useState(false)
+  const [savingIban, setSavingIban] = useState(false)
+  const [ibanError, setIbanError] = useState("")
 
   const [notificationPreferences, setNotificationPreferences] = useState({
     email: true,
@@ -88,6 +94,21 @@ export default function PerfilFamiliaPage() {
             telefono: userInfo.telefono || "",
             direccion: userInfo.direccion || ""
           })
+        }
+        // Cargar IBAN
+        try {
+          const ibanResponse = await fetch(`${apiUrl}/api/familia/iban`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (ibanResponse.ok) {
+            const ibanResult = await ibanResponse.json()
+            if (ibanResult.success && ibanResult.data?.iban) {
+              setIbanData(ibanResult.data.iban)
+              setIbanOriginal(ibanResult.data.iban)
+            }
+          }
+        } catch (ibanErr) {
+          console.warn('No se pudo cargar el IBAN:', ibanErr)
         }
       } else {
         // Si falla la API, intentar usar los datos de localStorage
@@ -254,6 +275,70 @@ export default function PerfilFamiliaPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const validateIban = (value: string): boolean => {
+    if (!value) {
+      setIbanError("El IBAN es obligatorio")
+      return false
+    }
+    if (!/^ES\d{22}$/.test(value)) {
+      setIbanError("El IBAN debe tener formato ES seguido de 22 dígitos")
+      return false
+    }
+    setIbanError("")
+    return true
+  }
+
+  const handleSaveIban = async () => {
+    if (!validateIban(ibanData)) return
+
+    setSavingIban(true)
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = getApiUrl()
+
+      const response = await fetch(`${apiUrl}/api/familia/iban`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ iban: ibanData })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setIbanOriginal(ibanData)
+        setIsEditingIban(false)
+        toast({
+          title: "IBAN actualizado",
+          description: "Tus datos bancarios se han guardado correctamente"
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "No se pudo actualizar el IBAN",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Error saving IBAN:', error)
+      toast({
+        title: "Error",
+        description: "Ocurrio un error al guardar el IBAN",
+        variant: "destructive"
+      })
+    } finally {
+      setSavingIban(false)
+    }
+  }
+
+  const handleCancelIban = () => {
+    setIbanData(ibanOriginal)
+    setIbanError("")
+    setIsEditingIban(false)
   }
 
   const handleSaveNotifications = () => {
@@ -436,6 +521,94 @@ export default function PerfilFamiliaPage() {
               </div>
             )}
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Datos bancarios - IBAN */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              <CardTitle>Datos Bancarios</CardTitle>
+            </div>
+            {!isEditingIban ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditingIban(true)}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                {ibanOriginal ? "Modificar" : "Añadir"}
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelIban}
+              >
+                <X className="mr-2 h-4 w-4" />
+                Cancelar
+              </Button>
+            )}
+          </div>
+          <CardDescription>
+            IBAN para domiciliaciones y cuotas del grupo
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="iban">IBAN</Label>
+              <Input
+                id="iban"
+                value={ibanData}
+                onChange={(e) => {
+                  const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+                  setIbanData(val)
+                  if (ibanError) validateIban(val)
+                }}
+                placeholder="ES0000000000000000000000"
+                maxLength={24}
+                readOnly={!isEditingIban}
+                className={`font-mono ${!isEditingIban ? "bg-muted" : ""} ${ibanError ? "border-destructive" : ""}`}
+              />
+              {ibanError && (
+                <p className="text-xs text-destructive">{ibanError}</p>
+              )}
+              {!isEditingIban && !ibanOriginal && (
+                <p className="text-xs text-muted-foreground">
+                  No hay IBAN registrado
+                </p>
+              )}
+              {!isEditingIban && ibanOriginal && (
+                <p className="text-xs text-muted-foreground">
+                  Formato: ES + 22 digitos
+                </p>
+              )}
+            </div>
+
+            {isEditingIban && (
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handleCancelIban}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveIban} disabled={savingIban}>
+                  {savingIban ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Guardar IBAN
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

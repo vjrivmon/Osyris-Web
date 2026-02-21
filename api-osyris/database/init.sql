@@ -361,6 +361,51 @@ CREATE INDEX IF NOT EXISTS idx_galeria_fotos_privada_visible_familiares ON galer
 CREATE INDEX IF NOT EXISTS idx_galeria_fotos_privada_fotografiado_ids ON galeria_fotos_privada USING GIN(fotografiado_ids);
 
 -- ========================================
+-- TABLA: historial_iban
+-- ========================================
+CREATE TABLE IF NOT EXISTS historial_iban (
+  id SERIAL PRIMARY KEY,
+  familia_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  iban_anterior TEXT,
+  iban_nuevo TEXT NOT NULL,
+  cambiado_por_usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_historial_iban_familia_id ON historial_iban(familia_id);
+CREATE INDEX IF NOT EXISTS idx_historial_iban_created_at ON historial_iban(created_at);
+
+-- ========================================
+-- TABLA: mensajes_newsletter
+-- ========================================
+CREATE TABLE IF NOT EXISTS mensajes_newsletter (
+  id SERIAL PRIMARY KEY,
+  titulo TEXT NOT NULL,
+  contenido TEXT NOT NULL,
+  filtro_seccion_id INTEGER REFERENCES secciones(id) ON DELETE SET NULL,
+  filtro_estado TEXT,
+  enviado_por INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  enviado_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  destinatarios_count INTEGER DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_mensajes_newsletter_enviado_por ON mensajes_newsletter(enviado_por);
+CREATE INDEX IF NOT EXISTS idx_mensajes_newsletter_enviado_at ON mensajes_newsletter(enviado_at);
+
+-- ========================================
+-- COLUMNA: iban en usuarios (idempotente)
+-- ========================================
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'usuarios' AND column_name = 'iban'
+  ) THEN
+    ALTER TABLE usuarios ADD COLUMN iban TEXT;
+  END IF;
+END $$;
+
+-- ========================================
 -- COMENTARIOS EN TABLAS
 -- ========================================
 COMMENT ON TABLE usuarios IS 'Tabla de usuarios del sistema Osyris (monitores, familiares, admin)';
@@ -375,3 +420,5 @@ COMMENT ON TABLE documentos_familia IS 'Documentos específicos para familias (a
 COMMENT ON TABLE notificaciones_familia IS 'Notificaciones específicas para familiares sobre sus educandos';
 COMMENT ON TABLE confirmaciones_asistencia IS 'Confirmaciones de asistencia de educandos a actividades';
 COMMENT ON TABLE galeria_fotos_privada IS 'Galería de fotos privadas visible para familiares';
+COMMENT ON TABLE historial_iban IS 'Historial de cambios de IBAN de familias';
+COMMENT ON TABLE mensajes_newsletter IS 'Registro de newsletters enviadas a familias';
