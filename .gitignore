@@ -177,3 +177,7 @@ yarn.lock
 !.claude/agents/
 !.claude/settings.json
 !.claude/settings.local.json
+
+# PDFs generados y de prueba (no templates)
+*.pdf
+!api-osyris/templates/*.pdf
