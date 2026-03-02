@@ -124,6 +124,6 @@ router.get('/historial', verifyToken, checkRole(['admin', 'scouter']), newslette
  *       400:
  *         description: Datos inválidos o sin destinatarios
  */
-router.post('/enviar', verifyToken, checkRole(['admin', 'scouter', 'kraal']), newsletterRateLimit, newsletterController.enviarNewsletter);
+router.post('/enviar', verifyToken, checkRole(['admin', 'scouter']), newsletterRateLimit, newsletterController.enviarNewsletter);
 
 module.exports = router;
