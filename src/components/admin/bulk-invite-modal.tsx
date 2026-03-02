@@ -41,7 +41,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [emailsText, setEmailsText] = useState("")
-  const [selectedRole, setSelectedRole] = useState<"admin" | "scouter" | "familia" | "comite">("scouter")
+  const [selectedRole, setSelectedRole] = useState<"superadmin" | "kraal" | "familia" | "comite">("kraal")
   const [selectedSection, setSelectedSection] = useState<string>("")
   const [parsedEmails, setParsedEmails] = useState<ParsedEmail[]>([])
   const [showPreview, setShowPreview] = useState(false)
@@ -111,7 +111,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
       return
     }
 
-    if (selectedRole === "scouter" && !selectedSection) {
+    if (selectedRole === "kraal" && !selectedSection) {
       toast({
         title: "Error",
         description: "Debes seleccionar una sección para los scouters",
@@ -128,7 +128,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
         nombre: email.split("@")[0], // Nombre temporal del email
         apellidos: "", // Se completará al registrarse
         rol: selectedRole,
-        seccion_id: selectedRole === "scouter" && selectedSection ? parseInt(selectedSection) : undefined
+        seccion_id: selectedRole === "kraal" && selectedSection ? parseInt(selectedSection) : undefined
       }))
 
       const result = await makeAuthenticatedRequest("/api/admin/invitations/bulk", {
@@ -153,7 +153,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
         setEmailsText("")
         setParsedEmails([])
         setShowPreview(false)
-        setSelectedRole("scouter")
+        setSelectedRole("kraal")
         setSelectedSection("")
 
         // Callback
@@ -225,7 +225,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
                     <span>Acceso completo</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="scouter">
+                <SelectItem value="kraal">
                   <div className="flex items-center gap-2">
                     <Badge variant="default" className="bg-green-600">Scouter</Badge>
                     <span>Monitor/Coordinador</span>
@@ -248,7 +248,7 @@ export function BulkInviteModal({ onInvitesSent, trigger }: BulkInviteModalProps
           </div>
 
           {/* Selector de Sección (solo para scouters) */}
-          {selectedRole === "scouter" && (
+          {selectedRole === "kraal" && (
             <div className="space-y-2">
               <Label htmlFor="seccion">Sección Scout *</Label>
               <Select

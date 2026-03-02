@@ -132,7 +132,7 @@ function RegisterPageContent() {
     }
 
     // Solo validar sección para scouters, no para familias
-    if (invitationData?.rol === 'scouter' && !invitationData?.seccion_id) {
+    if (invitationData?.rol === 'kraal' && !invitationData?.seccion_id) {
       toast({
         title: "Error",
         description: "Debes tener una sección asignada para completar el registro",
@@ -186,10 +186,10 @@ function RegisterPageContent() {
         localStorage.setItem("user", JSON.stringify(result.data.usuario))
 
         // Redirigir al dashboard según el rol del usuario
-        const rol = result.data.usuario?.rol || "scouter"
+        const rol = result.data.usuario?.rol || "kraal"
         let dashboardUrl = "/aula-virtual"
 
-        if (rol === "admin") {
+        if (rol === "superadmin") {
           dashboardUrl = "/admin/dashboard"
         } else if (rol === "familia") {
           dashboardUrl = "/familia/dashboard"
@@ -329,8 +329,8 @@ function RegisterPageContent() {
                 <p className="text-sm text-blue-700 dark:text-blue-400">{invitationData.email}</p>
                 <div className="flex items-center gap-2 mt-3 flex-wrap">
                   <Badge variant="outline" className="text-xs">
-                    {invitationData.rol === "admin" && "👑 Administrador"}
-                    {invitationData.rol === "scouter" && "⚜️ Scouter"}
+                    {invitationData.rol === "superadmin" && "👑 Administrador"}
+                    {invitationData.rol === "kraal" && "⚜️ Scouter"}
                     {invitationData.rol === "familia" && "👨‍👩‍👧‍👦 Familia"}
                     {invitationData.rol === "educando" && "🧒 Educando"}
                   </Badge>

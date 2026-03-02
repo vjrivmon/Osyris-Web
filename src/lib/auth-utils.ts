@@ -208,7 +208,7 @@ export const isAuthenticated = (): boolean => {
  */
 export const isAdmin = (): boolean => {
   const user = getCurrentUser()
-  return user?.rol === 'admin'
+  return user?.rol === 'superadmin'
 }
 
 /**

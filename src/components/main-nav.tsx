@@ -209,7 +209,7 @@ export function MainNav() {
                   </Link>
 
                   <div className="mt-4">
-                    {isAuthenticated && user?.rol === 'admin' ? (
+                    {isAuthenticated && user?.rol === 'superadmin' ? (
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-md">
                           <User className="h-4 w-4 text-primary" />
@@ -396,7 +396,7 @@ export function MainNav() {
             </NavigationMenu>
 
             <div className="flex items-center gap-2">
-              {isAuthenticated && user?.rol === 'admin' ? (
+              {isAuthenticated && user?.rol === 'superadmin' ? (
                 <div className="hidden lg:flex items-center gap-3">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-md">
                     <User className="h-4 w-4 text-primary" />

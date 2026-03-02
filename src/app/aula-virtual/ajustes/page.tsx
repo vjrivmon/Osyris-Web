@@ -286,7 +286,7 @@ export default function AjustesPage() {
                 {userData?.nombre} {userData?.apellidos}
               </CardTitle>
               <CardDescription className="capitalize">
-                {userData?.rol === 'scouter' ? 'Kraal' : userData?.rol}
+                {userData?.rol === 'kraal' ? 'Kraal' : userData?.rol}
               </CardDescription>
             </div>
           </div>

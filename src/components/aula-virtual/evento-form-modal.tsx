@@ -156,9 +156,9 @@ export function EventoFormModal({ open, onOpenChange, actividad, onSave }: Event
   const [nuevoRecordatorio, setNuevoRecordatorio] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // HIGH-004: Determinar si el usuario es scouter (no admin)
-  const isScouter = user?.rol === 'scouter'
-  const isAdmin = user?.rol === 'admin'
+  // HIGH-004: Determinar si el usuario es kraal (no superadmin)
+  const isScouter = user?.rol === 'kraal'
+  const isAdmin = user?.rol === 'superadmin'
   const userSeccionId = user?.seccion_id
 
   const [formData, setFormData] = useState<Actividad>({

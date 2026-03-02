@@ -24,7 +24,7 @@ export default function DashboardPage() {
     setUser(userData)
 
     // Si es admin, redirigir al panel de administración
-    if (userData.rol === 'admin') {
+    if (userData.rol === 'superadmin') {
       router.replace('/admin/dashboard')
       return
     }

@@ -69,7 +69,7 @@ export function PageEditor({
   const fileInputRefs = useRef<Record<string, HTMLInputElement>>({})
 
   // Solo mostrar editor si el usuario es admin
-  const isAdmin = isAuthenticated && user?.rol === 'admin'
+  const isAdmin = isAuthenticated && user?.rol === 'superadmin'
 
   useEffect(() => {
     if (isEditing) {

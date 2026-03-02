@@ -8,7 +8,7 @@ interface User {
   nombre: string
   apellidos: string
   email: string
-  rol: 'admin' | 'editor' | 'coordinador' | 'scouter' | 'padre' | 'educando'
+  rol: 'superadmin' | 'kraal' | 'jefe_seccion' | 'tic' | 'familia' | 'educando' | 'comite'
   seccion_id?: number
   activo: boolean
 }

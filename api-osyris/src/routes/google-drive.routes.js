@@ -154,7 +154,7 @@ router.post('/documento/upload', verifyToken, upload.single('file'), driveContro
  *       200:
  *         description: Documento aprobado
  */
-router.put('/documento/:documentoId/aprobar', verifyToken, requireRole(['scouter', 'admin']), driveController.aprobarDocumento);
+router.put('/documento/:documentoId/aprobar', verifyToken, requireRole(['kraal', 'superadmin']), driveController.aprobarDocumento);
 
 /**
  * @swagger
@@ -184,7 +184,7 @@ router.put('/documento/:documentoId/aprobar', verifyToken, requireRole(['scouter
  *       200:
  *         description: Documento rechazado
  */
-router.put('/documento/:documentoId/rechazar', verifyToken, requireRole(['scouter', 'admin']), driveController.rechazarDocumento);
+router.put('/documento/:documentoId/rechazar', verifyToken, requireRole(['kraal', 'superadmin']), driveController.rechazarDocumento);
 
 /**
  * @swagger
@@ -204,7 +204,7 @@ router.put('/documento/:documentoId/rechazar', verifyToken, requireRole(['scoute
  *       200:
  *         description: Lista de documentos pendientes
  */
-router.get('/documentos/pendientes', verifyToken, requireRole(['scouter', 'admin']), driveController.getDocumentosPendientes);
+router.get('/documentos/pendientes', verifyToken, requireRole(['kraal', 'superadmin']), driveController.getDocumentosPendientes);
 
 /**
  * @swagger

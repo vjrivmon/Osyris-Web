@@ -728,7 +728,7 @@ export default function AdminPanel() {
   };
 
   return (
-    <ProtectedRoute requiredRole="admin">
+    <ProtectedRoute requiredRole="superadmin">
       <div className="container mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">🛠️ Panel de Administración CMS</h1>
@@ -1260,10 +1260,11 @@ export default function AdminPanel() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="scouter">Scouter</SelectItem>
-                        <SelectItem value="coordinador">Coordinador</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="padre">Familia</SelectItem>
+                        <SelectItem value="kraal">Kraal</SelectItem>
+                        <SelectItem value="jefe_seccion">Jefe de Sección</SelectItem>
+                        <SelectItem value="superadmin">Superadmin</SelectItem>
+                        <SelectItem value="comite">Comité</SelectItem>
+                        <SelectItem value="familia">Familia</SelectItem>
                         <SelectItem value="educando">Educando</SelectItem>
                       </SelectContent>
                     </Select>

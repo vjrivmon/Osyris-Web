@@ -46,7 +46,7 @@ interface FormData {
   nombre: string
   apellidos: string
   email: string
-  rol: "admin" | "scouter" | "comite"
+  rol: "superadmin" | "kraal" | "comite"
   estado: "activo" | "inactivo"
   seccion_id?: number
 }
@@ -84,7 +84,7 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
     nombre: "",
     apellidos: "",
     email: "",
-    rol: "scouter",
+    rol: "kraal",
     estado: "activo",
     seccion_id: undefined
   })
@@ -112,7 +112,7 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
         nombre: user.nombre || "",
         apellidos: user.apellidos || "",
         email: user.email || "",
-        rol: (user.rol as "admin" | "scouter" | "comite") || "scouter",
+        rol: (user.rol as "superadmin" | "kraal" | "comite") || "kraal",
         estado: (user.estado as "activo" | "inactivo") || "activo",
         seccion_id: seccionId
       })
@@ -163,10 +163,10 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
       }
 
       // Solo incluir seccion_id si es scouter
-      if (formData.rol === "scouter" && formData.seccion_id) {
+      if (formData.rol === "kraal" && formData.seccion_id) {
         adminData.seccion_id = formData.seccion_id
-      } else if (formData.rol === "admin" || formData.rol === "comite") {
-        // Si es admin o comite, quitar la sección
+      } else if (formData.rol === "superadmin" || formData.rol === "comite") {
+        // Si es superadmin o comite, quitar la sección
         adminData.seccion_id = null
       }
 
@@ -318,18 +318,18 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
                 <Label htmlFor="edit-rol">Rol *</Label>
                 <Select
                   value={formData.rol}
-                  onValueChange={(value: "admin" | "scouter" | "comite") => handleInputChange("rol", value)}
+                  onValueChange={(value: "superadmin" | "kraal" | "comite") => handleInputChange("rol", value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">
+                    <SelectItem value="superadmin">
                       <div className="flex items-center gap-2">
-                        <Badge variant="destructive" className="bg-red-600">Admin</Badge>
+                        <Badge variant="destructive" className="bg-red-600">Superadmin</Badge>
                       </div>
                     </SelectItem>
-                    <SelectItem value="scouter">
+                    <SelectItem value="kraal">
                       <div className="flex items-center gap-2">
                         <Badge variant="default" className="bg-green-600">Scouter</Badge>
                       </div>
@@ -369,7 +369,7 @@ export function EditUserModal({ user, open, onOpenChange, onUserUpdated }: EditU
             </div>
 
             {/* Sección (solo para scouters) */}
-            {formData.rol === "scouter" && (
+            {formData.rol === "kraal" && (
               <div className="space-y-2">
                 <Label htmlFor="edit-seccion">Sección Scout</Label>
                 <Select

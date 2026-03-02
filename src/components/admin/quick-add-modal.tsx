@@ -29,7 +29,7 @@ interface NewInvitation {
   email: string
   nombre: string
   apellidos: string
-  rol: "admin" | "scouter" | "comite"
+  rol: "superadmin" | "kraal" | "comite"
   seccion_id?: number
 }
 
@@ -45,7 +45,7 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
     email: "",
     nombre: "",
     apellidos: "",
-    rol: "scouter",
+    rol: "kraal",
     seccion_id: undefined
   })
   const [errors, setErrors] = useState<Partial<NewInvitation>>({})
@@ -107,7 +107,7 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
           email: "",
           nombre: "",
           apellidos: "",
-          rol: "scouter",
+          rol: "kraal",
           seccion_id: undefined
         })
         setErrors({})
@@ -230,7 +230,7 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
                       <span>Acceso completo</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="scouter">
+                  <SelectItem value="kraal">
                     <div className="flex items-center gap-2">
                       <Badge variant="default" className="bg-green-600">Scouter</Badge>
                       <span>Monitor/Coordinador</span>
@@ -246,7 +246,7 @@ export function QuickAddModal({ onUserAdded, trigger }: QuickAddModalProps) {
               </Select>
             </div>
 
-            {formData.rol === "scouter" && (
+            {formData.rol === "kraal" && (
               <div className="space-y-2">
                 <Label htmlFor="seccion">Sección Scout</Label>
                 <Select

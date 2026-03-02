@@ -56,14 +56,14 @@ export default function AdminDashboard() {
       if (usersResponse?.data?.users) {
         const users = usersResponse.data.users
 
-        // Contar solo scouters (rol = 'scouter' o 'admin')
+        // Contar solo scouters (rol = 'kraal' o 'admin')
         const scoutersCount = users.filter((u: any) =>
-          u.activo && (u.rol === 'scouter' || u.rol === 'admin')
+          u.activo && (u.rol === 'kraal' || u.rol === 'superadmin')
         ).length
 
         // Actividad reciente: últimos 5 con acceso reciente (solo scouters/admin)
         const recent = users
-          .filter((u: any) => u.ultimo_acceso && (u.rol === 'scouter' || u.rol === 'admin'))
+          .filter((u: any) => u.ultimo_acceso && (u.rol === 'kraal' || u.rol === 'superadmin'))
           .sort((a: any, b: any) => new Date(b.ultimo_acceso).getTime() - new Date(a.ultimo_acceso).getTime())
           .slice(0, 5)
           .map((u: any) => ({
