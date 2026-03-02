@@ -37,7 +37,6 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
   const [perfilData, setPerfilData] = useState<Partial<PerfilSaludData>>({})
   const [contactosData, setContactosData] = useState<ContactoEmergencia[]>([])
   const [camposCustomResp, setCamposCustomResp] = useState<Record<string, unknown>>({})
-  const [firmaBase64, setFirmaBase64] = useState<string | null>(null)
   const [dniFamiliar, setDniFamiliar] = useState('')
   const [aceptaCondiciones, setAceptaCondiciones] = useState(false)
   const [actualizarPerfil, setActualizarPerfil] = useState(true)
@@ -89,7 +88,6 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            firmaBase64: firmaBase64,
             datosMedicos: perfilData,
             contactos: contactosData,
             dniFamiliar: dniFamiliar
@@ -107,7 +105,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
     } finally {
       setIsLoadingPreview(false)
     }
-  }, [circularConfig, educandoId, firmaBase64, perfilData, contactosData])
+  }, [circularConfig, educandoId, perfilData, contactosData])
 
   // Ya firmada
   if (respuestaExistente && !resultado) {
@@ -161,8 +159,8 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
         datosMedicos: perfilData,
         contactos: contactosData,
         camposCustom: camposCustomResp,
-        firmaBase64: firmaBase64 || '',
-        firmaTipo: 'image',
+        firmaBase64: '', // firma física — se firma fuera de la app
+        firmaTipo: 'fisica',
         aceptaCondiciones: true,
         actualizarPerfil,
         dniFamiliar
@@ -491,7 +489,7 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
                   <iframe
                     src={`data:application/pdf;base64,${pdfPreviewBase64}`}
                     className="w-full"
-                    style={{ height: '500px' }}
+                    style={{ height: 'clamp(300px, 60vh, 600px)' }}
                     title="Vista previa circular"
                   />
                 </div>
@@ -547,19 +545,23 @@ export function CircularDigitalWizard({ actividadId, educandoId, onComplete, onC
 
   return (
     <div className="space-y-4" data-testid="circular-wizard">
-      {/* Step indicator */}
-      <div className="flex items-center justify-center space-x-1">
-        {STEPS.map((s, i) => (
-          <div key={i} className="flex items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-              step === i ? 'bg-primary text-primary-foreground' : step > i ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
-            }`}>
-              {step > i ? <Check className="h-4 w-4" /> : i + 1}
+      {/* Step indicator — mobile-first: círculos pequeños con texto del paso actual */}
+      <div className="flex items-center justify-center overflow-x-auto pb-1">
+        <div className="flex items-center min-w-0">
+          {STEPS.map((s, i) => (
+            <div key={i} className="flex items-center">
+              <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-medium ${
+                step === i ? 'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-1' : step > i ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
+              }`}>
+                {step > i ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : i + 1}
+              </div>
+              {i < STEPS.length - 1 && <div className={`w-3 sm:w-5 h-0.5 mx-0.5 flex-shrink-0 ${step > i ? 'bg-green-500' : 'bg-muted'}`} />}
             </div>
-            {i < STEPS.length - 1 && <div className={`w-6 h-0.5 mx-0.5 ${step > i ? 'bg-green-500' : 'bg-muted'}`} />}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
+      {/* Nombre del paso actual */}
+      <p className="text-center text-xs text-muted-foreground">{STEPS[step]?.label} ({step + 1}/{STEPS.length})</p>
 
       <Progress value={(step / (STEPS.length - 1)) * 100} className="h-1" />
 

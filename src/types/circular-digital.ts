@@ -228,7 +228,7 @@ export interface DatosFirmaCircular {
   contactos: ContactoEmergencia[];
   camposCustom: Record<string, unknown>;
   firmaBase64: string;
-  firmaTipo: 'image' | 'text';
+  firmaTipo: 'image' | 'text' | 'fisica';
   aceptaCondiciones: boolean;
   actualizarPerfil: boolean;
   dniFamiliar?: string;
