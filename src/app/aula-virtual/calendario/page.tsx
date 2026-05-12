@@ -51,7 +51,8 @@ export default function CalendarioKraalPage() {
   const [actividades, setActividades] = useState<Actividad[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [fechaActual, setFechaActual] = useState(new Date())
+  const [fechaActual, setFechaActual] = useState<Date | null>(null)
+  const [hoy, setHoy] = useState<Date | null>(null)
   const [activeTab, setActiveTab] = useState('calendario')
   const [modalOpen, setModalOpen] = useState(false)
   const [actividadSeleccionada, setActividadSeleccionada] = useState<Actividad | null>(null)
@@ -82,8 +83,8 @@ export default function CalendarioKraalPage() {
     try {
       const token = localStorage.getItem('token')
       const apiUrl = getApiUrl()
-      const anio = fechaActual.getFullYear()
-      const mes = fechaActual.getMonth() + 1
+      const anio = (fechaActual ?? new Date(0)).getFullYear()
+      const mes = (fechaActual ?? new Date(0)).getMonth() + 1
 
       const response = await fetch(
         `${apiUrl}/api/actividades/mes/${anio}/${mes}?visibilidad=kraal`,
@@ -107,13 +108,20 @@ export default function CalendarioKraalPage() {
   }
 
   useEffect(() => {
+    const ahora = new Date()
+    setHoy(ahora)
+    setFechaActual(ahora)
+  }, [])
+
+  useEffect(() => {
     fetchActividades()
   }, [fechaActual])
 
   const navegarMes = (direccion: 'anterior' | 'siguiente') => {
     setFechaActual(prev => {
+      const base = prev ?? new Date()
       const offset = direccion === 'anterior' ? -1 : 1
-      return new Date(prev.getFullYear(), prev.getMonth() + offset, 1)
+      return new Date(base.getFullYear(), base.getMonth() + offset, 1)
     })
   }
 
@@ -123,8 +131,8 @@ export default function CalendarioKraalPage() {
   ]
 
   const generarDiasMes = () => {
-    const anio = fechaActual.getFullYear()
-    const mes = fechaActual.getMonth()
+    const anio = (fechaActual ?? new Date(0)).getFullYear()
+    const mes = (fechaActual ?? new Date(0)).getMonth()
     const primerDia = new Date(anio, mes, 1)
     const ultimoDia = new Date(anio, mes + 1, 0)
     const diaInicioSemana = primerDia.getDay() || 7
@@ -141,8 +149,8 @@ export default function CalendarioKraalPage() {
   }
 
   const obtenerActividadesPorDia = (dia: number) => {
-    const anio = fechaActual.getFullYear()
-    const mes = fechaActual.getMonth()
+    const anio = (fechaActual ?? new Date(0)).getFullYear()
+    const mes = (fechaActual ?? new Date(0)).getMonth()
 
     return actividades.filter(actividad => {
       const fechaActividad = new Date(actividad.fecha_inicio)
@@ -200,7 +208,7 @@ export default function CalendarioKraalPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>
-                  {nombresMeses[fechaActual.getMonth()]} {fechaActual.getFullYear()}
+                  {fechaActual ? `${nombresMeses[fechaActual.getMonth()]} ${fechaActual.getFullYear()}` : ''}
                 </CardTitle>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => navegarMes('anterior')}>
@@ -237,9 +245,10 @@ export default function CalendarioKraalPage() {
               {/* Dias del mes */}
               <div className="grid grid-cols-7 gap-0.5 sm:gap-2">
                 {generarDiasMes().map((dia, index) => {
-                  const esHoy = dia === new Date().getDate() &&
-                               fechaActual.getMonth() === new Date().getMonth() &&
-                               fechaActual.getFullYear() === new Date().getFullYear()
+                  const esHoy = hoy !== null && fechaActual !== null &&
+                               dia === hoy.getDate() &&
+                               fechaActual.getMonth() === hoy.getMonth() &&
+                               fechaActual.getFullYear() === hoy.getFullYear()
 
                   const actividadesDia = dia ? obtenerActividadesPorDia(dia) : []
 

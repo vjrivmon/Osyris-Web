@@ -91,6 +91,8 @@ export function PrivateGalleryView({
   const [sortBy, setSortBy] = useState<string>('fecha_desc')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [showDownloadModal, setShowDownloadModal] = useState(false)
+  const [hoy, setHoy] = useState<Date>(new Date(0))
+  useEffect(() => { setHoy(new Date()) }, [])
   const [showShareModal, setShowShareModal] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0)
@@ -140,7 +142,7 @@ export function PrivateGalleryView({
 
     // Filtrar por rango de fechas
     if (selectedDateRange !== 'todos') {
-      const ahora = new Date()
+      const ahora = hoy.getTime() > 0 ? hoy : new Date()
       let fechaLimite: Date
 
       switch (selectedDateRange) {
@@ -470,9 +472,9 @@ export function PrivateGalleryView({
               {viewMode === 'albums' ? (
                 <>
                   <span>{filteredAlbumes.length} álbumes</span>
-                  {albumes && albumes.some(a => isAlbumNuevo(a.fecha_evento)) && (
+                  {albumes && albumes.some(a => isAlbumNuevo(a.fecha_evento, hoy)) && (
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      {albumes.filter(a => isAlbumNuevo(a.fecha_evento)).length} nuevos
+                      {albumes.filter(a => isAlbumNuevo(a.fecha_evento, hoy)).length} nuevos
                     </Badge>
                   )}
                 </>
@@ -590,7 +592,7 @@ export function PrivateGalleryView({
                     </div>
 
                     {/* Indicador de nuevas fotos */}
-                    {isAlbumNuevo(foto.fecha_captura) && (
+                    {isAlbumNuevo(foto.fecha_captura, hoy) && (
                       <Badge className="absolute top-2 right-2 bg-green-500 text-white text-xs">
                         Nuevo
                       </Badge>
@@ -632,9 +634,8 @@ export function PrivateGalleryView({
 }
 
 // Función auxiliar
-function isAlbumNuevo(fecha: string): boolean {
+function isAlbumNuevo(fecha: string, ahora: Date = new Date(0)): boolean {
   const fechaEvento = new Date(fecha)
-  const ahora = new Date()
   const horasDiferencia = (ahora.getTime() - fechaEvento.getTime()) / (1000 * 60 * 60)
   return horasDiferencia <= 48
 }

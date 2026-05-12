@@ -169,7 +169,7 @@ export function SiteFooter() {
           <div className="flex flex-col gap-4">
             {/* Fila principal: Copyright y Créditos */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-primary-foreground/80 text-center sm:text-left">
+              <p className="text-sm text-primary-foreground/80 text-center sm:text-left" suppressHydrationWarning>
                 &copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.
               </p>
               <p className="text-sm text-primary-foreground/80">

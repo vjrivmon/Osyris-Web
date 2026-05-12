@@ -32,8 +32,9 @@ interface CalendarioCompactoProps {
 }
 
 export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: CalendarioCompactoProps) {
-  const [mesActual, setMesActual] = useState(new Date())
+  const [mesActual, setMesActual] = useState<Date | null>(null)
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null)
+  const [hoyHidration, setHoyHidration] = useState<Date | null>(null)
   const [actividades, setActividades] = useState<ActividadCalendario[]>([])
   const [loading, setLoading] = useState(true)
   const [confirmandoId, setConfirmandoId] = useState<number | null>(null)
@@ -156,6 +157,12 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
 
     return confirmacionesMap
   }
+
+  useEffect(() => {
+    const hoy = new Date()
+    setHoyHidration(hoy)
+    setMesActual(hoy)
+  }, [])
 
   // Cargar actividades desde la API - carga TODOS los meses necesarios (-3 a +6)
   // Se ejecuta cuando hijoActual está disponible
@@ -320,6 +327,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
 
   // Obtener actividades del mes actual
   const actividadesMes = useMemo(() => {
+    if (!mesActual) return []
     return actividades.filter(actividad => {
       const fechaActividad = new Date(actividad.fecha)
       return (
@@ -331,8 +339,8 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
 
   // Obtener próxima actividad (solo 1)
   const proximaActividad = useMemo(() => {
-    const hoy = new Date()
-    const dentro30Dias = new Date()
+    const hoy = hoyHidration ?? new Date(0)
+    const dentro30Dias = new Date(hoy.getTime())
     dentro30Dias.setDate(hoy.getDate() + 30)
 
     const proximas = actividades
@@ -343,10 +351,11 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
       .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
 
     return proximas[0] || null
-  }, [actividades])
+  }, [actividades, hoyHidration])
 
   // Generar días del calendario (Lunes a Domingo)
   const diasCalendario = useMemo(() => {
+    if (!mesActual) return []
     const primerDia = new Date(mesActual.getFullYear(), mesActual.getMonth(), 1)
     const ultimoDia = new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 0)
     // Convertir para que Lunes = 0, Domingo = 6
@@ -413,6 +422,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
 
   // Obtener tipos de evento activos en el mes (para la leyenda)
   const tiposActivosMes = useMemo(() => {
+    if (!mesActual) return []
     const tiposSet = new Set<string>()
     actividades.forEach(act => {
       const fechaInicio = new Date(act.fecha)
@@ -434,10 +444,12 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
   }, [diaSeleccionado, getActividadesDelDia])
 
   const mesAnterior = () => {
+    if (!mesActual) return
     setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() - 1, 1))
   }
 
   const mesSiguiente = () => {
+    if (!mesActual) return
     setMesActual(new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 1))
   }
 
@@ -565,7 +577,7 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
     setCampamentoModalOpen(true)
   }
 
-  const hoy = new Date()
+  const hoy = hoyHidration ?? new Date(0)
 
   // Renderizar tarjeta de actividad
   const renderActividadCard = (actividad: ActividadCalendario) => {
@@ -819,8 +831,8 @@ export function CalendarioCompacto({ seccionId, className, hijoSeleccionado }: C
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-xs sm:text-sm font-medium min-w-[70px] sm:min-w-[120px] text-center">
-                <span className="sm:hidden">{mesActual.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}</span>
-                <span className="hidden sm:inline">{mesActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
+                <span className="sm:hidden">{mesActual?.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }) ?? ''}</span>
+                <span className="hidden sm:inline">{mesActual?.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }) ?? ''}</span>
               </span>
               <Button variant="outline" size="icon" className="h-8 w-8" onClick={mesSiguiente}>
                 <ChevronRight className="h-4 w-4" />

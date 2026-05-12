@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -79,6 +79,8 @@ export function NotificationItem({
 }: NotificationItemProps) {
   const [expanded, setExpanded] = useState(showFull)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [hoy, setHoy] = useState<Date | null>(null)
+  useEffect(() => { setHoy(new Date()) }, [])
 
   // Handlers de acciones
   const handleMarkAsRead = async (e?: React.MouseEvent) => {
@@ -188,7 +190,7 @@ export function NotificationItem({
   const formatFecha = (fecha: string) => {
     try {
       const date = new Date(fecha)
-      const now = new Date()
+      const now = hoy ?? new Date(0)
       const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
 
       if (diffInHours < 24) {
@@ -201,7 +203,7 @@ export function NotificationItem({
     }
   }
 
-  const isExpired = notification.fecha_expiracion && new Date(notification.fecha_expiracion) < new Date()
+  const isExpired = notification.fecha_expiracion && hoy !== null && new Date(notification.fecha_expiracion) < hoy
 
   return (
     <Card

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -166,11 +166,17 @@ const toExportEvent = (event: CalendarEvent): CalendarExportEvent => ({
 })
 
 export function CalendarView({ events, className }: CalendarViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState<Date | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
+  const [hoy, setHoy] = useState<Date | null>(null)
+  useEffect(() => {
+    const ahora = new Date()
+    setHoy(ahora)
+    setCurrentDate(ahora)
+  }, [])
 
-  const currentYear = currentDate.getFullYear()
-  const currentMonth = currentDate.getMonth()
+  const currentYear = (currentDate ?? new Date(0)).getFullYear()
+  const currentMonth = (currentDate ?? new Date(0)).getMonth()
 
   // Get first day of month and number of days
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
@@ -180,10 +186,12 @@ export function CalendarView({ events, className }: CalendarViewProps) {
 
   // Navigate months
   const goToPreviousMonth = () => {
+    if (!currentDate) return
     setCurrentDate(new Date(currentYear, currentMonth - 1, 1))
   }
 
   const goToNextMonth = () => {
+    if (!currentDate) return
     setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
   }
 
@@ -273,7 +281,7 @@ export function CalendarView({ events, className }: CalendarViewProps) {
 
                   const day = dayObj.day
                   const dayEvents = getEventsForDate(day)
-                  const isToday = new Date().toDateString() === new Date(currentYear, currentMonth, day).toDateString()
+                  const isToday = hoy !== null && hoy.toDateString() === new Date(currentYear, currentMonth, day).toDateString()
 
                   return (
                     <div
@@ -520,7 +528,7 @@ export function CalendarView({ events, className }: CalendarViewProps) {
               <CardContent>
                 <div className="space-y-2">
                   {events
-                    .filter(event => new Date(event.date) >= new Date())
+                    .filter(event => new Date(event.date) >= (hoy ?? new Date(0)))
                     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                     .slice(0, 5)
                     .map(event => {
@@ -587,7 +595,7 @@ export function CalendarView({ events, className }: CalendarViewProps) {
                       )
                     })
                   }
-                  {events.filter(event => new Date(event.date) >= new Date()).length === 0 && (
+                  {events.filter(event => new Date(event.date) >= (hoy ?? new Date(0))).length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No hay actividades proximas programadas
                     </p>

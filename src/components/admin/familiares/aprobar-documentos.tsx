@@ -70,6 +70,8 @@ interface AprobarDocumentosProps {
 }
 
 export function AprobarDocumentosPanel({ onVerFamilias }: AprobarDocumentosProps) {
+  const [hoy, setHoy] = useState<Date>(new Date(0))
+  useEffect(() => { setHoy(new Date()) }, [])
   const [selectedDocumento, setSelectedDocumento] = useState<DocumentoFamiliar | null>(null)
   const [showPreviewDialog, setShowPreviewDialog] = useState(false)
   const [showReviewDialog, setShowReviewDialog] = useState(false)
@@ -189,7 +191,7 @@ export function AprobarDocumentosPanel({ onVerFamilias }: AprobarDocumentosProps
   }
 
   const getDaysSinceUpload = (uploadDate: string) => {
-    const now = new Date()
+    const now = hoy.getTime() > 0 ? hoy : new Date(0)
     const upload = new Date(uploadDate)
     const diffTime = Math.abs(now.getTime() - upload.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
@@ -596,8 +598,11 @@ function DocumentosTable({
   onReject,
   showActions = false
 }: DocumentosTableProps) {
+  const [hoyTable, setHoyTable] = useState<Date>(new Date(0))
+  useEffect(() => { setHoyTable(new Date()) }, [])
+
   const getDaysSinceUpload = (uploadDate: string) => {
-    const now = new Date()
+    const now = hoyTable.getTime() > 0 ? hoyTable : new Date(0)
     const upload = new Date(uploadDate)
     const diffTime = Math.abs(now.getTime() - upload.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))

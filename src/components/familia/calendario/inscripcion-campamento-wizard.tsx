@@ -93,6 +93,996 @@ interface InscripcionCampamentoWizardProps {
 
 type WizardStep = 0 | 1 | 2 | 3
 
+// ==========================================
+// Tipos de props para cada Step (scope módulo)
+// ==========================================
+
+interface StepCanceladoProps {
+  educando: ScoutHijo
+  inscripcion: { observaciones?: string } | null
+  onClose: () => void
+  handleReinscribir: () => void
+}
+
+interface StepAsistenciaProps {
+  actividad: ActividadCampamento
+  educando: ScoutHijo
+  plazoExpirado: boolean
+  tiempoRestante: { dias: number; horas: number } | null
+  asistira: boolean | null
+  handleAsistenciaSeleccion: (value: boolean) => void
+  loading: boolean
+  formatDate: (dateStr: string) => string
+}
+
+interface StepInformacionProps {
+  actividad: ActividadCampamento
+  infoConfirmada: boolean
+  setInfoConfirmada: (v: boolean) => void
+  formatDate: (dateStr: string) => string
+  formatTime: (timeStr?: string) => string
+  getRecordatoriosActivos: () => string[]
+  recordatoriosChecked: Record<number, boolean>
+  setRecordatoriosChecked: React.Dispatch<React.SetStateAction<Record<number, boolean>>>
+  handlePrevStep: () => void
+  handleNextStep: () => void
+}
+
+interface StepFormularioDocumentosProps {
+  circularDescargada: boolean
+  setCircularesModalOpen: (v: boolean) => void
+  circularSubida: boolean
+  justificanteSubido: boolean
+  formData: Partial<DatosInscripcionCampamento>
+  setFormData: React.Dispatch<React.SetStateAction<Partial<DatosInscripcionCampamento>>>
+  educando: ScoutHijo
+  error: string | null
+  datosConfirmados: boolean
+  setDatosConfirmados: (v: boolean) => void
+  handlePrevStep: () => void
+  handleSubmitInscripcion: () => void
+  loading: boolean
+  handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>, tipo: 'circular' | 'justificante') => void
+}
+
+interface StepConfirmacionProps {
+  asistira: boolean | null
+  educando: ScoutHijo
+  progreso: number
+  inscripcion: {
+    estado?: string
+    circular_firmada_url?: string
+    circular_firmada_drive_id?: string
+    justificante_pago_url?: string
+    justificante_pago_drive_id?: string
+  } | null
+  circularSubida: boolean
+  justificanteSubido: boolean
+  setSelectedDocumento: (doc: { name: string; webViewLink?: string; id?: string } | null) => void
+  setDocViewerOpen: (v: boolean) => void
+  getRecordatoriosActivos: () => string[]
+  handlePrevStep: () => void
+  onClose: () => void
+  setMostrarCancelacion: (v: boolean) => void
+}
+
+interface StepIndicatorProps {
+  asistira: boolean | null
+  currentStep: WizardStep
+}
+
+// ==========================================
+// Vista especial para inscripcion cancelada
+// ==========================================
+function StepCancelado({ educando, inscripcion, onClose, handleReinscribir }: StepCanceladoProps) {
+  return (
+    <div className="text-center space-y-6 py-8">
+      <div className="w-20 h-20 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+        <XCircle className="h-10 w-10 text-red-600 dark:text-red-400" />
+      </div>
+      <h3 className="text-xl font-semibold text-red-700 dark:text-red-400">Inscripcion Cancelada</h3>
+      <p className="text-muted-foreground">
+        La inscripcion de <span className="font-medium">{educando.nombre}</span> a este campamento fue cancelada previamente.
+      </p>
+      {inscripcion?.observaciones && (
+        <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+          <span className="font-medium">Motivo:</span> {inscripcion.observaciones}
+        </p>
+      )}
+      <div className="flex justify-center gap-3 pt-4">
+        <Button variant="outline" onClick={onClose}>
+          Cerrar
+        </Button>
+        <Button onClick={handleReinscribir} className="bg-primary hover:bg-primary/90">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Volver a inscribirse
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ==========================================
+// PASO 0: Seleccion de asistencia
+// ==========================================
+function StepAsistencia({
+  actividad,
+  educando,
+  plazoExpirado,
+  tiempoRestante,
+  asistira,
+  handleAsistenciaSeleccion,
+  loading,
+  formatDate
+}: StepAsistenciaProps) {
+  return (
+    <div className="space-y-6 py-4">
+      <div className="text-center space-y-2">
+        <h3 className="text-xl font-semibold">
+          {actividad.titulo}
+        </h3>
+        <p className="text-muted-foreground">
+          {formatDate(actividad.fecha)}
+          {actividad.fechaFin && actividad.fechaFin !== actividad.fecha && (
+            <> - {formatDate(actividad.fechaFin)}</>
+          )}
+        </p>
+      </div>
+
+      {/* Issue #7: Mostrar estado de fecha limite */}
+      {plazoExpirado && (
+        <Alert variant="destructive" className="mx-auto max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="ml-2">
+            <strong>El plazo de inscripcion ha finalizado.</strong>
+            <br />
+            <span className="text-sm">
+              La fecha limite era el {new Date(actividad.fecha_limite_inscripcion!).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!plazoExpirado && tiempoRestante && (tiempoRestante.dias < 2 || (tiempoRestante.dias === 0 && tiempoRestante.horas > 0)) && (
+        <Alert className="mx-auto max-w-md border-amber-300 bg-amber-50 dark:bg-amber-900/20">
+          <Clock className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="ml-2 text-amber-800 dark:text-amber-300">
+            <strong>Inscribete pronto!</strong> Quedan{' '}
+            {tiempoRestante.dias > 0 && `${tiempoRestante.dias} dia${tiempoRestante.dias > 1 ? 's' : ''} y `}
+            {tiempoRestante.horas} hora{tiempoRestante.horas !== 1 ? 's' : ''} para inscribirse.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!plazoExpirado && actividad.fecha_limite_inscripcion && tiempoRestante && tiempoRestante.dias >= 2 && (
+        <p className="text-center text-sm text-muted-foreground">
+          <Clock className="h-3 w-3 inline mr-1" />
+          Inscribete antes del {new Date(actividad.fecha_limite_inscripcion).toLocaleDateString('es-ES', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+          })}
+        </p>
+      )}
+
+      <div className="text-center py-6">
+        <p className="text-lg mb-6">
+          Asistira <strong>{educando.nombre}</strong> al campamento?
+        </p>
+
+        <div className="flex justify-center gap-4">
+          <Button
+            size="lg"
+            variant={asistira === true ? 'default' : 'outline'}
+            className="w-32 h-24 flex flex-col gap-2"
+            onClick={() => handleAsistenciaSeleccion(true)}
+            disabled={plazoExpirado}
+            title={plazoExpirado ? 'El plazo de inscripcion ha finalizado' : undefined}
+          >
+            <Check className="h-8 w-8" />
+            <span className="text-lg">Si</span>
+          </Button>
+
+          <Button
+            size="lg"
+            variant={asistira === false ? 'destructive' : 'outline'}
+            className="w-32 h-24 flex flex-col gap-2"
+            onClick={() => handleAsistenciaSeleccion(false)}
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="h-8 w-8 animate-spin" />
+            ) : (
+              <X className="h-8 w-8" />
+            )}
+            <span className="text-lg">No</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ==========================================
+// PASO 1: Informacion del campamento
+// ==========================================
+function StepInformacion({
+  actividad,
+  infoConfirmada,
+  setInfoConfirmada,
+  formatDate,
+  formatTime,
+  getRecordatoriosActivos,
+  recordatoriosChecked,
+  setRecordatoriosChecked,
+  handlePrevStep,
+  handleNextStep
+}: StepInformacionProps) {
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex-1 overflow-y-auto scrollbar-thin space-y-4 pb-4">
+      {/* Info basica */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Informacion del Campamento
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-start gap-3">
+              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="font-medium">Fecha</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(actividad.fecha)}
+                  {actividad.fechaFin && actividad.fechaFin !== actividad.fecha && (
+                    <> al {formatDate(actividad.fechaFin)}</>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {actividad.lugar && (
+              <div className="flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="font-medium">Lugar</p>
+                  <p className="text-sm text-muted-foreground">{actividad.lugar}</p>
+                </div>
+              </div>
+            )}
+
+            {actividad.costo && (
+              <div className="flex items-start gap-3">
+                <Euro className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="font-medium">Precio</p>
+                  <p className="text-sm text-muted-foreground">{actividad.costo}€</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Logistica salida/regreso */}
+      {(actividad.campamento?.lugar_salida || actividad.campamento?.lugar_regreso) && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Salida y Regreso
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {actividad.campamento?.lugar_salida && (
+              <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-lg">
+                <p className="font-medium text-primary dark:text-primary">Salida</p>
+                <p className="text-sm text-primary/80 dark:text-primary/70">
+                  {actividad.campamento.lugar_salida}
+                  {actividad.campamento.hora_salida && (
+                    <> a las <strong>{formatTime(actividad.campamento.hora_salida)}</strong></>
+                  )}
+                </p>
+                {actividad.campamento.mapa_salida_url && (
+                  <a
+                    href={actividad.campamento.mapa_salida_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline inline-flex items-center gap-1 mt-1"
+                  >
+                    <MapPin className="h-3 w-3" /> Ver en mapa
+                  </a>
+                )}
+              </div>
+            )}
+
+            {actividad.campamento?.lugar_regreso && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="font-medium text-blue-800 dark:text-blue-300">Regreso</p>
+                <p className="text-sm text-blue-700 dark:text-blue-400">
+                  {actividad.campamento.lugar_regreso}
+                  {actividad.campamento.hora_regreso && (
+                    <> a las <strong>{formatTime(actividad.campamento.hora_regreso)}</strong></>
+                  )}
+                </p>
+                {actividad.campamento.mapa_regreso_url && (
+                  <a
+                    href={actividad.campamento.mapa_regreso_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1 mt-1"
+                  >
+                    <MapPin className="h-3 w-3" /> Ver en mapa
+                  </a>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pago */}
+      {actividad.campamento?.numero_cuenta && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Euro className="h-5 w-5 text-primary" />
+              Datos de Pago
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Numero de cuenta:</p>
+              <p className="font-mono text-amber-900 dark:text-amber-200 select-all">
+                {actividad.campamento.numero_cuenta}
+              </p>
+            </div>
+            {actividad.campamento.concepto_pago && (
+              <div>
+                <p className="text-sm font-medium">Concepto:</p>
+                <p className="text-sm text-muted-foreground">
+                  {actividad.campamento.concepto_pago}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recordatorios - Checklist interactiva */}
+      {getRecordatoriosActivos().length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-primary" />
+              Recordatorios Importantes
+            </CardTitle>
+            <CardDescription>
+              Marca cada elemento cuando lo tengas preparado
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {getRecordatoriosActivos().map((recordatorio, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    recordatoriosChecked[index]
+                      ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/40'
+                      : 'bg-background hover:bg-muted/50'
+                  }`}
+                  onClick={() => setRecordatoriosChecked(prev => ({
+                    ...prev,
+                    [index]: !prev[index]
+                  }))}
+                >
+                  <Checkbox
+                    checked={recordatoriosChecked[index] || false}
+                    onCheckedChange={(checked) => setRecordatoriosChecked(prev => ({
+                      ...prev,
+                      [index]: checked === true
+                    }))}
+                    className="h-5 w-5"
+                  />
+                  <span className={`text-sm ${recordatoriosChecked[index] ? 'text-primary dark:text-primary line-through' : ''}`}>
+                    {recordatorio}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      </div>
+
+      {/* Footer con confirmacion y botones */}
+      <div className="pt-4 border-t space-y-3 flex-shrink-0">
+        {/* Confirmacion de lectura */}
+        <div className="flex items-center space-x-3 p-3 border rounded-lg bg-muted/50">
+          <Checkbox
+            id="info-confirmada"
+            checked={infoConfirmada}
+            onCheckedChange={(checked) => setInfoConfirmada(checked === true)}
+            className="h-5 w-5"
+          />
+          <label htmlFor="info-confirmada" className="text-sm font-medium cursor-pointer">
+            He leido y entendido toda la informacion del campamento
+          </label>
+        </div>
+
+        <div className="flex justify-between">
+          <Button variant="outline" size="lg" onClick={handlePrevStep}>
+            <ChevronLeft className="h-5 w-5 mr-2" />
+            Atras
+          </Button>
+          <Button size="lg" onClick={handleNextStep} disabled={!infoConfirmada}>
+            Continuar
+            <ChevronRight className="h-5 w-5 ml-2" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ==========================================
+// PASO 2: Formulario y Documentos
+// ==========================================
+function StepFormularioDocumentos({
+  circularDescargada,
+  setCircularesModalOpen,
+  circularSubida,
+  justificanteSubido,
+  formData,
+  setFormData,
+  educando,
+  error,
+  datosConfirmados,
+  setDatosConfirmados,
+  handlePrevStep,
+  handleSubmitInscripcion,
+  loading,
+  handleFileUpload
+}: StepFormularioDocumentosProps) {
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2 pb-4">
+        {/* Columna izquierda: Documentos */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
+            <FileText className="h-6 w-6" />
+            Documentos Requeridos
+          </h3>
+
+          {/* Descarga de circular - Boton estilo plantillas */}
+          <div className={`flex items-center justify-between p-5 rounded-xl border transition-colors ${
+            circularDescargada
+              ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/40'
+              : 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800'
+          }`}>
+            <div className="flex-1 mr-6">
+              <div className="flex items-center gap-3">
+                <p className="font-semibold text-base">Circular / Autorizacion</p>
+                {circularDescargada && (
+                  <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/20 dark:bg-primary/30 px-2.5 py-1 rounded-full">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Descargada
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Descargar, firmar y volver a subir
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setCircularesModalOpen(true)}
+              className="border-amber-500 text-amber-600 hover:bg-amber-50 flex-shrink-0 px-4 py-2"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Descargar
+            </Button>
+          </div>
+
+          {/* Subir circular firmada */}
+          <Card className={`border-2 ${circularSubida ? 'border-primary/40 bg-primary/10 dark:bg-primary/20' : 'border-dashed border-primary/30'}`}>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-base font-semibold flex items-center gap-2">
+                      Subir Circular Firmada
+                      {circularSubida && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Se enviara automaticamente al email de la seccion
+                    </p>
+                  </div>
+                </div>
+
+                {!circularSubida && (
+                  <div className="border-2 border-dashed rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={(e) => handleFileUpload(e, 'circular')}
+                      className="hidden"
+                      id="circular-upload"
+                      disabled={loading}
+                    />
+                    <label htmlFor="circular-upload" className="cursor-pointer block">
+                      <Upload className="h-12 w-12 mx-auto text-primary/60 mb-3" />
+                      <p className="text-base font-medium text-foreground">
+                        {loading ? 'Subiendo...' : 'Haz clic para seleccionar archivo'}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">PDF o imagen (JPG, PNG)</p>
+                    </label>
+                  </div>
+                )}
+
+                {circularSubida && (
+                  <div className="flex items-center gap-2 p-3 bg-primary/20 dark:bg-primary/30 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <span className="font-medium text-primary">Circular subida correctamente</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Subir justificante de pago */}
+          <Card className={`border-2 ${justificanteSubido ? 'border-primary/40 bg-primary/10 dark:bg-primary/20' : 'border-dashed border-primary/30'}`}>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-base font-semibold flex items-center gap-2">
+                      Subir Justificante de Pago
+                      {justificanteSubido && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Se enviara automaticamente a tesoreria
+                    </p>
+                  </div>
+                </div>
+
+                {!justificanteSubido && (
+                  <div className="border-2 border-dashed rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={(e) => handleFileUpload(e, 'justificante')}
+                      className="hidden"
+                      id="justificante-upload"
+                      disabled={loading}
+                    />
+                    <label htmlFor="justificante-upload" className="cursor-pointer block">
+                      <Upload className="h-12 w-12 mx-auto text-primary/60 mb-3" />
+                      <p className="text-base font-medium text-foreground">
+                        {loading ? 'Subiendo...' : 'Haz clic para seleccionar archivo'}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">PDF o imagen (JPG, PNG)</p>
+                    </label>
+                  </div>
+                )}
+
+                {justificanteSubido && (
+                  <div className="flex items-center gap-2 p-3 bg-primary/20 dark:bg-primary/30 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <span className="font-medium text-primary">Justificante subido correctamente</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Columna derecha: Datos */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
+            <User className="h-6 w-6" />
+            Datos de Inscripcion
+          </h3>
+
+          {/* Datos del familiar */}
+          <Card className="border-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Datos del Familiar
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nombre_familiar" className="text-sm font-medium">Nombre completo</Label>
+                <Input
+                  id="nombre_familiar"
+                  value={formData.nombre_familiar}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nombre_familiar: e.target.value }))}
+                  placeholder="Nombre y apellidos"
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email_familiar" className="text-sm font-medium">Email</Label>
+                <Input
+                  id="email_familiar"
+                  type="email"
+                  value={formData.email_familiar}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email_familiar: e.target.value }))}
+                  placeholder="email@ejemplo.com"
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="telefono_familiar" className="text-sm font-medium">Telefono</Label>
+                <Input
+                  id="telefono_familiar"
+                  type="tel"
+                  value={formData.telefono_familiar}
+                  onChange={(e) => setFormData(prev => ({ ...prev, telefono_familiar: e.target.value }))}
+                  placeholder="600 000 000"
+                  className="h-11"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Datos del educando (readonly) */}
+          <Card className="bg-muted/30 border-2 border-muted">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Datos del Educando
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 p-3 bg-background rounded-lg">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-lg font-bold text-primary">
+                    {educando.nombre?.charAt(0) || 'E'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-base font-semibold">{educando.nombre} {educando.apellidos}</p>
+                  <p className="text-sm text-muted-foreground">{educando.seccion}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Datos de salud */}
+          <Card className="border-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Heart className="h-4 w-4 text-red-500" />
+                Datos de Salud
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Prellenados desde la ficha sanitaria
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="alergias" className="text-sm font-medium">Alergias e intolerancias</Label>
+                <Textarea
+                  id="alergias"
+                  value={formData.alergias}
+                  onChange={(e) => setFormData(prev => ({ ...prev, alergias: e.target.value }))}
+                  placeholder="Ninguna / Detallar alergias..."
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dieta_especial" className="text-sm font-medium">Dieta especial</Label>
+                <Input
+                  id="dieta_especial"
+                  value={formData.dieta_especial}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dieta_especial: e.target.value }))}
+                  placeholder="Vegetariano, sin gluten, etc."
+                  className="h-11"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <Alert variant="destructive" className="mx-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Footer con confirmacion y botones */}
+      <div className="pt-4 border-t space-y-3 px-2 flex-shrink-0">
+        {/* Confirmacion de datos */}
+        <div className="flex items-center space-x-3 p-3 border rounded-lg bg-muted/50">
+          <Checkbox
+            id="datos-confirmados"
+            checked={datosConfirmados}
+            onCheckedChange={(checked) => setDatosConfirmados(checked === true)}
+            className="h-5 w-5"
+          />
+          <label htmlFor="datos-confirmados" className="text-sm font-medium cursor-pointer">
+            Confirmo que todos los datos son correctos
+          </label>
+        </div>
+
+        <div className="flex justify-between">
+          <Button variant="outline" size="lg" onClick={handlePrevStep}>
+            <ChevronLeft className="h-5 w-5 mr-2" />
+            Atras
+          </Button>
+          <Button
+            size="lg"
+            onClick={handleSubmitInscripcion}
+            disabled={!datosConfirmados || loading}
+            className="min-w-[200px]"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              <>
+                Finalizar Inscripcion
+                <Check className="h-5 w-5 ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ==========================================
+// PASO 3: Confirmacion
+// ==========================================
+function StepConfirmacion({
+  asistira,
+  educando,
+  progreso,
+  inscripcion,
+  circularSubida,
+  justificanteSubido,
+  setSelectedDocumento,
+  setDocViewerOpen,
+  getRecordatoriosActivos,
+  handlePrevStep,
+  onClose,
+  setMostrarCancelacion
+}: StepConfirmacionProps) {
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex-1 overflow-y-auto scrollbar-thin space-y-3 py-3 px-2 text-center">
+      {asistira === false ? (
+        // Confirmacion de NO asistencia
+        <>
+          <div className="flex justify-center">
+            <div className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <X className="h-7 w-7 text-gray-500 dark:text-gray-400" />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold">No asistencia registrada</h3>
+            <p className="text-muted-foreground mt-2">
+              Hemos registrado que <strong>{educando.nombre}</strong> no asistira al campamento.
+            </p>
+          </div>
+        </>
+      ) : (
+        // Confirmacion de inscripcion exitosa
+        <>
+          <div className="flex justify-center">
+            <div className="h-14 w-14 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center">
+              <CheckCircle2 className="h-7 w-7 text-primary" />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-primary">Inscripcion Completada</h3>
+            <p className="text-muted-foreground mt-2">
+              <strong>{educando.nombre}</strong> ha sido inscrito/a correctamente en el campamento.
+            </p>
+          </div>
+
+          {/* Progreso */}
+          <div className="max-w-md mx-auto space-y-1">
+            <div className="flex justify-between text-sm">
+              <span>Progreso de inscripcion</span>
+              <span className="font-medium">{progreso}%</span>
+            </div>
+            <Progress value={progreso} className="h-2" />
+          </div>
+
+          {/* Documentos Enviados */}
+          {inscripcion && (circularSubida || justificanteSubido) && (
+            <Card className="text-left max-w-md mx-auto">
+              <CardHeader className="py-2 pb-1">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-500" />
+                  Documentos Enviados
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-2 space-y-2">
+                {/* Circular Firmada */}
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <FileCheck className={`h-5 w-5 ${circularSubida ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`} />
+                    <div>
+                      <p className="font-medium text-sm">Circular Firmada</p>
+                      <p className="text-xs text-muted-foreground">
+                        {circularSubida ? 'Subido correctamente' : 'Pendiente de subir'}
+                      </p>
+                    </div>
+                  </div>
+                  {circularSubida && (inscripcion.circular_firmada_url || inscripcion.circular_firmada_drive_id) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700"
+                      onClick={() => {
+                        setSelectedDocumento({
+                          name: 'Circular Firmada',
+                          webViewLink: inscripcion.circular_firmada_url,
+                          id: inscripcion.circular_firmada_drive_id
+                        })
+                        setDocViewerOpen(true)
+                      }}
+                    >
+                      <Eye className="h-3 w-3 mr-1" /> Ver
+                    </Button>
+                  )}
+                </div>
+
+                {/* Justificante de Pago */}
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Receipt className={`h-5 w-5 ${justificanteSubido ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`} />
+                    <div>
+                      <p className="font-medium text-sm">Justificante de Pago</p>
+                      <p className="text-xs text-muted-foreground">
+                        {justificanteSubido ? 'Subido correctamente' : 'Pendiente de subir'}
+                      </p>
+                    </div>
+                  </div>
+                  {justificanteSubido && (inscripcion.justificante_pago_url || inscripcion.justificante_pago_drive_id) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700"
+                      onClick={() => {
+                        setSelectedDocumento({
+                          name: 'Justificante de Pago',
+                          webViewLink: inscripcion.justificante_pago_url,
+                          id: inscripcion.justificante_pago_drive_id
+                        })
+                        setDocViewerOpen(true)
+                      }}
+                    >
+                      <Eye className="h-3 w-3 mr-1" /> Ver
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recordatorios */}
+          {getRecordatoriosActivos().length > 0 && (
+            <Card className="text-left max-w-md mx-auto">
+              <CardHeader className="py-2 pb-1">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Info className="h-4 w-4 text-amber-500" />
+                  No olvides para el campamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-2">
+                <ul className="space-y-1 text-sm">
+                  {getRecordatoriosActivos().map((recordatorio, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span>{recordatorio}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+      </div>
+
+      {/* Botones de accion - Footer fijo */}
+      <div className="pt-3 border-t flex justify-center gap-3 flex-shrink-0 bg-background">
+        <Button variant="outline" onClick={handlePrevStep} className="min-w-32">
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Volver
+        </Button>
+        <Button onClick={onClose} className="min-w-32">
+          Cerrar
+        </Button>
+        {inscripcion && (inscripcion.estado === 'inscrito' || inscripcion.estado === 'pendiente') && (
+          <Button
+            variant="outline"
+            className="min-w-32 border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700"
+            onClick={() => setMostrarCancelacion(true)}
+          >
+            <X className="h-4 w-4 mr-2" />
+            Cancelar Inscripcion
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ==========================================
+// Indicador de pasos
+// ==========================================
+function StepIndicator({ asistira, currentStep }: StepIndicatorProps) {
+  const steps = [
+    { num: 0, label: 'Asistencia' },
+    { num: 1, label: 'Informacion' },
+    { num: 2, label: 'Documentos' },
+    { num: 3, label: 'Confirmacion' }
+  ]
+
+  if (asistira === false) {
+    return null
+  }
+
+  return (
+    <div className="flex items-center justify-center space-x-2 mb-4">
+      {steps.map((step, index) => (
+        <div key={step.num} className="flex items-center">
+          <div
+            className={`
+              w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+              ${currentStep === step.num
+                ? 'bg-primary text-primary-foreground'
+                : currentStep > step.num
+                  ? 'bg-green-500 text-white'
+                  : 'bg-muted text-muted-foreground'
+              }
+            `}
+          >
+            {currentStep > step.num ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              step.num + 1
+            )}
+          </div>
+          {index < steps.length - 1 && (
+            <div
+              className={`w-12 h-0.5 mx-1 ${
+                currentStep > step.num ? 'bg-green-500' : 'bg-muted'
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function InscripcionCampamentoWizard({
   isOpen,
   onClose,
@@ -459,823 +1449,78 @@ export function InscripcionCampamentoWizard({
     // El hook manejará la actualización del estado en BD cuando el usuario confirme de nuevo
   }
 
-  // Vista especial para inscripción cancelada
-  const StepCancelado = () => (
-    <div className="text-center space-y-6 py-8">
-      <div className="w-20 h-20 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-        <XCircle className="h-10 w-10 text-red-600 dark:text-red-400" />
-      </div>
-      <h3 className="text-xl font-semibold text-red-700 dark:text-red-400">Inscripcion Cancelada</h3>
-      <p className="text-muted-foreground">
-        La inscripcion de <span className="font-medium">{educando.nombre}</span> a este campamento fue cancelada previamente.
-      </p>
-      {inscripcion?.observaciones && (
-        <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-          <span className="font-medium">Motivo:</span> {inscripcion.observaciones}
-        </p>
-      )}
-      <div className="flex justify-center gap-3 pt-4">
-        <Button variant="outline" onClick={onClose}>
-          Cerrar
-        </Button>
-        <Button onClick={handleReinscribir} className="bg-primary hover:bg-primary/90">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Volver a inscribirse
-        </Button>
-      </div>
-    </div>
-  )
-
   // Render del paso actual
   // IMPORTANTE: Llamamos a las funciones directamente en lugar de usarlas como componentes JSX
   // para evitar que React las desmonte/remonte en cada re-render (lo que causa pérdida de focus en inputs)
   const renderStep = () => {
     // Si está cancelado y no está reinscribiéndose, mostrar vista de cancelado
     if (inscripcion?.estado === 'cancelado' && !reinscribiendo) {
-      return StepCancelado()
+      return StepCancelado({ educando, inscripcion, onClose, handleReinscribir })
     }
 
     switch (currentStep) {
       case 0:
-        return StepAsistencia()
+        return StepAsistencia({
+          actividad,
+          educando,
+          plazoExpirado,
+          tiempoRestante,
+          asistira,
+          handleAsistenciaSeleccion,
+          loading,
+          formatDate
+        })
       case 1:
-        return StepInformacion()
+        return StepInformacion({
+          actividad,
+          infoConfirmada,
+          setInfoConfirmada,
+          formatDate,
+          formatTime,
+          getRecordatoriosActivos,
+          recordatoriosChecked,
+          setRecordatoriosChecked,
+          handlePrevStep,
+          handleNextStep
+        })
       case 2:
-        return StepFormularioDocumentos()
+        return StepFormularioDocumentos({
+          circularDescargada,
+          setCircularesModalOpen,
+          circularSubida,
+          justificanteSubido,
+          formData,
+          setFormData,
+          educando,
+          error,
+          datosConfirmados,
+          setDatosConfirmados,
+          handlePrevStep,
+          handleSubmitInscripcion,
+          loading,
+          handleFileUpload
+        })
       case 3:
-        return StepConfirmacion()
+        return StepConfirmacion({
+          asistira,
+          educando,
+          progreso,
+          inscripcion,
+          circularSubida,
+          justificanteSubido,
+          setSelectedDocumento,
+          setDocViewerOpen,
+          getRecordatoriosActivos,
+          handlePrevStep,
+          onClose,
+          setMostrarCancelacion
+        })
       default:
         return null
     }
   }
 
-  // ==========================================
-  // PASO 0: Seleccion de asistencia
-  // ==========================================
-  const StepAsistencia = () => (
-    <div className="space-y-6 py-4">
-      <div className="text-center space-y-2">
-        <h3 className="text-xl font-semibold">
-          {actividad.titulo}
-        </h3>
-        <p className="text-muted-foreground">
-          {formatDate(actividad.fecha)}
-          {actividad.fechaFin && actividad.fechaFin !== actividad.fecha && (
-            <> - {formatDate(actividad.fechaFin)}</>
-          )}
-        </p>
-      </div>
-
-      {/* Issue #7: Mostrar estado de fecha límite */}
-      {plazoExpirado && (
-        <Alert variant="destructive" className="mx-auto max-w-md">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="ml-2">
-            <strong>El plazo de inscripción ha finalizado.</strong>
-            <br />
-            <span className="text-sm">
-              La fecha límite era el {new Date(actividad.fecha_limite_inscripcion!).toLocaleDateString('es-ES', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </span>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!plazoExpirado && tiempoRestante && (tiempoRestante.dias < 2 || (tiempoRestante.dias === 0 && tiempoRestante.horas > 0)) && (
-        <Alert className="mx-auto max-w-md border-amber-300 bg-amber-50 dark:bg-amber-900/20">
-          <Clock className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="ml-2 text-amber-800 dark:text-amber-300">
-            <strong>¡Inscríbete pronto!</strong> Quedan{' '}
-            {tiempoRestante.dias > 0 && `${tiempoRestante.dias} día${tiempoRestante.dias > 1 ? 's' : ''} y `}
-            {tiempoRestante.horas} hora{tiempoRestante.horas !== 1 ? 's' : ''} para inscribirse.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!plazoExpirado && actividad.fecha_limite_inscripcion && tiempoRestante && tiempoRestante.dias >= 2 && (
-        <p className="text-center text-sm text-muted-foreground">
-          <Clock className="h-3 w-3 inline mr-1" />
-          Inscríbete antes del {new Date(actividad.fecha_limite_inscripcion).toLocaleDateString('es-ES', { 
-            weekday: 'long', 
-            day: 'numeric', 
-            month: 'long'
-          })}
-        </p>
-      )}
-
-      <div className="text-center py-6">
-        <p className="text-lg mb-6">
-          ¿Asistira <strong>{educando.nombre}</strong> al campamento?
-        </p>
-
-        <div className="flex justify-center gap-4">
-          <Button
-            size="lg"
-            variant={asistira === true ? 'default' : 'outline'}
-            className="w-32 h-24 flex flex-col gap-2"
-            onClick={() => handleAsistenciaSeleccion(true)}
-            disabled={plazoExpirado}
-            title={plazoExpirado ? 'El plazo de inscripción ha finalizado' : undefined}
-          >
-            <Check className="h-8 w-8" />
-            <span className="text-lg">Sí</span>
-          </Button>
-
-          <Button
-            size="lg"
-            variant={asistira === false ? 'destructive' : 'outline'}
-            className="w-32 h-24 flex flex-col gap-2"
-            onClick={() => handleAsistenciaSeleccion(false)}
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="h-8 w-8 animate-spin" />
-            ) : (
-              <X className="h-8 w-8" />
-            )}
-            <span className="text-lg">No</span>
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-
-  // ==========================================
-  // PASO 1: Informacion del campamento
-  // ==========================================
-  const StepInformacion = () => (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto scrollbar-thin space-y-4 pb-4">
-      {/* Info basica */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Informacion del Campamento
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="font-medium">Fecha</p>
-                <p className="text-sm text-muted-foreground">
-                  {formatDate(actividad.fecha)}
-                  {actividad.fechaFin && actividad.fechaFin !== actividad.fecha && (
-                    <> al {formatDate(actividad.fechaFin)}</>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {actividad.lugar && (
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">Lugar</p>
-                  <p className="text-sm text-muted-foreground">{actividad.lugar}</p>
-                </div>
-              </div>
-            )}
-
-            {actividad.costo && (
-              <div className="flex items-start gap-3">
-                <Euro className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">Precio</p>
-                  <p className="text-sm text-muted-foreground">{actividad.costo}€</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Logistica salida/regreso */}
-      {(actividad.campamento?.lugar_salida || actividad.campamento?.lugar_regreso) && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Salida y Regreso
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {actividad.campamento?.lugar_salida && (
-              <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-lg">
-                <p className="font-medium text-primary dark:text-primary">Salida</p>
-                <p className="text-sm text-primary/80 dark:text-primary/70">
-                  {actividad.campamento.lugar_salida}
-                  {actividad.campamento.hora_salida && (
-                    <> a las <strong>{formatTime(actividad.campamento.hora_salida)}</strong></>
-                  )}
-                </p>
-                {actividad.campamento.mapa_salida_url && (
-                  <a
-                    href={actividad.campamento.mapa_salida_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline inline-flex items-center gap-1 mt-1"
-                  >
-                    <MapPin className="h-3 w-3" /> Ver en mapa
-                  </a>
-                )}
-              </div>
-            )}
-
-            {actividad.campamento?.lugar_regreso && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="font-medium text-blue-800 dark:text-blue-300">Regreso</p>
-                <p className="text-sm text-blue-700 dark:text-blue-400">
-                  {actividad.campamento.lugar_regreso}
-                  {actividad.campamento.hora_regreso && (
-                    <> a las <strong>{formatTime(actividad.campamento.hora_regreso)}</strong></>
-                  )}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Pago */}
-      {actividad.campamento?.numero_cuenta && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Euro className="h-5 w-5 text-primary" />
-              Datos de Pago
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Numero de cuenta:</p>
-              <p className="font-mono text-amber-900 dark:text-amber-200 select-all">
-                {actividad.campamento.numero_cuenta}
-              </p>
-            </div>
-            {actividad.campamento.concepto_pago && (
-              <div>
-                <p className="text-sm font-medium">Concepto:</p>
-                <p className="text-sm text-muted-foreground">
-                  {actividad.campamento.concepto_pago}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Recordatorios - Checklist interactiva */}
-      {getRecordatoriosActivos().length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-primary" />
-              Recordatorios Importantes
-            </CardTitle>
-            <CardDescription>
-              Marca cada elemento cuando lo tengas preparado
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {getRecordatoriosActivos().map((recordatorio, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    recordatoriosChecked[index]
-                      ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/40'
-                      : 'bg-background hover:bg-muted/50'
-                  }`}
-                  onClick={() => setRecordatoriosChecked(prev => ({
-                    ...prev,
-                    [index]: !prev[index]
-                  }))}
-                >
-                  <Checkbox
-                    checked={recordatoriosChecked[index] || false}
-                    onCheckedChange={(checked) => setRecordatoriosChecked(prev => ({
-                      ...prev,
-                      [index]: checked === true
-                    }))}
-                    className="h-5 w-5"
-                  />
-                  <span className={`text-sm ${recordatoriosChecked[index] ? 'text-primary dark:text-primary line-through' : ''}`}>
-                    {recordatorio}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      </div>
-
-      {/* Footer con confirmacion y botones */}
-      <div className="pt-4 border-t space-y-3 flex-shrink-0">
-        {/* Confirmacion de lectura */}
-        <div className="flex items-center space-x-3 p-3 border rounded-lg bg-muted/50">
-          <Checkbox
-            id="info-confirmada"
-            checked={infoConfirmada}
-            onCheckedChange={(checked) => setInfoConfirmada(checked === true)}
-            className="h-5 w-5"
-          />
-          <label htmlFor="info-confirmada" className="text-sm font-medium cursor-pointer">
-            He leido y entendido toda la informacion del campamento
-          </label>
-        </div>
-
-        <div className="flex justify-between">
-          <Button variant="outline" size="lg" onClick={handlePrevStep}>
-            <ChevronLeft className="h-5 w-5 mr-2" />
-            Atras
-          </Button>
-          <Button size="lg" onClick={handleNextStep} disabled={!infoConfirmada}>
-            Continuar
-            <ChevronRight className="h-5 w-5 ml-2" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-
-  // ==========================================
-  // PASO 2: Formulario y Documentos
-  // ==========================================
-  const StepFormularioDocumentos = () => (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2 pb-4">
-        {/* Columna izquierda: Documentos */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
-            <FileText className="h-6 w-6" />
-            Documentos Requeridos
-          </h3>
-
-          {/* Descarga de circular - Boton estilo plantillas */}
-          <div className={`flex items-center justify-between p-5 rounded-xl border transition-colors ${
-            circularDescargada
-              ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/40'
-              : 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800'
-          }`}>
-            <div className="flex-1 mr-6">
-              <div className="flex items-center gap-3">
-                <p className="font-semibold text-base">Circular / Autorizacion</p>
-                {circularDescargada && (
-                  <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/20 dark:bg-primary/30 px-2.5 py-1 rounded-full">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Descargada
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Descargar, firmar y volver a subir
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setCircularesModalOpen(true)}
-              className="border-amber-500 text-amber-600 hover:bg-amber-50 flex-shrink-0 px-4 py-2"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Descargar
-            </Button>
-          </div>
-
-          {/* Subir circular firmada */}
-          <Card className={`border-2 ${circularSubida ? 'border-primary/40 bg-primary/10 dark:bg-primary/20' : 'border-dashed border-primary/30'}`}>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-base font-semibold flex items-center gap-2">
-                      Subir Circular Firmada
-                      {circularSubida && <CheckCircle2 className="h-5 w-5 text-green-500" />}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Se enviara automaticamente al email de la seccion
-                    </p>
-                  </div>
-                </div>
-
-                {!circularSubida && (
-                  <div className="border-2 border-dashed rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-                    <input
-                      type="file"
-                      accept=".pdf,image/*"
-                      onChange={(e) => handleFileUpload(e, 'circular')}
-                      className="hidden"
-                      id="circular-upload"
-                      disabled={loading}
-                    />
-                    <label htmlFor="circular-upload" className="cursor-pointer block">
-                      <Upload className="h-12 w-12 mx-auto text-primary/60 mb-3" />
-                      <p className="text-base font-medium text-foreground">
-                        {loading ? 'Subiendo...' : 'Haz clic para seleccionar archivo'}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">PDF o imagen (JPG, PNG)</p>
-                    </label>
-                  </div>
-                )}
-
-                {circularSubida && (
-                  <div className="flex items-center gap-2 p-3 bg-primary/20 dark:bg-primary/30 rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                    <span className="font-medium text-primary">Circular subida correctamente</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Subir justificante de pago */}
-          <Card className={`border-2 ${justificanteSubido ? 'border-primary/40 bg-primary/10 dark:bg-primary/20' : 'border-dashed border-primary/30'}`}>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-base font-semibold flex items-center gap-2">
-                      Subir Justificante de Pago
-                      {justificanteSubido && <CheckCircle2 className="h-5 w-5 text-green-500" />}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Se enviara automaticamente a tesoreria
-                    </p>
-                  </div>
-                </div>
-
-                {!justificanteSubido && (
-                  <div className="border-2 border-dashed rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-                    <input
-                      type="file"
-                      accept=".pdf,image/*"
-                      onChange={(e) => handleFileUpload(e, 'justificante')}
-                      className="hidden"
-                      id="justificante-upload"
-                      disabled={loading}
-                    />
-                    <label htmlFor="justificante-upload" className="cursor-pointer block">
-                      <Upload className="h-12 w-12 mx-auto text-primary/60 mb-3" />
-                      <p className="text-base font-medium text-foreground">
-                        {loading ? 'Subiendo...' : 'Haz clic para seleccionar archivo'}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">PDF o imagen (JPG, PNG)</p>
-                    </label>
-                  </div>
-                )}
-
-                {justificanteSubido && (
-                  <div className="flex items-center gap-2 p-3 bg-primary/20 dark:bg-primary/30 rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                    <span className="font-medium text-primary">Justificante subido correctamente</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Columna derecha: Datos */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
-            <User className="h-6 w-6" />
-            Datos de Inscripcion
-          </h3>
-
-          {/* Datos del familiar */}
-          <Card className="border-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Datos del Familiar
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nombre_familiar" className="text-sm font-medium">Nombre completo</Label>
-                <Input
-                  id="nombre_familiar"
-                  value={formData.nombre_familiar}
-                  onChange={(e) => setFormData({ ...formData, nombre_familiar: e.target.value })}
-                  placeholder="Nombre y apellidos"
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email_familiar" className="text-sm font-medium">Email</Label>
-                <Input
-                  id="email_familiar"
-                  type="email"
-                  value={formData.email_familiar}
-                  onChange={(e) => setFormData({ ...formData, email_familiar: e.target.value })}
-                  placeholder="email@ejemplo.com"
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="telefono_familiar" className="text-sm font-medium">Telefono</Label>
-                <Input
-                  id="telefono_familiar"
-                  type="tel"
-                  value={formData.telefono_familiar}
-                  onChange={(e) => setFormData({ ...formData, telefono_familiar: e.target.value })}
-                  placeholder="600 000 000"
-                  className="h-11"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Datos del educando (readonly) */}
-          <Card className="bg-muted/30 border-2 border-muted">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Datos del Educando
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4 p-3 bg-background rounded-lg">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-lg font-bold text-primary">
-                    {educando.nombre?.charAt(0) || 'E'}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-base font-semibold">{educando.nombre} {educando.apellidos}</p>
-                  <p className="text-sm text-muted-foreground">{educando.seccion}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Datos de salud */}
-          <Card className="border-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Heart className="h-4 w-4 text-red-500" />
-                Datos de Salud
-              </CardTitle>
-              <CardDescription className="text-sm">
-                Prellenados desde la ficha sanitaria
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="alergias" className="text-sm font-medium">Alergias e intolerancias</Label>
-                <Textarea
-                  id="alergias"
-                  value={formData.alergias}
-                  onChange={(e) => setFormData({ ...formData, alergias: e.target.value })}
-                  placeholder="Ninguna / Detallar alergias..."
-                  rows={3}
-                  className="resize-none"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dieta_especial" className="text-sm font-medium">Dieta especial</Label>
-                <Input
-                  id="dieta_especial"
-                  value={formData.dieta_especial}
-                  onChange={(e) => setFormData({ ...formData, dieta_especial: e.target.value })}
-                  placeholder="Vegetariano, sin gluten, etc."
-                  className="h-11"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        </div>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <Alert variant="destructive" className="mx-2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Footer con confirmacion y botones */}
-      <div className="pt-4 border-t space-y-3 px-2 flex-shrink-0">
-        {/* Confirmacion de datos */}
-        <div className="flex items-center space-x-3 p-3 border rounded-lg bg-muted/50">
-          <Checkbox
-            id="datos-confirmados"
-            checked={datosConfirmados}
-            onCheckedChange={(checked) => setDatosConfirmados(checked === true)}
-            className="h-5 w-5"
-          />
-          <label htmlFor="datos-confirmados" className="text-sm font-medium cursor-pointer">
-            Confirmo que todos los datos son correctos
-          </label>
-        </div>
-
-        <div className="flex justify-between">
-          <Button variant="outline" size="lg" onClick={handlePrevStep}>
-            <ChevronLeft className="h-5 w-5 mr-2" />
-            Atras
-          </Button>
-          <Button
-            size="lg"
-            onClick={handleSubmitInscripcion}
-            disabled={!datosConfirmados || loading}
-            className="min-w-[200px]"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                Guardando...
-              </>
-            ) : (
-              <>
-                Finalizar Inscripcion
-                <Check className="h-5 w-5 ml-2" />
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-
-  // ==========================================
-  // PASO 3: Confirmacion
-  // ==========================================
-  const StepConfirmacion = () => (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto scrollbar-thin space-y-3 py-3 px-2 text-center">
-      {asistira === false ? (
-        // Confirmacion de NO asistencia
-        <>
-          <div className="flex justify-center">
-            <div className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-              <X className="h-7 w-7 text-gray-500 dark:text-gray-400" />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold">No asistencia registrada</h3>
-            <p className="text-muted-foreground mt-2">
-              Hemos registrado que <strong>{educando.nombre}</strong> no asistira al campamento.
-            </p>
-          </div>
-        </>
-      ) : (
-        // Confirmacion de inscripcion exitosa
-        <>
-          <div className="flex justify-center">
-            <div className="h-14 w-14 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center">
-              <CheckCircle2 className="h-7 w-7 text-primary" />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-primary">Inscripcion Completada</h3>
-            <p className="text-muted-foreground mt-2">
-              <strong>{educando.nombre}</strong> ha sido inscrito/a correctamente en el campamento.
-            </p>
-          </div>
-
-          {/* Progreso */}
-          <div className="max-w-md mx-auto space-y-1">
-            <div className="flex justify-between text-sm">
-              <span>Progreso de inscripcion</span>
-              <span className="font-medium">{progreso}%</span>
-            </div>
-            <Progress value={progreso} className="h-2" />
-          </div>
-
-          {/* Documentos Enviados */}
-          {inscripcion && (circularSubida || justificanteSubido) && (
-            <Card className="text-left max-w-md mx-auto">
-              <CardHeader className="py-2 pb-1">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-blue-500" />
-                  Documentos Enviados
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="py-2 space-y-2">
-                {/* Circular Firmada */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileCheck className={`h-5 w-5 ${circularSubida ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`} />
-                    <div>
-                      <p className="font-medium text-sm">Circular Firmada</p>
-                      <p className="text-xs text-muted-foreground">
-                        {circularSubida ? 'Subido correctamente' : 'Pendiente de subir'}
-                      </p>
-                    </div>
-                  </div>
-                  {circularSubida && (inscripcion.circular_firmada_url || inscripcion.circular_firmada_drive_id) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700"
-                      onClick={() => {
-                        setSelectedDocumento({
-                          name: 'Circular Firmada',
-                          webViewLink: inscripcion.circular_firmada_url,
-                          id: inscripcion.circular_firmada_drive_id
-                        })
-                        setDocViewerOpen(true)
-                      }}
-                    >
-                      <Eye className="h-3 w-3 mr-1" /> Ver
-                    </Button>
-                  )}
-                </div>
-
-                {/* Justificante de Pago */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Receipt className={`h-5 w-5 ${justificanteSubido ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`} />
-                    <div>
-                      <p className="font-medium text-sm">Justificante de Pago</p>
-                      <p className="text-xs text-muted-foreground">
-                        {justificanteSubido ? 'Subido correctamente' : 'Pendiente de subir'}
-                      </p>
-                    </div>
-                  </div>
-                  {justificanteSubido && (inscripcion.justificante_pago_url || inscripcion.justificante_pago_drive_id) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700"
-                      onClick={() => {
-                        setSelectedDocumento({
-                          name: 'Justificante de Pago',
-                          webViewLink: inscripcion.justificante_pago_url,
-                          id: inscripcion.justificante_pago_drive_id
-                        })
-                        setDocViewerOpen(true)
-                      }}
-                    >
-                      <Eye className="h-3 w-3 mr-1" /> Ver
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Recordatorios */}
-          {getRecordatoriosActivos().length > 0 && (
-            <Card className="text-left max-w-md mx-auto">
-              <CardHeader className="py-2 pb-1">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Info className="h-4 w-4 text-amber-500" />
-                  No olvides para el campamento
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="py-2">
-                <ul className="space-y-1 text-sm">
-                  {getRecordatoriosActivos().map((recordatorio, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>{recordatorio}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
-      </div>
-
-      {/* Botones de acción - Footer fijo */}
-      <div className="pt-3 border-t flex justify-center gap-3 flex-shrink-0 bg-background">
-        <Button variant="outline" onClick={handlePrevStep} className="min-w-32">
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Volver
-        </Button>
-        <Button onClick={onClose} className="min-w-32">
-          Cerrar
-        </Button>
-        {inscripcion && (inscripcion.estado === 'inscrito' || inscripcion.estado === 'pendiente') && (
-          <Button
-            variant="outline"
-            className="min-w-32 border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700"
-            onClick={() => setMostrarCancelacion(true)}
-          >
-            <X className="h-4 w-4 mr-2" />
-            Cancelar Inscripción
-          </Button>
-        )}
-      </div>
-    </div>
-  )
-
-  // Handler para cancelar inscripción
+  // Handler para cancelar inscripcion
   const handleCancelarInscripcion = async () => {
     setCancelando(true)
     try {
@@ -1292,54 +1537,6 @@ export function InscripcionCampamentoWizard({
     }
   }
 
-  // Indicador de pasos
-  const StepIndicator = () => {
-    const steps = [
-      { num: 0, label: 'Asistencia' },
-      { num: 1, label: 'Informacion' },
-      { num: 2, label: 'Documentos' },
-      { num: 3, label: 'Confirmacion' }
-    ]
-
-    // Si no asiste, ocultar pasos intermedios
-    if (asistira === false) {
-      return null
-    }
-
-    return (
-      <div className="flex items-center justify-center space-x-2 mb-4">
-        {steps.map((step, index) => (
-          <div key={step.num} className="flex items-center">
-            <div
-              className={`
-                w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                ${currentStep === step.num
-                  ? 'bg-primary text-primary-foreground'
-                  : currentStep > step.num
-                    ? 'bg-green-500 text-white'
-                    : 'bg-muted text-muted-foreground'
-                }
-              `}
-            >
-              {currentStep > step.num ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                step.num + 1
-              )}
-            </div>
-            {index < steps.length - 1 && (
-              <div
-                className={`w-12 h-0.5 mx-1 ${
-                  currentStep > step.num ? 'bg-green-500' : 'bg-muted'
-                }`}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-    )
-  }
-
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -1354,7 +1551,7 @@ export function InscripcionCampamentoWizard({
             </DialogDescription>
           </DialogHeader>
 
-          {StepIndicator()}
+          {StepIndicator({ asistira, currentStep })}
 
           <div className="flex-1 overflow-auto min-h-0">
             {renderStep()}

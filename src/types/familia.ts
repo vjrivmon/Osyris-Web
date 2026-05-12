@@ -345,6 +345,7 @@ export interface CampamentoDetalles {
   mapa_salida_url?: string
   lugar_regreso?: string
   hora_regreso?: string
+  mapa_regreso_url?: string
 
   // Pago
   precio?: number
