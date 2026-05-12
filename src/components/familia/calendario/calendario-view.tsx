@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,7 +46,9 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
   const { hijos } = useFamiliaData()
   const { user } = useAuth()
 
-  const [fechaActual, setFechaActual] = useState(new Date())
+  const [fechaActual, setFechaActual] = useState(() => new Date())
+  const [hoy, setHoy] = useState<Date | null>(null)
+  useEffect(() => { setHoy(new Date()) }, [])
   const [selectedActividad, setSelectedActividad] = useState<ActividadCalendario | null>(null)
   const [vistaMode, setVistaMode] = useState<'mes' | 'lista'>('mes')
   const [filtros, setFiltros] = useState({
@@ -348,9 +350,10 @@ export function CalendarioView({ className, hijoSeleccionado }: CalendarioViewPr
             {/* Días del mes */}
             <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {generarDiasMes.map((dia, index) => {
-                const esHoy = dia === new Date().getDate() &&
-                             fechaActual.getMonth() === new Date().getMonth() &&
-                             fechaActual.getFullYear() === new Date().getFullYear()
+                const esHoy = hoy !== null &&
+                             dia === hoy.getDate() &&
+                             fechaActual.getMonth() === hoy.getMonth() &&
+                             fechaActual.getFullYear() === hoy.getFullYear()
 
                 const actividadesDia = dia ? obtenerActividadesPorDia(dia) : []
 

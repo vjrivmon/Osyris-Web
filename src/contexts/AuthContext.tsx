@@ -476,36 +476,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
+const SSR_AUTH_FALLBACK: AuthContextType = {
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  isLoading: false,
+  authReady: false,
+  sessionExpired: false,
+  sessionExpiredReason: null,
+  login: async () => false,
+  logout: () => {},
+  logoutWithReason: () => {},
+  refreshUser: async () => {},
+  waitForAuthReady: async () => {},
+  activeRole: '',
+  availableRoles: [],
+  switchRole: () => {}
+}
+
 export function useAuth(): AuthContextType {
-  try {
-    const context = useContext(AuthContext)
-    if (context === undefined) {
-      throw new Error('useAuth must be used within an AuthProvider')
-    }
-    return context
-  } catch (error) {
-    // Durante el build estatico o SSR sin AuthProvider, retornar valores seguros
+  const context = useContext(AuthContext)
+  if (context === undefined) {
     if (typeof window === 'undefined') {
-      return {
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        authReady: false,
-        sessionExpired: false,
-        sessionExpiredReason: null,
-        login: async () => false,
-        logout: () => {},
-        logoutWithReason: () => {},
-        refreshUser: async () => {},
-        waitForAuthReady: async () => {},
-        activeRole: '',
-        availableRoles: [],
-        switchRole: () => {}
-      }
+      return SSR_AUTH_FALLBACK
     }
-    throw error
+    throw new Error('useAuth must be used within an AuthProvider')
   }
+  return context
 }
 
 export { AuthContext }

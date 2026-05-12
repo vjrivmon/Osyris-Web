@@ -1354,7 +1354,7 @@ export function InscripcionCampamentoWizard({
             </DialogDescription>
           </DialogHeader>
 
-          <StepIndicator />
+          {StepIndicator()}
 
           <div className="flex-1 overflow-auto min-h-0">
             {renderStep()}
