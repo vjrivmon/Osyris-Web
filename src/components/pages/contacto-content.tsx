@@ -90,7 +90,7 @@ export default function ContactoContent() {
                           <div>
                             <h3 className="font-medium">Email</h3>
                             <StaticText
-                              content="info@grupoosyris.es"
+                              content="osyris.scouts@gmail.com"
                               tag="p"
                               className="text-muted-foreground"
                             />
@@ -141,19 +141,7 @@ export default function ContactoContent() {
                         className="font-medium"
                       />
                       <StaticText
-                        content="Sábados de 17:00 a 19:00"
-                        tag="p"
-                        className="text-muted-foreground"
-                      />
-                    </div>
-                    <div>
-                      <StaticText
-                        content="Atención a familias"
-                        tag="h3"
-                        className="font-medium"
-                      />
-                      <StaticText
-                        content="Sábados de 16:30 a 17:00 y de 19:00 a 19:30"
+                        content="Sábados de 16:30 a 18:30"
                         tag="p"
                         className="text-muted-foreground"
                       />
@@ -165,7 +153,7 @@ export default function ContactoContent() {
                         className="font-medium"
                       />
                       <StaticText
-                        content="Viernes de 20:00 a 22:00"
+                        content="Lunes de 20:00 a 23:00"
                         tag="p"
                         className="text-muted-foreground"
                       />

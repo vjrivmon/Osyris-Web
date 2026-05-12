@@ -57,7 +57,7 @@ export function SiteFooter() {
                   <Youtube className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="mailto:info@grupoosyris.es"
+                  href="mailto:osyris.scouts@gmail.com"
                   className="p-2 rounded-full bg-white/10 hover:bg-secondary hover:text-black transition-all"
                   aria-label="Email"
                 >

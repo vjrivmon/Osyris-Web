@@ -35,7 +35,7 @@ export default function ContactoPage() {
             addressCountry: 'ES',
           },
           telephone: '+34 600 123 456',
-          email: 'info@grupoosyris.es',
+          email: 'osyris.scouts@gmail.com',
           url: `${SITE_URL}/contacto`,
           openingHoursSpecification: [
             {

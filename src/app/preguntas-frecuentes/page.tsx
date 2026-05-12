@@ -217,7 +217,7 @@ const inscripcionFaqs = [
   {
     question: "¿Cómo puedo inscribir a mi hijo/a en el grupo scout?",
     answer:
-      "Para inscribir a tu hijo/a, puedes contactarnos a través del formulario de contacto de nuestra web, por email a info@grupoosyris.es o acercarte directamente a nuestro local en horario de atención a familias (sábados de 16:30 a 17:00 y de 19:00 a 19:30). Te informaremos sobre el proceso de inscripción y las plazas disponibles.",
+      "Para inscribir a tu hijo/a, puedes contactarnos a través del formulario de contacto de nuestra web, por email a osyris.scouts@gmail.com o acercarte directamente a nuestro local los sábados de 16:30 a 18:30. Te informaremos sobre el proceso de inscripción y las plazas disponibles.",
   },
   {
     question: "¿Cuál es la edad mínima para unirse al grupo?",
@@ -245,7 +245,7 @@ const actividadesFaqs = [
   {
     question: "¿Qué actividades realizan durante el año?",
     answer:
-      "Realizamos reuniones semanales los sábados de 17:00 a 19:00, acampadas de fin de semana aproximadamente una vez al trimestre, y un campamento de verano de 15 días en julio. También participamos en actividades con otros grupos scouts y eventos comunitarios en el barrio de Benimaclet.",
+      "Realizamos reuniones semanales los sábados de 16:30 a 18:30, acampadas de fin de semana aproximadamente una vez al trimestre, y un campamento de verano de 15 días en julio. También participamos en actividades con otros grupos scouts y eventos comunitarios en el barrio de Benimaclet.",
   },
   {
     question: "¿Cómo son los campamentos de verano?",

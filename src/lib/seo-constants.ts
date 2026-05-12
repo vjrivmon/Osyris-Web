@@ -13,7 +13,7 @@ export const organizationJsonLd = {
   ],
   contactPoint: {
     '@type': 'ContactPoint',
-    email: 'info@grupoosyris.es',
+    email: 'osyris.scouts@gmail.com',
     contactType: 'customer service',
     availableLanguage: 'Spanish',
   },
