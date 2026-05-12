@@ -443,3 +443,28 @@ nav,
   transform: scale(1.02);
 }
 
+/* Banner 45 Aniversario */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes banner-shimmer {
+  0%   { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(300%) skewX(-15deg); }
+}
+.banner-marquee {
+  animation: marquee 55s linear infinite;
+  display: flex;
+  width: max-content;
+}
+.banner-marquee:hover {
+  animation-play-state: paused;
+}
+.banner-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+  animation: banner-shimmer 4s ease-in-out infinite;
+}
+

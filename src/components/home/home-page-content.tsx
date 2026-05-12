@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MainNav } from "@/components/main-nav"
+import { AniversarioBanner } from "@/components/aniversario-banner"
 import { SiteFooter } from "@/components/site-footer"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,6 +27,7 @@ export default function HomePageContent() {
     <div className="flex flex-col min-h-screen">
       <MainNav />
       <main className="flex-1">
+        <AniversarioBanner />
         {/* Hero Section */}
         <section
           className="relative bg-black overflow-hidden py-20 sm:py-28 md:py-36 lg:py-48"
