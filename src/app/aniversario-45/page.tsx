@@ -11,18 +11,34 @@ interface Foto {
 }
 
 const SESSION_KEY = "aniversario45_token"
+const EMAIL_KEY = "aniversario45_email"
+
+async function logEvento(email: string, token: string, evento: "view" | "download", detalle?: string) {
+  try {
+    await fetch("/api/aniversario/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, token, evento, detalle }),
+    })
+  } catch {
+    // silencioso
+  }
+}
 
 export default function Aniversario45Page() {
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [token, setToken] = useState<string | null>(null)
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [fotos, setFotos] = useState<Foto[]>([])
   const [total, setTotal] = useState(0)
   const [lightbox, setLightbox] = useState<Foto | null>(null)
   const [fotosLoading, setFotosLoading] = useState(false)
+  const [viewLogged, setViewLogged] = useState(false)
 
-  const loadFotos = useCallback(async (t: string) => {
+  const loadFotos = useCallback(async (t: string, em: string) => {
     setFotosLoading(true)
     try {
       const res = await fetch(`/api/aniversario/fotos?token=${encodeURIComponent(t)}`)
@@ -37,12 +53,22 @@ export default function Aniversario45Page() {
   }, [])
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(SESSION_KEY)
-    if (saved) {
-      setToken(saved)
-      loadFotos(saved)
+    const savedToken = sessionStorage.getItem(SESSION_KEY)
+    const savedEmail = sessionStorage.getItem(EMAIL_KEY)
+    if (savedToken && savedEmail) {
+      setToken(savedToken)
+      setSessionEmail(savedEmail)
+      loadFotos(savedToken, savedEmail)
     }
   }, [loadFotos])
+
+  // Registrar "view" una sola vez al entrar a la galería
+  useEffect(() => {
+    if (token && sessionEmail && !viewLogged) {
+      logEvento(sessionEmail, token, "view")
+      setViewLogged(true)
+    }
+  }, [token, sessionEmail, viewLogged])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -52,14 +78,18 @@ export default function Aniversario45Page() {
       const res = await fetch("/api/aniversario/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       })
       if (res.ok) {
         sessionStorage.setItem(SESSION_KEY, password)
+        sessionStorage.setItem(EMAIL_KEY, email)
         setToken(password)
-        loadFotos(password)
+        setSessionEmail(email)
+        loadFotos(password, email)
       } else if (res.status === 500) {
         setError("La galería aún no está configurada. Vuelve pronto.")
+      } else if (res.status === 400) {
+        setError("Introduce un email válido.")
       } else {
         setError("Contraseña incorrecta.")
       }
@@ -72,9 +102,19 @@ export default function Aniversario45Page() {
 
   function handleLogout() {
     sessionStorage.removeItem(SESSION_KEY)
+    sessionStorage.removeItem(EMAIL_KEY)
     setToken(null)
+    setSessionEmail(null)
     setFotos([])
     setPassword("")
+    setEmail("")
+    setViewLogged(false)
+  }
+
+  function handleDownload(foto: Foto) {
+    if (sessionEmail && token) {
+      logEvento(sessionEmail, token, "download", foto.filename)
+    }
   }
 
   if (!token) {
@@ -96,9 +136,24 @@ export default function Aniversario45Page() {
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <p className="text-sm text-gray-600 mb-6 text-center">
-                Introduce la contraseña para acceder a las fotos del aniversario.
+                Introduce tu correo y la contraseña para acceder a las fotos.
               </p>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1.5">
+                    Correo electrónico
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3d2a]/30 focus:border-[#1b3d2a]"
+                    placeholder="tu@correo.es"
+                    autoFocus
+                    required
+                  />
+                </div>
                 <div>
                   <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1.5">
                     Contraseña
@@ -110,7 +165,6 @@ export default function Aniversario45Page() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3d2a]/30 focus:border-[#1b3d2a]"
                     placeholder="••••••••"
-                    autoFocus
                     required
                   />
                 </div>
@@ -119,7 +173,7 @@ export default function Aniversario45Page() {
                 )}
                 <button
                   type="submit"
-                  disabled={loading || !password}
+                  disabled={loading || !password || !email}
                   className="w-full py-2.5 rounded-lg bg-[#1b3d2a] text-white text-sm font-medium hover:bg-[#244f37] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? "Comprobando..." : "Ver fotos"}
@@ -215,7 +269,7 @@ export default function Aniversario45Page() {
             href={lightbox.full}
             download={lightbox.filename}
             className="absolute bottom-4 right-4 flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); handleDownload(lightbox) }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
