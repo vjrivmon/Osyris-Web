@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -83,6 +83,8 @@ export function ActividadPreview({
 }: ActividadPreviewProps) {
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [hoy, setHoy] = useState<Date | null>(null)
+  useEffect(() => { setHoy(new Date()) }, [])
 
   const getTipoIcon = (tipo: string) => {
     switch (tipo) {
@@ -160,16 +162,16 @@ export function ActividadPreview({
   const estaProximaPorVencer = () => {
     if (!actividad.fecha_limite_confirmacion) return false
     const fechaLimite = new Date(actividad.fecha_limite_confirmacion)
-    const hoy = new Date()
-    const diasRestantes = Math.ceil((fechaLimite.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
+    const ahora = hoy ?? new Date(0)
+    const diasRestantes = Math.ceil((fechaLimite.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24))
     return diasRestantes <= 3 && diasRestantes >= 0
   }
 
   const diasParaConfirmar = () => {
     if (!actividad.fecha_limite_confirmacion) return null
     const fechaLimite = new Date(actividad.fecha_limite_confirmacion)
-    const hoy = new Date()
-    return Math.ceil((fechaLimite.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
+    const ahora = hoy ?? new Date(0)
+    return Math.ceil((fechaLimite.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24))
   }
 
   if (compact) {

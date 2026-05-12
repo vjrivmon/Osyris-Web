@@ -197,8 +197,8 @@ export function MarkdownEditor({
       .replace(/<\/li>(?=(?:(?!<li>).)*$)/g, '</li></ul>')
   }
 
-  // Toolbar component
-  const Toolbar = () => (
+  // Funcion de render para toolbar
+  const renderToolbar = () => (
     <div className="flex flex-wrap items-center gap-1 p-2 border-b border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20">
       <div className="flex items-center gap-1 border-r border-red-200 dark:border-red-800 pr-2 mr-2">
         <Button
@@ -349,7 +349,7 @@ export function MarkdownEditor({
       </CardHeader>
 
       <CardContent className="p-0">
-        <Toolbar />
+        {renderToolbar()}
 
         {isDragging && (
           <div className="absolute inset-0 bg-blue-100/50 dark:bg-blue-900/20 border-2 border-dashed border-blue-500 flex items-center justify-center z-10">

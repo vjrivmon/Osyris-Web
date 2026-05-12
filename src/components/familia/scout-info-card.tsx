@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -100,6 +100,8 @@ export function ScoutInfoCard({
   className
 }: ScoutInfoCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const [hoy, setHoy] = useState<Date | null>(null)
+  useEffect(() => { setHoy(new Date()) }, [])
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
@@ -174,11 +176,11 @@ export function ScoutInfoCard({
   }
 
   const calculateEdad = (fechaNacimiento: string) => {
-    const hoy = new Date()
+    const ahora = hoy ?? new Date(0)
     const nacimiento = new Date(fechaNacimiento)
-    let edad = hoy.getFullYear() - nacimiento.getFullYear()
-    const mes = hoy.getMonth() - nacimiento.getMonth()
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+    let edad = ahora.getFullYear() - nacimiento.getFullYear()
+    const mes = ahora.getMonth() - nacimiento.getMonth()
+    if (mes < 0 || (mes === 0 && ahora.getDate() < nacimiento.getDate())) {
       edad--
     }
     return edad

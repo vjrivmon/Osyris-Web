@@ -288,8 +288,8 @@ export function EducandoFormModal({
     }
   }
 
-  // Componente para mostrar estado de completado de seccion
-  const SectionBadge = ({ section }: { section: keyof typeof sectionCompletionStatus }) => {
+  // Funcion para mostrar estado de completado de seccion
+  const renderSectionBadge = (section: keyof typeof sectionCompletionStatus) => {
     const status = sectionCompletionStatus[section]
     if (status.filled === 0) {
       return (
@@ -387,7 +387,7 @@ export function EducandoFormModal({
                 <User className="h-4 w-4 mr-2 text-primary" />
                 <span className="font-medium">Datos basicos</span>
                 <span className="text-xs text-destructive ml-1">*</span>
-                <SectionBadge section="basicos" />
+                {renderSectionBadge("basicos")}
               </div>
             </AccordionTrigger>
             <AccordionContent>
@@ -517,7 +517,7 @@ export function EducandoFormModal({
               <div className="flex items-center">
                 <MapPin className="h-4 w-4 mr-2 text-blue-500" />
                 <span className="font-medium">Contacto y direccion</span>
-                <SectionBadge section="contacto" />
+                {renderSectionBadge("contacto")}
               </div>
             </AccordionTrigger>
             <AccordionContent>
@@ -596,7 +596,7 @@ export function EducandoFormModal({
               <div className="flex items-center">
                 <FileText className="h-4 w-4 mr-2 text-amber-500" />
                 <span className="font-medium">Documentacion</span>
-                <SectionBadge section="documentacion" />
+                {renderSectionBadge("documentacion")}
               </div>
             </AccordionTrigger>
             <AccordionContent>
@@ -644,7 +644,7 @@ export function EducandoFormModal({
               <div className="flex items-center">
                 <Heart className="h-4 w-4 mr-2 text-red-500" />
                 <span className="font-medium">Informacion medica</span>
-                <SectionBadge section="medico" />
+                {renderSectionBadge("medico")}
               </div>
             </AccordionTrigger>
             <AccordionContent>
@@ -692,7 +692,7 @@ export function EducandoFormModal({
               <div className="flex items-center">
                 <ClipboardList className="h-4 w-4 mr-2 text-gray-500" />
                 <span className="font-medium">Observaciones</span>
-                <SectionBadge section="otros" />
+                {renderSectionBadge("otros")}
               </div>
             </AccordionTrigger>
             <AccordionContent>

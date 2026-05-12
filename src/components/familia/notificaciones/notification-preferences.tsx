@@ -101,9 +101,7 @@ export function NotificationPreferences({ className }: NotificationPreferencesPr
   }
 
   const updateTempPreferencias = (updates: Partial<PreferenciasNotificacion>) => {
-    if (tempPreferencias) {
-      setTempPreferencias({ ...tempPreferencias, ...updates })
-    }
+    setTempPreferencias(prev => prev ? { ...prev, ...updates } : prev)
   }
 
   const addContactoAdicional = () => {
@@ -706,7 +704,7 @@ export function NotificationPreferences({ className }: NotificationPreferencesPr
                         <Input
                           id="contacto-nombre"
                           value={newContact.nombre || ''}
-                          onChange={(e) => setNewContact({ ...newContact, nombre: e.target.value })}
+                          onChange={(e) => setNewContact(prev => ({ ...prev, nombre: e.target.value }))}
                           placeholder="Ej: María González"
                         />
                       </div>
@@ -715,7 +713,7 @@ export function NotificationPreferences({ className }: NotificationPreferencesPr
                         <Input
                           id="contacto-relacion"
                           value={newContact.relacion || ''}
-                          onChange={(e) => setNewContact({ ...newContact, relacion: e.target.value })}
+                          onChange={(e) => setNewContact(prev => ({ ...prev, relacion: e.target.value }))}
                           placeholder="Ej: Abuela, Tío, Tutor legal"
                         />
                       </div>
@@ -725,7 +723,7 @@ export function NotificationPreferences({ className }: NotificationPreferencesPr
                           id="contacto-email"
                           type="email"
                           value={newContact.email || ''}
-                          onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                          onChange={(e) => setNewContact(prev => ({ ...prev, email: e.target.value }))}
                           placeholder="email@ejemplo.com"
                         />
                       </div>
@@ -734,7 +732,7 @@ export function NotificationPreferences({ className }: NotificationPreferencesPr
                         <Input
                           id="contacto-telefono"
                           value={newContact.telefono || ''}
-                          onChange={(e) => setNewContact({ ...newContact, telefono: e.target.value })}
+                          onChange={(e) => setNewContact(prev => ({ ...prev, telefono: e.target.value }))}
                           placeholder="+34 600 000 000"
                         />
                       </div>
@@ -745,7 +743,7 @@ export function NotificationPreferences({ className }: NotificationPreferencesPr
                             <Checkbox
                               id="contacto-urgentes"
                               checked={newContact.recibir_urgentes || false}
-                              onCheckedChange={(checked) => setNewContact({ ...newContact, recibir_urgentes: !!checked })}
+                              onCheckedChange={(checked) => setNewContact(prev => ({ ...prev, recibir_urgentes: !!checked }))}
                             />
                             <Label htmlFor="contacto-urgentes" className="text-sm">
                               Notificaciones urgentes 🚨
@@ -755,7 +753,7 @@ export function NotificationPreferences({ className }: NotificationPreferencesPr
                             <Checkbox
                               id="contacto-importantes"
                               checked={newContact.recibir_importantes || false}
-                              onCheckedChange={(checked) => setNewContact({ ...newContact, recibir_importantes: !!checked })}
+                              onCheckedChange={(checked) => setNewContact(prev => ({ ...prev, recibir_importantes: !!checked }))}
                             />
                             <Label htmlFor="contacto-importantes" className="text-sm">
                               Notificaciones importantes ⚠️
@@ -765,7 +763,7 @@ export function NotificationPreferences({ className }: NotificationPreferencesPr
                             <Checkbox
                               id="contacto-informativas"
                               checked={newContact.recibir_informativos || false}
-                              onCheckedChange={(checked) => setNewContact({ ...newContact, recibir_informativos: !!checked })}
+                              onCheckedChange={(checked) => setNewContact(prev => ({ ...prev, recibir_informativos: !!checked }))}
                             />
                             <Label htmlFor="contacto-informativas" className="text-sm">
                               Notificaciones informativas ℹ️

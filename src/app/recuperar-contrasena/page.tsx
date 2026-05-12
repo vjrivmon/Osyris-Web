@@ -128,7 +128,7 @@ export default function RecuperarContrasenaPage() {
         </Card>
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.</p>
+          <p suppressHydrationWarning>&copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.</p>
           <div className="mt-2 flex justify-center space-x-4">
             <Link href="/terminos" className="hover:underline">
               Términos de uso

@@ -42,6 +42,8 @@ export function DashboardHome({ className }: DashboardHomeProps) {
   } = useDashboardData()
 
   const [refreshing, setRefreshing] = useState(false)
+  const [hoy, setHoy] = useState<Date | null>(null)
+  useEffect(() => { setHoy(new Date()) }, [])
 
   // Función para obtener el nombre a mostrar
   const getNombreMostrar = () => {
@@ -132,7 +134,7 @@ export function DashboardHome({ className }: DashboardHomeProps) {
             <div className="flex items-center space-x-2">
               <Calendar className="h-5 w-5" />
               <span className="font-medium">
-                {new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {hoy ? hoy.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
               </span>
             </div>
           </div>

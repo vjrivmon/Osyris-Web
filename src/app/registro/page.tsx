@@ -29,6 +29,8 @@ function RegisterPageContent() {
   const { toast } = useToast()
 
   const [isLoading, setIsLoading] = useState(true)
+  const [fechaMaxima, setFechaMaxima] = useState<string>('')
+  useEffect(() => { setFechaMaxima(new Date().toISOString().split('T')[0]) }, [])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null)
@@ -391,7 +393,7 @@ function RegisterPageContent() {
                         value={formData.fecha_nacimiento}
                         onChange={(e) => handleInputChange("fecha_nacimiento", e.target.value)}
                         className={formErrors.fecha_nacimiento ? "border-red-500" : ""}
-                        max={new Date().toISOString().split('T')[0]}
+                        max={fechaMaxima}
                       />
                       {formErrors.fecha_nacimiento && (
                         <p className="text-xs text-red-500">{formErrors.fecha_nacimiento}</p>

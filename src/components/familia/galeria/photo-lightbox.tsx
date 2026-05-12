@@ -143,20 +143,12 @@ export function PhotoLightbox({
 
   // Navegación
   const handleNext = useCallback(() => {
-    if (currentIndex < photos.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-    } else {
-      setCurrentIndex(0) // Loop al inicio
-    }
-  }, [currentIndex, photos.length])
+    setCurrentIndex(prev => prev < photos.length - 1 ? prev + 1 : 0)
+  }, [photos.length])
 
   const handlePrevious = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-    } else {
-      setCurrentIndex(photos.length - 1) // Loop al final
-    }
-  }, [currentIndex, photos.length])
+    setCurrentIndex(prev => prev > 0 ? prev - 1 : photos.length - 1)
+  }, [photos.length])
 
   // Zoom
   const handleZoomIn = useCallback(() => {

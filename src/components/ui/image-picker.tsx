@@ -193,7 +193,7 @@ export function ImagePicker({
     image.archivo_nombre.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const GridView = () => (
+  const renderGridView = () => (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {filteredImages.map((image) => {
         const isSelected = selectedImages.find(img => img.id === image.id)
@@ -257,7 +257,7 @@ export function ImagePicker({
     </div>
   )
 
-  const ListView = () => (
+  const renderListView = () => (
     <div className="space-y-2">
       {filteredImages.map((image) => {
         const isSelected = selectedImages.find(img => img.id === image.id)
@@ -425,9 +425,9 @@ export function ImagePicker({
                   <p>No se encontraron imágenes</p>
                 </div>
               ) : viewMode === 'grid' ? (
-                <GridView />
+                renderGridView()
               ) : (
-                <ListView />
+                renderListView()
               )}
             </div>
 

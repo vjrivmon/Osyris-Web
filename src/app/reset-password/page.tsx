@@ -237,7 +237,7 @@ function ResetPasswordContent() {
         </Card>
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.</p>
+          <p suppressHydrationWarning>&copy; {new Date().getFullYear()} Grupo Scout Osyris. Todos los derechos reservados.</p>
         </div>
       </div>
     </div>

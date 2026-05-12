@@ -112,7 +112,7 @@ export function FamiliaNavSidebar({
     }
   }
 
-  const NavContent = () => (
+  const renderNavContent = () => (
     <div className="flex flex-col h-full">
       {/* Header del Sidebar */}
       <div className="p-6 border-b bg-gradient-to-r from-green-600 to-green-700">
@@ -267,7 +267,7 @@ export function FamiliaNavSidebar({
           "fixed left-0 top-0 h-full w-80 bg-white shadow-xl transform transition-transform",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <NavContent />
+          {renderNavContent()}
         </div>
       </div>
     )
@@ -278,7 +278,7 @@ export function FamiliaNavSidebar({
       "w-80 bg-white border-r h-screen sticky top-0 overflow-hidden flex flex-col",
       className
     )}>
-      <NavContent />
+      {renderNavContent()}
     </aside>
   )
 }

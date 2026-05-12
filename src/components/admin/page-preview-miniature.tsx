@@ -69,6 +69,12 @@ export function PagePreviewMiniature({
   const [hoveredElement, setHoveredElement] = useState<string | null>(null)
   const [realPageData, setRealPageData] = useState<any>(null)
   const [isLoadingRealPage, setIsLoadingRealPage] = useState(false)
+  const [fechaActualizacion, setFechaActualizacion] = useState<string>('')
+  useEffect(() => {
+    if (pageData?.fecha_actualizacion) {
+      setFechaActualizacion(new Date(pageData.fecha_actualizacion).toLocaleString())
+    }
+  }, [pageData?.fecha_actualizacion])
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   // Load real page data for preview
@@ -309,7 +315,7 @@ export function PagePreviewMiniature({
     return originalContent
   }
 
-  const PreviewContent = () => {
+  const renderPreviewContent = () => {
     if (isLoadingRealPage) {
       return (
         <div className="flex items-center justify-center h-full">
@@ -456,7 +462,7 @@ export function PagePreviewMiniature({
               height: dimensions.height
             }}
           >
-            <PreviewContent />
+            {renderPreviewContent()}
 
             {/* Click hint overlay */}
             {showControls && !hoveredElement && (
@@ -471,7 +477,7 @@ export function PagePreviewMiniature({
 
           <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
             <span>Escala: {Math.round(scale * 100)}%</span>
-            <span>Actualizado: {new Date(pageData.fecha_actualizacion).toLocaleString()}</span>
+            <span>Actualizado: {fechaActualizacion}</span>
           </div>
         </CardContent>
       </Card>

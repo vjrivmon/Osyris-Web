@@ -32,7 +32,7 @@ const getEducandosSinConfirmar = async (actividadId, seccionId) => {
     SELECT e.id, e.nombre, e.apellidos
     FROM educandos e
     WHERE e.activo = true
-    AND e.seccion_id = $1
+    AND ($1::integer IS NULL OR e.seccion_id = $1)
     AND NOT EXISTS (
       SELECT 1 FROM confirmaciones_asistencia ca
       WHERE ca.educando_id = e.id AND ca.actividad_id = $2
@@ -51,7 +51,7 @@ const getEducandosSinInscribir = async (actividadId, seccionId) => {
     SELECT e.id, e.nombre, e.apellidos
     FROM educandos e
     WHERE e.activo = true
-    AND e.seccion_id = $1
+    AND ($1::integer IS NULL OR e.seccion_id = $1)
     AND NOT EXISTS (
       SELECT 1 FROM inscripciones_campamento ic
       WHERE ic.educando_id = e.id AND ic.actividad_id = $2
@@ -75,7 +75,7 @@ const getProximoSabado = async (seccionId) => {
     WHERE a.tipo = 'reunion_sabado'
     AND a.fecha_inicio >= CURRENT_DATE
     AND (a.cancelado = false OR a.cancelado IS NULL)
-    AND a.visibilidad IN ('todos', 'familias')
+    AND (a.visibilidad IS NULL OR a.visibilidad IN ('todos', 'familias', 'kraal', 'scouters'))
   `;
 
   const params = [];
@@ -105,7 +105,7 @@ const getProximoCampamento = async (seccionId) => {
     WHERE a.tipo = 'campamento'
     AND a.fecha_inicio >= CURRENT_DATE
     AND (a.cancelado = false OR a.cancelado IS NULL)
-    AND a.visibilidad IN ('todos', 'familias')
+    AND (a.visibilidad IS NULL OR a.visibilidad IN ('todos', 'familias', 'kraal', 'scouters'))
   `;
 
   const params = [];
@@ -126,10 +126,10 @@ const getProximoCampamento = async (seccionId) => {
  * Obtener estadisticas de asistencia para una reunion
  */
 const getEstadisticasSabado = async (actividadId, seccionId) => {
-  // Total de educandos activos en la seccion
+  // Total de educandos activos en la seccion (o todos si seccionId es null)
   const totalResult = await query(`
     SELECT COUNT(*) as total FROM educandos
-    WHERE activo = true AND seccion_id = $1
+    WHERE activo = true AND ($1::integer IS NULL OR seccion_id = $1)
   `, [seccionId]);
   const totalEducandos = parseInt(totalResult[0]?.total || 0);
 
@@ -140,7 +140,7 @@ const getEstadisticasSabado = async (actividadId, seccionId) => {
       COUNT(*) FILTER (WHERE ca.asistira = false) as no_asisten
     FROM confirmaciones_asistencia ca
     JOIN educandos e ON ca.educando_id = e.id
-    WHERE ca.actividad_id = $1 AND e.seccion_id = $2
+    WHERE ca.actividad_id = $1 AND ($2::integer IS NULL OR e.seccion_id = $2)
   `, [actividadId, seccionId]);
 
   const confirmados = parseInt(confirmacionesResult[0]?.confirmados || 0);
@@ -166,7 +166,7 @@ const getListaConfirmaciones = async (actividadId, seccionId) => {
     FROM confirmaciones_asistencia ca
     JOIN educandos e ON ca.educando_id = e.id
     LEFT JOIN usuarios uf ON ca.familiar_id = uf.id
-    WHERE ca.actividad_id = $1 AND e.seccion_id = $2
+    WHERE ca.actividad_id = $1 AND ($2::integer IS NULL OR e.seccion_id = $2)
     ORDER BY e.apellidos, e.nombre
   `, [actividadId, seccionId]);
 
@@ -177,10 +177,10 @@ const getListaConfirmaciones = async (actividadId, seccionId) => {
  * Obtener estadisticas de inscripciones para un campamento
  */
 const getEstadisticasCampamento = async (actividadId, seccionId) => {
-  // Total de educandos activos en la sección (para calcular pendientes)
+  // Total de educandos activos en la sección (o todos si seccionId es null)
   const totalResult = await query(`
     SELECT COUNT(*) as total FROM educandos
-    WHERE activo = true AND seccion_id = $1
+    WHERE activo = true AND ($1::integer IS NULL OR seccion_id = $1)
   `, [seccionId]);
   const totalEducandos = parseInt(totalResult[0]?.total || 0);
 
@@ -198,7 +198,7 @@ const getEstadisticasCampamento = async (actividadId, seccionId) => {
       COUNT(*) as total_respuestas
     FROM inscripciones_campamento ic
     JOIN educandos e ON ic.educando_id = e.id
-    WHERE ic.actividad_id = $1 AND e.seccion_id = $2
+    WHERE ic.actividad_id = $1 AND ($2::integer IS NULL OR e.seccion_id = $2)
   `, [actividadId, seccionId]);
 
   const totalRespuestas = parseInt(inscripcionesResult[0]?.total_respuestas || 0);
@@ -231,7 +231,7 @@ const getListaInscripciones = async (actividadId, seccionId) => {
     FROM inscripciones_campamento ic
     JOIN educandos e ON ic.educando_id = e.id
     LEFT JOIN usuarios uf ON ic.familiar_id = uf.id
-    WHERE ic.actividad_id = $1 AND e.seccion_id = $2
+    WHERE ic.actividad_id = $1 AND ($2::integer IS NULL OR e.seccion_id = $2)
     ORDER BY e.apellidos, e.nombre
   `, [actividadId, seccionId]);
 
@@ -312,7 +312,7 @@ const getDashboardSummary = async (req, res) => {
     const sabado = await getProximoSabado(effectiveSeccionId);
     if (sabado) {
       // Usar la sección del scouter para estadísticas, no la de la actividad
-      const seccionParaStats = effectiveSeccionId || sabado.seccion_id || 2;
+      const seccionParaStats = effectiveSeccionId || sabado.seccion_id || null;
       const estadisticas = await getEstadisticasSabado(sabado.id, seccionParaStats);
 
       proximoSabado = {
@@ -335,7 +335,7 @@ const getDashboardSummary = async (req, res) => {
     let proximoCampamento = null;
     const campamento = await getProximoCampamento(effectiveSeccionId);
     if (campamento) {
-      const seccionParaStats = effectiveSeccionId || campamento.seccion_id || 2;
+      const seccionParaStats = effectiveSeccionId || campamento.seccion_id || null;
       const estadisticas = await getEstadisticasCampamento(campamento.id, seccionParaStats);
 
       proximoCampamento = {
@@ -451,7 +451,7 @@ const getSabadoDetalle = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Actividad no encontrada' });
     }
 
-    const effectiveSeccionId = seccionId || actividad.seccion_id || 2;
+    const effectiveSeccionId = seccionId || actividad.seccion_id || null;
     const estadisticas = await getEstadisticasSabado(actividadId, effectiveSeccionId);
     const confirmaciones = await getListaConfirmaciones(actividadId, effectiveSeccionId);
     const scoutsSinConfirmar = await getEducandosSinConfirmar(actividadId, effectiveSeccionId);
@@ -500,7 +500,7 @@ const getCampamentoDetalle = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Actividad no encontrada' });
     }
 
-    const effectiveSeccionId = seccionId || actividad.seccion_id || 2;
+    const effectiveSeccionId = seccionId || actividad.seccion_id || null;
     const estadisticas = await getEstadisticasCampamento(actividadId, effectiveSeccionId);
     const inscripciones = await getListaInscripciones(actividadId, effectiveSeccionId);
     const educandosSinInscribir = await getEducandosSinInscribir(actividadId, effectiveSeccionId);
@@ -589,7 +589,7 @@ const getCampamentoInscripcionesForModal = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Actividad no encontrada' });
     }
 
-    const effectiveSeccionId = seccionId || actividad.seccion_id || 2;
+    const effectiveSeccionId = seccionId || actividad.seccion_id || null;
 
     // Obtener inscripciones y educandos sin inscribir
     const inscripciones = await getListaInscripciones(actividadId, effectiveSeccionId);

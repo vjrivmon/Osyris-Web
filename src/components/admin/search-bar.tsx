@@ -84,7 +84,7 @@ export function SearchBar({
     // Convertir "all" a string vacío para el filtrado
     const filterValue = value === "all" ? "" : value
     const newFilters = { ...filters, [key]: filterValue }
-    setFilters({ ...filters, [key]: value }) // Mantener "all" en el estado
+    setFilters(prev => ({ ...prev, [key]: value })) // Mantener "all" en el estado
     onSearch(newFilters) // Enviar "" para el filtrado
   }
 

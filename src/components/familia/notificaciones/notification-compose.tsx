@@ -164,7 +164,7 @@ export function NotificationCompose({ scoutId, onMessageSent, className }: Notif
           sentAt: new Date().toISOString(),
           status: 'sent'
         }
-        setSentMessages([newMessage, ...sentMessages])
+        setSentMessages(prev => [newMessage, ...prev])
 
         onMessageSent?.()
       }
