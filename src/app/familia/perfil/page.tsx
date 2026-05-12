@@ -359,7 +359,7 @@ export default function PerfilFamiliaPage() {
                 <Input
                   id="nombre"
                   value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
                   readOnly={!isEditing}
                   className={!isEditing ? "bg-muted" : ""}
                 />
@@ -370,7 +370,7 @@ export default function PerfilFamiliaPage() {
                 <Input
                   id="apellidos"
                   value={formData.apellidos}
-                  onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, apellidos: e.target.value }))}
                   readOnly={!isEditing}
                   className={!isEditing ? "bg-muted" : ""}
                 />
@@ -382,7 +382,7 @@ export default function PerfilFamiliaPage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   disabled
                   className="bg-muted"
                 />
@@ -397,7 +397,7 @@ export default function PerfilFamiliaPage() {
                   id="telefono"
                   type="tel"
                   value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
                   readOnly={!isEditing}
                   className={!isEditing ? "bg-muted" : ""}
                 />
@@ -408,7 +408,7 @@ export default function PerfilFamiliaPage() {
                 <Input
                   id="direccion"
                   value={formData.direccion}
-                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
                   readOnly={!isEditing}
                   className={!isEditing ? "bg-muted" : ""}
                 />
@@ -467,7 +467,7 @@ export default function PerfilFamiliaPage() {
                   id="currentPassword"
                   type="password"
                   value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
                   required
                 />
               </div>
@@ -478,7 +478,7 @@ export default function PerfilFamiliaPage() {
                   id="newPassword"
                   type="password"
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                   required
                   minLength={8}
                 />
@@ -493,7 +493,7 @@ export default function PerfilFamiliaPage() {
                   id="confirmPassword"
                   type="password"
                   value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                   required
                 />
               </div>
@@ -554,7 +554,7 @@ export default function PerfilFamiliaPage() {
             <Switch
               id="email-notifications"
               checked={notificationPreferences.email}
-              onCheckedChange={(checked) => setNotificationPreferences({...notificationPreferences, email: checked})}
+              onCheckedChange={(checked) => setNotificationPreferences(prev => ({...prev, email: checked}))}
             />
           </div>
 
@@ -568,7 +568,7 @@ export default function PerfilFamiliaPage() {
             <Switch
               id="activity-notifications"
               checked={notificationPreferences.actividades}
-              onCheckedChange={(checked) => setNotificationPreferences({...notificationPreferences, actividades: checked})}
+              onCheckedChange={(checked) => setNotificationPreferences(prev => ({...prev, actividades: checked}))}
             />
           </div>
 
@@ -582,7 +582,7 @@ export default function PerfilFamiliaPage() {
             <Switch
               id="gallery-notifications"
               checked={notificationPreferences.galeria}
-              onCheckedChange={(checked) => setNotificationPreferences({...notificationPreferences, galeria: checked})}
+              onCheckedChange={(checked) => setNotificationPreferences(prev => ({...prev, galeria: checked}))}
             />
           </div>
 
@@ -596,7 +596,7 @@ export default function PerfilFamiliaPage() {
             <Switch
               id="document-notifications"
               checked={notificationPreferences.documentos}
-              onCheckedChange={(checked) => setNotificationPreferences({...notificationPreferences, documentos: checked})}
+              onCheckedChange={(checked) => setNotificationPreferences(prev => ({...prev, documentos: checked}))}
             />
           </div>
 

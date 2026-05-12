@@ -333,7 +333,7 @@ export default function AjustesPage() {
                 <Input
                   id="nombre"
                   value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
                   readOnly={!isEditing}
                   className={!isEditing ? "bg-muted" : ""}
                 />
@@ -344,7 +344,7 @@ export default function AjustesPage() {
                 <Input
                   id="apellidos"
                   value={formData.apellidos}
-                  onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, apellidos: e.target.value }))}
                   readOnly={!isEditing}
                   className={!isEditing ? "bg-muted" : ""}
                 />
@@ -356,7 +356,7 @@ export default function AjustesPage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   disabled
                   className="bg-muted"
                 />
@@ -371,7 +371,7 @@ export default function AjustesPage() {
                   id="telefono"
                   type="tel"
                   value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
                   readOnly={!isEditing}
                   className={!isEditing ? "bg-muted" : ""}
                 />
@@ -382,7 +382,7 @@ export default function AjustesPage() {
                 <Input
                   id="direccion"
                   value={formData.direccion}
-                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
                   readOnly={!isEditing}
                   className={!isEditing ? "bg-muted" : ""}
                 />
@@ -441,7 +441,7 @@ export default function AjustesPage() {
                   id="currentPassword"
                   type="password"
                   value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
                   required
                 />
               </div>
@@ -452,7 +452,7 @@ export default function AjustesPage() {
                   id="newPassword"
                   type="password"
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                   required
                   minLength={8}
                 />
@@ -467,7 +467,7 @@ export default function AjustesPage() {
                   id="confirmPassword"
                   type="password"
                   value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                   required
                 />
               </div>

@@ -74,22 +74,6 @@ export default function ConfirmacionSabadoPage() {
     }
   }, [token])
 
-  // Redirigir segun el estado de autenticacion
-  useEffect(() => {
-    if (!authReady || loading || error || !actividad) return
-
-    // Si no esta logueado, redirigir a login con redirect
-    if (!user) {
-      router.push(`/login?redirect=/confirmacion/sabado/${token}`)
-      return
-    }
-
-    // Si es familia, redirigir al calendario familiar para confirmar asistencia
-    if (user.rol === 'familia') {
-      router.push(`/familia/calendario`)
-      return
-    }
-  }, [authReady, user, actividad, loading, error, token, router])
 
   const formatFecha = (fecha: string) =>
     new Date(fecha).toLocaleDateString('es-ES', {
@@ -147,6 +131,12 @@ export default function ConfirmacionSabadoPage() {
         </Card>
       </div>
     )
+  }
+
+  // Usuario de familia: redirigir al calendario para confirmar asistencia
+  if (authReady && !loading && !error && actividad && user?.rol === 'familia') {
+    router.replace('/familia/calendario')
+    return null
   }
 
   // Usuario logueado pero no es familia (kraal, admin, etc.)
