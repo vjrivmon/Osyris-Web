@@ -35,8 +35,8 @@ export async function GET(request: Request) {
   files.sort()
 
   const fotos = files.map((filename) => {
-    const thumb = `/api/aniversario/imagen?file=${encodeURIComponent(filename)}&token=${token}&size=thumb`
-    const full = `/api/aniversario/imagen?file=${encodeURIComponent(filename)}&token=${token}&size=full`
+    const thumb = `/api/aniversario/imagen?file=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}&size=thumb`
+    const full = `/api/aniversario/imagen?file=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}&size=full`
     return { filename, thumb, full }
   })
 

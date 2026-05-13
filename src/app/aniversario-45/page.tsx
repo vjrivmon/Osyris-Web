@@ -350,7 +350,7 @@ export default function Aniversario45Page() {
           <div>
             <h1 className="text-2xl font-semibold text-[#1b3d2a]">45 Aniversario</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              {fotosLoading ? "Cargando..." : total > 0 ? `${total} fotos` : ""}
+              {fotosLoading ? "Cargando..." : total > 0 ? `${total} ${total === 1 ? "foto" : "fotos"}` : ""}
             </p>
           </div>
         </div>
