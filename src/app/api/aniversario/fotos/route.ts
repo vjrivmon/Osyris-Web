@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
 
-const FOTOS_DIR = "/mnt/storagebox/fotos-45-aniversario"
+const FOTOS_DIR = "/var/sftp/nora/fotos"
 const THUMBNAILS_DIR = path.join(FOTOS_DIR, "thumbnails")
 const ORIGINALES_DIR = path.join(FOTOS_DIR, "originales")
 
@@ -20,7 +20,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ fotos: [], total: 0 })
   }
 
-  const dir = fs.existsSync(THUMBNAILS_DIR) ? THUMBNAILS_DIR : ORIGINALES_DIR
+  // Busca en thumbnails, luego originales, luego directamente en la raíz
+  const dir = fs.existsSync(THUMBNAILS_DIR) ? THUMBNAILS_DIR
+    : fs.existsSync(ORIGINALES_DIR) ? ORIGINALES_DIR
+    : FOTOS_DIR
 
   let files: string[] = []
   try {

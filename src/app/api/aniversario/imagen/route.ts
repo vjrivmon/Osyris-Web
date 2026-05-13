@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
 
-const FOTOS_DIR = "/mnt/storagebox/fotos-45-aniversario"
+const FOTOS_DIR = "/var/sftp/nora/fotos"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -19,10 +19,9 @@ export async function GET(request: Request) {
   const subdir = size === "full" ? "originales" : "thumbnails"
   let filePath = path.join(FOTOS_DIR, subdir, safe)
 
-  // Fall back to originales if thumbnails don't exist
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(FOTOS_DIR, "originales", safe)
-  }
+  // Fall back: originales → raíz del directorio
+  if (!fs.existsSync(filePath)) filePath = path.join(FOTOS_DIR, "originales", safe)
+  if (!fs.existsSync(filePath)) filePath = path.join(FOTOS_DIR, safe)
 
   if (!fs.existsSync(filePath)) {
     return new NextResponse("Not found", { status: 404 })
