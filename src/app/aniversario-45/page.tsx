@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { MainNav } from "@/components/main-nav"
 
@@ -12,6 +12,22 @@ interface Foto {
 
 const SESSION_KEY = "aniversario45_token"
 const EMAIL_KEY = "aniversario45_email"
+
+// Contraseña estructurada: 1981 + cinco * patronato
+// Segmentos: [4 chars][sep "+"][5 chars][sep "*"][9 chars]
+const SEG1_LEN = 4   // 1981
+const SEG2_LEN = 5   // cinco
+const SEG3_LEN = 9   // patronato
+const SEP1 = "+"
+const SEP2 = "*"
+
+const HINTS = [
+  { dots: SEG1_LEN, label: "Año en que nació el Osyris" },
+  { sep: SEP1 },
+  { dots: SEG2_LEN, label: "En letras: cuántas secciones hay en el Osyris" },
+  { sep: SEP2 },
+  { dots: SEG3_LEN, label: "Rima con pato, lugar de reuniones de los sábados" },
+]
 
 async function logEvento(email: string, token: string, evento: "view" | "download", detalle?: string) {
   try {
@@ -25,9 +41,21 @@ async function logEvento(email: string, token: string, evento: "view" | "downloa
   }
 }
 
+// Devuelve el valor del input distribuido en segmentos visuales
+function buildDisplayParts(value: string) {
+  // value es la contraseña completa conforme se va construyendo
+  // seg1: chars 0..3, sep1: "+", seg2: chars 4..8, sep2: "*", seg3: chars 9..17
+  const seg1 = value.slice(0, SEG1_LEN)
+  const seg2 = value.slice(SEG1_LEN, SEG1_LEN + SEG2_LEN)
+  const seg3 = value.slice(SEG1_LEN + SEG2_LEN, SEG1_LEN + SEG2_LEN + SEG3_LEN)
+  return { seg1, seg2, seg3 }
+}
+
 export default function Aniversario45Page() {
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  // rawInput: solo los chars del usuario sin los separadores
+  const [rawInput, setRawInput] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [token, setToken] = useState<string | null>(null)
   const [sessionEmail, setSessionEmail] = useState<string | null>(null)
   const [error, setError] = useState("")
@@ -37,8 +65,23 @@ export default function Aniversario45Page() {
   const [lightbox, setLightbox] = useState<Foto | null>(null)
   const [fotosLoading, setFotosLoading] = useState(false)
   const [viewLogged, setViewLogged] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  const loadFotos = useCallback(async (t: string, em: string) => {
+  // Construir contraseña completa con separadores para el campo visual
+  const { seg1, seg2, seg3 } = buildDisplayParts(rawInput)
+  const fullPassword = seg1 + (seg1.length > 0 || seg2.length > 0 || seg3.length > 0 ? SEP1 : "") + seg2 + (seg2.length > 0 || seg3.length > 0 ? SEP2 : "") + seg3
+
+  // El input interno siempre construye "seg1+seg2*seg3"
+  const displayValue = (() => {
+    let v = seg1
+    if (seg1.length === SEG1_LEN || seg2.length > 0) v += SEP1
+    v += seg2
+    if (seg2.length === SEG2_LEN || seg3.length > 0) v += SEP2
+    v += seg3
+    return v
+  })()
+
+  const loadFotos = useCallback(async (t: string) => {
     setFotosLoading(true)
     try {
       const res = await fetch(`/api/aniversario/fotos?token=${encodeURIComponent(t)}`)
@@ -58,11 +101,10 @@ export default function Aniversario45Page() {
     if (savedToken && savedEmail) {
       setToken(savedToken)
       setSessionEmail(savedEmail)
-      loadFotos(savedToken, savedEmail)
+      loadFotos(savedToken)
     }
   }, [loadFotos])
 
-  // Registrar "view" una sola vez al entrar a la galería
   useEffect(() => {
     if (token && sessionEmail && !viewLogged) {
       logEvento(sessionEmail, token, "view")
@@ -70,9 +112,28 @@ export default function Aniversario45Page() {
     }
   }, [token, sessionEmail, viewLogged])
 
+  // Manejar input: el usuario escribe libre, nosotros extraemos solo los chars de usuario
+  // (ignoramos los separadores que ya inyectamos) y los distribuimos en segmentos
+  function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value
+    // Extraer solo los chars que no son separadores, distribuir en segmentos
+    const raw = val.replace(/[+*]/g, "")
+    const maxLen = SEG1_LEN + SEG2_LEN + SEG3_LEN
+    setRawInput(raw.slice(0, maxLen))
+    setError("")
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+
+    const password = `${seg1}${SEP1}${seg2}${SEP2}${seg3}`
+
+    if (rawInput.length < SEG1_LEN + SEG2_LEN + SEG3_LEN) {
+      setError("Completa todos los campos de la contraseña.")
+      return
+    }
+
     setLoading(true)
     try {
       const res = await fetch("/api/aniversario/auth", {
@@ -85,13 +146,13 @@ export default function Aniversario45Page() {
         sessionStorage.setItem(EMAIL_KEY, email)
         setToken(password)
         setSessionEmail(email)
-        loadFotos(password, email)
+        loadFotos(password)
       } else if (res.status === 500) {
         setError("La galería aún no está configurada. Vuelve pronto.")
       } else if (res.status === 400) {
         setError("Introduce un email válido.")
       } else {
-        setError("Contraseña incorrecta.")
+        setError("Alguna respuesta no es correcta. Inténtalo de nuevo.")
       }
     } catch {
       setError("Error de conexión. Inténtalo de nuevo.")
@@ -106,7 +167,7 @@ export default function Aniversario45Page() {
     setToken(null)
     setSessionEmail(null)
     setFotos([])
-    setPassword("")
+    setRawInput("")
     setEmail("")
     setViewLogged(false)
   }
@@ -117,28 +178,37 @@ export default function Aniversario45Page() {
     }
   }
 
+  // Calcular progreso de cada segmento para colorear los dots del hint
+  const seg1Progress = seg1.length
+  const seg2Progress = seg2.length
+  const seg3Progress = seg3.length
+
   if (!token) {
     return (
       <div className="min-h-screen bg-[#f8f5f0] flex flex-col">
         <MainNav />
         <main className="flex-1 flex items-center justify-center px-4 py-16">
           <div className="w-full max-w-sm">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#1b3d2a] mb-4">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
-              </div>
-              <h1 className="text-2xl font-semibold text-[#1b3d2a]">45 Aniversario</h1>
-              <p className="text-sm text-gray-500 mt-1">Grupo Scout Osyris</p>
+            {/* Logo */}
+            <div className="flex justify-center mb-6">
+              <Image
+                src="/logo-45-aniversario.png"
+                alt="45 Aniversario Grupo Scout Osyris"
+                width={120}
+                height={120}
+                className="select-none"
+                priority
+              />
+            </div>
+
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-semibold text-[#1b3d2a]">Fotos del Aniversario</h1>
+              <p className="text-sm text-gray-500 mt-1">Grupo Scout Osyris · 45 años</p>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <p className="text-sm text-gray-600 mb-6 text-center">
-                Introduce tu correo y la contraseña para acceder a las fotos.
-              </p>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Email */}
                 <div>
                   <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1.5">
                     Correo electrónico
@@ -154,36 +224,108 @@ export default function Aniversario45Page() {
                     required
                   />
                 </div>
+
+                {/* Contraseña */}
                 <div>
                   <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1.5">
                     Contraseña
                   </label>
-                  <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b3d2a]/30 focus:border-[#1b3d2a]"
-                    placeholder="••••••••"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      ref={inputRef}
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={displayValue}
+                      onChange={handlePasswordChange}
+                      className="w-full px-3 py-2.5 pr-10 rounded-lg border border-gray-200 text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-[#1b3d2a]/30 focus:border-[#1b3d2a]"
+                      placeholder=""
+                      autoComplete="off"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      tabIndex={-1}
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                      {showPassword ? (
+                        // ojo abierto
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      ) : (
+                        // ojo tachado
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Hint visual — estructura de la contraseña */}
+                  <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                    {/* Dots row */}
+                    <div className="flex items-center gap-1 mb-2.5 flex-wrap">
+                      {/* Seg 1 */}
+                      {Array.from({ length: SEG1_LEN }).map((_, i) => (
+                        <span
+                          key={`s1-${i}`}
+                          className={`w-2 h-2 rounded-full transition-colors ${i < seg1Progress ? "bg-[#1b3d2a]" : "bg-gray-300"}`}
+                        />
+                      ))}
+                      {/* Sep + */}
+                      <span className={`text-sm font-bold mx-0.5 transition-colors ${seg1Progress === SEG1_LEN ? "text-[#1b3d2a]" : "text-gray-300"}`}>+</span>
+                      {/* Seg 2 */}
+                      {Array.from({ length: SEG2_LEN }).map((_, i) => (
+                        <span
+                          key={`s2-${i}`}
+                          className={`w-2 h-2 rounded-full transition-colors ${i < seg2Progress ? "bg-[#1b3d2a]" : "bg-gray-300"}`}
+                        />
+                      ))}
+                      {/* Sep * */}
+                      <span className={`text-sm font-bold mx-0.5 transition-colors ${seg2Progress === SEG2_LEN ? "text-[#1b3d2a]" : "text-gray-300"}`}>*</span>
+                      {/* Seg 3 */}
+                      {Array.from({ length: SEG3_LEN }).map((_, i) => (
+                        <span
+                          key={`s3-${i}`}
+                          className={`w-2 h-2 rounded-full transition-colors ${i < seg3Progress ? "bg-[#1b3d2a]" : "bg-gray-300"}`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pistas */}
+                    <div className="space-y-1">
+                      <div className="flex items-start gap-1.5">
+                        <span className={`text-xs font-semibold shrink-0 transition-colors ${seg1Progress === SEG1_LEN ? "text-[#1b3d2a]" : "text-gray-400"}`}>····</span>
+                        <span className="text-xs text-gray-500">Año en que nació el Osyris</span>
+                      </div>
+                      <div className="flex items-start gap-1.5">
+                        <span className={`text-xs font-semibold shrink-0 transition-colors ${seg2Progress === SEG2_LEN ? "text-[#1b3d2a]" : "text-gray-400"}`}>·····</span>
+                        <span className="text-xs text-gray-500">En letras: cuántas secciones hay en el Osyris</span>
+                      </div>
+                      <div className="flex items-start gap-1.5">
+                        <span className={`text-xs font-semibold shrink-0 transition-colors ${seg3Progress === SEG3_LEN ? "text-[#1b3d2a]" : "text-gray-400"}`}>·········</span>
+                        <span className="text-xs text-gray-500">Rima con pato, lugar de reuniones de los sábados</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
                 {error && (
                   <p className="text-xs text-red-600 text-center">{error}</p>
                 )}
+
                 <button
                   type="submit"
-                  disabled={loading || !password || !email}
+                  disabled={loading || !email || rawInput.length < SEG1_LEN + SEG2_LEN + SEG3_LEN}
                   className="w-full py-2.5 rounded-lg bg-[#1b3d2a] text-white text-sm font-medium hover:bg-[#244f37] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? "Comprobando..." : "Ver fotos"}
                 </button>
               </form>
             </div>
-
-            <p className="text-xs text-gray-400 text-center mt-4">
-              La contraseña fue enviada por el grupo a las familias.
-            </p>
           </div>
         </main>
       </div>
