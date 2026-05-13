@@ -350,7 +350,7 @@ export default function Aniversario45Page() {
           <div>
             <h1 className="text-2xl font-semibold text-[#1b3d2a]">45 Aniversario</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              {fotosLoading ? "Cargando..." : total > 0 ? `${total} fotos` : "Preparando la galería…"}
+              {fotosLoading ? "Cargando..." : total > 0 ? `${total} fotos` : ""}
             </p>
           </div>
           <button
@@ -370,12 +370,10 @@ export default function Aniversario45Page() {
         )}
 
         {!fotosLoading && fotos.length === 0 && (
-          <div className="text-center py-24 text-gray-400">
-            <svg className="mx-auto mb-4 opacity-40" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-            <p className="text-sm">Las fotos se publicarán pronto.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div key={i} className="aspect-square bg-gray-100 rounded-lg animate-pulse" style={{ animationDelay: `${(i * 80) % 800}ms` }} />
+            ))}
           </div>
         )}
 
