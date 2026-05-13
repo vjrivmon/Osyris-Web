@@ -202,8 +202,7 @@ export default function Aniversario45Page() {
             </div>
 
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-semibold text-[#1b3d2a]">Fotos del Aniversario</h1>
-              <p className="text-sm text-gray-500 mt-1">Grupo Scout Osyris · 45 años</p>
+              <h1 className="text-2xl font-semibold text-[#1b3d2a]">Fotos del 45 Aniversario</h1>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

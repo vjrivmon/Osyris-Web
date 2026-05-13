@@ -7,13 +7,13 @@ const REPETICIONES = 8
 
 export function AniversarioBanner() {
   return (
-    <div className="relative w-full bg-[#1b3d2a] border-y border-amber-500/20 banner-shimmer" style={{ height: '44px' }}>
+    <div className="relative w-full bg-[#1b3d2a] border-y border-amber-500/20 banner-shimmer overflow-hidden" style={{ height: '44px' }}>
 
-      {/* Zona marquee — termina antes del CTA */}
-      <div className="absolute left-0 top-0 bottom-0 overflow-hidden" style={{ right: '160px' }}>
-        <div className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
+      {/* Marquee — en desktop termina antes del CTA, en móvil ocupa todo */}
+      <div className="absolute left-0 top-0 bottom-0 overflow-hidden right-0 md:right-[155px]">
+        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
           style={{ background: 'linear-gradient(to right, #1b3d2a, transparent)' }} />
-        <div className="absolute right-0 top-0 bottom-0 w-24 z-10 pointer-events-none"
+        <div className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
           style={{ background: 'linear-gradient(to left, #1b3d2a, transparent)' }} />
 
         <div className="flex items-center h-full" style={{ marginLeft: '-60%' }}>
@@ -34,25 +34,26 @@ export function AniversarioBanner() {
         </div>
       </div>
 
-      {/* CTA fijo alineado con el container del navbar */}
-      <div className="absolute inset-y-0 right-0 left-0 pointer-events-none z-20">
-        <div className="container mx-auto px-4 h-full flex items-center justify-end">
-          <div className="flex items-center gap-3 pointer-events-auto">
-            <div className="w-px self-stretch py-2.5">
-              <div className="h-full bg-amber-500/20" />
-            </div>
-            <Link
-              href="/aniversario-45"
-              className="inline-flex items-center gap-1.5 text-amber-300 hover:text-amber-100 font-bold transition-colors border border-amber-400/50 hover:border-amber-300 hover:bg-amber-400/10 rounded px-3 py-1 text-xs tracking-wide whitespace-nowrap"
-            >
-              Ver fotos
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </Link>
-          </div>
+      {/* CTA desktop — alineado con el botón Acceder del nav */}
+      <div className="hidden md:flex absolute inset-y-0 items-center gap-3 pointer-events-none" style={{ right: '44px', zIndex: 1 }}>
+        <div className="absolute right-full top-0 bottom-0 w-16 pointer-events-none"
+          style={{ background: 'linear-gradient(to right, transparent, #1b3d2a)' }} />
+        <div className="w-px self-stretch py-2.5 pointer-events-none">
+          <div className="h-full bg-amber-500/20" />
         </div>
+        <Link
+          href="/aniversario-45"
+          className="pointer-events-auto inline-flex items-center gap-1.5 text-amber-300 hover:text-amber-100 font-bold transition-colors border border-amber-400/50 hover:border-amber-300 hover:bg-amber-400/10 rounded px-3 py-1 text-xs tracking-wide whitespace-nowrap"
+        >
+          Ver fotos
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </Link>
       </div>
+
+      {/* CTA móvil — banner completo clickable */}
+      <Link href="/aniversario-45" className="md:hidden absolute inset-0" aria-label="Ver fotos del 45 Aniversario" />
     </div>
   )
 }
