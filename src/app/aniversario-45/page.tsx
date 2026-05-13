@@ -353,12 +353,6 @@ export default function Aniversario45Page() {
               {fotosLoading ? "Cargando..." : total > 0 ? `${total} fotos` : ""}
             </p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            Cerrar sesión
-          </button>
         </div>
 
         {fotosLoading && (
