@@ -366,7 +366,7 @@ export default function Aniversario45Page() {
         {!fotosLoading && fotos.length === 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {Array.from({ length: 20 }).map((_, i) => (
-              <div key={i} className="aspect-square bg-gray-100 rounded-lg animate-pulse" style={{ animationDelay: `${(i * 80) % 800}ms` }} />
+              <div key={i} className="aspect-square bg-gray-300 rounded-lg animate-pulse" style={{ animationDelay: `${(i * 80) % 800}ms` }} />
             ))}
           </div>
         )}
