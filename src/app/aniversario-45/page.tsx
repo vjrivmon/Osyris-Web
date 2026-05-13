@@ -230,32 +230,66 @@ export default function Aniversario45Page() {
                   <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1.5">
                     Contraseña
                   </label>
-                  <div className="relative">
+
+                  {/* Campo visual con dots + input invisible encima */}
+                  <div
+                    className="relative rounded-lg border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-[#1b3d2a]/30 focus-within:border-[#1b3d2a] cursor-text"
+                    onClick={() => inputRef.current?.focus()}
+                  >
+                    {/* Input invisible — captura el teclado */}
                     <input
                       ref={inputRef}
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type="text"
+                      inputMode="text"
                       value={displayValue}
                       onChange={handlePasswordChange}
-                      className="w-full px-3 py-2.5 pr-10 rounded-lg border border-gray-200 text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-[#1b3d2a]/30 focus:border-[#1b3d2a]"
-                      placeholder=""
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-text"
                       autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                     />
+
+                    {/* Visualización: dots o texto según showPassword */}
+                    <div className="flex items-center px-3 py-2.5 pr-10 min-h-[42px] gap-[3px]">
+                      {showPassword ? (
+                        // Texto plano con separadores
+                        <span className="text-sm font-mono tracking-widest text-gray-800 select-none">
+                          {displayValue || <span className="text-gray-300">····+·····*·········</span>}
+                        </span>
+                      ) : (
+                        // Dots con separadores que se van llenando
+                        <>
+                          {Array.from({ length: SEG1_LEN }).map((_, i) => (
+                            <span key={`s1-${i}`} className={`w-[7px] h-[7px] rounded-full shrink-0 transition-colors ${i < seg1Progress ? "bg-gray-800" : "bg-gray-300"}`} />
+                          ))}
+                          <span className={`text-xs font-bold mx-0.5 transition-colors ${seg1Progress > 0 ? "text-gray-800" : "text-gray-300"}`}>+</span>
+                          {Array.from({ length: SEG2_LEN }).map((_, i) => (
+                            <span key={`s2-${i}`} className={`w-[7px] h-[7px] rounded-full shrink-0 transition-colors ${i < seg2Progress ? "bg-gray-800" : "bg-gray-300"}`} />
+                          ))}
+                          <span className={`text-xs font-bold mx-0.5 transition-colors ${seg2Progress > 0 ? "text-gray-800" : "text-gray-300"}`}>*</span>
+                          {Array.from({ length: SEG3_LEN }).map((_, i) => (
+                            <span key={`s3-${i}`} className={`w-[7px] h-[7px] rounded-full shrink-0 transition-colors ${i < seg3Progress ? "bg-gray-800" : "bg-gray-300"}`} />
+                          ))}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Ojo */}
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10"
                       tabIndex={-1}
                       aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     >
                       {showPassword ? (
-                        // ojo abierto
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                           <circle cx="12" cy="12" r="3"/>
                         </svg>
                       ) : (
-                        // ojo tachado
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                           <line x1="1" y1="1" x2="23" y2="23"/>
@@ -264,52 +298,12 @@ export default function Aniversario45Page() {
                     </button>
                   </div>
 
-                  {/* Hint visual — estructura de la contraseña */}
-                  <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                    {/* Dots row */}
-                    <div className="flex items-center gap-1 mb-2.5 flex-wrap">
-                      {/* Seg 1 */}
-                      {Array.from({ length: SEG1_LEN }).map((_, i) => (
-                        <span
-                          key={`s1-${i}`}
-                          className={`w-2 h-2 rounded-full transition-colors ${i < seg1Progress ? "bg-[#1b3d2a]" : "bg-gray-300"}`}
-                        />
-                      ))}
-                      {/* Sep + */}
-                      <span className={`text-sm font-bold mx-0.5 transition-colors ${seg1Progress === SEG1_LEN ? "text-[#1b3d2a]" : "text-gray-300"}`}>+</span>
-                      {/* Seg 2 */}
-                      {Array.from({ length: SEG2_LEN }).map((_, i) => (
-                        <span
-                          key={`s2-${i}`}
-                          className={`w-2 h-2 rounded-full transition-colors ${i < seg2Progress ? "bg-[#1b3d2a]" : "bg-gray-300"}`}
-                        />
-                      ))}
-                      {/* Sep * */}
-                      <span className={`text-sm font-bold mx-0.5 transition-colors ${seg2Progress === SEG2_LEN ? "text-[#1b3d2a]" : "text-gray-300"}`}>*</span>
-                      {/* Seg 3 */}
-                      {Array.from({ length: SEG3_LEN }).map((_, i) => (
-                        <span
-                          key={`s3-${i}`}
-                          className={`w-2 h-2 rounded-full transition-colors ${i < seg3Progress ? "bg-[#1b3d2a]" : "bg-gray-300"}`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Pistas */}
-                    <div className="space-y-1">
-                      <div className="flex items-start gap-1.5">
-                        <span className={`text-xs font-semibold shrink-0 transition-colors ${seg1Progress === SEG1_LEN ? "text-[#1b3d2a]" : "text-gray-400"}`}>····</span>
-                        <span className="text-xs text-gray-500">Año en que nació el Osyris</span>
-                      </div>
-                      <div className="flex items-start gap-1.5">
-                        <span className={`text-xs font-semibold shrink-0 transition-colors ${seg2Progress === SEG2_LEN ? "text-[#1b3d2a]" : "text-gray-400"}`}>·····</span>
-                        <span className="text-xs text-gray-500">En letras: cuántas secciones hay en el Osyris</span>
-                      </div>
-                      <div className="flex items-start gap-1.5">
-                        <span className={`text-xs font-semibold shrink-0 transition-colors ${seg3Progress === SEG3_LEN ? "text-[#1b3d2a]" : "text-gray-400"}`}>·········</span>
-                        <span className="text-xs text-gray-500">Rima con pato, lugar de reuniones de los sábados</span>
-                      </div>
-                    </div>
+                  {/* Solo las pistas de texto */}
+                  <div className="mt-2 space-y-1 pl-0.5">
+                    <p className="text-xs text-gray-400"><span className="font-medium text-gray-500">····</span> Año en que nació el Osyris</p>
+                    <p className="text-xs text-gray-400"><span className="font-medium text-gray-500">·····</span> En letras: cuántas secciones hay en el Osyris</p>
+                    <p className="text-xs text-gray-400"><span className="font-medium text-gray-500">·········</span> Rima con pato, lugar de reuniones de los sábados</p>
+                    <p className="text-xs text-gray-400 mt-1 pt-1 border-t border-gray-100">Todo en minúsculas, sin espacios</p>
                   </div>
                 </div>
 
