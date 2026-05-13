@@ -1,0 +1,18 @@
+{
+  "nombreGrupo": "Grupo Scout Osyris",
+  "slogan": "Desde 1981 en Valencia (test CMS)",
+  "descripcion": "Educando en valores desde 1981. Formamos parte del Moviment Escolta de Valencia - Movimiento Scout Católico.",
+  "cita": "Siempre listos para servir",
+  "fundacion": "1981",
+  "contacto": {
+    "direccion": "Calle Poeta Ricard Sanmartí n3, Barrio de Benimaclet, Valencia",
+    "telefono": "+34 601 037 577",
+    "emailContacto": "osyris.scouts@gmail.com",
+    "emailWeb": "web.osyris@gmail.com"
+  },
+  "redesSociales": {
+    "facebook": "https://www.facebook.com/osyris.gruposcout/",
+    "instagram": "https://www.instagram.com/osyris.scouts",
+    "youtube": "https://www.youtube.com/@GrupoScoutOsyris"
+  }
+}
