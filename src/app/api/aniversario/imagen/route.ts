@@ -8,26 +8,20 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const token = searchParams.get("token")
   const file = searchParams.get("file")
-  const size = searchParams.get("size") ?? "thumb"
 
   if (token !== process.env.ANIVERSARIO_PASSWORD || !file) {
     return new NextResponse("Unauthorized", { status: 401 })
   }
 
-  // Prevent path traversal
-  const safe = path.basename(file)
-  const subdir = size === "full" ? "originales" : "thumbnails"
-  let filePath = path.join(FOTOS_DIR, subdir, safe)
+  // Prevent path traversal: normalize and ensure it stays inside FOTOS_DIR
+  const normalized = path.normalize(file).replace(/^(\.\.(\/|\\|$))+/, "")
+  const filePath = path.join(FOTOS_DIR, normalized)
 
-  // Fall back: originales → raíz del directorio
-  if (!fs.existsSync(filePath)) filePath = path.join(FOTOS_DIR, "originales", safe)
-  if (!fs.existsSync(filePath)) filePath = path.join(FOTOS_DIR, safe)
-
-  if (!fs.existsSync(filePath)) {
+  if (!filePath.startsWith(FOTOS_DIR) || !fs.existsSync(filePath)) {
     return new NextResponse("Not found", { status: 404 })
   }
 
-  const ext = path.extname(safe).toLowerCase()
+  const ext = path.extname(filePath).toLowerCase()
   const contentType =
     ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg"
 

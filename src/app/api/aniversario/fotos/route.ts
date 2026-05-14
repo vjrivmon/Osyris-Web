@@ -3,10 +3,22 @@ import fs from "fs"
 import path from "path"
 
 const FOTOS_DIR = "/var/sftp/nora/fotos"
-const THUMBNAILS_DIR = path.join(FOTOS_DIR, "thumbnails")
-const ORIGINALES_DIR = path.join(FOTOS_DIR, "originales")
-
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp"])
+
+function collectImages(dir: string): string[] {
+  if (!fs.existsSync(dir)) return []
+  const entries = fs.readdirSync(dir, { withFileTypes: true })
+  const files: string[] = []
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const sub = collectImages(path.join(dir, entry.name))
+      files.push(...sub.map((f) => path.join(entry.name, f)))
+    } else if (IMAGE_EXTS.has(path.extname(entry.name).toLowerCase())) {
+      files.push(entry.name)
+    }
+  }
+  return files
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -20,24 +32,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ fotos: [], total: 0 })
   }
 
-  // Busca en thumbnails, luego originales, luego directamente en la raíz
-  const dir = fs.existsSync(THUMBNAILS_DIR) ? THUMBNAILS_DIR
-    : fs.existsSync(ORIGINALES_DIR) ? ORIGINALES_DIR
-    : FOTOS_DIR
-
-  let files: string[] = []
-  try {
-    files = fs.readdirSync(dir).filter((f) => IMAGE_EXTS.has(path.extname(f).toLowerCase()))
-  } catch {
-    return NextResponse.json({ fotos: [], total: 0 })
-  }
-
+  const files = collectImages(FOTOS_DIR)
   files.sort()
 
-  const fotos = files.map((filename) => {
-    const thumb = `/api/aniversario/imagen?file=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}&size=thumb`
-    const full = `/api/aniversario/imagen?file=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}&size=full`
-    return { filename, thumb, full }
+  const fotos = files.map((relativePath) => {
+    const encoded = encodeURIComponent(relativePath)
+    const tokenEnc = encodeURIComponent(token!)
+    const thumb = `/api/aniversario/imagen?file=${encoded}&token=${tokenEnc}&size=thumb`
+    const full = `/api/aniversario/imagen?file=${encoded}&token=${tokenEnc}&size=full`
+    return { filename: relativePath, thumb, full }
   })
 
   return NextResponse.json({ fotos, total: fotos.length })
