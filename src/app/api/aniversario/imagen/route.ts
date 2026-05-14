@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
 
-const FOTOS_DIR = "/var/sftp/nora/fotos"
+const FOTOS_DIR = "/var/sftp/nora/fotos/ Aniversario Osyris definitivo"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

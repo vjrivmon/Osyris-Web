@@ -3,6 +3,7 @@ import fs from "fs"
 import path from "path"
 
 const FOTOS_DIR = "/var/sftp/nora/fotos"
+const DEFINITIVO_DIR = path.join(FOTOS_DIR, " Aniversario Osyris definitivo")
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp"])
 
 function collectImages(dir: string): string[] {
@@ -28,11 +29,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 
-  if (!fs.existsSync(FOTOS_DIR)) {
+  if (!fs.existsSync(DEFINITIVO_DIR)) {
     return NextResponse.json({ fotos: [], total: 0 })
   }
 
-  const files = collectImages(FOTOS_DIR)
+  // Solo la selección definitiva de la fotógrafa, ignorando los lotes numerados
+  const files = collectImages(DEFINITIVO_DIR)
   files.sort()
 
   const fotos = files.map((relativePath) => {
