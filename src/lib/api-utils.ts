@@ -19,7 +19,7 @@ export function getApiUrl(): string {
 
   // Para el dominio de producción gruposcoutosyris.es
   if (hostname.includes('gruposcoutosyris.es')) {
-    return `${protocol}//gruposcoutosyris.es/api`;
+    return `${protocol}//gruposcoutosyris.es`;
   }
 
   // Para staging (IP del servidor o subdominios)
